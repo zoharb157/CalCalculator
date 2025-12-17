@@ -1,0 +1,58 @@
+{
+  "meal_name": "Chicken Shawarma Bowl",
+  "total": {
+    "calories": 620,
+    "protein_g": 42,
+    "carbs_g": 55,
+    "fat_g": 22
+  },
+  "items": [
+    {
+      "name": "chicken shawarma",
+      "portion": 180,
+      "unit": "g",
+      "calories": 320,
+      "protein_g": 35,
+      "carbs_g": 3,
+      "fat_g": 18
+    },
+    {
+      "name": "basmati rice",
+      "portion": 150,
+      "unit": "g",
+      "calories": 195,
+      "protein_g": 4,
+      "carbs_g": 43,
+      "fat_g": 1
+    },
+    {
+      "name": "hummus",
+      "portion": 50,
+      "unit": "g",
+      "calories": 80,
+      "protein_g": 2,
+      "carbs_g": 6,
+      "fat_g": 5
+    },
+    {
+      "name": "pickled vegetables",
+      "portion": 30,
+      "unit": "g",
+      "calories": 10,
+      "protein_g": 0,
+      "carbs_g": 2,
+      "fat_g": 0
+    },
+    {
+      "name": "garlic sauce",
+      "portion": 20,
+      "unit": "g",
+      "calories": 45,
+      "protein_g": 1,
+      "carbs_g": 1,
+      "fat_g": 4
+    }
+  ],
+  "confidence": 0.78,
+  "notes": "Estimates vary based on recipe, portion size, and cooking method. Chicken shawarma nutrition depends on marinade and cooking oil used."
+}
