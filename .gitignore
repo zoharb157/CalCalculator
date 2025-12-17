@@ -1,0 +1,83 @@
+# === macOS ===
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# === Xcode ===
+## Build generated
+build/
+DerivedData/
+.DS_Store
+
+## Various settings
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xcuserstate
+
+## User-specific settings
+xcuserdata/
+
+## Xcode 8+ SCM
+*.xccheckout
+*.xcscmblueprint
+
+## Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# === Swift Package Manager ===
+.build/
+.swiftpm/
+Package.resolved
+
+# === CocoaPods ===
+Pods/
+*.xcworkspace
+
+# === Carthage ===
+Carthage/Build/
+
+# === Accidental Xcode Backups ===
+*.moved-aside
+*.xccheckout
+*.xcscmblueprint
+
+# === Fastlane ===
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+
+# === Code Coverage ===
+*.gcno
+*.gcda
+*.gcov
+*.profraw
+
+# === Crashlytics / Firebase ===
+firebase.json
+GoogleService-Info.plist
+
+# === Environment / Secrets ===
+.env
+.env.*
+*.key
+*.pem
+
+# === Logs ===
+*.log
+
+# === Archives ===
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# === IDEs ===
+.idea/
+.vscode/
+
+# === Temporary Files ===
+*.swp
+*~

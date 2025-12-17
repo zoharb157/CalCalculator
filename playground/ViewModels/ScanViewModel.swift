@@ -42,8 +42,8 @@ final class ScanViewModel {
     
     init(
         repository: MealRepository,
-        analysisService: FoodAnalysisServiceProtocol = FoodAnalysisServiceFactory.createService(),
-        imageStorage: ImageStorage = .shared
+        analysisService: FoodAnalysisServiceProtocol,
+        imageStorage: ImageStorage
     ) {
         self.repository = repository
         self.analysisService = analysisService

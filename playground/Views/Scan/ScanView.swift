@@ -175,7 +175,11 @@ struct ScanView: View {
 #Preview {
     let persistence = PersistenceController.shared
     let repository = MealRepository(context: persistence.mainContext)
-    let viewModel = ScanViewModel(repository: repository)
+    let viewModel = ScanViewModel(
+        repository: repository,
+        analysisService: CaloriesAPIService(),
+        imageStorage: .shared
+    )
     
     ScanView(viewModel: viewModel)
 }

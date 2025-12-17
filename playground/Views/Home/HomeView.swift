@@ -156,8 +156,12 @@ struct HomeView: View {
 #Preview {
     let persistence = PersistenceController.shared
     let repository = MealRepository(context: persistence.mainContext)
-    let viewModel = HomeViewModel(repository: repository)
-    let scanViewModel = ScanViewModel(repository: repository)
+    let viewModel = HomeViewModel(repository: repository, imageStorage: .shared)
+    let scanViewModel = ScanViewModel(
+        repository: repository,
+        analysisService: CaloriesAPIService(),
+        imageStorage: .shared
+    )
     
     HomeView(
         viewModel: viewModel,

@@ -171,7 +171,7 @@ struct SettingsView: View {
         HStack {
             Text("Mode")
             Spacer()
-            Text(USE_REAL_API ? "Real API" : "Mock Mode")
+            Text("Real API")
                 .foregroundColor(.secondary)
         }
     }
@@ -211,7 +211,7 @@ struct SettingsView: View {
 #Preview {
     let persistence = PersistenceController.shared
     let repository = MealRepository(context: persistence.mainContext)
-    let viewModel = SettingsViewModel(repository: repository)
+    let viewModel = SettingsViewModel(repository: repository, imageStorage: .shared)
     
     SettingsView(viewModel: viewModel)
 }

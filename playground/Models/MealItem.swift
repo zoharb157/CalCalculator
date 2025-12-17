@@ -60,7 +60,6 @@ final class MealItem {
     /// Recalculates macros when portion changes
     func updatePortion(to newPortion: Double) {
         guard originalPortion > 0 else { return }
-        let ratio = newPortion / originalPortion
         
         // Get base values per original portion
         let baseCaloriesPerUnit = Double(calories) / (portion / originalPortion)

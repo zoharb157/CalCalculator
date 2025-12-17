@@ -53,7 +53,7 @@ final class HomeViewModel {
     
     init(
         repository: MealRepository,
-        imageStorage: ImageStorage = .shared
+        imageStorage: ImageStorage
     ) {
         self.repository = repository
         self.imageStorage = imageStorage

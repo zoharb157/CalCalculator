@@ -83,7 +83,6 @@ struct MealDetailView: View {
                 .padding(.bottom, 32)
             }
         }
-        .ignoresSafeArea(edges: .top)
     }
     
     // MARK: - Hero Image Section
@@ -102,7 +101,7 @@ struct MealDetailView: View {
             } else {
                 // Gradient placeholder with icon
                 LinearGradient(
-                    colors: [Color.blue.opacity(0.6), Color.purple.opacity(0.6)],
+                    colors: [Color.blue.opacity(0.6), Color.green.opacity(0.6)],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )

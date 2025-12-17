@@ -20,10 +20,30 @@ struct MainTabView: View {
     
     init(repository: MealRepository) {
         self.repository = repository
-        _homeViewModel = State(initialValue: HomeViewModel(repository: repository))
-        _scanViewModel = State(initialValue: ScanViewModel(repository: repository))
-        _historyViewModel = State(initialValue: HistoryViewModel(repository: repository))
-        _settingsViewModel = State(initialValue: SettingsViewModel(repository: repository))
+        _homeViewModel = State(
+            initialValue: HomeViewModel(
+                repository: repository,
+                imageStorage: .shared
+            )
+        )
+        _scanViewModel = State(
+            initialValue: ScanViewModel(
+                repository: repository,
+                analysisService: CaloriesAPIService(),
+                imageStorage: .shared
+            )
+        )
+        _historyViewModel = State(
+            initialValue: HistoryViewModel(
+                repository: repository
+            )
+        )
+        _settingsViewModel = State(
+            initialValue: SettingsViewModel(
+                repository: repository,
+                imageStorage: .shared
+            )
+        )
     }
     
     var body: some View {

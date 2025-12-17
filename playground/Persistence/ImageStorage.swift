@@ -9,7 +9,7 @@ import Foundation
 import UIKit
 
 /// Manages local storage of meal images
-final class ImageStorage {
+final class ImageStorage: @unchecked Sendable {
     static let shared = ImageStorage()
     
     private let fileManager = FileManager.default

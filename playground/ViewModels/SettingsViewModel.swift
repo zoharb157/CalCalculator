@@ -26,7 +26,7 @@ final class SettingsViewModel {
     
     init(
         repository: MealRepository,
-        imageStorage: ImageStorage = .shared
+        imageStorage: ImageStorage
     ) {
         self.repository = repository
         self.imageStorage = imageStorage

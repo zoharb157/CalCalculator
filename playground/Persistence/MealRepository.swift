@@ -67,7 +67,15 @@ final class MealRepository {
     }
     
     func fetchRecentMeals(limit: Int = 10) throws -> [Meal] {
+        let calendar = Calendar.current
+        let today = Date()
+        let startOfDay = calendar.startOfDay(for: today)
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+        
         var descriptor = FetchDescriptor<Meal>(
+            predicate: #Predicate<Meal> { meal in
+                meal.timestamp >= startOfDay && meal.timestamp < endOfDay
+            },
             sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
         )
         descriptor.fetchLimit = limit
