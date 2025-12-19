@@ -49,7 +49,7 @@ struct MealRowView: View {
                 .foregroundColor(.secondary)
         }
         .padding()
-        .cardStyle()
+        .cardStyle(background: Color(.secondarySystemGroupedBackground))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(meal.name), \(meal.totalCalories) calories, at \(meal.formattedTime)")
     }

@@ -78,7 +78,7 @@ struct MacroCard: View {
         }
         .padding()
         .frame(width: 140)
-        .background(Color(.systemBackground))
+        .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
     }

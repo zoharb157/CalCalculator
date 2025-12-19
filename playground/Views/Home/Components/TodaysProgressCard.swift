@@ -54,7 +54,7 @@ struct TodaysProgressCard: View {
                 .frame(width: 100, height: 100)
         }
         .padding()
-        .cardStyle()
+        .cardStyle(background: Color(.secondarySystemGroupedBackground))
     }
 }
 

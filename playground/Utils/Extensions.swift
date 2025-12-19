@@ -11,9 +11,9 @@ import SwiftUI
 
 extension View {
     /// Applies a card style with rounded corners and shadow
-    func cardStyle() -> some View {
+    func cardStyle(background: Color = Color(.systemBackground)) -> some View {
         self
-            .background(Color(.systemBackground))
+            .background(background)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 4)
     }
