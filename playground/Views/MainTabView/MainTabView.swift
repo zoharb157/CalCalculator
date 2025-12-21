@@ -16,6 +16,7 @@ struct MainTabView: View {
     @State var homeViewModel: HomeViewModel
     @State var scanViewModel: ScanViewModel
     @State var historyViewModel: HistoryViewModel
+    @State var progressViewModel: ProgressViewModel
     @State var settingsViewModel: SettingsViewModel
     
     init(repository: MealRepository) {
@@ -38,6 +39,11 @@ struct MainTabView: View {
                 repository: repository
             )
         )
+        _progressViewModel = State(
+            initialValue: ProgressViewModel(
+                repository: repository
+            )
+        )
         _settingsViewModel = State(
             initialValue: SettingsViewModel(
                 repository: repository,
@@ -56,6 +62,7 @@ struct MainTabView: View {
                     Task {
                         await homeViewModel.refreshTodayData()
                         await historyViewModel.loadData()
+                        await progressViewModel.loadData()
                     }
                 }
             )
@@ -64,22 +71,29 @@ struct MainTabView: View {
             }
             .tag(0)
             
-            HistoryView(viewModel: historyViewModel, repository: repository)
+            ProgressDashboardView(viewModel: progressViewModel)
                 .tabItem {
-                    Label("Progress", systemImage: "chart.bar.fill")
+                    Label("Progress", systemImage: "chart.line.uptrend.xyaxis")
                 }
                 .tag(1)
+            
+            HistoryView(viewModel: historyViewModel, repository: repository)
+                .tabItem {
+                    Label("History", systemImage: "calendar")
+                }
+                .tag(2)
             
             SettingsView(viewModel: settingsViewModel, onDataDeleted: {
                 Task {
                     await homeViewModel.loadData()
                     await historyViewModel.loadData()
+                    await progressViewModel.loadData()
                 }
             })
             .tabItem {
                 Label("Settings", systemImage: "gearshape.fill")
             }
-            .tag(2)
+            .tag(3)
         }
     }
 }
@@ -87,7 +101,7 @@ struct MainTabView: View {
 #Preview {
     ContentView()
         .modelContainer(
-            for: [Meal.self, MealItem.self, DaySummary.self],
+            for: [Meal.self, MealItem.self, DaySummary.self, WeightEntry.self],
             inMemory: true
         )
 }

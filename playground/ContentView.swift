@@ -80,7 +80,7 @@ struct ContentView: View {
 #Preview {
     ContentView()
         .modelContainer(
-            for: [Meal.self, MealItem.self, DaySummary.self],
+            for: [Meal.self, MealItem.self, DaySummary.self, WeightEntry.self],
             inMemory: true
         )
 }

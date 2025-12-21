@@ -17,7 +17,8 @@ struct playgroundApp: App {
             let schema = Schema([
                 Meal.self,
                 MealItem.self,
-                DaySummary.self
+                DaySummary.self,
+                WeightEntry.self
             ])
             let modelConfiguration = ModelConfiguration(
                 schema: schema,
