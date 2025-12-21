@@ -70,6 +70,7 @@ struct HomeView: View {
             mealsSection
         }
         .listStyle(.plain)
+        .background(Color(.systemGroupedBackground))
     }
     
     private var floatingAddButton: some View {
