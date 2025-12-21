@@ -169,3 +169,50 @@ struct IngredientRow: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#Preview("Ingredients Section") {
+    IngredientsSection(
+        items: [
+            MealItem(
+                name: "Grilled Chicken Breast",
+                portion: 150,
+                unit: "g",
+                calories: 248,
+                proteinG: 46,
+                carbsG: 0,
+                fatG: 5.4
+            ),
+            MealItem(
+                name: "Brown Rice",
+                portion: 100,
+                unit: "g",
+                calories: 112,
+                proteinG: 2.6,
+                carbsG: 24,
+                fatG: 0.9
+            )
+        ],
+        onUpdatePortion: { _, _ in },
+        onDelete: { _ in }
+    )
+    .padding()
+}
+
+#Preview("Ingredient Row") {
+    IngredientRow(
+        item: MealItem(
+            name: "Grilled Chicken Breast",
+            portion: 150,
+            unit: "g",
+            calories: 248,
+            proteinG: 46,
+            carbsG: 0,
+            fatG: 5.4
+        ),
+        onUpdatePortion: { _ in },
+        onDelete: {}
+    )
+    .padding()
+}

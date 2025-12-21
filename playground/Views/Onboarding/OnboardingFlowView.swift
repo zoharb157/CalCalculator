@@ -90,3 +90,11 @@ struct OnboardingFlowView: View {
         onComplete(dict)
     }
 }
+
+// MARK: - Preview
+
+#Preview {
+    OnboardingFlowView(jsonFileName: "onboarding") { result in
+        print("Onboarding completed: \(result)")
+    }
+}

@@ -68,3 +68,13 @@ struct SelectedImageView: View {
         }
     }
 }
+
+// MARK: - Preview
+
+#Preview {
+    SelectedImageView(
+        image: UIImage(systemName: "photo.fill")!,
+        onAnalyze: {},
+        onRetake: {}
+    )
+}

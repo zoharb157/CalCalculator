@@ -119,3 +119,34 @@ struct MacroChip: View {
             .foregroundColor(.secondary)
     }
 }
+
+// MARK: - Previews
+
+#Preview("Total Macros Card") {
+    TotalMacrosCard(
+        macros: MacroData(
+            calories: 650,
+            proteinG: 35,
+            carbsG: 45,
+            fatG: 28
+        )
+    )
+    .padding()
+}
+
+#Preview("Macro Chip") {
+    HStack(spacing: 16) {
+        MacroChip(
+            value: "650",
+            label: "Calories",
+            color: .orange
+        )
+        MacroChip(
+            value: "35",
+            label: "Protein",
+            unit: "g",
+            color: .red
+        )
+    }
+    .padding()
+}

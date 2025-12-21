@@ -17,6 +17,7 @@ struct ContentView: View {
     enum AuthState {
         case login
         case onboarding
+        case goalsGeneration
         case signIn
         case authenticated
     }
@@ -36,18 +37,29 @@ struct ContentView: View {
                 
             case .onboarding:
                 OnboardingFlowView(jsonFileName: "onboarding") { dict in
-                    // ✅ This is the final dictionary: [stepId: answer]
+                    // This is the final dictionary: [stepId: answer]
                     onboardingResult = dict
-                    authState = .authenticated
                     
-                    // Save user as authenticated
-                    AuthenticationManager.shared.setUserId(AuthenticationManager.shared.userId ?? "")
+                    // Transition to goals generation
+                    withAnimation {
+                        authState = .goalsGeneration
+                    }
 
                     // Example: convert to JSON for debugging/network
                     if JSONSerialization.isValidJSONObject(dict),
                        let data = try? JSONSerialization.data(withJSONObject: dict, options: [.prettyPrinted]),
                        let json = String(data: data, encoding: .utf8) {
                         print(json)
+                    }
+                }
+                
+            case .goalsGeneration:
+                GoalsGenerationView(onboardingData: onboardingResult) {
+                    // Save user as authenticated
+                    AuthenticationManager.shared.setUserId(AuthenticationManager.shared.userId ?? "")
+                    
+                    withAnimation {
+                        authState = .authenticated
                     }
                 }
                 

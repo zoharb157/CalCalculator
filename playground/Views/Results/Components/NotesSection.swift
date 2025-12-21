@@ -35,3 +35,12 @@ struct NotesSection: View {
             .foregroundColor(.secondary)
     }
 }
+
+// MARK: - Preview
+
+#Preview {
+    NotesSection(
+        notes: "This meal is high in protein and perfect for post-workout recovery. Consider adding more vegetables for fiber."
+    )
+    .padding()
+}

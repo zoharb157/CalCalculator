@@ -62,3 +62,23 @@ struct MealNameSection: View {
         }
     }
 }
+
+// MARK: - Preview
+
+#Preview("Display Mode") {
+    MealNameSection(
+        name: .constant("Grilled Chicken Salad"),
+        isEditing: .constant(false),
+        onSave: {}
+    )
+    .padding()
+}
+
+#Preview("Editing Mode") {
+    MealNameSection(
+        name: .constant("Grilled Chicken Salad"),
+        isEditing: .constant(true),
+        onSave: {}
+    )
+    .padding()
+}

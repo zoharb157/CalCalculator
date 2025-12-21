@@ -16,3 +16,9 @@ struct ShareSheet: UIViewControllerRepresentable {
     
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
+
+// MARK: - Preview
+
+#Preview {
+    ShareSheet(items: ["Sample text to share"])
+}

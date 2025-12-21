@@ -43,3 +43,11 @@ struct CameraView: UIViewControllerRepresentable {
         }
     }
 }
+
+// MARK: - Preview
+// Note: Camera preview requires a physical device
+
+#Preview {
+    Text("Camera requires physical device")
+        .foregroundStyle(.secondary)
+}

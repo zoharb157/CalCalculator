@@ -86,4 +86,12 @@ final class UserSettings {
     func completeOnboarding() {
         hasCompletedOnboarding = true
     }
+    
+    /// Update all nutrition goals at once
+    func updateGoals(calories: Int, protein: Double, carbs: Double, fat: Double) {
+        calorieGoal = calories
+        proteinGoal = protein
+        carbsGoal = carbs
+        fatGoal = fat
+    }
 }

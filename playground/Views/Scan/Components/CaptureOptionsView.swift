@@ -89,3 +89,12 @@ struct CaptureOptionsView: View {
         }
     }
 }
+
+// MARK: - Preview
+
+#Preview {
+    CaptureOptionsView(
+        onCamera: {},
+        onPhotoLibrary: {}
+    )
+}
