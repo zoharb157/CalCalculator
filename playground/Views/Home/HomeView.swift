@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import MavenCommonSwiftUI
 
 struct HomeView: View {
     @Bindable var viewModel: HomeViewModel
@@ -16,6 +17,7 @@ struct HomeView: View {
     private var settings = UserSettings.shared
     
     @State private var showScanSheet = false
+    @State private var confettiCounter = 0
     
     init(
         viewModel: HomeViewModel,
@@ -50,6 +52,7 @@ struct HomeView: View {
                     viewModel: scanViewModel,
                     onMealSaved: {
                         showScanSheet = false
+                        confettiCounter += 1
                         onMealSaved()
                     },
                     onDismiss: {
@@ -57,6 +60,7 @@ struct HomeView: View {
                     }
                 )
             }
+            .confettiCannon(trigger: $confettiCounter)
         }
     }
     
