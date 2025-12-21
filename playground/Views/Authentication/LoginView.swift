@@ -107,33 +107,22 @@ struct LoginView: View {
                     .animation(.easeOut(duration: 0.5).delay(0.4), value: isAnimating)
                     
                     // Secondary button - Sign In
-                    Button(action: onSignIn) {
-                        HStack(spacing: 8) {
-                            Text("Already have an account?")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(.secondary)
-                            
+                    HStack(spacing: 8) {
+                        Text("Already have an account?")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.secondary)
+                        
+                        Button(action: onSignIn) {
                             Text("Sign In")
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundColor(.accentColor)
                         }
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(
-                            colorScheme == .dark 
-                                ? Color.gray.opacity(0.15)
-                                : Color.white
-                        )
-                        .cornerRadius(16)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(Color.accentColor.opacity(0.2), lineWidth: 1.5)
-                        )
                     }
-                    .buttonStyle(ScaleButtonStyle())
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .animation(.easeOut(duration: 0.5).delay(0.5), value: isAnimating)
                     .opacity(isAnimating ? 1 : 0)
                     .offset(y: isAnimating ? 0 : 20)
-                    .animation(.easeOut(duration: 0.5).delay(0.5), value: isAnimating)
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 50)
