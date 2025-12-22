@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SDK
 
 struct ResultsView: View {
     @Bindable var viewModel: ScanViewModel
@@ -14,7 +15,10 @@ struct ResultsView: View {
     @State private var mealNameText: String
     @State private var showingFixResult = false
     @State private var foodHintText = ""
+    @State private var showPaywall = false
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.isSubscribed) private var isSubscribed
+    @Environment(TheSDK.self) private var sdk
 
     /// Callback to notify parent when meal is saved
     var onMealSaved: (() -> Void)?
@@ -36,6 +40,15 @@ struct ResultsView: View {
                 }
                 .sheet(isPresented: $showingFixResult) {
                     fixResultSheet
+                }
+                .fullScreenCover(isPresented: $showPaywall) {
+                    SDKView(
+                        model: sdk,
+                        page: .splash,
+                        show: $showPaywall,
+                        backgroundColor: .white,
+                        ignoreSafeArea: true
+                    )
                 }
         }
     }
@@ -231,6 +244,11 @@ struct ResultsView: View {
     }
 
     private func saveMeal() {
+        guard isSubscribed else {
+            showPaywall = true
+            return
+        }
+        
         resultsVM.updateMealName(mealNameText)
         viewModel.pendingMeal = resultsVM.meal
 

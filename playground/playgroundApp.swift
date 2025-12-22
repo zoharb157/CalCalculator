@@ -11,12 +11,14 @@ import MavenCommonSwiftUI
 import SDK
 import Firebase
 import FirebaseAnalytics
+import UIKit
 
 @main
 struct playgroundApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     let modelContainer: ModelContainer
     @State var sdk: TheSDK
+    @State private var subscriptionStatus: Bool = false
     
     init() {
         // Initialize ModelContainer (fast, synchronous)
@@ -67,29 +69,55 @@ struct playgroundApp: App {
             ContentView()
                 .modelContainer(modelContainer)
                 .environment(sdk) // Use direct environment like example app
-                .environment(\.isSubscribed, effectiveSubscriptionStatus) // Inject subscription status with debug override
+                .environment(\.isSubscribed, subscriptionStatus) // Inject reactive subscription status
+                .task {
+                    // Update subscription status on app opening
+                    do {
+                        try await sdk.updateIsSubscribed()
+                        updateSubscriptionStatus()
+                        print("📱 Subscription status updated on app launch: \(subscriptionStatus)")
+                    } catch {
+                        print("⚠️ Failed to update subscription status on launch: \(error)")
+                    }
+                }
                 .onChange(of: sdk.isSubscribed) { oldValue, newValue in
-                    // Subscription status changed - environment will update automatically
+                    // Subscription status changed - update reactive state
+                    updateSubscriptionStatus()
                     print("📱 Subscription status changed: \(newValue)")
                 }
                 .onChange(of: UserSettings.shared.debugOverrideSubscription) { oldValue, newValue in
-                    // Debug override changed - update environment
+                    // Debug override changed - update reactive state
+                    updateSubscriptionStatus()
                     print("🔧 Debug override subscription: \(newValue ? "enabled" : "disabled")")
                 }
                 .onChange(of: UserSettings.shared.debugIsSubscribed) { oldValue, newValue in
-                    // Debug subscription value changed - update environment
+                    // Debug subscription value changed - update reactive state
+                    updateSubscriptionStatus()
                     print("🔧 Debug isSubscribed: \(newValue)")
+                }
+                .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+                    // Refresh subscription status when app becomes active
+                    Task {
+                        do {
+                            try await sdk.updateIsSubscribed()
+                            updateSubscriptionStatus()
+                            print("📱 Subscription status refreshed on app becoming active: \(subscriptionStatus)")
+                        } catch {
+                            print("⚠️ Failed to refresh subscription status: \(error)")
+                        }
+                    }
                 }
         }
     }
     
-    /// Effective subscription status: uses debug override if enabled, otherwise uses SDK value
-    private var effectiveSubscriptionStatus: Bool {
+    /// Update reactive subscription status based on debug override or SDK value
+    private func updateSubscriptionStatus() {
         let settings = UserSettings.shared
         if settings.debugOverrideSubscription {
-            return settings.debugIsSubscribed
+            subscriptionStatus = settings.debugIsSubscribed
+        } else {
+            subscriptionStatus = sdk.isSubscribed
         }
-        return sdk.isSubscribed
     }
 }
 

@@ -123,12 +123,8 @@ struct ScanView: View {
     
     private var cameraSheet: some View {
         CameraView { image in
-            // Check subscription when photo is actually taken
-            if isSubscribed {
-                viewModel.handleSelectedImage(image)
-            } else {
-                showPaywall = true
-            }
+            // Allow taking photo - check subscription when analyzing/sending
+            viewModel.handleSelectedImage(image)
         }
     }
     
@@ -173,14 +169,8 @@ struct ScanView: View {
             if let newValue,
                let data = try? await newValue.loadTransferable(type: Data.self),
                let image = UIImage(data: data) {
-                // Check subscription when photo is actually selected
-                if isSubscribed {
-                    viewModel.handleSelectedImage(image)
-                } else {
-                    await MainActor.run {
-                        showPaywall = true
-                    }
-                }
+                // Allow selecting photo - check subscription when analyzing/sending
+                viewModel.handleSelectedImage(image)
             }
         }
     }
