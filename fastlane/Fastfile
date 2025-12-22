@@ -70,6 +70,8 @@ platform :ios do
   #
   desc "Build and archive the app"
   lane :_build_app_for_testflight do
+    # Skip package dependency resolution - project format issue
+    # Build directly which should work with newer Xcode
     build_app(
       workspace: nil,
       project: PROJECT,
@@ -81,7 +83,8 @@ platform :ios do
         teamID: TEAM_ID,
         signingStyle: "automatic"
       },
-      xcargs: "-allowProvisioningUpdates"
+      skip_package_dependencies_resolution: true,
+      xcargs: "-allowProvisioningUpdates -skipPackagePluginValidation"
     )
   end
 
