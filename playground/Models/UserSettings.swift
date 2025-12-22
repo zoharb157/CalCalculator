@@ -85,7 +85,7 @@ final class UserSettings {
     var debugIsSubscribed: Bool {
         didSet { defaults.set(debugIsSubscribed, forKey: Keys.debugIsSubscribed) }
     }
-    
+
     // MARK: - Computed Properties
     var macroGoals: MacroData {
         MacroData(
