@@ -63,7 +63,6 @@ final class UserSettings {
     
     var targetWeight: Double { // in kg
         didSet { defaults.set(targetWeight, forKey: Keys.targetWeight) }
-        didSet { defaults.set(targetWeight, forKey: Keys.targetWeight) }
     }
     
     var height: Double { // in cm
