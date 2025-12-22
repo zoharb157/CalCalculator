@@ -28,6 +28,8 @@ final class UserSettings {
         static let height = "height"
         static let lastWeightDate = "lastWeightDate"
         static let lastWeightPromptDate = "lastWeightPromptDate"
+        static let debugOverrideSubscription = "debugOverrideSubscription"
+        static let debugIsSubscribed = "debugIsSubscribed"
     }
     
     // MARK: - Properties
@@ -75,6 +77,15 @@ final class UserSettings {
         didSet { defaults.set(lastWeightPromptDate, forKey: Keys.lastWeightPromptDate) }
     }
     
+    // MARK: - Debug Properties
+    var debugOverrideSubscription: Bool {
+        didSet { defaults.set(debugOverrideSubscription, forKey: Keys.debugOverrideSubscription) }
+    }
+    
+    var debugIsSubscribed: Bool {
+        didSet { defaults.set(debugIsSubscribed, forKey: Keys.debugIsSubscribed) }
+    }
+
     // MARK: - Computed Properties
     var macroGoals: MacroData {
         MacroData(
@@ -99,7 +110,17 @@ final class UserSettings {
     
     /// Whether it's time to prompt for weight
     var shouldPromptForWeight: Bool {
-        guard let lastDate = lastWeightDate else { return true }
+        // If no weight has been set at all, don't prompt (let onboarding handle it)
+        guard currentWeight > 0 else { return false }
+        
+        // If weight exists but no lastWeightDate, it means it came from onboarding
+        // Set the date to today so we don't prompt immediately
+        if lastWeightDate == nil && currentWeight > 0 {
+            lastWeightDate = Date()
+            return false
+        }
+        
+        guard let lastDate = lastWeightDate else { return false }
         let calendar = Calendar.current
         let weekday = calendar.component(.weekday, from: Date())
         
@@ -164,6 +185,8 @@ final class UserSettings {
         self.height = defaults.object(forKey: Keys.height) as? Double ?? 170
         self.lastWeightDate = defaults.object(forKey: Keys.lastWeightDate) as? Date
         self.lastWeightPromptDate = defaults.object(forKey: Keys.lastWeightPromptDate) as? Date
+        self.debugOverrideSubscription = defaults.bool(forKey: Keys.debugOverrideSubscription)
+        self.debugIsSubscribed = defaults.bool(forKey: Keys.debugIsSubscribed)
     }
     
     // MARK: - Methods

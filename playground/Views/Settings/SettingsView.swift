@@ -6,10 +6,12 @@
 //
 
 import SwiftUI
+import SDK
 
 struct SettingsView: View {
     @Bindable var settings = UserSettings.shared
     @Bindable var viewModel: SettingsViewModel
+    @Environment(TheSDK.self) private var sdk
     
     @State private var showingExportSheet = false
     @State private var showingDeleteConfirmation = false
@@ -44,6 +46,7 @@ struct SettingsView: View {
             macroGoalsSection
             unitsSection
             dataManagementSection
+            debugSection
             aboutSection
         }
     }
@@ -145,6 +148,43 @@ struct SettingsView: View {
             Label("Delete All Data", systemImage: "trash")
                 .foregroundColor(.red)
         }
+    }
+    
+    private var debugSection: some View {
+        #if DEBUG
+        Section {
+            Toggle(isOn: $settings.debugOverrideSubscription) {
+                Label("Override Subscription", systemImage: "wrench.and.screwdriver")
+            }
+            
+            if settings.debugOverrideSubscription {
+                Toggle(isOn: $settings.debugIsSubscribed) {
+                    HStack {
+                        Label("Debug: Is Subscribed", systemImage: "crown.fill")
+                        Spacer()
+                        Text(settings.debugIsSubscribed ? "Premium" : "Free")
+                            .font(.caption)
+                            .foregroundColor(settings.debugIsSubscribed ? .green : .gray)
+                    }
+                }
+                
+                HStack {
+                    Text("SDK Status")
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text(sdk.isSubscribed ? "Subscribed" : "Not Subscribed")
+                        .font(.caption)
+                        .foregroundColor(sdk.isSubscribed ? .green : .gray)
+                }
+            }
+        } header: {
+            Text("Debug")
+        } footer: {
+            Text("Override subscription status for testing. Only visible in debug builds.")
+        }
+        #else
+        EmptyView()
+        #endif
     }
     
     private var aboutSection: some View {

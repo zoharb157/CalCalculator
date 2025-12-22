@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		CE4533C62EF81636006F848D /* MavenCommonSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = FF5B2D1B53224F94AE3D23B7 /* MavenCommonSwiftUI */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		A31433152EF0897D00EFE039 /* playground.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = playground.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CE4533C62EF81636006F848D /* MavenCommonSwiftUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +70,7 @@
 			);
 			name = playground;
 			packageProductDependencies = (
+				FF5B2D1B53224F94AE3D23B7 /* MavenCommonSwiftUI */,
 			);
 			productName = playground;
 			productReference = A31433152EF0897D00EFE039 /* playground.app */;
@@ -94,6 +100,9 @@
 			);
 			mainGroup = A314330C2EF0897D00EFE039;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				6AB94DA94C5042569CD5B911 /* XCRemoteSwiftPackageReference "Ios-Bundle" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A31433162EF0897D00EFE039 /* Products */;
 			projectDirPath = "";
@@ -252,23 +261,26 @@
 				CODE_SIGN_ENTITLEMENTS = playground/playground.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5NS9ZUMYCS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs camera access to take photos of your meals for calorie tracking.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "CalCalculator needs access to read your health data to display activity metrics and weight history.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "CalCalculator needs access to save your weight measurements to Apple Health.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs photo library access to select photos of your meals for calorie tracking.";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "This app uses tracking to provide personalized content and improve your experience. Your data is used only for app functionality and analytics.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = CalCalculator;
+				PRODUCT_BUNDLE_IDENTIFIER = CalCalculatorAi;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL_APP_INTENTS_METADATA = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -289,23 +301,26 @@
 				CODE_SIGN_ENTITLEMENTS = playground/playground.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5NS9ZUMYCS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs camera access to take photos of your meals for calorie tracking.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "CalCalculator needs access to read your health data to display activity metrics and weight history.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "CalCalculator needs access to save your weight measurements to Apple Health.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs photo library access to select photos of your meals for calorie tracking.";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "This app uses tracking to provide personalized content and improve your experience. Your data is used only for app functionality and analytics.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = CalCalculator;
+				PRODUCT_BUNDLE_IDENTIFIER = CalCalculatorAi;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL_APP_INTENTS_METADATA = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -340,6 +355,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		6AB94DA94C5042569CD5B911 /* XCRemoteSwiftPackageReference "Ios-Bundle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://git-codecommit.us-east-1.amazonaws.com/v1/repos/Ios-Bundle";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		FF5B2D1B53224F94AE3D23B7 /* MavenCommonSwiftUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6AB94DA94C5042569CD5B911 /* XCRemoteSwiftPackageReference "Ios-Bundle" */;
+			productName = MavenCommonSwiftUI;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A314330D2EF0897D00EFE039 /* Project object */;
 }

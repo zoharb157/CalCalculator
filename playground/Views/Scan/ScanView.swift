@@ -7,10 +7,16 @@
 
 import SwiftUI
 import PhotosUI
+import SDK
 
 struct ScanView: View {
     @Bindable var viewModel: ScanViewModel
     @State private var selectedItem: PhotosPickerItem?
+    
+    @Environment(\.isSubscribed) private var isSubscribed
+    @Environment(TheSDK.self) private var sdk
+    
+    @State private var showPaywall = false
     
     /// Callback when meal is saved successfully
     var onMealSaved: (() -> Void)?
@@ -55,6 +61,15 @@ struct ScanView: View {
                     errorAlertActions
                 } message: {
                     errorAlertMessage
+                }
+                .fullScreenCover(isPresented: $showPaywall) {
+                    SDKView(
+                        model: sdk,
+                        page: .splash,
+                        show: $showPaywall,
+                        backgroundColor: .white,
+                        ignoreSafeArea: true
+                    )
                 }
         }
     }
@@ -108,7 +123,12 @@ struct ScanView: View {
     
     private var cameraSheet: some View {
         CameraView { image in
-            viewModel.handleSelectedImage(image)
+            // Check subscription when photo is actually taken
+            if isSubscribed {
+                viewModel.handleSelectedImage(image)
+            } else {
+                showPaywall = true
+            }
         }
     }
     
@@ -153,7 +173,14 @@ struct ScanView: View {
             if let newValue,
                let data = try? await newValue.loadTransferable(type: Data.self),
                let image = UIImage(data: data) {
-                viewModel.handleSelectedImage(image)
+                // Check subscription when photo is actually selected
+                if isSubscribed {
+                    viewModel.handleSelectedImage(image)
+                } else {
+                    await MainActor.run {
+                        showPaywall = true
+                    }
+                }
             }
         }
     }
@@ -165,6 +192,10 @@ struct ScanView: View {
     }
     
     private func analyzeImage() {
+        guard isSubscribed else {
+            showPaywall = true
+            return
+        }
         guard let image = viewModel.selectedImage else { return }
         Task {
             await viewModel.analyzeImage(image)
