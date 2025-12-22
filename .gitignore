@@ -7,6 +7,10 @@ fastlane/AuthKey.p8
 *.ipa
 *.dSYM.zip
 
+# API Keys (any location)
+*.p8
+**/ApiKey_*.p8
+
 # Xcode
 *.xcodeproj/*
 !*.xcodeproj/project.pbxproj
