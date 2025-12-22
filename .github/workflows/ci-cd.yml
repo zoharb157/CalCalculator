@@ -37,7 +37,8 @@ jobs:
       
       - name: Validate project
         run: |
-          xcodebuild -list -project playground.xcodeproj
+          # Use -scheme to avoid project file parsing issues with newer Xcode formats
+          xcodebuild -list -project playground.xcodeproj -scheme playground || xcodebuild -list -project playground.xcodeproj
       
       - name: Install dependencies
         run: |
@@ -89,7 +90,8 @@ jobs:
       
       - name: Validate project
         run: |
-          xcodebuild -list -project playground.xcodeproj
+          # Use -scheme to avoid project file parsing issues with newer Xcode formats
+          xcodebuild -list -project playground.xcodeproj -scheme playground || xcodebuild -list -project playground.xcodeproj
       
       - name: Install dependencies
         run: |
