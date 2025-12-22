@@ -11,8 +11,15 @@ import SwiftUI
 @main
 struct CalCalculatorWidgetBundle: WidgetBundle {
     var body: some Widget {
+        // Main home screen widgets
         CalCalculatorWidget()
+        CaloriesSmallWidget()
+        MacrosMediumWidget()
+        WeeklyLargeWidget()
+        QuickLogWidget()
+        CompactMacrosWidget()
+        
+        // Control center widget
         CalCalculatorWidgetControl()
-        CalCalculatorWidgetLiveActivity()
     }
 }

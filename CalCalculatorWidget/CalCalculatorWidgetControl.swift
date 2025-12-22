@@ -2,7 +2,7 @@
 //  CalCalculatorWidgetControl.swift
 //  CalCalculatorWidget
 //
-//  Created by Bassam-Hillo on 22/12/2025.
+//  Control Center widget for quick actions
 //
 
 import AppIntents
@@ -10,68 +10,76 @@ import SwiftUI
 import WidgetKit
 
 struct CalCalculatorWidgetControl: ControlWidget {
-    static let kind: String = "CalCalculator.CalCalculatorWidget"
-
+    static let kind: String = "CalCalculator.CalCalculatorWidgetControl"
+    
     var body: some ControlWidgetConfiguration {
         AppIntentControlConfiguration(
             kind: Self.kind,
-            provider: Provider()
+            provider: CaloriesControlProvider()
         ) { value in
-            ControlWidgetToggle(
-                "Start Timer",
-                isOn: value.isRunning,
-                action: StartTimerIntent(value.name)
-            ) { isRunning in
-                Label(isRunning ? "On" : "Off", systemImage: "timer")
+            ControlWidgetButton(action: ScanMealControlIntent()) {
+                Label {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("\(value.caloriesConsumed)")
+                            .font(.system(size: 16, weight: .bold))
+                        Text("of \(value.caloriesGoal) kcal")
+                            .font(.system(size: 10))
+                    }
+                } icon: {
+                    Image(systemName: "camera.fill")
+                }
             }
         }
-        .displayName("Timer")
-        .description("A an example control that runs a timer.")
+        .displayName("Scan Meal")
+        .description("Quick access to scan and log meals.")
     }
 }
+
+// MARK: - Control Value Provider
 
 extension CalCalculatorWidgetControl {
     struct Value {
-        var isRunning: Bool
-        var name: String
-    }
-
-    struct Provider: AppIntentControlValueProvider {
-        func previewValue(configuration: TimerConfiguration) -> Value {
-            CalCalculatorWidgetControl.Value(isRunning: false, name: configuration.timerName)
+        var caloriesConsumed: Int
+        var caloriesGoal: Int
+        var progress: Double {
+            guard caloriesGoal > 0 else { return 0 }
+            return Double(caloriesConsumed) / Double(caloriesGoal)
         }
-
-        func currentValue(configuration: TimerConfiguration) async throws -> Value {
-            let isRunning = true // Check if the timer is running
-            return CalCalculatorWidgetControl.Value(isRunning: isRunning, name: configuration.timerName)
+    }
+    
+    struct CaloriesControlProvider: AppIntentControlValueProvider {
+        func previewValue(configuration: CaloriesControlConfiguration) -> Value {
+            Value(caloriesConsumed: 1450, caloriesGoal: 2000)
+        }
+        
+        func currentValue(configuration: CaloriesControlConfiguration) async throws -> Value {
+            let defaults = UserDefaults(suiteName: "group.com.calcalculator.shared")
+            let consumed = defaults?.integer(forKey: "widget_calories_consumed") ?? 0
+            let goal = defaults?.integer(forKey: "widget_calories_goal") ?? 2000
+            return Value(
+                caloriesConsumed: consumed,
+                caloriesGoal: goal > 0 ? goal : 2000
+            )
         }
     }
 }
 
-struct TimerConfiguration: ControlConfigurationIntent {
-    static let title: LocalizedStringResource = "Timer Name Configuration"
+// MARK: - Control Configuration
 
-    @Parameter(title: "Timer Name", default: "Timer")
-    var timerName: String
+struct CaloriesControlConfiguration: ControlConfigurationIntent {
+    static let title: LocalizedStringResource = "Calories Control Configuration"
 }
 
-struct StartTimerIntent: SetValueIntent {
-    static let title: LocalizedStringResource = "Start a timer"
+// MARK: - Control Intent
 
-    @Parameter(title: "Timer Name")
-    var name: String
-
-    @Parameter(title: "Timer is running")
-    var value: Bool
-
+struct ScanMealControlIntent: AppIntent {
+    static let title: LocalizedStringResource = "Scan Meal"
+    static var openAppWhenRun: Bool { true }
+    
     init() {}
-
-    init(_ name: String) {
-        self.name = name
-    }
-
+    
     func perform() async throws -> some IntentResult {
-        // Start the timer…
+        // This will open the app - deep linking to scan view
         return .result()
     }
 }
