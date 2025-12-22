@@ -31,9 +31,9 @@ jobs:
           ruby-version: '3.2'
           bundler-cache: true
       
-      - name: Install dependencies
+      - name: Install Fastlane
         run: |
-          bundle install
+          bundle install || gem install fastlane -NV
       
       - name: Validate project
         continue-on-error: true
@@ -86,9 +86,9 @@ jobs:
           ruby-version: '3.2'
           bundler-cache: true
       
-      - name: Install dependencies
+      - name: Install Fastlane
         run: |
-          bundle install
+          bundle install || gem install fastlane -NV
       
       - name: Validate project
         continue-on-error: true
