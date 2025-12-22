@@ -187,6 +187,12 @@ struct ContentView: View {
             )
             .ignoresSafeArea()
             .id(page.id)
+            .onAppear {
+                print("🌐 Loading paywall page: \(page.page)")
+                print("🌐 Base URL: \(Config.baseURL)")
+                // The SDK will construct the full URL from baseURL + page
+                // Check Xcode's Network tab to see the actual URL being loaded
+            }
         }
         .onChange(of: sdk.isSubscribed) { oldValue, newValue in
             if newValue && paywallItem != nil {

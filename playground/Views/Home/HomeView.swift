@@ -7,6 +7,7 @@
 
 import SwiftUI
 import MavenCommonSwiftUI
+import SDK
 
 struct HomeView: View {
     @Bindable var viewModel: HomeViewModel
@@ -14,9 +15,13 @@ struct HomeView: View {
     @Bindable var scanViewModel: ScanViewModel
     var onMealSaved: () -> Void
     
+    @Environment(\.isSubscribed) private var isSubscribed
+    @Environment(TheSDK.self) private var sdk
+    
     private var settings = UserSettings.shared
     
     @State private var showScanSheet = false
+    @State private var showPaywall = false
     @State private var confettiCounter = 0
     
     init(
@@ -82,26 +87,51 @@ struct HomeView: View {
             HStack {
                 Spacer()
                 Button {
-                    showScanSheet = true
+                    if isSubscribed {
+                        showScanSheet = true
+                    } else {
+                        showPaywall = true
+                    }
                 } label: {
-                    Image(systemName: "plus")
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.white)
-                        .frame(width: 60, height: 60)
-                        .background(
-                            LinearGradient(
-                                colors: [Color.blue, Color.blue.opacity(0.8)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
+                    ZStack {
+                        Image(systemName: "plus")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.white)
+                            .frame(width: 60, height: 60)
+                            .background(
+                                LinearGradient(
+                                    colors: [Color.blue, Color.blue.opacity(0.8)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
                             )
-                        )
-                        .clipShape(Circle())
-                        .shadow(color: .blue.opacity(0.4), radius: 8, x: 0, y: 4)
+                            .clipShape(Circle())
+                            .shadow(color: .blue.opacity(0.4), radius: 8, x: 0, y: 4)
+                        
+                        if !isSubscribed {
+                            Image(systemName: "lock.fill")
+                                .font(.caption)
+                                .foregroundColor(.white)
+                                .padding(4)
+                                .background(Color.orange)
+                                .clipShape(Circle())
+                                .offset(x: 18, y: -18)
+                        }
+                    }
                 }
                 .padding(.trailing, 20)
                 .padding(.bottom, 20)
             }
+        }
+        .fullScreenCover(isPresented: $showPaywall) {
+            SDKView(
+                model: sdk,
+                page: .splash,
+                show: $showPaywall,
+                backgroundColor: .white,
+                ignoreSafeArea: true
+            )
         }
     }
     

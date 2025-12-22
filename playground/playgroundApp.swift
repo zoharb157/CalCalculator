@@ -9,9 +9,12 @@ import SwiftUI
 import SwiftData
 import MavenCommonSwiftUI
 import SDK
+import Firebase
+import FirebaseAnalytics
 
 @main
 struct playgroundApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     let modelContainer: ModelContainer
     @State var sdk: TheSDK
     
@@ -43,27 +46,20 @@ struct playgroundApp: App {
             fatalError("Could not initialize ModelContainer: \(error)")
         }
         
-        // Initialize SDK synchronously like the translate app
-        // Match translate app exactly: use "app.translate-now.com" (with "app." prefix)
-        let baseURL = URL(string: "https://app.translate-now.com")!
-        let config = SDKConfig(
-            baseURL: baseURL,
-            facebook: "569790992889415", // Match translate app - they pass a Facebook app ID
-            logOptions: .all, // Match translate app - use .all
-            apnsHandler: { event in
-                switch event {
-                case let .didReceive(notification, details):
-                    guard details == .appOpened else { return }
-                    if let urlString = notification["webviewUrl"] as? String,
-                       let url = URL(string: urlString) {
-                        print("📱 Deep link received: \(url)")
-                    }
-                default:
-                    break
-                }
-            }
-        )
-        sdk = TheSDK(config: config)
+        sdk = .init(config: .init(baseURL: Config.baseURL,
+                                  logOptions: .all,
+                                  apnsHandler: { event in
+                                      switch event {
+                                      case let .didReceive(notification, details):
+                                          guard details == .appOpened else { return }
+                                          if let urlString = notification["webviewUrl"] as? String,
+                                             let url = URL(string: urlString) {
+                                              print("📱 Deep link received: \(url)")
+                                          }
+                                      default:
+                                          break
+                                      }
+                                  }))
     }
     
     var body: some Scene {
@@ -71,6 +67,11 @@ struct playgroundApp: App {
             ContentView()
                 .modelContainer(modelContainer)
                 .environment(sdk) // Use direct environment like example app
+                .environment(\.isSubscribed, sdk.isSubscribed) // Inject subscription status
+                .onChange(of: sdk.isSubscribed) { oldValue, newValue in
+                    // Subscription status changed - environment will update automatically
+                    print("📱 Subscription status changed: \(newValue)")
+                }
         }
     }
 }

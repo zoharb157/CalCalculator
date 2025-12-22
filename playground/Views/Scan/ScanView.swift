@@ -7,10 +7,16 @@
 
 import SwiftUI
 import PhotosUI
+import SDK
 
 struct ScanView: View {
     @Bindable var viewModel: ScanViewModel
     @State private var selectedItem: PhotosPickerItem?
+    
+    @Environment(\.isSubscribed) private var isSubscribed
+    @Environment(TheSDK.self) private var sdk
+    
+    @State private var showPaywall = false
     
     /// Callback when meal is saved successfully
     var onMealSaved: (() -> Void)?
@@ -20,23 +26,29 @@ struct ScanView: View {
     
     var body: some View {
         NavigationStack {
-            mainContent
-                .navigationTitle("Scan Meal")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        if onDismiss != nil {
-                            Button {
-                                onDismiss?()
-                            } label: {
-                                Image(systemName: "xmark")
-                                    .font(.body)
-                                    .fontWeight(.medium)
-                                    .foregroundStyle(.secondary)
-                            }
+            ZStack {
+                mainContent
+                
+                if !isSubscribed {
+                    LockedFeatureOverlay(message: "Upgrade to Premium to scan meals")
+                }
+            }
+            .navigationTitle("Scan Meal")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    if onDismiss != nil {
+                        Button {
+                            onDismiss?()
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.body)
+                                .fontWeight(.medium)
+                                .foregroundStyle(.secondary)
                         }
                     }
                 }
+            }
                 .sheet(isPresented: $viewModel.showingCamera) {
                     cameraSheet
                 }
@@ -55,6 +67,15 @@ struct ScanView: View {
                     errorAlertActions
                 } message: {
                     errorAlertMessage
+                }
+                .fullScreenCover(isPresented: $showPaywall) {
+                    SDKView(
+                        model: sdk,
+                        page: .splash,
+                        show: $showPaywall,
+                        backgroundColor: .white,
+                        ignoreSafeArea: true
+                    )
                 }
         }
     }
@@ -165,6 +186,10 @@ struct ScanView: View {
     }
     
     private func analyzeImage() {
+        guard isSubscribed else {
+            showPaywall = true
+            return
+        }
         guard let image = viewModel.selectedImage else { return }
         Task {
             await viewModel.analyzeImage(image)
