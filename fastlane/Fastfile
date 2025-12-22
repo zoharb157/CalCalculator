@@ -70,19 +70,52 @@ platform :ios do
   #
   desc "Build and archive the app"
   lane :_build_app_for_testflight do
-    build_app(
-      workspace: nil,
-      project: PROJECT,
-      scheme: SCHEME,
-      configuration: "Release",
-      export_method: "app-store",
-      export_options: {
-        method: "app-store",
-        teamID: TEAM_ID,
-        signingStyle: "automatic"
-      },
-      xcargs: "-allowProvisioningUpdates"
+    # Use xcodebuild directly to avoid Fastlane's dependency resolution
+    # which fails with newer Xcode project format
+    UI.important("Building app for TestFlight...")
+    
+    # Build and archive using xcodebuild directly
+    archive_path = "./build/playground.xcarchive"
+    
+    sh("xcodebuild",
+       "archive",
+       "-project", PROJECT,
+       "-scheme", SCHEME,
+       "-configuration", "Release",
+       "-archivePath", archive_path,
+       "-sdk", "iphoneos",
+       "CODE_SIGN_IDENTITY=",
+       "CODE_SIGNING_REQUIRED=YES",
+       "CODE_SIGN_STYLE=Automatic",
+       "DEVELOPMENT_TEAM=#{TEAM_ID}",
+       "PROVISIONING_PROFILE_SPECIFIER=",
+       "-allowProvisioningUpdates"
     )
+    
+    # Export IPA
+    export_path = "./build"
+    sh("xcodebuild",
+       "-exportArchive",
+       "-archivePath", archive_path,
+       "-exportPath", export_path,
+       "-exportOptionsPlist", "/dev/stdin",
+       input: <<~PLIST
+         <?xml version="1.0" encoding="UTF-8"?>
+         <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+         <plist version="1.0">
+         <dict>
+           <key>method</key>
+           <string>app-store</string>
+           <key>teamID</key>
+           <string>#{TEAM_ID}</string>
+           <key>signingStyle</key>
+           <string>automatic</string>
+         </dict>
+         </plist>
+       PLIST
+    )
+    
+    UI.success("✅ App built and archived successfully")
   end
 
   #
