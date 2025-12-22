@@ -70,16 +70,11 @@ struct MainTabView: View {
                 }
                 .tag(1)
             
-            SettingsView(viewModel: settingsViewModel, onDataDeleted: {
-                Task {
-                    await homeViewModel.loadData()
-                    await historyViewModel.loadData()
+            ProfileView()
+                .tabItem {
+                    Label("Profile", systemImage: "person.fill")
                 }
-            })
-            .tabItem {
-                Label("Settings", systemImage: "gearshape.fill")
-            }
-            .tag(2)
+                .tag(2)
         }
     }
 }

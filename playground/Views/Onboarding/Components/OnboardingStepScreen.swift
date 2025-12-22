@@ -28,35 +28,8 @@ struct OnboardingStepScreen: View {
     }
 
     var canContinue: Bool {
-        switch step.type {
-        case .info:
-            return true
-
-        case .permission:
-            // permission screens handle their own buttons; allow continue if already answered
-            return store.isNonEmpty(store.stepAnswer(stepID: step.id))
-
-        case .question:
-            if step.optional == true { return true }
-            return store.isNonEmpty(store.stepAnswer(stepID: step.id))
-
-        case .form:
-            guard let fields = step.fields else { return true }
-            for f in fields {
-                let required = f.required ?? true
-                guard required else { continue }
-
-                // measurement field stored as object with "value"
-                if f.input.type == .number, (f.input.unitOptions?.isEmpty == false) {
-                    let val = store.measurementValueAnswer(stepID: step.id, fieldID: f.id)
-                    if !store.isNonEmpty(val) { return false }
-                } else {
-                    let ans = store.formField(stepID: step.id, fieldID: f.id)
-                    if !store.isNonEmpty(ans) { return false }
-                }
-            }
-            return true
-        }
+        // Always allow continue - don't require values to be set
+        return true
     }
 
     var body: some View {
