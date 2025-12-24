@@ -36,6 +36,15 @@ enum CaptureMode: String, CaseIterable {
         case .document: return "Capture menu or receipt"
         }
     }
+    
+    /// Convert to API ScanMode
+    func toScanMode() -> ScanMode {
+        switch self {
+        case .barcode: return .barcode
+        case .photo: return .food
+        case .document: return .label
+        }
+    }
 }
 
 // MARK: - Capture Result

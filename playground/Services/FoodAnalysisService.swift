@@ -19,12 +19,20 @@ enum APIConfiguration {
 }
 
 protocol FoodAnalysisServiceProtocol {
-    func analyzeFood(image: UIImage, foodHint: String?) async throws -> FoodAnalysisResult
+    func analyzeFood(image: UIImage, mode: ScanMode, foodHint: String?) async throws -> FoodAnalysisResult
 }
 
 extension FoodAnalysisServiceProtocol {
+    func analyzeFood(image: UIImage, mode: ScanMode = .food) async throws -> FoodAnalysisResult {
+        try await analyzeFood(image: image, mode: mode, foodHint: nil)
+    }
+    
+    func analyzeFood(image: UIImage, foodHint: String?) async throws -> FoodAnalysisResult {
+        try await analyzeFood(image: image, mode: .food, foodHint: foodHint)
+    }
+    
     func analyzeFood(image: UIImage) async throws -> FoodAnalysisResult {
-        try await analyzeFood(image: image, foodHint: nil)
+        try await analyzeFood(image: image, mode: .food, foodHint: nil)
     }
 }
 
@@ -45,6 +53,7 @@ final class CaloriesAPIService: FoodAnalysisServiceProtocol {
 
     func analyzeFood(
         image: UIImage,
+        mode: ScanMode = .food,
         foodHint: String? = nil
     ) async throws -> FoodAnalysisResult {
         let (userId, token) = try getCredentials()
@@ -53,6 +62,7 @@ final class CaloriesAPIService: FoodAnalysisServiceProtocol {
             base64Image: base64Image,
             userId: userId,
             token: token,
+            mode: mode,
             foodHint: foodHint
         )
 
@@ -92,6 +102,7 @@ final class CaloriesAPIService: FoodAnalysisServiceProtocol {
         base64Image: String,
         userId: String,
         token: String,
+        mode: ScanMode = .food,
         foodHint: String? = nil
     ) throws -> URLRequest {
         var urlComponents = URLComponents(
@@ -108,7 +119,12 @@ final class CaloriesAPIService: FoodAnalysisServiceProtocol {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.timeoutInterval = APIConfiguration.requestTimeoutInterval
 
-        let requestBody = AnalyzeRequest(image: base64Image, userId: userId, foodHint: foodHint)
+        let requestBody = AnalyzeRequest(
+            image: base64Image,
+            userId: userId,
+            mode: mode,
+            foodHint: foodHint
+        )
         request.httpBody = try encoder.encode(requestBody)
 
         return request
@@ -199,10 +215,16 @@ final class CaloriesAPIService: FoodAnalysisServiceProtocol {
         return FoodAnalysisResult(
             foodDetected: analysis.foodDetected,
             mealName: analysis.foodName,
+            brand: analysis.brand,
             totalCalories: analysis.totalCalories,
             confidence: confidenceLevel,
             breakdown: analysis.breakdown,
+            servingSize: analysis.servingSize,
             items: resultItems,
+            source: analysis.source,
+            barcode: analysis.barcode,
+            ingredients: analysis.ingredients,
+            labelType: analysis.labelType,
             notes: analysis.notes
         )
     }

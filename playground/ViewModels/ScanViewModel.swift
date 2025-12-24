@@ -115,7 +115,7 @@ final class ScanViewModel {
 
     // MARK: - Meal Analysis
 
-    func analyzeImage(_ image: UIImage, foodHint: String? = nil) async {
+    func analyzeImage(_ image: UIImage, mode: ScanMode = .food, foodHint: String? = nil) async {
         isAnalyzing = true
         analysisProgress = 0
         showingNoFoodDetected = false
@@ -134,7 +134,7 @@ final class ScanViewModel {
         }
 
         do {
-            let response = try await analysisService.analyzeFood(image: image, foodHint: foodHint)
+            let response = try await analysisService.analyzeFood(image: image, mode: mode, foodHint: foodHint)
             progressTask.cancel()
             analysisProgress = 1.0
 
@@ -194,7 +194,9 @@ final class ScanViewModel {
         showingResults = false
         pendingMeal = nil
 
-        await analyzeImage(image, foodHint: foodHint)
+        // Use the last capture mode to determine the scan mode
+        let mode = lastCaptureMode.toScanMode()
+        await analyzeImage(image, mode: mode, foodHint: foodHint)
     }
 
     // MARK: - Meal Management
@@ -238,8 +240,9 @@ final class ScanViewModel {
         guard let image = selectedImage else { return }
         showingNoFoodDetected = false
         noFoodDetectedMessage = nil
+        let mode = lastCaptureMode.toScanMode()
         Task {
-            await analyzeImage(image)
+            await analyzeImage(image, mode: mode)
         }
     }
     
@@ -254,7 +257,7 @@ final class ScanViewModel {
         case .image(let image):
             lastCaptureMode = .photo
             selectedImage = image
-            await analyzeImage(image, foodHint: hint)
+            await analyzeImage(image, mode: .food, foodHint: hint)
             
         case .barcode(let barcodeValue, let previewImage):
             lastCaptureMode = .barcode
@@ -265,7 +268,7 @@ final class ScanViewModel {
             // For barcodes, use the barcode value as food hint to help API identify the product
             let barcodeHint = buildBarcodeHint(barcode: barcodeValue, userHint: hint)
             if let image = previewImage {
-                await analyzeImage(image, foodHint: barcodeHint)
+                await analyzeImage(image, mode: .barcode, foodHint: barcodeHint)
             } else {
                 // If no preview image, show error - we need an image for the API
                 error = .imageSelectionFailed
@@ -276,9 +279,9 @@ final class ScanViewModel {
         case .document(let image):
             lastCaptureMode = .document
             selectedImage = image
-            // For documents, the hint helps clarify what's in the menu/receipt
+            // For documents (menus, labels), use the label mode
             let documentHint = buildDocumentHint(userHint: hint)
-            await analyzeImage(image, foodHint: documentHint)
+            await analyzeImage(image, mode: .label, foodHint: documentHint)
             
         case .cancelled:
             // User cancelled, do nothing
