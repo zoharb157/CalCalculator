@@ -83,6 +83,49 @@ final class MealRepository {
         return try context.fetch(descriptor)
     }
     
+    // MARK: - Exercise Operations
+    
+    func fetchTodaysExercises() throws -> [Exercise] {
+        let calendar = Calendar.current
+        let today = Date()
+        let startOfDay = calendar.startOfDay(for: today)
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+        
+        let descriptor = FetchDescriptor<Exercise>(
+            predicate: #Predicate<Exercise> { exercise in
+                exercise.date >= startOfDay && exercise.date < endOfDay
+            },
+            sortBy: [SortDescriptor(\.date, order: .reverse)]
+        )
+        
+        return try context.fetch(descriptor)
+    }
+    
+    func fetchExercises(for date: Date) throws -> [Exercise] {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+        
+        let descriptor = FetchDescriptor<Exercise>(
+            predicate: #Predicate<Exercise> { exercise in
+                exercise.date >= startOfDay && exercise.date < endOfDay
+            },
+            sortBy: [SortDescriptor(\.date, order: .reverse)]
+        )
+        
+        return try context.fetch(descriptor)
+    }
+    
+    func saveExercise(_ exercise: Exercise) throws {
+        context.insert(exercise)
+        try context.save()
+    }
+    
+    func deleteExercise(_ exercise: Exercise) throws {
+        context.delete(exercise)
+        try context.save()
+    }
+    
     // MARK: - Day Summary Operations
     
     func fetchDaySummary(for date: Date) throws -> DaySummary? {

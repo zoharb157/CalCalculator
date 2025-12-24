@@ -8,7 +8,6 @@
 import Foundation
 import SwiftData
 
-/// Represents a single weight entry for tracking progress
 @Model
 final class WeightEntry {
     var id: UUID

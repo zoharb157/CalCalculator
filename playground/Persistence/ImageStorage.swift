@@ -8,20 +8,27 @@
 import Foundation
 import UIKit
 
-/// Manages local storage of meal images
+/// Manages local storage of meal images and profile photos
 final class ImageStorage: @unchecked Sendable {
     static let shared = ImageStorage()
     
     private let fileManager = FileManager.default
     private let imageDirectory: URL
+    private let profileImageDirectory: URL
+    
+    private static let profilePhotoFilename = "profile_photo.jpg"
     
     private init() {
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
         imageDirectory = documentsDirectory.appendingPathComponent("MealImages", isDirectory: true)
+        profileImageDirectory = documentsDirectory.appendingPathComponent("ProfileImages", isDirectory: true)
         
-        // Create directory if needed
+        // Create directories if needed
         if !fileManager.fileExists(atPath: imageDirectory.path) {
             try? fileManager.createDirectory(at: imageDirectory, withIntermediateDirectories: true)
+        }
+        if !fileManager.fileExists(atPath: profileImageDirectory.path) {
+            try? fileManager.createDirectory(at: profileImageDirectory, withIntermediateDirectories: true)
         }
     }
     
@@ -64,6 +71,41 @@ final class ImageStorage: @unchecked Sendable {
         for url in contents {
             try fileManager.removeItem(at: url)
         }
+    }
+    
+    // MARK: - Profile Photo
+    
+    /// Saves profile photo and returns success status
+    func saveProfilePhoto(_ image: UIImage) throws -> URL {
+        guard let data = image.jpegData(compressionQuality: 0.8) else {
+            throw ImageStorageError.compressionFailed
+        }
+        
+        let fileURL = profileImageDirectory.appendingPathComponent(ImageStorage.profilePhotoFilename)
+        
+        // Delete existing photo if any
+        try? fileManager.removeItem(at: fileURL)
+        
+        try data.write(to: fileURL)
+        return fileURL
+    }
+    
+    /// Loads the profile photo
+    func loadProfilePhoto() -> UIImage? {
+        let fileURL = profileImageDirectory.appendingPathComponent(ImageStorage.profilePhotoFilename)
+        return UIImage(contentsOfFile: fileURL.path)
+    }
+    
+    /// Deletes the profile photo
+    func deleteProfilePhoto() {
+        let fileURL = profileImageDirectory.appendingPathComponent(ImageStorage.profilePhotoFilename)
+        try? fileManager.removeItem(at: fileURL)
+    }
+    
+    /// Check if profile photo exists
+    var hasProfilePhoto: Bool {
+        let fileURL = profileImageDirectory.appendingPathComponent(ImageStorage.profilePhotoFilename)
+        return fileManager.fileExists(atPath: fileURL.path)
     }
 }
 

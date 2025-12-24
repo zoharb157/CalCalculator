@@ -82,18 +82,12 @@ struct MainTabView: View {
                     Label("History", systemImage: "calendar")
                 }
                 .tag(2)
-            
-            SettingsView(viewModel: settingsViewModel, onDataDeleted: {
-                Task {
-                    await homeViewModel.loadData()
-                    await historyViewModel.loadData()
-                    await progressViewModel.loadData()
+
+            ProfileView()
+                .tabItem {
+                    Label("Profile", systemImage: "person.fill")
                 }
-            })
-            .tabItem {
-                Label("Settings", systemImage: "gearshape.fill")
-            }
-            .tag(3)
+                .tag(3)
         }
     }
 }

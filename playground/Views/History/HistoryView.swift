@@ -12,14 +12,72 @@ struct HistoryView: View {
     let repository: MealRepository
     
     @State private var selectedDate: SelectedDate?
+    @State private var searchText: String = ""
+    @State private var selectedTimeFilter: HistoryTimeFilter = .all
+    @State private var showingFilterSheet = false
+    
+    private var filteredSummaries: [DaySummary] {
+        var summaries = viewModel.allDaySummaries
+        
+        // Apply time filter
+        if selectedTimeFilter != .all {
+            let cutoffDate = selectedTimeFilter.startDate
+            summaries = summaries.filter { $0.date >= cutoffDate }
+        }
+        
+        // Apply search filter (search by date or meal count range)
+        if !searchText.isEmpty {
+            let lowercasedSearch = searchText.lowercased()
+            summaries = summaries.filter { summary in
+                // Search by formatted date
+                let formatter = DateFormatter()
+                formatter.dateStyle = .medium
+                let dateString = formatter.string(from: summary.date).lowercased()
+                
+                // Also check day name
+                formatter.dateFormat = "EEEE"
+                let dayName = formatter.string(from: summary.date).lowercased()
+                
+                // Check month name
+                formatter.dateFormat = "MMMM"
+                let monthName = formatter.string(from: summary.date).lowercased()
+                
+                return dateString.contains(lowercasedSearch) ||
+                       dayName.contains(lowercasedSearch) ||
+                       monthName.contains(lowercasedSearch)
+            }
+        }
+        
+        return summaries
+    }
+    
+    // Stats for the filtered data
+    private var totalCalories: Int {
+        filteredSummaries.reduce(0) { $0 + $1.totalCalories }
+    }
+    
+    private var totalMeals: Int {
+        filteredSummaries.reduce(0) { $0 + $1.mealCount }
+    }
+    
+    private var averageCalories: Int {
+        guard !filteredSummaries.isEmpty else { return 0 }
+        return totalCalories / filteredSummaries.count
+    }
     
     var body: some View {
         NavigationStack {
             content
                 .navigationTitle("History")
                 .background(Color(.systemGroupedBackground))
+                .searchable(text: $searchText, prompt: "Search by date, day, or month")
                 .refreshable {
                     await viewModel.loadData()
+                }
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        filterMenuButton
+                    }
                 }
                 .fullScreenCover(item: $selectedDate) { selected in
                     MealsListSheet(
@@ -36,12 +94,42 @@ struct HistoryView: View {
         }
     }
     
+    private var filterMenuButton: some View {
+        Menu {
+            ForEach(HistoryTimeFilter.allCases, id: \.self) { filter in
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        selectedTimeFilter = filter
+                    }
+                    HapticManager.shared.impact(.light)
+                } label: {
+                    HStack {
+                        Text(filter.displayName)
+                        if selectedTimeFilter == filter {
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "line.3.horizontal.decrease.circle")
+                Text(selectedTimeFilter.shortName)
+                    .font(.caption)
+                    .fontWeight(.medium)
+            }
+            .foregroundColor(.blue)
+        }
+    }
+    
     // MARK: - Private Views
     
     @ViewBuilder
     private var content: some View {
         if viewModel.allDaySummaries.isEmpty {
             emptyStateView
+        } else if filteredSummaries.isEmpty {
+            noResultsView
         } else {
             historyList
         }
@@ -50,15 +138,30 @@ struct HistoryView: View {
     private var historyList: some View {
         ScrollView {
             LazyVStack(spacing: 16) {
-                ForEach(viewModel.allDaySummaries, id: \.id) { summary in
+                // Stats Summary Card
+                if !filteredSummaries.isEmpty {
+                    StatsSummaryCard(
+                        daysCount: filteredSummaries.count,
+                        totalMeals: totalMeals,
+                        totalCalories: totalCalories,
+                        averageCalories: averageCalories,
+                        timeFilter: selectedTimeFilter
+                    )
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+                
+                ForEach(filteredSummaries, id: \.id) { summary in
                     DaySummaryCard(summary: summary)
                         .onTapGesture {
+                            HapticManager.shared.impact(.light)
                             selectedDate = SelectedDate(date: summary.date)
                         }
+                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 }
             }
             .padding(.horizontal)
             .padding(.vertical, 8)
+            .animation(.easeInOut(duration: 0.2), value: filteredSummaries.count)
         }
     }
 
@@ -79,6 +182,177 @@ struct HistoryView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.systemGroupedBackground))
+    }
+    
+    private var noResultsView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 48))
+                .foregroundStyle(.secondary)
+            
+            Text("No Results")
+                .font(.title2)
+                .fontWeight(.semibold)
+            
+            if !searchText.isEmpty {
+                Text("No entries found for \"\(searchText)\"")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            } else {
+                Text("No entries found for the selected time period")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            
+            Button {
+                withAnimation {
+                    searchText = ""
+                    selectedTimeFilter = .all
+                }
+            } label: {
+                Text("Clear Filters")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+            }
+            .padding(.top, 8)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemGroupedBackground))
+    }
+}
+
+// MARK: - Time Filter Enum
+
+enum HistoryTimeFilter: String, CaseIterable {
+    case week = "1W"
+    case twoWeeks = "2W"
+    case month = "1M"
+    case threeMonths = "3M"
+    case sixMonths = "6M"
+    case year = "1Y"
+    case all = "All"
+    
+    var displayName: String {
+        switch self {
+        case .week: return "Last 7 Days"
+        case .twoWeeks: return "Last 2 Weeks"
+        case .month: return "Last Month"
+        case .threeMonths: return "Last 3 Months"
+        case .sixMonths: return "Last 6 Months"
+        case .year: return "Last Year"
+        case .all: return "All Time"
+        }
+    }
+    
+    var shortName: String {
+        return self.rawValue
+    }
+    
+    var startDate: Date {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        switch self {
+        case .week:
+            return calendar.date(byAdding: .day, value: -7, to: now) ?? now
+        case .twoWeeks:
+            return calendar.date(byAdding: .day, value: -14, to: now) ?? now
+        case .month:
+            return calendar.date(byAdding: .month, value: -1, to: now) ?? now
+        case .threeMonths:
+            return calendar.date(byAdding: .month, value: -3, to: now) ?? now
+        case .sixMonths:
+            return calendar.date(byAdding: .month, value: -6, to: now) ?? now
+        case .year:
+            return calendar.date(byAdding: .year, value: -1, to: now) ?? now
+        case .all:
+            return calendar.date(byAdding: .year, value: -100, to: now) ?? now
+        }
+    }
+}
+
+// MARK: - Stats Summary Card
+
+struct StatsSummaryCard: View {
+    let daysCount: Int
+    let totalMeals: Int
+    let totalCalories: Int
+    let averageCalories: Int
+    let timeFilter: HistoryTimeFilter
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Summary")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    
+                    Text(timeFilter.displayName)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chart.bar.fill")
+                    .font(.title2)
+                    .foregroundColor(.blue.opacity(0.7))
+            }
+            
+            Divider()
+            
+            HStack(spacing: 0) {
+                StatItem(value: "\(daysCount)", label: "Days", color: .blue)
+                
+                Divider()
+                    .frame(height: 40)
+                
+                StatItem(value: "\(totalMeals)", label: "Meals", color: .green)
+                
+                Divider()
+                    .frame(height: 40)
+                
+                StatItem(value: formatNumber(totalCalories), label: "Total Cal", color: .orange)
+                
+                Divider()
+                    .frame(height: 40)
+                
+                StatItem(value: formatNumber(averageCalories), label: "Avg/Day", color: .purple)
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+    }
+    
+    private func formatNumber(_ number: Int) -> String {
+        if number >= 10000 {
+            return String(format: "%.1fk", Double(number) / 1000)
+        }
+        return "\(number)"
+    }
+}
+
+struct StatItem: View {
+    let value: String
+    let label: String
+    let color: Color
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .foregroundColor(color)
+            
+            Text(label)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
     }
 }
 

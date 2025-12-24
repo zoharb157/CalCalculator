@@ -15,13 +15,14 @@ struct WeightProgressSheet: View {
     let onFilterChange: () -> Void
     
     @Environment(\.dismiss) private var dismiss
+    @State private var selectedPoint: WeightDataPoint?
     
     var displayWeights: [WeightDataPoint] {
         if useMetricUnits {
             return weightHistory
         } else {
             return weightHistory.map { point in
-                WeightDataPoint(date: point.date, weight: point.weight * 2.20462)
+                WeightDataPoint(date: point.date, weight: point.weight * 2.20462, note: point.note)
             }
         }
     }
@@ -44,6 +45,19 @@ struct WeightProgressSheet: View {
         return last - first
     }
     
+    var averageWeight: Double {
+        guard !displayWeights.isEmpty else { return 0 }
+        return displayWeights.map(\.weight).reduce(0, +) / Double(displayWeights.count)
+    }
+    
+    var lowestWeight: Double {
+        displayWeights.map(\.weight).min() ?? 0
+    }
+    
+    var highestWeight: Double {
+        displayWeights.map(\.weight).max() ?? 0
+    }
+    
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -53,6 +67,9 @@ struct WeightProgressSheet: View {
                     
                     // Summary Card
                     summaryCard
+                    
+                    // Stats Grid
+                    statsGrid
                     
                     // Chart
                     chartSection
@@ -79,24 +96,28 @@ struct WeightProgressSheet: View {
     // MARK: - Filter Section
     
     private var filterSection: some View {
-        HStack(spacing: 8) {
-            ForEach(TimeFilter.allCases) { filter in
-                Button {
-                    withAnimation {
-                        selectedFilter = filter
-                        onFilterChange()
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(TimeFilter.allCases) { filter in
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            selectedFilter = filter
+                            onFilterChange()
+                        }
+                        HapticManager.shared.impact(.light)
+                    } label: {
+                        Text(filter.rawValue)
+                            .font(.subheadline)
+                            .fontWeight(selectedFilter == filter ? .semibold : .regular)
+                            .foregroundColor(selectedFilter == filter ? .white : .primary)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(selectedFilter == filter ? Color.blue : Color(.secondarySystemGroupedBackground))
+                            .clipShape(Capsule())
                     }
-                } label: {
-                    Text(filter.rawValue)
-                        .font(.subheadline)
-                        .fontWeight(selectedFilter == filter ? .semibold : .regular)
-                        .foregroundColor(selectedFilter == filter ? .white : .primary)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(selectedFilter == filter ? Color.blue : Color(.secondarySystemGroupedBackground))
-                        .clipShape(Capsule())
                 }
             }
+            .padding(.horizontal, 4)
         }
     }
     
@@ -162,6 +183,44 @@ struct WeightProgressSheet: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
     
+    // MARK: - Stats Grid
+    
+    private var statsGrid: some View {
+        HStack(spacing: 12) {
+            StatCard(
+                title: "Average",
+                value: String(format: "%.1f", averageWeight),
+                unit: weightUnit,
+                icon: "chart.bar.fill",
+                color: .blue
+            )
+            
+            StatCard(
+                title: "Lowest",
+                value: String(format: "%.1f", lowestWeight),
+                unit: weightUnit,
+                icon: "arrow.down.circle.fill",
+                color: .green
+            )
+            
+            StatCard(
+                title: "Highest",
+                value: String(format: "%.1f", highestWeight),
+                unit: weightUnit,
+                icon: "arrow.up.circle.fill",
+                color: .orange
+            )
+            
+            StatCard(
+                title: "Entries",
+                value: "\(displayWeights.count)",
+                unit: nil,
+                icon: "list.bullet",
+                color: .purple
+            )
+        }
+    }
+    
     // MARK: - Chart Section
     
     @ViewBuilder
@@ -170,8 +229,16 @@ struct WeightProgressSheet: View {
             emptyChartView
         } else {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Weight Trend")
-                    .font(.headline)
+                HStack {
+                    Text("Weight Trend")
+                        .font(.headline)
+                    
+                    Spacer()
+                    
+                    Text(selectedFilter.displayName)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
                 
                 Chart(displayWeights) { point in
                     LineMark(
@@ -180,6 +247,7 @@ struct WeightProgressSheet: View {
                     )
                     .foregroundStyle(Color.blue.gradient)
                     .interpolationMethod(.catmullRom)
+                    .lineStyle(StrokeStyle(lineWidth: 3))
                     
                     AreaMark(
                         x: .value("Date", point.date),
@@ -198,8 +266,25 @@ struct WeightProgressSheet: View {
                         x: .value("Date", point.date),
                         y: .value("Weight", point.weight)
                     )
-                    .foregroundStyle(Color.blue)
-                    .symbolSize(30)
+                    .foregroundStyle(selectedPoint?.id == point.id ? Color.orange : Color.blue)
+                    .symbolSize(selectedPoint?.id == point.id ? 80 : 40)
+                    .annotation(position: .top, spacing: 8) {
+                        if selectedPoint?.id == point.id {
+                            VStack(spacing: 2) {
+                                Text(String(format: "%.1f %@", point.weight, weightUnit))
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                Text(point.dateString)
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color(.secondarySystemGroupedBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                        }
+                    }
                 }
                 .chartYScale(domain: minWeight...maxWeight)
                 .chartXAxis {
@@ -216,6 +301,32 @@ struct WeightProgressSheet: View {
                                 Text("\(Int(weight))")
                             }
                         }
+                    }
+                }
+                .chartOverlay { proxy in
+                    GeometryReader { geometry in
+                        Rectangle()
+                            .fill(Color.clear)
+                            .contentShape(Rectangle())
+                            .gesture(
+                                DragGesture(minimumDistance: 0)
+                                    .onChanged { value in
+                                        let xPosition = value.location.x
+                                        guard let date: Date = proxy.value(atX: xPosition) else { return }
+                                        
+                                        // Find closest point
+                                        if let closest = displayWeights.min(by: { abs($0.date.timeIntervalSince(date)) < abs($1.date.timeIntervalSince(date)) }) {
+                                            withAnimation(.easeInOut(duration: 0.1)) {
+                                                selectedPoint = closest
+                                            }
+                                        }
+                                    }
+                                    .onEnded { _ in
+                                        withAnimation(.easeInOut(duration: 0.2)) {
+                                            selectedPoint = nil
+                                        }
+                                    }
+                            )
                     }
                 }
                 .frame(height: 250)
@@ -249,8 +360,16 @@ struct WeightProgressSheet: View {
     
     private var weightListSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("History")
-                .font(.headline)
+            HStack {
+                Text("History")
+                    .font(.headline)
+                
+                Spacer()
+                
+                Text("\(displayWeights.count) entries")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
             
             if displayWeights.isEmpty {
                 Text("No entries yet")
@@ -260,24 +379,94 @@ struct WeightProgressSheet: View {
                     .padding()
             } else {
                 ForEach(displayWeights.reversed()) { point in
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(point.dateString)
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                        }
-                        
-                        Spacer()
-                        
-                        Text("\(String(format: "%.1f", point.weight)) \(weightUnit)")
-                            .font(.headline)
-                            .foregroundColor(.blue)
-                    }
-                    .padding()
-                    .background(Color(.tertiarySystemGroupedBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    WeightHistoryRow(point: point, unit: weightUnit)
                 }
             }
+        }
+    }
+}
+
+// MARK: - Stat Card
+
+private struct StatCard: View {
+    let title: String
+    let value: String
+    let unit: String?
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundColor(color)
+            
+            VStack(spacing: 2) {
+                Text(value)
+                    .font(.headline)
+                    .fontWeight(.bold)
+                
+                if let unit = unit {
+                    Text(unit)
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+                
+                Text(title)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+// MARK: - Weight History Row
+
+private struct WeightHistoryRow: View {
+    let point: WeightDataPoint
+    let unit: String
+    
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(formattedDate)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                
+                if let note = point.note, !note.isEmpty {
+                    Text(note)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
+            }
+            
+            Spacer()
+            
+            Text("\(String(format: "%.1f", point.weight)) \(unit)")
+                .font(.headline)
+                .foregroundColor(.blue)
+        }
+        .padding()
+        .background(Color(.tertiarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+    
+    private var formattedDate: String {
+        let calendar = Calendar.current
+        let formatter = DateFormatter()
+        
+        if calendar.isDateInToday(point.date) {
+            return "Today"
+        } else if calendar.isDateInYesterday(point.date) {
+            return "Yesterday"
+        } else {
+            formatter.dateFormat = "E, MMM d"
+            return formatter.string(from: point.date)
         }
     }
 }
@@ -285,9 +474,9 @@ struct WeightProgressSheet: View {
 #Preview {
     WeightProgressSheet(
         weightHistory: [
-            WeightDataPoint(date: Date().addingTimeInterval(-86400 * 30), weight: 80),
+            WeightDataPoint(date: Date().addingTimeInterval(-86400 * 30), weight: 80, note: "Started diet"),
             WeightDataPoint(date: Date().addingTimeInterval(-86400 * 20), weight: 78.5),
-            WeightDataPoint(date: Date().addingTimeInterval(-86400 * 10), weight: 77),
+            WeightDataPoint(date: Date().addingTimeInterval(-86400 * 10), weight: 77, note: "Feeling good!"),
             WeightDataPoint(date: Date(), weight: 75.5)
         ],
         selectedFilter: .constant(.threeMonths),

@@ -15,19 +15,21 @@ import UIKit
 
 @main
 struct playgroundApp: App {
+
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     let modelContainer: ModelContainer
+    @State private var appearanceMode: AppearanceMode
     @State var sdk: TheSDK
     @State private var subscriptionStatus: Bool = false
     
     init() {
-        // Initialize ModelContainer (fast, synchronous)
         do {
             let schema = Schema([
                 Meal.self,
                 MealItem.self,
                 DaySummary.self,
-                WeightEntry.self
+                WeightEntry.self,
+                Exercise.self
             ])
             
             // Ensure Application Support directory exists before SwiftData tries to create the store
@@ -48,26 +50,33 @@ struct playgroundApp: App {
             fatalError("Could not initialize ModelContainer: \(error)")
         }
         
+        _appearanceMode = State(initialValue: UserProfileRepository.shared.getAppearanceMode())
         sdk = .init(config: .init(baseURL: Config.baseURL,
                                   logOptions: .all,
                                   apnsHandler: { event in
-                                      switch event {
-                                      case let .didReceive(notification, details):
-                                          guard details == .appOpened else { return }
-                                          if let urlString = notification["webviewUrl"] as? String,
-                                             let url = URL(string: urlString) {
-                                              print("📱 Deep link received: \(url)")
-                                          }
-                                      default:
-                                          break
-                                      }
-                                  }))
+            switch event {
+            case let .didReceive(notification, details):
+                guard details == .appOpened else { return }
+                if let urlString = notification["webviewUrl"] as? String,
+                   let url = URL(string: urlString) {
+                    print("📱 Deep link received: \(url)")
+                }
+            default:
+                break
+            }
+        }))
     }
     
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .modelContainer(modelContainer)
+                .preferredColorScheme(appearanceMode.colorScheme)
+                .onReceive(NotificationCenter.default.publisher(for: .appearanceModeChanged)) { notification in
+                    if let mode = notification.object as? AppearanceMode {
+                        appearanceMode = mode
+                    }
+                }
                 .environment(sdk) // Use direct environment like example app
                 .environment(\.isSubscribed, subscriptionStatus) // Inject reactive subscription status
                 .task {
@@ -121,4 +130,9 @@ struct playgroundApp: App {
     }
 }
 
-// No custom environment key needed - using TheSDK directly as environment object
+// MARK: - Notification Names
+
+extension Notification.Name {
+    static let appearanceModeChanged = Notification.Name("appearanceModeChanged")
+    static let nutritionGoalsChanged = Notification.Name("nutritionGoalsChanged")
+}

@@ -12,6 +12,7 @@ struct TodaysProgressCard: View {
     let calorieGoal: Int
     let remainingCalories: Int
     let progress: Double
+    var goalAdjustment: String? = nil
     
     private var consumed: Int {
         summary?.totalCalories ?? 0
@@ -26,9 +27,19 @@ struct TodaysProgressCard: View {
                     .font(.system(size: 42, weight: .bold, design: .rounded))
                     .foregroundColor(.primary)
                 
-                Text("of \(calorieGoal) cal")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("of \(calorieGoal) cal")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
+                    // Goal adjustment indicator
+                    if let adjustment = goalAdjustment {
+                        Text(adjustment)
+                            .font(.caption2)
+                            .foregroundColor(.blue)
+                            .fontWeight(.medium)
+                    }
+                }
                 
                 // Remaining calories badge
                 HStack(spacing: 4) {

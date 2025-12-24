@@ -37,15 +37,21 @@ struct WeekDayItem: View {
             
             // Circular progress
             ZStack {
-                // Background circle
-                Circle()
-                    .stroke(Color.gray.opacity(0.2), lineWidth: 3)
-                
-                // Progress circle
-                Circle()
-                    .trim(from: 0, to: min(day.progress, 1.0))
-                    .stroke(day.progressColor, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
+                if day.isDotted {
+                    // Dotted background circle for days with no meals
+                    Circle()
+                        .strokeBorder(Color.gray, style: StrokeStyle(lineWidth: 3, dash: [4, 3]))
+                } else {
+                    // Background circle
+                    Circle()
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 3)
+                    
+                    // Progress circle
+                    Circle()
+                        .trim(from: 0, to: min(day.progress, 1.0))
+                        .stroke(day.progressColor, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                        .rotationEffect(.degrees(-90))
+                }
                 
                 // Day number
                 Text("\(day.dayNumber)")
@@ -72,6 +78,9 @@ struct WeekDayItem: View {
         
         let isToday = calendar.isDateInToday(date)
         let progress = Double(offset) / 7.0
+        let caloriesConsumed = Int(progress * 2000)
+        let calorieGoal = 1800
+        let hasMeals = offset != 1 // Day at offset 1 has no meals (for testing dotted ring)
         
         return WeekDay(
             date: date,
@@ -80,15 +89,18 @@ struct WeekDayItem: View {
             isToday: isToday,
             progress: progress,
             summary: DaySummary(
-                totalCalories: Int(progress * 2000),
+                totalCalories: caloriesConsumed,
                 totalProteinG: progress * 120,
                 totalCarbsG: progress * 200,
                 totalFatG: progress * 60,
-                mealCount: Int(progress * 4)
-            )
+                mealCount: hasMeals ? Int(progress * 4) : 0
+            ),
+            caloriesConsumed: caloriesConsumed,
+            calorieGoal: calorieGoal,
+            hasMeals: hasMeals
         )
     }
     
-    return WeekDaysHeader(weekDays: weekDays)
+    WeekDaysHeader(weekDays: weekDays)
         .padding()
 }

@@ -7,166 +7,40 @@
 
 import SwiftUI
 import SwiftData
-import MavenCommonSwiftUI
 import SDK
-
-// PaywallItem struct matching the example pattern
-struct PaywallItem: Equatable, Identifiable {
-    let page: SDK.Page
-    let callback: (() -> Void)?
-    
-    init(page: SDK.Page, callback: (() -> Void)? = nil) {
-        self.page = page
-        self.callback = callback
-    }
-    
-    static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.page == rhs.page
-    }
-    
-    var id: String {
-        page.id
-    }
-}
+import MavenCommonSwiftUI
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Environment(TheSDK.self) private var sdk // SDK is always available
+    @Environment(TheSDK.self) private var sdk
+    
     @State private var repository: MealRepository?
     @State private var authState: AuthState = .login
     @State private var onboardingResult: [String: Any] = [:]
     @State private var paywallItem: PaywallItem?
     @State private var hasCheckedSubscription = false
     
+    private var settings = UserSettings.shared
+    
+    struct PaywallItem: Identifiable {
+        let id = UUID()
+        let page: Page
+        var callback: (() -> Void)?
+    }
+    
     enum AuthState {
         case login
         case onboarding
         case goalsGeneration
         case signIn
-        case paywall
         case authenticated
     }
-
+    
     var body: some View {
         Group {
-            // Initialize repository immediately - it's fast
-            let currentRepository = repository ?? {
-                let repo = MealRepository(context: modelContext)
-                // Set it asynchronously to avoid modifying state during view render
-                Task { @MainActor in
-                    if repository == nil {
-                        repository = repo
-                    }
-                }
-                return repo
-            }()
-            
-            switch authState {
-            case .login:
-                LoginView(
-                    onGetStarted: {
-                        authState = .onboarding
-                    },
-                    onSignIn: {
-                        authState = .signIn
-                    }
-                )
-                
-            case .onboarding:
-                OnboardingFlowView(jsonFileName: "onboarding") { dict in
-                    // This is the final dictionary: [stepId: answer]
-                    onboardingResult = dict
-                    // Save onboarding data to UserSettings
-                    saveOnboardingData(dict)
-                    
-                    // Transition to goals generation
-                    withAnimation {
-                        authState = .goalsGeneration
-                    }
-
-                    // Example: convert to JSON for debugging/network
-                    if JSONSerialization.isValidJSONObject(dict),
-                       let data = try? JSONSerialization.data(withJSONObject: dict, options: [.prettyPrinted]),
-                       let json = String(data: data, encoding: .utf8) {
-                        print(json)
-                    }
-                    
-                    // Check subscription status before showing paywall
-                    // Match example app pattern exactly: use async let with delay
-                    Task {
-                        do {
-                            async let timewasteTask: () = Task.sleep(nanoseconds: 1_000_000_000) // 1 second like example app
-                            async let updateSubscriptionStateTask = sdk.updateIsSubscribed()
-                            
-                            let _ = try await (timewasteTask, updateSubscriptionStateTask)
-                            
-                            await MainActor.run {
-                                // Use sdk.isSubscribed after updateIsSubscribed completes (like example app uses self.isSubscribed)
-                                if !sdk.isSubscribed {
-                                    paywallItem = .init(page: .splash, callback: {
-                                        authState = .authenticated
-                                    })
-                                } else {
-                                    authState = .authenticated
-                                }
-                            }
-                        } catch {
-                            // If subscription check fails, proceed to app
-                            await MainActor.run {
-                                authState = .authenticated
-                            }
-                        }
-                    }
-                }
-                
-            case .goalsGeneration:
-                GoalsGenerationView(onboardingData: onboardingResult) {
-                    // Save user as authenticated
-                    AuthenticationManager.shared.setUserId(AuthenticationManager.shared.userId ?? "")
-                    
-                    withAnimation {
-                        authState = .authenticated
-                    }
-                }
-                
-            case .signIn:
-                // TODO: Implement sign in view
-                // For now, just authenticate directly
-                    Text("Sign In View")
-                        .task {
-                            guard !hasCheckedSubscription else { return }
-                            hasCheckedSubscription = true
-                            
-                            do {
-                                // Match example app pattern exactly: use async let with delay
-                                async let timewasteTask: () = Task.sleep(nanoseconds: 1_000_000_000) // 1 second like example app
-                                async let updateSubscriptionStateTask = sdk.updateIsSubscribed()
-                                
-                                let _ = try await (timewasteTask, updateSubscriptionStateTask)
-                                
-                                // Use sdk.isSubscribed after updateIsSubscribed completes (like example app uses self.isSubscribed)
-                                if !sdk.isSubscribed {
-                                    paywallItem = .init(page: .splash, callback: {
-                                        authState = .authenticated
-                                    })
-                                } else {
-                                    authState = .authenticated
-                                }
-                            } catch {
-                                // If subscription check fails, proceed to app
-                                authState = .authenticated
-                            }
-                        }
-                
-            case .paywall:
-                // Paywall is shown via fullScreenCover, this is just a placeholder
-                Color.clear
-                
-            case .authenticated:
-                if let repository = repository {
-                    MainTabView(repository: repository)
-                } else {
-                    // Repository not ready yet, but show login in the meantime
+            if let repository = repository {
+                switch authState {
+                case .login:
                     LoginView(
                         onGetStarted: {
                             authState = .onboarding
@@ -175,44 +49,119 @@ struct ContentView: View {
                             authState = .signIn
                         }
                     )
+                    
+                case .onboarding:
+                    OnboardingFlowView(jsonFileName: "onboarding") { dict in
+                        // This is the final dictionary: [stepId: answer]
+                        onboardingResult = dict
+                        // Save onboarding data to UserSettings
+                        saveOnboardingData(dict)
+                        
+                        // Mark onboarding as completed
+                        settings.completeOnboarding()
+                        
+                        // Save user as authenticated
+                        AuthenticationManager.shared.setUserId(AuthenticationManager.shared.userId ?? "")
+                        
+                        // Example: convert to JSON for debugging/network
+                        if JSONSerialization.isValidJSONObject(dict),
+                           let data = try? JSONSerialization.data(withJSONObject: dict, options: [.prettyPrinted]),
+                           let json = String(data: data, encoding: .utf8) {
+                            print(json)
+                        }
+                        
+                        // Check subscription status before showing paywall
+                        Task {
+                            do {
+                                async let timewasteTask: () = Task.sleep(nanoseconds: 1_000_000_000)
+                                async let updateSubscriptionStateTask = sdk.updateIsSubscribed()
+                                
+                                let _ = try await (timewasteTask, updateSubscriptionStateTask)
+                                
+                                await MainActor.run {
+                                    if !sdk.isSubscribed {
+                                        paywallItem = .init(page: .splash, callback: {
+                                            authState = .goalsGeneration
+                                        })
+                                    } else {
+                                        authState = .goalsGeneration
+                                    }
+                                }
+                            } catch {
+                                await MainActor.run {
+                                    authState = .goalsGeneration
+                                }
+                            }
+                        }
+                    }
+                    
+                case .goalsGeneration:
+                    GoalsGenerationView(onboardingData: onboardingResult) {
+                        // Save user as authenticated
+                        AuthenticationManager.shared.setUserId(AuthenticationManager.shared.userId ?? "")
+                        
+                        withAnimation {
+                            authState = .authenticated
+                        }
+                    }
+                    
+                case .signIn:
+                    // TODO: Implement sign in view
+                    Text("Sign In View")
+                        .task {
+                            guard !hasCheckedSubscription else { return }
+                            hasCheckedSubscription = true
+                            
+                            do {
+                                async let timewasteTask: () = Task.sleep(nanoseconds: 1_000_000_000)
+                                async let updateSubscriptionStateTask = sdk.updateIsSubscribed()
+                                
+                                let _ = try await (timewasteTask, updateSubscriptionStateTask)
+                                
+                                if !sdk.isSubscribed {
+                                    paywallItem = .init(page: .splash, callback: {
+                                        authState = .authenticated
+                                    })
+                                } else {
+                                    authState = .authenticated
+                                }
+                            } catch {
+                                authState = .authenticated
+                            }
+                        }
+                    
+                case .authenticated:
+                    MainTabView(repository: repository)
                 }
+            } else {
+                ProgressView("Loading...")
+                    .task {
+                        self.repository = MealRepository(context: modelContext)
+                        
+                        // Check if onboarding is already completed
+                        if settings.hasCompletedOnboarding {
+                            authState = .authenticated
+                        }
+                    }
             }
         }
-        .onAppear {
-            // Initialize repository on appear if not already done
-            if repository == nil {
-                repository = MealRepository(context: modelContext)
-            }
-        }
-        .fullScreenCover(item: $paywallItem) { page in
-            let show: Binding<Bool> = .init(
-                get: { true },
-                set: { _ in
-                    page.callback?()
-                    paywallItem = nil
-                }
-            )
-            
+        .fullScreenCover(item: $paywallItem) { item in
             SDKView(
                 model: sdk,
-                page: page.page,
-                show: show,
+                page: item.page,
+                show: Binding(
+                    get: { paywallItem != nil },
+                    set: { if !$0 { paywallItem = nil } }
+                ),
                 backgroundColor: .white,
                 ignoreSafeArea: true
             )
             .ignoresSafeArea()
-            .id(page.id)
-            .onAppear {
-                print("🌐 Loading paywall page: \(page.page)")
-                print("🌐 Base URL: \(Config.baseURL)")
-                // The SDK will construct the full URL from baseURL + page
-                // Check Xcode's Network tab to see the actual URL being loaded
-            }
-        }
-        .onChange(of: sdk.isSubscribed) { oldValue, newValue in
-            if newValue && paywallItem != nil {
-                paywallItem?.callback?()
-                paywallItem = nil
+            .onChange(of: sdk.isSubscribed) { oldValue, newValue in
+                if newValue && paywallItem != nil {
+                    paywallItem?.callback?()
+                    paywallItem = nil
+                }
             }
         }
     }
@@ -241,15 +190,12 @@ struct ContentView: View {
                    let unit = weightData["unit"] as? String {
                     // Convert to kg
                     let weightInKg = unit == "kg" ? weightValue : weightValue * 0.453592 // lbs to kg
-                    // Use updateWeight to set both weight and lastWeightDate
-                    // This prevents the prompt from showing immediately after onboarding
                     settings.updateWeight(weightInKg)
                 }
             }
         }
         
         // Extract desired weight from "desired_weight" step
-        // Structure: desired_weight -> Double (already in kg)
         if let desiredWeightValue = dict["desired_weight"] as? Double {
             settings.targetWeight = desiredWeightValue
         }

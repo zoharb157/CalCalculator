@@ -17,6 +17,7 @@ final class HealthKitManager {
     private var healthStore: HKHealthStore?
     
     var isAuthorized = false
+    var authorizationDenied = false
     var steps: Int = 0
     var activeCalories: Int = 0
     var exerciseMinutes: Int = 0
@@ -63,7 +64,55 @@ final class HealthKitManager {
         ]
         
         try await store.requestAuthorization(toShare: typesToWrite, read: typesToRead)
-        isAuthorized = true
+        
+        // Check actual authorization status for a key type (steps)
+        checkAuthorizationStatus()
+    }
+    
+    /// Check if we have authorization to read health data
+    func checkAuthorizationStatus() {
+        guard let store = healthStore else {
+            isAuthorized = false
+            authorizationDenied = true
+            return
+        }
+        
+        // Check authorization for step count as a representative type
+        let stepType = HKQuantityType(.stepCount)
+        let status = store.authorizationStatus(for: stepType)
+        
+        switch status {
+        case .sharingAuthorized:
+            isAuthorized = true
+            authorizationDenied = false
+        case .sharingDenied:
+            isAuthorized = false
+            authorizationDenied = true
+        case .notDetermined:
+            isAuthorized = false
+            authorizationDenied = false
+        @unknown default:
+            isAuthorized = false
+            authorizationDenied = false
+        }
+    }
+    
+    /// Check read authorization by attempting to fetch data
+    func verifyReadAccess() async {
+        guard healthStore != nil else {
+            isAuthorized = false
+            authorizationDenied = true
+            return
+        }
+        
+        // Try to fetch steps - if we get data or zero, we have access
+        // The only way to truly know is to check if query succeeds
+        let stepsValue = await fetchStepsValue()
+        let caloriesValue = await fetchActiveCaloriesValue()
+        
+        // If both are 0 and it's not early morning, likely no permission
+        // But we can't truly detect read denial, so we check write status
+        checkAuthorizationStatus()
     }
     
     // MARK: - Fetch Today's Data

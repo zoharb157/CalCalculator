@@ -1,0 +1,489 @@
+//
+//  WeightHistoryView.swift
+//
+//  Weight History screen with chart and entry management
+//
+
+import SwiftUI
+import SwiftData
+import Charts
+
+struct WeightHistoryView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \WeightEntry.date, order: .reverse) private var weightEntries: [WeightEntry]
+    
+    @State private var showingAddWeight = false
+    @State private var newWeight: Double = 150
+    @State private var newWeightNote: String = ""
+    @State private var selectedDate: Date = Date()
+    @State private var selectedTimeRange: TimeRange = .month
+    @State private var showingExportOptions = false
+    
+    private let repository = UserProfileRepository.shared
+    
+    enum TimeRange: String, CaseIterable {
+        case week = "1W"
+        case month = "1M"
+        case threeMonths = "3M"
+        case sixMonths = "6M"
+        case year = "1Y"
+        case all = "All"
+        
+        var days: Int? {
+            switch self {
+            case .week: return 7
+            case .month: return 30
+            case .threeMonths: return 90
+            case .sixMonths: return 180
+            case .year: return 365
+            case .all: return nil
+            }
+        }
+    }
+    
+    private var filteredEntries: [WeightEntry] {
+        guard let days = selectedTimeRange.days else {
+            return weightEntries
+        }
+        let cutoffDate = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+        return weightEntries.filter { $0.date >= cutoffDate }
+    }
+    
+    private var chartEntries: [WeightEntry] {
+        // Reverse to get chronological order for chart
+        Array(filteredEntries.reversed())
+    }
+    
+    var body: some View {
+        NavigationStack {
+            Group {
+                if weightEntries.isEmpty {
+                    emptyStateView
+                } else {
+                    weightListView
+                }
+            }
+            .navigationTitle("Weight History")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    HStack(spacing: 16) {
+                        if !weightEntries.isEmpty {
+                            Button {
+                                showingExportOptions = true
+                            } label: {
+                                Image(systemName: "square.and.arrow.up")
+                            }
+                        }
+                        Button {
+                            newWeight = repository.getCurrentWeight()
+                            newWeightNote = ""
+                            selectedDate = Date()
+                            showingAddWeight = true
+                        } label: {
+                            Image(systemName: "plus")
+                        }
+                    }
+                }
+            }
+            .sheet(isPresented: $showingAddWeight) {
+                addWeightSheet
+            }
+            .confirmationDialog("Export Weight Data", isPresented: $showingExportOptions) {
+                Button("Export as CSV") {
+                    exportWeightData()
+                }
+                Button("Cancel", role: .cancel) {}
+            }
+        }
+    }
+    
+    // MARK: - Empty State View
+    
+    private var emptyStateView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "scalemass")
+                .font(.system(size: 60))
+                .foregroundColor(.gray)
+            
+            Text("No weight entries yet")
+                .font(.headline)
+                .foregroundColor(.secondary)
+            
+            Text("Start tracking your weight to see your progress here")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+            
+            Button {
+                newWeight = repository.getCurrentWeight()
+                newWeightNote = ""
+                selectedDate = Date()
+                showingAddWeight = true
+            } label: {
+                HStack {
+                    Image(systemName: "plus.circle.fill")
+                    Text("Add First Entry")
+                }
+                .font(.headline)
+                .foregroundColor(.white)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .background(Color.blue)
+                .cornerRadius(12)
+            }
+            .padding(.top, 8)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    // MARK: - Weight List View
+    
+    private var weightListView: some View {
+        List {
+            // Chart Section
+            if chartEntries.count >= 2 {
+                Section {
+                    VStack(spacing: 12) {
+                        // Time Range Picker
+                        Picker("Time Range", selection: $selectedTimeRange) {
+                            ForEach(TimeRange.allCases, id: \.self) { range in
+                                Text(range.rawValue).tag(range)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        
+                        // Weight Chart
+                        weightChart
+                            .frame(height: 200)
+                    }
+                    .padding(.vertical, 8)
+                } header: {
+                    Text("Progress")
+                }
+            }
+            
+            // Summary Section
+            if let latestEntry = weightEntries.first,
+               let oldestEntry = weightEntries.last,
+               weightEntries.count > 1 {
+                Section {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Total Change")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            let change = latestEntry.weight - oldestEntry.weight
+                            let changeText = change >= 0 ? "+\(Int(change)) lbs" : "\(Int(change)) lbs"
+                            Text(changeText)
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(change <= 0 ? .green : .red)
+                        }
+                        
+                        Spacer()
+                        
+                        VStack(alignment: .center, spacing: 4) {
+                            Text("Average")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            let average = weightEntries.reduce(0) { $0 + $1.weight } / Double(weightEntries.count)
+                            Text("\(Int(average)) lbs")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                        }
+                        
+                        Spacer()
+                        
+                        VStack(alignment: .trailing, spacing: 4) {
+                            Text("Entries")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            Text("\(weightEntries.count)")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                        }
+                    }
+                    .padding(.vertical, 8)
+                }
+            }
+            
+            // Entries Section
+            Section {
+                ForEach(weightEntries) { entry in
+                    WeightEntryRow(entry: entry, previousEntry: getPreviousEntry(for: entry))
+                }
+                .onDelete(perform: deleteEntries)
+            } header: {
+                Text("All Entries")
+            }
+        }
+    }
+    
+    // MARK: - Weight Chart
+    
+    @ViewBuilder
+    private var weightChart: some View {
+        let minWeight = (chartEntries.map { $0.weight }.min() ?? 100) - 5
+        let maxWeight = (chartEntries.map { $0.weight }.max() ?? 200) + 5
+        
+        Chart(chartEntries) { entry in
+            LineMark(
+                x: .value("Date", entry.date),
+                y: .value("Weight", entry.weight)
+            )
+            .foregroundStyle(
+                LinearGradient(
+                    colors: [.blue, .purple],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
+            .interpolationMethod(.catmullRom)
+            
+            AreaMark(
+                x: .value("Date", entry.date),
+                y: .value("Weight", entry.weight)
+            )
+            .foregroundStyle(
+                LinearGradient(
+                    colors: [.blue.opacity(0.3), .purple.opacity(0.1), .clear],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+            .interpolationMethod(.catmullRom)
+            
+            PointMark(
+                x: .value("Date", entry.date),
+                y: .value("Weight", entry.weight)
+            )
+            .foregroundStyle(.blue)
+            .symbolSize(40)
+        }
+        .chartYScale(domain: minWeight...maxWeight)
+        .chartXAxis {
+            AxisMarks(values: .automatic(desiredCount: 5)) { value in
+                AxisGridLine()
+                AxisValueLabel(format: .dateTime.month(.abbreviated).day())
+            }
+        }
+        .chartYAxis {
+            AxisMarks(position: .leading, values: .automatic(desiredCount: 5)) { value in
+                AxisGridLine()
+                AxisValueLabel {
+                    if let weight = value.as(Double.self) {
+                        Text("\(Int(weight))")
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Add Weight Sheet
+    
+    private var addWeightSheet: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                // Weight Display
+                Text("\(Int(newWeight)) lbs")
+                    .font(.system(size: 56, weight: .bold))
+                
+                // Weight Slider
+                VStack(spacing: 8) {
+                    Slider(value: $newWeight, in: 80...400, step: 1)
+                        .padding(.horizontal, 32)
+                    
+                    HStack {
+                        Text("80 lbs")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text("400 lbs")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.horizontal, 32)
+                }
+                
+                // Date Picker
+                DatePicker(
+                    "Date",
+                    selection: $selectedDate,
+                    in: ...Date(),
+                    displayedComponents: .date
+                )
+                .datePickerStyle(.compact)
+                .padding(.horizontal, 32)
+                
+                // Note Field
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Note (optional)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    TextField("e.g., After workout", text: $newWeightNote)
+                        .textFieldStyle(.roundedBorder)
+                }
+                .padding(.horizontal, 32)
+                
+                Spacer()
+            }
+            .padding(.top, 40)
+            .navigationTitle("Log Weight")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        showingAddWeight = false
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        saveWeightEntry()
+                    }
+                    .fontWeight(.semibold)
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+    
+    // MARK: - Helper Functions
+    
+    private func saveWeightEntry() {
+        let entry = WeightEntry(
+            weight: newWeight,
+            date: selectedDate,
+            note: newWeightNote.isEmpty ? nil : newWeightNote
+        )
+        modelContext.insert(entry)
+        
+        // Update current weight in repository if this is today's entry
+        if Calendar.current.isDateInToday(selectedDate) {
+            repository.setCurrentWeight(newWeight)
+        }
+        
+        HapticManager.shared.notification(.success)
+        showingAddWeight = false
+    }
+    
+    private func deleteEntries(at offsets: IndexSet) {
+        for index in offsets {
+            modelContext.delete(weightEntries[index])
+        }
+        HapticManager.shared.notification(.success)
+    }
+    
+    private func getPreviousEntry(for entry: WeightEntry) -> WeightEntry? {
+        guard let currentIndex = weightEntries.firstIndex(where: { $0.id == entry.id }),
+              currentIndex + 1 < weightEntries.count else {
+            return nil
+        }
+        return weightEntries[currentIndex + 1]
+    }
+    
+    private func exportWeightData() {
+        var csvString = "Date,Weight (lbs),Note\n"
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        
+        for entry in weightEntries.reversed() {
+            let date = dateFormatter.string(from: entry.date)
+            let weight = String(format: "%.1f", entry.weight)
+            let note = entry.note?.replacingOccurrences(of: ",", with: ";") ?? ""
+            csvString += "\(date),\(weight),\(note)\n"
+        }
+        
+        let filename = "weight_history_\(dateFormatter.string(from: Date())).csv"
+        
+        if let data = csvString.data(using: .utf8) {
+            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+            do {
+                try data.write(to: tempURL)
+                let activityVC = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
+                
+                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                   let rootVC = windowScene.windows.first?.rootViewController {
+                    rootVC.present(activityVC, animated: true)
+                }
+                HapticManager.shared.notification(.success)
+            } catch {
+                print("Failed to export: \(error)")
+            }
+        }
+    }
+}
+
+// MARK: - Weight Entry Row
+
+struct WeightEntryRow: View {
+    let entry: WeightEntry
+    let previousEntry: WeightEntry?
+    
+    private var weightChange: Double? {
+        guard let previous = previousEntry else { return nil }
+        return entry.weight - previous.weight
+    }
+    
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    Text("\(Int(entry.weight)) lbs")
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                    
+                    // Show change from previous entry
+                    if let change = weightChange {
+                        HStack(spacing: 2) {
+                            Image(systemName: change > 0 ? "arrow.up" : change < 0 ? "arrow.down" : "minus")
+                                .font(.caption2)
+                            Text("\(abs(Int(change))) lbs")
+                                .font(.caption)
+                        }
+                        .foregroundColor(change < 0 ? .green : change > 0 ? .red : .secondary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(
+                            (change < 0 ? Color.green : change > 0 ? Color.red : Color.gray)
+                                .opacity(0.15)
+                        )
+                        .cornerRadius(4)
+                    }
+                }
+                
+                Text(entry.date.formatted(date: .long, time: .omitted))
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                if let note = entry.note, !note.isEmpty {
+                    Text(note)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .italic()
+                }
+            }
+            
+            Spacer()
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+#Preview {
+    WeightHistoryView()
+        .modelContainer(for: [WeightEntry.self], inMemory: true)
+}

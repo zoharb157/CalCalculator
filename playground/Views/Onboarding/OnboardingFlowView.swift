@@ -42,7 +42,19 @@ struct OnboardingFlowView: View {
                     onFinish: { finish() }
                 )
                 .animation(.default, value: currentIndex)
-                .task { loadIfNeeded() }
+                .task { 
+                    loadIfNeeded()
+                }
+                .onChange(of: currentIndex) { oldValue, newValue in
+                    if !steps.isEmpty && newValue < steps.count {
+                        loadValuesFromProfile(for: steps[newValue])
+                    }
+                }
+                .onAppear {
+                    if !steps.isEmpty {
+                        loadValuesFromProfile(for: step)
+                    }
+                }
             }
         }
     }
@@ -88,6 +100,91 @@ struct OnboardingFlowView: View {
     private func finish() {
         let dict = store.asAnyDictionary(jsonFriendly: true)
         onComplete(dict)
+    }
+    
+    private func loadValuesFromProfile(for step: OnboardingStep) {
+        let profile = UserProfile.shared
+        
+        switch step.id {
+        case "height_weight":
+            // Load height and weight from profile only if not already set
+            // Height: convert feet/inches to cm or ft
+            if let heightField = step.fields?.first(where: { $0.id == "height" }) {
+                // Only load if value doesn't exist
+                if store.measurementValueAnswer(stepID: step.id, fieldID: "height") == nil {
+                    let heightInInches = Double(profile.heightFeet * 12 + profile.heightInches)
+                    let heightInCm = heightInInches * 2.54
+                    let defaultUnit = heightField.input.defaultUnit ?? "cm"
+                    
+                    if defaultUnit == "cm" {
+                        store.setMeasurementValue(
+                            stepID: step.id,
+                            fieldID: "height",
+                            value: .double(heightInCm),
+                            fallbackUnit: defaultUnit
+                        )
+                    } else {
+                        // ft - store as feet with decimal for inches
+                        let feet = Double(profile.heightFeet) + Double(profile.heightInches) / 12.0
+                        store.setMeasurementValue(
+                            stepID: step.id,
+                            fieldID: "height",
+                            value: .double(feet),
+                            fallbackUnit: defaultUnit
+                        )
+                    }
+                }
+            }
+            
+            // Weight: convert lbs to kg or keep as lbs
+            if let weightField = step.fields?.first(where: { $0.id == "weight" }) {
+                // Only load if value doesn't exist
+                if store.measurementValueAnswer(stepID: step.id, fieldID: "weight") == nil {
+                    let defaultUnit = weightField.input.defaultUnit ?? "kg"
+                    
+                    if defaultUnit == "kg" {
+                        let weightInKg = profile.currentWeight * 0.453592
+                        store.setMeasurementValue(
+                            stepID: step.id,
+                            fieldID: "weight",
+                            value: .double(weightInKg),
+                            fallbackUnit: defaultUnit
+                        )
+                    } else {
+                        // lbs
+                        store.setMeasurementValue(
+                            stepID: step.id,
+                            fieldID: "weight",
+                            value: .double(profile.currentWeight),
+                            fallbackUnit: defaultUnit
+                        )
+                    }
+                }
+            }
+            
+        case "birthdate":
+            // Load date of birth only if not already set
+            if let birthdateField = step.fields?.first(where: { $0.id == "birthdate" }) {
+                if store.formField(stepID: step.id, fieldID: birthdateField.id) == nil {
+                    store.setFormField(
+                        stepID: step.id,
+                        fieldID: birthdateField.id,
+                        value: .date(profile.dateOfBirth)
+                    )
+                }
+            }
+            
+        default:
+            break
+        }
+    }
+}
+
+// MARK: - Preview
+
+#Preview {
+    OnboardingFlowView(jsonFileName: "onboarding") { result in
+        print("Onboarding completed: \(result)")
     }
 }
 

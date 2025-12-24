@@ -68,16 +68,21 @@ struct ProgressDashboardView: View {
                     }
                     
                     // HealthKit Data Section - Locked with blur + Premium button
-                    PremiumLockedContent {
-                        HealthDataSection(
-                            steps: viewModel.steps,
-                            activeCalories: viewModel.activeCalories,
-                            exerciseMinutes: viewModel.exerciseMinutes,
-                            heartRate: viewModel.heartRate,
-                            distance: viewModel.distance,
-                            sleepHours: viewModel.sleepHours,
-                            isSubscribed: true
-                        )
+                    // Show enable settings prompt if authorization denied
+                    if viewModel.healthKitAuthorizationDenied {
+                        HealthKitSettingsPromptCard()
+                    } else {
+                        PremiumLockedContent {
+                            HealthDataSection(
+                                steps: viewModel.steps,
+                                activeCalories: viewModel.activeCalories,
+                                exerciseMinutes: viewModel.exerciseMinutes,
+                                heartRate: viewModel.heartRate,
+                                distance: viewModel.distance,
+                                sleepHours: viewModel.sleepHours,
+                                isSubscribed: true
+                            )
+                        }
                     }
                 }
                 .padding()
@@ -98,6 +103,12 @@ struct ProgressDashboardView: View {
                         showWeightInput = true
                         viewModel.markWeightPromptShown()
                     }
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+                // Re-check HealthKit authorization when app comes back from settings
+                Task {
+                    await viewModel.loadHealthKitData()
                 }
             }
             .sheet(isPresented: $showWeightInput) {
@@ -587,6 +598,80 @@ struct HealthMetricCard: View {
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.03), radius: 5, x: 0, y: 2)
+    }
+}
+
+// MARK: - HealthKit Settings Prompt Card
+
+struct HealthKitSettingsPromptCard: View {
+    var body: some View {
+        VStack(spacing: 16) {
+            HStack(spacing: 16) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [.orange.opacity(0.2), .yellow.opacity(0.2)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 60, height: 60)
+                    
+                    Image(systemName: "heart.fill")
+                        .font(.title2)
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.red, .pink],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                }
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Health Access Required")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    
+                    Text("Enable Health access in Settings to view your activity data")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                }
+                
+                Spacer()
+            }
+            
+            Button {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            } label: {
+                HStack {
+                    Image(systemName: "gearshape.fill")
+                        .font(.subheadline)
+                    Text("Open Settings")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(
+                    LinearGradient(
+                        colors: [.orange, .yellow.opacity(0.8)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 4)
     }
 }
 
