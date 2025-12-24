@@ -43,7 +43,7 @@ struct ScanView: View {
                         }
                     }
                 }
-                .sheet(isPresented: $viewModel.showingCamera) {
+                .fullScreenCover(isPresented: $viewModel.showingCamera) {
                     cameraSheet
                 }
                 .photosPicker(
@@ -122,9 +122,20 @@ struct ScanView: View {
     }
     
     private var cameraSheet: some View {
-        CameraView { image in
-            // Allow taking photo - check subscription when analyzing/sending
-            viewModel.handleSelectedImage(image)
+        CustomCameraView { result, hint in
+            // Handle capture result from the custom camera
+            Task {
+                // Check subscription before analyzing
+                guard isSubscribed else {
+                    // If cancelled, just return
+                    if case .cancelled = result {
+                        return
+                    }
+                    showPaywall = true
+                    return
+                }
+                await viewModel.handleCaptureResult(result, hint: hint)
+            }
         }
     }
     

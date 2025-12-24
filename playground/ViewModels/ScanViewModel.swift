@@ -30,6 +30,10 @@ final class ScanViewModel {
     var pendingMeal: Meal?
     var pendingImage: UIImage?
     var showingResults = false
+    
+    // MARK: - Barcode State
+    var scannedBarcode: String?
+    var lastCaptureMode: CaptureMode = .photo
 
     // MARK: - No Food Detected State
     var showingNoFoodDetected = false
@@ -237,6 +241,69 @@ final class ScanViewModel {
         Task {
             await analyzeImage(image)
         }
+    }
+    
+    // MARK: - Capture Result Handling
+    
+    /// Handle the result from CustomCameraView
+    /// - Parameters:
+    ///   - result: The capture result (image, barcode, document, or cancelled)
+    ///   - hint: Optional food hint/description provided by the user
+    func handleCaptureResult(_ result: CaptureResult, hint: String?) async {
+        switch result {
+        case .image(let image):
+            lastCaptureMode = .photo
+            selectedImage = image
+            await analyzeImage(image, foodHint: hint)
+            
+        case .barcode(let barcodeValue, let previewImage):
+            lastCaptureMode = .barcode
+            scannedBarcode = barcodeValue
+            if let image = previewImage {
+                selectedImage = image
+            }
+            // For barcodes, use the barcode value as food hint to help API identify the product
+            let barcodeHint = buildBarcodeHint(barcode: barcodeValue, userHint: hint)
+            if let image = previewImage {
+                await analyzeImage(image, foodHint: barcodeHint)
+            } else {
+                // If no preview image, show error - we need an image for the API
+                error = .imageSelectionFailed
+                errorMessage = "Could not capture product image. Please try again."
+                showingError = true
+            }
+            
+        case .document(let image):
+            lastCaptureMode = .document
+            selectedImage = image
+            // For documents, the hint helps clarify what's in the menu/receipt
+            let documentHint = buildDocumentHint(userHint: hint)
+            await analyzeImage(image, foodHint: documentHint)
+            
+        case .cancelled:
+            // User cancelled, do nothing
+            break
+        }
+    }
+    
+    /// Build a food hint for barcode scanning
+    private func buildBarcodeHint(barcode: String, userHint: String?) -> String {
+        var hints: [String] = []
+        hints.append("Product barcode: \(barcode)")
+        if let userHint = userHint, !userHint.isEmpty {
+            hints.append("User description: \(userHint)")
+        }
+        return hints.joined(separator: ". ")
+    }
+    
+    /// Build a food hint for document capture
+    private func buildDocumentHint(userHint: String?) -> String {
+        var hints: [String] = []
+        hints.append("This is a photo of a menu, receipt, or food label")
+        if let userHint = userHint, !userHint.isEmpty {
+            hints.append("User notes: \(userHint)")
+        }
+        return hints.joined(separator: ". ")
     }
 
     // MARK: - Private Helpers
