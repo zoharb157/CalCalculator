@@ -120,7 +120,11 @@ jobs:
       - name: Install dependencies
         run: |
           # Resolve package dependencies with scheme (this validates the project)
-          xcodebuild -resolvePackageDependencies -project playground.xcodeproj -scheme playground || echo "Package resolution completed"
+          xcodebuild -resolvePackageDependencies -project CalCalculatorAiPlaygournd.xcodeproj -scheme CalCalculator || echo "Package resolution completed"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
       
       - name: Setup AWS CodeCommit credentials
         run: |
