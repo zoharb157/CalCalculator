@@ -187,3 +187,11 @@ struct OnboardingFlowView: View {
         print("Onboarding completed: \(result)")
     }
 }
+
+// MARK: - Preview
+
+#Preview {
+    OnboardingFlowView(jsonFileName: "onboarding") { result in
+        print("Onboarding completed: \(result)")
+    }
+}
