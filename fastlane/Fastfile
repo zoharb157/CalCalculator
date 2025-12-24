@@ -33,7 +33,7 @@ platform :ios do
   #
   desc "Deploy to TestFlight"
   lane :deploy_to_testflight do
-    _run_tests
+    run_unit_tests
     _bump_build
     _build_app_for_testflight
     _upload_build
@@ -43,7 +43,7 @@ platform :ios do
   # Run unit tests
   #
   desc "Run unit tests"
-  lane :_run_tests do
+  lane :run_unit_tests do
     # Configure AWS credentials for CodeCommit if available
     # This is needed even for scan because xcodebuild -showBuildSettings may resolve packages
     if ENV["AWS_ACCESS_KEY_ID"] && ENV["AWS_SECRET_ACCESS_KEY"]
@@ -202,7 +202,7 @@ platform :ios do
   #
   desc "Run tests only"
   lane :test do
-    _run_tests
+    run_unit_tests
   end
 end
 
