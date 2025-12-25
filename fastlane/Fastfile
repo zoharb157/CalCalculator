@@ -157,7 +157,10 @@ platform :ios do
       export_options: {
         method: "app-store",
         teamID: TEAM_ID,
-        signingStyle: "automatic"
+        signingStyle: "automatic",
+        provisioningProfiles: {
+          BUNDLE_IDENTIFIER => "match AppStore #{BUNDLE_IDENTIFIER}"
+        }
       },
       skip_package_dependencies_resolution: false, # Need to resolve packages to get dependencies
       xcargs: "-allowProvisioningUpdates -skipPackagePluginValidation"
