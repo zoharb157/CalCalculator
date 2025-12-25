@@ -266,6 +266,7 @@ platform :ios do
     
     # Use API key authentication - produce will use ENV variables we set above
     # Username is required by produce but API key will be used if ENV vars are set
+    # Application-specific password can be used to bypass 2FA
     produce(
       app_identifier: BUNDLE_IDENTIFIER,
       app_name: APP_NAME,
@@ -274,6 +275,7 @@ platform :ios do
       sku: BUNDLE_IDENTIFIER,
       team_id: TEAM_ID,
       username: ENV["FASTLANE_USER"] || "zoharb157@gmail.com"
+      # Note: If FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD is set, it will bypass 2FA
     )
     
     UI.success("✅ App '#{APP_NAME}' (#{BUNDLE_IDENTIFIER}) created in App Store Connect!")
