@@ -1,5 +1,5 @@
 # App identifier and Apple Developer Portal team details
-app_identifier("CalCalculatorAi") # The bundle identifier of your app
+app_identifier("CalCalculatorAiPlaygournd") # The bundle identifier of your app
 apple_id("") # Your Apple email address (optional, can be set via environment variable)
 
 itc_team_id("") # App Store Connect Team ID (optional, can be set via environment variable)

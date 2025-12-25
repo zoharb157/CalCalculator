@@ -282,7 +282,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = CalCalculatorAi;
+				PRODUCT_BUNDLE_IDENTIFIER = CalCalculatorAiPlaygournd;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL_APP_INTENTS_METADATA = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -322,7 +322,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = CalCalculatorAi;
+				PRODUCT_BUNDLE_IDENTIFIER = CalCalculatorAiPlaygournd;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL_APP_INTENTS_METADATA = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

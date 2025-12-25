@@ -8,7 +8,7 @@ platform :ios do
   PROJECT = "CalCalculatorAiPlaygournd.xcodeproj"
   SCHEME = "CalCalculator"
   APP_NAME = "CalCalculator"
-  BUNDLE_IDENTIFIER = "CalCalculatorAi"
+  BUNDLE_IDENTIFIER = "CalCalculatorAiPlaygournd"
   TEAM_ID = "5NS9ZUMYCS"
 
   # Helper method to get release notes from git commits
