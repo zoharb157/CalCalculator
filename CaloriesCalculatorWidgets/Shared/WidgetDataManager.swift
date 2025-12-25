@@ -18,6 +18,7 @@ final class WidgetDataManager: Sendable {
     private static let appGroupIdentifier = "group.com.calcalculator.shared"
     private static let macroDataKey = "widget.macroNutrients"
     private static let lastUpdatedKey = "widget.lastUpdated"
+    private static let isSubscribedKey = "widget.isSubscribed"
     
     // MARK: - Properties
     
@@ -86,6 +87,26 @@ final class WidgetDataManager: Sendable {
     func isDataFromToday() -> Bool {
         guard let lastUpdated = lastUpdated() else { return false }
         return Calendar.current.isDateInToday(lastUpdated)
+    }
+    
+    /// Loads subscription status from shared UserDefaults
+    /// Returns false by default if no data exists
+    func loadIsSubscribed() -> Bool {
+        guard let defaults = sharedDefaults else {
+            debugPrint("WidgetDataManager: Failed to access shared UserDefaults for subscription status")
+            return false
+        }
+        return defaults.bool(forKey: Self.isSubscribedKey)
+    }
+    
+    /// Saves subscription status to shared UserDefaults (called from main app)
+    func saveIsSubscribed(_ isSubscribed: Bool) {
+        guard let defaults = sharedDefaults else {
+            debugPrint("WidgetDataManager: Failed to access shared UserDefaults to save subscription status")
+            return
+        }
+        defaults.set(isSubscribed, forKey: Self.isSubscribedKey)
+        debugPrint("WidgetDataManager: Saved subscription status: \(isSubscribed)")
     }
 }
 

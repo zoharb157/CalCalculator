@@ -132,6 +132,48 @@ struct PersonalDetailsView: View {
                 saveProfilePhoto(image)
             }
         }
+        .onChange(of: isEditingName) { _, newValue in
+            if newValue {
+                tempFirstName = viewModel.firstName
+                tempLastName = viewModel.lastName
+            }
+        }
+        .onChange(of: isEditingWeight) { _, newValue in
+            if newValue {
+                tempWeight = viewModel.currentWeight
+            }
+        }
+        .onChange(of: isEditingGoalWeight) { _, newValue in
+            if newValue {
+                tempGoalWeight = viewModel.goalWeight
+            }
+        }
+        .onChange(of: isEditingHeight) { _, newValue in
+            if newValue {
+                tempHeightFeet = viewModel.heightFeet
+                tempHeightInches = viewModel.heightInches
+            }
+        }
+        .onChange(of: isEditingDateOfBirth) { _, newValue in
+            if newValue {
+                tempDateOfBirth = viewModel.dateOfBirth
+            }
+        }
+        .onChange(of: isEditingGender) { _, newValue in
+            if newValue {
+                tempGender = viewModel.gender
+            }
+        }
+        .onChange(of: isEditingStepGoal) { _, newValue in
+            if newValue {
+                tempStepGoal = viewModel.dailyStepGoal
+            }
+        }
+        .onChange(of: isEditingUsername) { _, newValue in
+            if newValue {
+                tempUsername = viewModel.username
+            }
+        }
     }
     
     // MARK: - Profile Header Section

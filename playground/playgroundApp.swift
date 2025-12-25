@@ -142,6 +142,7 @@ struct playgroundApp: App {
     }
     
     /// Update reactive subscription status based on debug override or SDK value
+    /// Also syncs the subscription status to the widget via shared UserDefaults
     private func updateSubscriptionStatus() {
         let settings = UserSettings.shared
         if settings.debugOverrideSubscription {
@@ -149,6 +150,26 @@ struct playgroundApp: App {
         } else {
             subscriptionStatus = sdk.isSubscribed
         }
+        
+        // Sync subscription status to widget via shared UserDefaults
+        syncSubscriptionStatusToWidget(subscriptionStatus)
+    }
+    
+    /// Syncs subscription status to the widget using App Groups shared UserDefaults
+    private func syncSubscriptionStatusToWidget(_ isSubscribed: Bool) {
+        let appGroupIdentifier = "group.com.calcalculator.shared"
+        let isSubscribedKey = "widget.isSubscribed"
+        
+        guard let sharedDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
+            print("⚠️ Failed to access shared UserDefaults for widget subscription sync")
+            return
+        }
+        
+        sharedDefaults.set(isSubscribed, forKey: isSubscribedKey)
+        print("📱 Widget subscription status synced: \(isSubscribed)")
+        
+        // Reload widget timelines to reflect the change
+        WidgetCenter.shared.reloadAllTimelines()
     }
 }
 
