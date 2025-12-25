@@ -152,20 +152,35 @@ platform :ios do
     # Build app - package dependencies will be resolved with Git credentials configured
     # Note: jwt-kit package has Swift 6 strict concurrency errors, but we can't control package build settings
     # The build may fail if jwt-kit errors are blocking. This is a known issue with jwt-kit v5.3.0
-    build_app(
-      workspace: nil,
-      project: PROJECT,
-      scheme: SCHEME,
-      configuration: "Release",
-      export_method: "app-store",
-      export_options: {
-        method: "app-store",
-        teamID: TEAM_ID,
-        signingStyle: "automatic"
-      },
-      skip_package_dependencies_resolution: false, # Need to resolve packages to get dependencies
-      xcargs: "-allowProvisioningUpdates -skipPackagePluginValidation SWIFT_STRICT_CONCURRENCY=off"
-    )
+    begin
+      build_app(
+        workspace: nil,
+        project: PROJECT,
+        scheme: SCHEME,
+        configuration: "Release",
+        export_method: "app-store",
+        export_options: {
+          method: "app-store",
+          teamID: TEAM_ID,
+          signingStyle: "automatic"
+        },
+        skip_package_dependencies_resolution: false, # Need to resolve packages to get dependencies
+        xcargs: "-allowProvisioningUpdates -skipPackagePluginValidation"
+      )
+    rescue => ex
+      if ex.message.include?("jwt-kit") || ex.message.include?("Sendable") || ex.message.include?("conformance to 'Sendable'")
+        UI.user_error!("❌ Build failed due to jwt-kit Swift 6 strict concurrency errors.\n\n" \
+          "This is a known issue with jwt-kit v5.3.0 and Xcode 16.2 (Swift 6).\n\n" \
+          "Possible solutions:\n" \
+          "1. Contact SDK/CommonSwiftUI maintainers to update jwt-kit to a Swift 6 compatible version\n" \
+          "2. Wait for jwt-kit to release a fix for Swift 6 compatibility\n" \
+          "3. Use an older Xcode version (not recommended)\n\n" \
+          "The errors are in the third-party jwt-kit package, not in your app code.\n" \
+          "Error: #{ex.message}")
+      else
+        raise ex
+      end
+    end
   end
 
   #
