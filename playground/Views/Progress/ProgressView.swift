@@ -28,7 +28,7 @@ struct ProgressDashboardView: View {
                         VStack(spacing: 20) {
                             // Current Weight Card
                             CurrentWeightCard(
-                                        weight: viewModel.displayWeight,
+                                weight: viewModel.displayWeight,
                                 unit: viewModel.weightUnit,
                                 daysUntilCheck: viewModel.daysUntilNextWeightCheck,
                                 isSubscribed: isSubscribed,
@@ -91,6 +91,7 @@ struct ProgressDashboardView: View {
                         }
                         .padding()
                     }
+                }
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Progress")
