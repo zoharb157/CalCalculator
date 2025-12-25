@@ -168,7 +168,8 @@ platform :ios do
         xcargs: "-allowProvisioningUpdates -skipPackagePluginValidation"
       )
     rescue => ex
-      if ex.message.include?("jwt-kit") || ex.message.include?("Sendable") || ex.message.include?("conformance to 'Sendable'")
+      error_msg = ex.message.to_s
+      if error_msg.include?("jwt-kit") || error_msg.include?("Sendable") || error_msg.include?("conformance to 'Sendable'")
         UI.user_error!("❌ Build failed due to jwt-kit Swift 6 strict concurrency errors.\n\n" \
           "This is a known issue with jwt-kit v5.3.0 and Xcode 16.2 (Swift 6).\n\n" \
           "Possible solutions:\n" \
@@ -176,7 +177,20 @@ platform :ios do
           "2. Wait for jwt-kit to release a fix for Swift 6 compatibility\n" \
           "3. Use an older Xcode version (not recommended)\n\n" \
           "The errors are in the third-party jwt-kit package, not in your app code.\n" \
-          "Error: #{ex.message}")
+          "Error: #{error_msg}")
+      elsif error_msg.include?("No profiles") || error_msg.include?("No Accounts") || error_msg.include?("provisioning profile")
+        UI.user_error!("❌ Build failed due to missing provisioning profiles.\n\n" \
+          "The bundle ID '#{BUNDLE_IDENTIFIER}' is not registered in the Apple Developer Portal.\n\n" \
+          "To fix:\n" \
+          "1. Go to https://developer.apple.com/account/resources/identifiers/list\n" \
+          "2. Click '+' to add a new App ID\n" \
+          "3. Enter '#{BUNDLE_IDENTIFIER}' as the Bundle ID\n" \
+          "4. Select 'App' as the type\n" \
+          "5. Enable any required capabilities (Push Notifications, etc.)\n" \
+          "6. Save and wait a few minutes for provisioning profiles to be generated\n\n" \
+          "Alternatively, you can use Fastlane's 'produce' action to create the app:\n" \
+          "  bundle exec fastlane create_app\n\n" \
+          "Error: #{error_msg}")
       else
         raise ex
       end
