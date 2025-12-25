@@ -1,0 +1,38 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test -project CalCalculatorAiPlaygournd.xcodeproj -scheme CalCalculator -destination "platform=iOS Simulator,id=94DF8015-81EF-463B-9D4D-18621F3869B1"
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  GoogleUtilities: https://github.com/google/GoogleUtilities.git @ 8.1.0
+  jwt-kit: https://github.com/vapor/jwt-kit.git @ 5.3.0
+  Promises: https://github.com/google/promises.git @ 2.4.0
+  AppCheck: https://github.com/google/app-check.git @ 11.2.0
+  GoogleAppMeasurement: https://github.com/google/GoogleAppMeasurement.git @ 12.5.0
+  ShipBookSDK: https://github.com/ShipBook/ShipBookSDK-iOS.git @ 1.2.4
+  KeychainAccess: https://github.com/kishikawakatsumi/KeychainAccess.git @ master (e0c7eeb)
+  GTMSessionFetcher: https://github.com/google/gtm-session-fetcher.git @ 5.0.0
+  nanopb: https://github.com/firebase/nanopb.git @ 2.30910.0
+  CommonSwiftUI: https://git-codecommit.us-east-1.amazonaws.com/v1/repos/CommonSwiftUI @ main (ddffcaa)
+  leveldb: https://github.com/firebase/leveldb.git @ 1.22.5
+  swift-crypto: https://github.com/apple/swift-crypto.git @ 4.2.0
+  swift-certificates: https://github.com/apple/swift-certificates.git @ 1.17.0
+  Firebase: https://github.com/firebase/firebase-ios-sdk.git @ 12.7.0
+  Facebook: https://github.com/facebook/facebook-ios-sdk @ 14.1.0
+  swift-log: https://github.com/apple/swift-log.git @ 1.8.0
+  SDK: https://git-codecommit.us-east-1.amazonaws.com/v1/repos/apps-sdk-V2 @ master (a737a8b)
+  abseil: https://github.com/google/abseil-cpp-binary.git @ 1.2024072200.0
+  InteropForGoogle: https://github.com/google/interop-ios-for-google-sdks.git @ 101.0.0
+  swift-asn1: https://github.com/apple/swift-asn1.git @ 1.5.1
+  SwiftProtobuf: https://github.com/apple/swift-protobuf.git @ 1.33.3
+  GoogleDataTransport: https://github.com/google/GoogleDataTransport.git @ 10.1.0
+  MavenCommonSwiftUI: https://git-codecommit.us-east-1.amazonaws.com/v1/repos/Ios-Bundle @ master (28af807)
+  gRPC: https://github.com/google/grpc-binary.git @ 1.69.1
+  GoogleAdsOnDeviceConversion: https://github.com/googleads/google-ads-on-device-conversion-ios-sdk @ 3.2.0
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS Simulator, arch:arm64, id:94DF8015-81EF-463B-9D4D-18621F3869B1, OS:17.4, name:iPhone 15 }
+{ platform:iOS Simulator, arch:x86_64, id:94DF8015-81EF-463B-9D4D-18621F3869B1, OS:17.4, name:iPhone 15 }
+2025-12-25 16:02:13.045 xcodebuild[76589:150381085] Writing error result bundle to /var/folders/4n/1r047dls1kdgzfkclw7fpq4c0000gn/T/ResultBundle_2025-25-12_16-02-0013.xcresult
+xcodebuild: error: Failed to build project CalCalculatorAiPlaygournd with scheme CalCalculator.: Could not find test host for CalCalculatorTests: TEST_HOST evaluates to "/Users/zoharbuchris/Library/Developer/Xcode/DerivedData/CalCalculatorAiPlaygournd-cbzakjzkurolfugllhiknyerdlha/Build/Products/Debug-iphonesimulator/CalCalculator.app"
