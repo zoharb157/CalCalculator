@@ -61,3 +61,14 @@ playgroundTests/
 
 # Firebase
 playground/Resources/GoogleService-Info.plist
+
+# Markdown files (except fastlane README)
+*.md
+!fastlane/README.md
+
+# Export options
+ExportOptions*.plist
+
+# Test/Example files
+Ios-Bundle-test
+translate-ios-example

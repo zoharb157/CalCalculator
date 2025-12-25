@@ -12,6 +12,7 @@ import SDK
 import Firebase
 import FirebaseAnalytics
 import UIKit
+import WidgetKit
 
 @main
 struct playgroundApp: App {
@@ -108,6 +109,20 @@ struct playgroundApp: App {
                     // Debug subscription value changed - update reactive state
                     updateSubscriptionStatus()
                     print("🔧 Debug isSubscribed: \(newValue)")
+                }
+                .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+                    // Refresh widget when app becomes active
+                    WidgetCenter.shared.reloadAllTimelines()
+                }
+                .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
+                    // Refresh widget when app enters background
+                    WidgetCenter.shared.reloadAllTimelines()
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .nutritionGoalsChanged)) { _ in
+                    // Sync widget data and refresh when nutrition goals change
+                    let context = ModelContext(modelContainer)
+                    let repository = MealRepository(context: context)
+                    repository.syncWidgetData()
                 }
                 .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
                     // Refresh subscription status when app becomes active (non-blocking)

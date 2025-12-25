@@ -208,6 +208,9 @@ final class UserSettings {
         proteinGoal = protein
         carbsGoal = carbs
         fatGoal = fat
+        
+        // Notify that nutrition goals changed (for widget refresh)
+        NotificationCenter.default.post(name: .nutritionGoalsChanged, object: nil)
     }
 
     func updateWeight(_ weight: Double) {

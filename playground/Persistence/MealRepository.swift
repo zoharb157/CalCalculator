@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftData
+import WidgetKit
 
 /// Repository for managing meal data operations
 final class MealRepository {
@@ -24,6 +25,9 @@ final class MealRepository {
         
         // Update or create day summary
         try updateDaySummary(for: meal.timestamp, adding: meal)
+        
+        // Sync widget data
+        syncWidgetData()
     }
     
     func deleteMeal(_ meal: Meal) throws {
@@ -32,6 +36,9 @@ final class MealRepository {
         
         context.delete(meal)
         try context.save()
+        
+        // Sync widget data
+        syncWidgetData()
     }
     
     func fetchMeals(for date: Date? = nil) throws -> [Meal] {
@@ -307,4 +314,92 @@ struct ExportMealItem: Codable {
     let proteinG: Double
     let carbsG: Double
     let fatG: Double
+}
+
+// MARK: - Widget Data Sync Extension
+
+extension MealRepository {
+    
+    /// Syncs today's macro data to the widget via App Group UserDefaults
+    /// Call this after any meal is added, updated, or deleted
+    func syncWidgetData() {
+        do {
+            let summary = try fetchTodaySummary()
+            let settings = UserSettings.shared
+            
+            // Create widget-compatible macro data
+            let widgetData = WidgetMacroData(
+                calories: summary.totalCalories,
+                protein: Int(summary.totalProteinG),
+                carbs: Int(summary.totalCarbsG),
+                fats: Int(summary.totalFatG),
+                calorieGoal: settings.calorieGoal,
+                proteinGoal: Int(settings.proteinGoal),
+                carbsGoal: Int(settings.carbsGoal),
+                fatsGoal: Int(settings.fatGoal)
+            )
+            
+            // Save to App Group UserDefaults
+            widgetData.saveToAppGroup()
+            
+            // Trigger widget refresh
+            WidgetCenter.shared.reloadAllTimelines()
+            
+            print("📱 [MealRepository] Widget data synced: \(widgetData.calories)/\(widgetData.calorieGoal) kcal")
+        } catch {
+            print("⚠️ [MealRepository] Failed to sync widget data: \(error)")
+        }
+    }
+}
+
+// MARK: - Widget Data Model (App Side)
+
+/// Lightweight struct for sharing macro data with widget via App Group
+struct WidgetMacroData: Codable {
+    let calories: Int
+    let protein: Int
+    let carbs: Int
+    let fats: Int
+    let calorieGoal: Int
+    let proteinGoal: Int
+    let carbsGoal: Int
+    let fatsGoal: Int
+    
+    private static let appGroupIdentifier = "group.com.calcalculator.shared"
+    private static let macroDataKey = "widget.macroNutrients"
+    private static let lastUpdatedKey = "widget.lastUpdated"
+    
+    /// Saves this data to App Group UserDefaults for widget access
+    func saveToAppGroup() {
+        guard let defaults = UserDefaults(suiteName: Self.appGroupIdentifier) else {
+            print("⚠️ [WidgetMacroData] Failed to access App Group UserDefaults")
+            return
+        }
+        
+        do {
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(self)
+            defaults.set(data, forKey: Self.macroDataKey)
+            defaults.set(Date(), forKey: Self.lastUpdatedKey)
+            defaults.synchronize()
+        } catch {
+            print("⚠️ [WidgetMacroData] Failed to encode data: \(error)")
+        }
+    }
+    
+    /// Loads data from App Group UserDefaults
+    static func loadFromAppGroup() -> WidgetMacroData? {
+        guard let defaults = UserDefaults(suiteName: appGroupIdentifier),
+              let data = defaults.data(forKey: macroDataKey) else {
+            return nil
+        }
+        
+        do {
+            let decoder = JSONDecoder()
+            return try decoder.decode(WidgetMacroData.self, from: data)
+        } catch {
+            print("⚠️ [WidgetMacroData] Failed to decode data: \(error)")
+            return nil
+        }
+    }
 }
