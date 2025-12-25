@@ -39,9 +39,9 @@ struct ProfileView: View {
                     goalsTrackingSection
                     preferencesSection
                     supportSection
-                    #if DEBUG
-                    debugSection
-                    #endif
+                    if isDebugOrTestFlight {
+                        debugSection
+                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
@@ -275,7 +275,20 @@ struct ProfileView: View {
     
     // MARK: - Debug Section
     
-    #if DEBUG
+    /// Check if we're in DEBUG build or TestFlight
+    private var isDebugOrTestFlight: Bool {
+        #if DEBUG
+        return true
+        #else
+        // Check if running in TestFlight (receipt URL contains sandboxReceipt)
+        if let receiptURL = Bundle.main.appStoreReceiptURL,
+           receiptURL.path.contains("sandboxReceipt") {
+            return true
+        }
+        return false
+        #endif
+    }
+    
     @ViewBuilder
     private var debugSection: some View {
         VStack(alignment: .leading, spacing: 8) {
