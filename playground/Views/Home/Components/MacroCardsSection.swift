@@ -16,45 +16,33 @@ struct MacroCardsSection: View {
     }
     
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
-//                MacroCard(
-//                    title: "Calories",
-//                    value: Double(consumed.calories),
-//                    goal: Double(goals.calories),
-//                    unit: "cal",
-//                    color: .caloriesColor,
-//                    icon: "flame.fill"
-//                )
-                
-                MacroCard(
-                    title: "Protein",
-                    value: consumed.proteinG,
-                    goal: goals.proteinG,
-                    unit: "g",
-                    color: .proteinColor,
-                    icon: "p.circle.fill"
-                )
-                
-                MacroCard(
-                    title: "Carbs",
-                    value: consumed.carbsG,
-                    goal: goals.carbsG,
-                    unit: "g",
-                    color: .carbsColor,
-                    icon: "c.circle.fill"
-                )
-                
-                MacroCard(
-                    title: "Fat",
-                    value: consumed.fatG,
-                    goal: goals.fatG,
-                    unit: "g",
-                    color: .fatColor,
-                    icon: "f.circle.fill"
-                )
-            }
-            .padding()
+        HStack(spacing: 12) {
+            MacroCard(
+                title: "Protein",
+                value: consumed.proteinG,
+                goal: goals.proteinG,
+                unit: "g",
+                color: .proteinColor,
+                icon: "p.circle.fill"
+            )
+            
+            MacroCard(
+                title: "Carbs",
+                value: consumed.carbsG,
+                goal: goals.carbsG,
+                unit: "g",
+                color: .carbsColor,
+                icon: "c.circle.fill"
+            )
+            
+            MacroCard(
+                title: "Fat",
+                value: consumed.fatG,
+                goal: goals.fatG,
+                unit: "g",
+                color: .fatColor,
+                icon: "f.circle.fill"
+            )
         }
     }
 }

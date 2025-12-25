@@ -24,6 +24,7 @@ struct HomeView: View {
     @State private var showScanSheet = false
     @State private var showLogFoodSheet = false
     @State private var showLogExerciseSheet = false
+    @State private var showBadgesSheet = false
     @State private var showingFloatingMenu = false
     @State private var confettiCounter = 0
     @State private var showBadgeAlert = false
@@ -90,6 +91,9 @@ struct HomeView: View {
             .sheet(isPresented: $showLogExerciseSheet) {
                 LogExerciseView()
             }
+            .sheet(isPresented: $showBadgesSheet) {
+                BadgesView()
+            }
             .confettiCannon(trigger: $confettiCounter)
             .overlay {
                 if badgeManager.showBadgeAlert, let badge = badgeManager.newlyEarnedBadge {
@@ -135,8 +139,9 @@ struct HomeView: View {
         List {
             weekDaysSection
             progressSection
-            healthKitSection
             macroSection
+            badgesSection
+            healthKitSection
             mealsSection
         }
         .listStyle(.plain)
@@ -265,6 +270,15 @@ struct HomeView: View {
         .listRowBackground(Color.clear)
     }
     
+    private var badgesSection: some View {
+        BadgesCard {
+            showBadgesSheet = true
+        }
+        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+        .listRowSeparator(.hidden)
+        .listRowBackground(Color.clear)
+    }
+    
     private var macroSection: some View {
         PremiumLockedContent {
             MacroCardsSection(
@@ -272,7 +286,7 @@ struct HomeView: View {
                 goals: settings.macroGoals
             )
         }
-        .listRowInsets(EdgeInsets(.zero))
+        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
         .listRowSeparator(.hidden)
         .listRowBackground(Color.clear)
     }
