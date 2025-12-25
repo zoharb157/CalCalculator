@@ -16,7 +16,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A31433142EF0897D00EFE039"
-               BuildableName = "CalCalculator.app"
+               BuildableName = "playground.app"
                BlueprintName = "playground"
                ReferencedContainer = "container:playground.xcodeproj">
             </BuildableReference>
@@ -29,8 +29,6 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES"
       shouldAutocreateTestPlan = "YES">
-      <Testables>
-      </Testables>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
@@ -47,7 +45,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A31433142EF0897D00EFE039"
-            BuildableName = "CalCalculator.app"
+            BuildableName = "playground.app"
             BlueprintName = "playground"
             ReferencedContainer = "container:playground.xcodeproj">
          </BuildableReference>
@@ -67,7 +65,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A31433142EF0897D00EFE039"
-            BuildableName = "CalCalculator.app"
+            BuildableName = "playground.app"
             BlueprintName = "playground"
             ReferencedContainer = "container:playground.xcodeproj">
          </BuildableReference>
