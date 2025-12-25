@@ -228,20 +228,25 @@ struct ScanView: View {
     }
     
     private func openSettings() {
-        Task { @MainActor in
-            let settingsURL = URL(string: UIApplication.openSettingsURLString)
-            guard let url = settingsURL else {
-                print("❌ [ScanView] Failed to create settings URL")
-                return
+        // Direct approach: Open Settings app to the app's settings page
+        guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else {
+            print("❌ [ScanView] Failed to create settings URL")
+            return
+        }
+        
+        print("🔵 [ScanView] Opening settings: \(settingsURL.absoluteString)")
+        
+        // Use the synchronous open method with completion handler for better reliability
+        if UIApplication.shared.canOpenURL(settingsURL) {
+            UIApplication.shared.open(settingsURL) { success in
+                if success {
+                    print("✅ [ScanView] Successfully opened settings")
+                } else {
+                    print("❌ [ScanView] Failed to open settings")
+                }
             }
-            
-            print("🔵 [ScanView] Opening settings: \(url.absoluteString)")
-            let success = await UIApplication.shared.open(url)
-            if success {
-                print("✅ [ScanView] Successfully opened settings")
-            } else {
-                print("❌ [ScanView] Failed to open settings")
-            }
+        } else {
+            print("❌ [ScanView] Cannot open settings URL")
         }
     }
     

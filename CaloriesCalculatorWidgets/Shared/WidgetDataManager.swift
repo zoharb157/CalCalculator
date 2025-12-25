@@ -15,7 +15,7 @@ final class WidgetDataManager: Sendable {
     
     static let shared = WidgetDataManager()
     
-    private static let appGroupIdentifier = "group.com.calcalculator.shared"
+    private static let appGroupIdentifier = "group.CalCalculatorAiPlaygournd.shared"
     private static let macroDataKey = "widget.macroNutrients"
     private static let lastUpdatedKey = "widget.lastUpdated"
     private static let isSubscribedKey = "widget.isSubscribed"

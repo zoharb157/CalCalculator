@@ -143,7 +143,9 @@ struct ContentView: View {
                         }
                     
                 case .authenticated:
-                    MainTabView(repository: repository)
+                    let mainTabView = MainTabView(repository: repository)
+                    mainTabView
+                        .mealReminderHandler(scanViewModel: mainTabView.scanViewModel)
                 }
             } else {
                 ProgressView("Loading...")

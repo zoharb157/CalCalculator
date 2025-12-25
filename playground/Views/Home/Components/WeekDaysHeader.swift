@@ -37,36 +37,37 @@ struct WeekDayItem: View {
             Text(day.dayName)
                 .font(.caption2)
                 .fontWeight(.medium)
-                .foregroundColor(day.isToday ? .primary : .secondary)
+                .foregroundColor(day.isSelected ? .white : (day.isToday ? .primary : .secondary))
             
             // Circular progress
             ZStack {
                 if day.isDotted {
                     // Dotted background circle for days with no meals
                     Circle()
-                        .strokeBorder(Color.gray, style: StrokeStyle(lineWidth: 3, dash: [4, 3]))
+                        .strokeBorder(day.isSelected ? Color.white.opacity(0.6) : Color.gray, style: StrokeStyle(lineWidth: 3, dash: [4, 3]))
                 } else {
                     // Background circle
                     Circle()
-                        .stroke(Color.gray.opacity(0.2), lineWidth: 3)
+                        .stroke(day.isSelected ? Color.white.opacity(0.3) : Color.gray.opacity(0.2), lineWidth: 3)
                     
                     // Progress circle
                     Circle()
                         .trim(from: 0, to: min(day.progress, 1.0))
-                        .stroke(day.progressColor, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                        .stroke(day.isSelected ? Color.white : day.progressColor, style: StrokeStyle(lineWidth: 3, lineCap: .round))
                         .rotationEffect(.degrees(-90))
                 }
                 
                 // Day number
                 Text("\(day.dayNumber)")
-                    .font(.system(size: 12, weight: day.isToday ? .bold : .medium, design: .rounded))
-                    .foregroundColor(day.isToday ? .primary : .secondary)
+                    .font(.system(size: 12, weight: day.isSelected ? .bold : (day.isToday ? .bold : .medium), design: .rounded))
+                    .foregroundColor(day.isSelected ? .white : (day.isToday ? .primary : .secondary))
             }
             .frame(width: 32, height: 32)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 4)
-        .background(day.isToday ? Color.blue.opacity(0.1) : Color.clear)
+        .padding(.horizontal, 4)
+        .background(day.isSelected ? Color.blue : (day.isToday ? Color.blue.opacity(0.1) : Color.clear))
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .contentShape(Rectangle())
         .onTapGesture {
@@ -115,6 +116,7 @@ struct WeekDayItem: View {
             dayName: dayFormatter.string(from: date),
             dayNumber: calendar.component(.day, from: date),
             isToday: isToday,
+            isSelected: isToday, // In preview, selected day is today
             progress: progress,
             summary: DaySummary(
                 totalCalories: caloriesConsumed,

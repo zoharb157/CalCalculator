@@ -365,7 +365,7 @@ struct WidgetMacroData: Codable {
     let carbsGoal: Int
     let fatsGoal: Int
     
-    private static let appGroupIdentifier = "group.com.calcalculator.shared"
+    private static let appGroupIdentifier = "group.CalCalculatorAiPlaygournd.shared"
     private static let macroDataKey = "widget.macroNutrients"
     private static let lastUpdatedKey = "widget.lastUpdated"
     

@@ -31,7 +31,11 @@ struct playgroundApp: App {
                 MealItem.self,
                 DaySummary.self,
                 WeightEntry.self,
-                Exercise.self
+                Exercise.self,
+                DietPlan.self,
+                ScheduledMeal.self,
+                MealTemplate.self,
+                MealReminder.self
             ])
             
             // Ensure Application Support directory exists before SwiftData tries to create the store
@@ -168,7 +172,7 @@ struct playgroundApp: App {
     
     /// Syncs subscription status to the widget using App Groups shared UserDefaults
     private func syncSubscriptionStatusToWidget(_ isSubscribed: Bool) {
-        let appGroupIdentifier = "group.com.calcalculator.shared"
+        let appGroupIdentifier = "group.CalCalculatorAiPlaygournd.shared"
         let isSubscribedKey = "widget.isSubscribed"
         
         guard let sharedDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
@@ -193,4 +197,6 @@ extension Notification.Name {
     static let exerciseSaved = Notification.Name("exerciseSaved")
     static let addBurnedCaloriesToggled = Notification.Name("addBurnedCaloriesToggled")
     static let languageChanged = Notification.Name("languageChanged")
+    static let mealReminderAction = Notification.Name("mealReminderAction")
+    static let dietPlanChanged = Notification.Name("dietPlanChanged")
 }

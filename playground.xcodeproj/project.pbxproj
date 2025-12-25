@@ -393,6 +393,7 @@
 				);
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs photo library access to select photos of your meals for calorie tracking.";
 				INFOPLIST_KEY_NSUserTrackingUsageDescription = "This app uses tracking to provide personalized content and improve your experience. Your data is used only for app functionality and analytics.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -436,6 +437,7 @@
 				);
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs photo library access to select photos of your meals for calorie tracking.";
 				INFOPLIST_KEY_NSUserTrackingUsageDescription = "This app uses tracking to provide personalized content and improve your experience. Your data is used only for app functionality and analytics.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -480,7 +482,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.CalCalculator.dev.widget;
+				PRODUCT_BUNDLE_IDENTIFIER = CalCalculatorAiPlaygournd.widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -512,7 +514,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.CalCalculator.dev.widget;
+				PRODUCT_BUNDLE_IDENTIFIER = CalCalculatorAiPlaygournd.widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

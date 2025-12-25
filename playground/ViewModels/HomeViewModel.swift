@@ -16,6 +16,7 @@ struct WeekDay: Identifiable {
     let dayName: String       // "Sun", "Mon", etc.
     let dayNumber: Int        // 1-31
     let isToday: Bool
+    let isSelected: Bool      // Whether this day is currently selected
     let progress: Double      // 0.0 to 1.0+ (calorie progress)
     let summary: DaySummary?
     let caloriesConsumed: Int
@@ -71,7 +72,7 @@ final class HomeViewModel {
     var error: Error?
     
     // MARK: - Selected Day State
-    var selectedDate: Date? = nil // nil means today is selected
+    var selectedDate: Date = Date() // Default to today
     
     // MARK: - Burned/Rollover Calories State
     var todaysBurnedCalories: Int = 0
@@ -117,6 +118,7 @@ final class HomeViewModel {
                     dayName: dayFormatter.string(from: today),
                     dayNumber: calendar.component(.day, from: today),
                     isToday: true,
+                    isSelected: calendar.isDateInToday(selectedDate),
                     progress: 0.0,
                     summary: nil,
                     caloriesConsumed: 0,
@@ -130,6 +132,7 @@ final class HomeViewModel {
                 dayName: dayFormatter.string(from: date),
                 dayNumber: calendar.component(.day, from: date),
                 isToday: calendar.isDateInToday(date),
+                isSelected: calendar.isDate(date, inSameDayAs: selectedDate),
                 progress: 0.0, // Placeholder - will be updated when data loads
                 summary: nil, // Placeholder - will be updated when data loads
                 caloriesConsumed: 0, // Placeholder
@@ -171,6 +174,64 @@ final class HomeViewModel {
         print("🟢 [HomeViewModel] refreshTodayData() completed in \(String(format: "%.3f", elapsed))s")
     }
     
+    /// Select a specific date and load its data
+    func selectDay(_ date: Date) {
+        let calendar = Calendar.current
+        let normalizedDate = calendar.startOfDay(for: date)
+        
+        // Only reload if date actually changed
+        if !calendar.isDate(selectedDate, inSameDayAs: normalizedDate) {
+            selectedDate = normalizedDate
+            
+            // Update week days to reflect new selection
+            Task { @MainActor in
+                // Rebuild week days with new selected date
+                if let weekSummaries = try? repository.fetchCurrentWeekSummaries() {
+                    let newWeekDays = buildWeekDays(from: weekSummaries, selectedDate: selectedDate)
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        weekDays = newWeekDays
+                    }
+                }
+                
+                // Load data for selected date
+                await loadDataForSelectedDate()
+            }
+        }
+    }
+    
+    /// Load data for the currently selected date
+    private func loadDataForSelectedDate() async {
+        let startTime = Date()
+        print("🟢 [HomeViewModel] loadDataForSelectedDate() started for: \(selectedDate)")
+        
+        isLoading = true
+        defer { isLoading = false }
+        
+        do {
+            // Load summary for selected date
+            let summary = try repository.fetchDaySummary(for: selectedDate)
+            todaysSummary = summary
+            
+            // Load meals for selected date
+            let meals = try repository.fetchMeals(for: selectedDate)
+            recentMeals = meals.sorted { $0.timestamp > $1.timestamp }
+            
+            // Update UI with animation
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                hasDataLoaded = true
+            }
+            
+            let totalTime = Date().timeIntervalSince(startTime)
+            print("🟢 [HomeViewModel] loadDataForSelectedDate() completed in \(String(format: "%.3f", totalTime))s")
+        } catch {
+            let totalTime = Date().timeIntervalSince(startTime)
+            print("🔴 [HomeViewModel] loadDataForSelectedDate() failed after \(String(format: "%.3f", totalTime))s: \(error)")
+            self.error = error
+            self.errorMessage = error.localizedDescription
+            self.showError = true
+        }
+    }
+    
     /// Load critical data that's needed for initial UI display
     private func loadCriticalData() async {
         let startTime = Date()
@@ -185,9 +246,15 @@ final class HomeViewModel {
             guard let self = self else { return }
             
             do {
-                // Load today's summary and recent meals in parallel (both on main thread but truly parallel)
-                async let summaryTask = try repository.fetchTodaySummary()
-                async let mealsTask = try repository.fetchRecentMeals()
+                // Load summary and meals for selected date in parallel
+                let calendar = Calendar.current
+                let targetDate = calendar.startOfDay(for: self.selectedDate)
+                let isToday = calendar.isDateInToday(targetDate)
+                
+                async let summaryTask = isToday 
+                    ? try repository.fetchTodaySummary()
+                    : try repository.fetchDaySummary(for: targetDate)
+                async let mealsTask = try repository.fetchMeals(for: targetDate)
                 
                 // Wait for both
                 let summary = try await summaryTask
@@ -196,12 +263,14 @@ final class HomeViewModel {
                 // Update UI with animation
                 withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
                     self.todaysSummary = summary
-                    self.recentMeals = meals
+                    self.recentMeals = meals.sorted { $0.timestamp > $1.timestamp }
                     self.hasDataLoaded = true
                 }
                 
-                // Update Live Activity if enabled
-                self.updateLiveActivityIfNeeded()
+                // Update Live Activity if enabled (only for today)
+                if isToday {
+                    self.updateLiveActivityIfNeeded()
+                }
                 
                 let totalTime = Date().timeIntervalSince(startTime)
                 print("🟢 [HomeViewModel] loadCriticalData() completed in \(String(format: "%.3f", totalTime))s")
@@ -241,7 +310,7 @@ final class HomeViewModel {
                 self.todaysBurnedCalories = burned
                 
                 // Build week days and calculate rollover (fast operations)
-                let newWeekDays = self.buildWeekDays(from: weekSummaries)
+                let newWeekDays = self.buildWeekDays(from: weekSummaries, selectedDate: self.selectedDate)
                 self.calculateAndStoreRollover(weekSummaries: weekSummaries)
                 
                 // Update UI with animation
@@ -277,7 +346,7 @@ final class HomeViewModel {
             print("  ✅ Week summaries: \(Date().timeIntervalSince(weekStart))s")
             
             let buildStart = Date()
-            weekDays = buildWeekDays(from: weekSummaries)
+            weekDays = buildWeekDays(from: weekSummaries, selectedDate: selectedDate)
             print("  ✅ Week days built: \(Date().timeIntervalSince(buildStart))s")
             
             // Fetch burned calories for today
@@ -362,7 +431,7 @@ final class HomeViewModel {
     }
     
     /// Build WeekDay array for the current week (Sun-Sat)
-    private func buildWeekDays(from summaries: [Date: DaySummary]) -> [WeekDay] {
+    private func buildWeekDays(from summaries: [Date: DaySummary], selectedDate: Date) -> [WeekDay] {
         let calendar = Calendar.current
         let today = Date()
         let calorieGoalValue = effectiveCalorieGoal
@@ -394,6 +463,7 @@ final class HomeViewModel {
                 dayName: dayFormatter.string(from: date),
                 dayNumber: calendar.component(.day, from: date),
                 isToday: calendar.isDateInToday(date),
+                isSelected: calendar.isDate(date, inSameDayAs: selectedDate),
                 progress: progress,
                 summary: summary,
                 caloriesConsumed: caloriesConsumed,

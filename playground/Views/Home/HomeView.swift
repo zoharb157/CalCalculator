@@ -28,6 +28,9 @@ struct HomeView: View {
     @State private var showingFloatingMenu = false
     @State private var confettiCounter = 0
     @State private var showBadgeAlert = false
+    @State private var showingCreateDiet = false
+    @State private var showingPaywall = false
+    @Environment(\.modelContext) private var modelContext
     
     init(
         viewModel: HomeViewModel,
@@ -47,7 +50,8 @@ struct HomeView: View {
                 contentView
                 floatingMenuOverlay
             }
-            .navigationTitle(navigationTitle)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: UUID.self) { mealId in
                 MealDetailView(mealId: mealId, repository: repository)
             }
@@ -126,6 +130,18 @@ struct HomeView: View {
             .sheet(isPresented: $showBadgesSheet) {
                 BadgesView()
             }
+            .sheet(isPresented: $showingCreateDiet) {
+                DietPlansListView()
+            }
+            .fullScreenCover(isPresented: $showingPaywall) {
+                SDKView(
+                    model: sdk,
+                    page: .splash,
+                    show: $showingPaywall,
+                    backgroundColor: .white,
+                    ignoreSafeArea: true
+                )
+            }
             .confettiCannon(trigger: $confettiCounter)
             .overlay {
                 if badgeManager.showBadgeAlert, let badge = badgeManager.newlyEarnedBadge {
@@ -165,29 +181,28 @@ struct HomeView: View {
         )
     }
     
-    // MARK: - Computed Properties
-    
-    private var navigationTitle: String {
-        // Use localized date formatter - shows "Thursday, January 25, 2024" format
-        // This automatically adapts to user's locale settings
-        let formatter = DateFormatter()
-        formatter.dateStyle = .full
-        formatter.timeStyle = .none
-        return formatter.string(from: Date())
-    }
-    
     // MARK: - Private Views
     
     private var contentView: some View {
-        List {
+        VStack(spacing: 0) {
+            // Week days header at the very top
             weekDaysSection
-            progressSection
-            macroSection
-            badgesSection
-            healthKitSection
-            mealsSection
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+                .padding(.bottom, 12)
+                .background(Color(.systemGroupedBackground))
+            
+            // Rest of the content
+            List {
+                progressSection
+                dietPlanSection
+                macroSection
+                badgesSection
+                healthKitSection
+                mealsSection
+            }
+            .listStyle(.plain)
         }
-        .listStyle(.plain)
     }
     
     @ViewBuilder
@@ -213,6 +228,25 @@ struct HomeView: View {
                     VStack(alignment: .trailing, spacing: 12) {
                         // Menu items (shown when expanded)
                         if showingFloatingMenu {
+                            FloatingMenuItem(
+                                icon: "calendar.badge.plus",
+                                title: "Create Diet Plan",
+                                color: .blue
+                            ) {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                    showingFloatingMenu = false
+                                }
+                                if isSubscribed {
+                                    showingCreateDiet = true
+                                } else {
+                                    showingPaywall = true
+                                }
+                            }
+                            .transition(.asymmetric(
+                                insertion: .scale.combined(with: .opacity).combined(with: .offset(x: 0, y: 20)),
+                                removal: .scale.combined(with: .opacity)
+                            ))
+                            
                             FloatingMenuItem(
                                 icon: "dumbbell.fill",
                                 title: "Log Exercise",
@@ -292,17 +326,11 @@ struct HomeView: View {
     
     private var weekDaysSection: some View {
         WeekDaysHeader(weekDays: viewModel.weekDays) { selectedDate in
-            // Navigate to history view for selected date
-            // For now, we'll show an alert or navigate to history
-            // TODO: Implement day detail view
             HapticManager.shared.impact(.medium)
-            // Could navigate to HistoryView with date filter
+            viewModel.selectDay(selectedDate)
         }
         .transition(.opacity.combined(with: .scale(scale: 0.95)))
         .animation(.spring(response: 0.6, dampingFraction: 0.8), value: viewModel.weekDays.map { $0.progress })
-        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-        .listRowSeparator(.hidden)
-        .listRowBackground(Color.clear)
     }
     
     private var progressSection: some View {
@@ -317,6 +345,16 @@ struct HomeView: View {
         .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
         .listRowSeparator(.hidden)
         .listRowBackground(Color.clear)
+    }
+    
+    @ViewBuilder
+    private var dietPlanSection: some View {
+        if isSubscribed {
+            DietPlanCard()
+                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+        }
     }
     
     private var badgesSection: some View {

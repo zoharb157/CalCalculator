@@ -20,6 +20,12 @@ struct MainTabView: View {
     @State var progressViewModel: ProgressViewModel
     @State var settingsViewModel: SettingsViewModel
     
+    @Query(filter: #Predicate<DietPlan> { $0.isActive == true }) private var activeDietPlans: [DietPlan]
+    
+    private var hasActiveDiet: Bool {
+        !activeDietPlans.isEmpty
+    }
+    
     init(repository: MealRepository) {
         let initStart = Date()
         self.repository = repository
@@ -86,9 +92,13 @@ struct MainTabView: View {
                 }
                 .tag(1)
             
-            HistoryView(viewModel: historyViewModel, repository: repository)
+            HistoryOrDietView(
+                viewModel: historyViewModel,
+                repository: repository,
+                tabName: hasActiveDiet ? "My Diet" : "History"
+            )
                 .tabItem {
-                    Label("History", systemImage: "calendar")
+                    Label(hasActiveDiet ? "My Diet" : "History", systemImage: "calendar")
                 }
                 .tag(2)
 

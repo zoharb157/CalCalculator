@@ -30,6 +30,7 @@ final class UserSettings {
         static let lastWeightPromptDate = "lastWeightPromptDate"
         static let debugOverrideSubscription = "debugOverrideSubscription"
         static let debugIsSubscribed = "debugIsSubscribed"
+        static let hasSeenDietWelcome = "hasSeenDietWelcome"
     }
     
     // MARK: - Properties
@@ -75,6 +76,10 @@ final class UserSettings {
     
     var lastWeightPromptDate: Date? {
         didSet { defaults.set(lastWeightPromptDate, forKey: Keys.lastWeightPromptDate) }
+    }
+    
+    var hasSeenDietWelcome: Bool {
+        didSet { defaults.set(hasSeenDietWelcome, forKey: Keys.hasSeenDietWelcome) }
     }
     
     // MARK: - Debug Properties
@@ -187,6 +192,7 @@ final class UserSettings {
         self.lastWeightPromptDate = defaults.object(forKey: Keys.lastWeightPromptDate) as? Date
         self.debugOverrideSubscription = defaults.bool(forKey: Keys.debugOverrideSubscription)
         self.debugIsSubscribed = defaults.bool(forKey: Keys.debugIsSubscribed)
+        self.hasSeenDietWelcome = defaults.bool(forKey: Keys.hasSeenDietWelcome)
     }
     
     // MARK: - Methods

@@ -1,0 +1,39 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project CalCalculatorAiPlaygournd.xcodeproj -scheme CalCalculator -sdk iphonesimulator -destination "platform=iOS Simulator,name=iPhone 15 Pro" test
+
+Build settings from command line:
+    SDKROOT = iphonesimulator26.2
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  swift-log: https://github.com/apple/swift-log.git @ 1.8.0
+  swift-certificates: https://github.com/apple/swift-certificates.git @ 1.17.0
+  CommonSwiftUI: https://git-codecommit.us-east-1.amazonaws.com/v1/repos/CommonSwiftUI @ main (ddffcaa)
+  GoogleAppMeasurement: https://github.com/google/GoogleAppMeasurement.git @ 12.5.0
+  Firebase: https://github.com/firebase/firebase-ios-sdk.git @ 12.7.0
+  InteropForGoogle: https://github.com/google/interop-ios-for-google-sdks.git @ 101.0.0
+  MavenCommonSwiftUI: https://git-codecommit.us-east-1.amazonaws.com/v1/repos/Ios-Bundle @ master (28af807)
+  swift-asn1: https://github.com/apple/swift-asn1.git @ 1.5.1
+  GTMSessionFetcher: https://github.com/google/gtm-session-fetcher.git @ 5.0.0
+  Facebook: https://github.com/facebook/facebook-ios-sdk @ 14.1.0
+  swift-crypto: https://github.com/apple/swift-crypto.git @ 4.2.0
+  GoogleAdsOnDeviceConversion: https://github.com/googleads/google-ads-on-device-conversion-ios-sdk @ 3.2.0
+  ShipBookSDK: https://github.com/ShipBook/ShipBookSDK-iOS.git @ 1.2.4
+  GoogleUtilities: https://github.com/google/GoogleUtilities.git @ 8.1.0
+  SDK: https://git-codecommit.us-east-1.amazonaws.com/v1/repos/apps-sdk-V2 @ master (a737a8b)
+  gRPC: https://github.com/google/grpc-binary.git @ 1.69.1
+  jwt-kit: https://github.com/vapor/jwt-kit.git @ 5.3.0
+  GoogleDataTransport: https://github.com/google/GoogleDataTransport.git @ 10.1.0
+  AppCheck: https://github.com/google/app-check.git @ 11.2.0
+  abseil: https://github.com/google/abseil-cpp-binary.git @ 1.2024072200.0
+  nanopb: https://github.com/firebase/nanopb.git @ 2.30910.0
+  Promises: https://github.com/google/promises.git @ 2.4.0
+  SwiftProtobuf: https://github.com/apple/swift-protobuf.git @ 1.33.3
+  leveldb: https://github.com/firebase/leveldb.git @ 1.22.5
+  KeychainAccess: https://github.com/kishikawakatsumi/KeychainAccess.git @ master (e0c7eeb)
+
+2025-12-25 13:17:38.532 xcodebuild[11532:149472266] Writing error result bundle to /var/folders/4n/1r047dls1kdgzfkclw7fpq4c0000gn/T/ResultBundle_2025-25-12_13-17-0038.xcresult
+xcodebuild: error: Scheme CalCalculator is not currently configured for the test action.
+

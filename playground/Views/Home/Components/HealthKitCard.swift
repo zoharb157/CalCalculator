@@ -366,45 +366,26 @@ struct HealthKitCard: View {
     // MARK: - Actions
     
     private func openHealthSettings() {
-        // iOS doesn't allow deep linking directly to HealthKit permissions in Settings
-        // Strategy: Try opening Health app first - user can navigate to Sources > CalCalculator
-        // If that fails, open Settings (user needs to go to Privacy & Security > Health > CalCalculator)
-        Task { @MainActor in
-            if let healthAppURL = URL(string: "x-apple-health://") {
-                // Check if Health app can be opened
-                if UIApplication.shared.canOpenURL(healthAppURL) {
-                    // Try to open Health app - user can go to Sources tab > CalCalculator
-                    let success = await UIApplication.shared.open(healthAppURL)
-                    if !success {
-                        // If Health app can't be opened, fall back to Settings
-                        await openAppSettings()
-                    }
-                } else {
-                    // Health app not available, go directly to Settings
-                    await openAppSettings()
-                }
-            } else {
-                // Fallback: Open app settings
-                await openAppSettings()
-            }
-        }
-    }
-    
-    private func openAppSettings() async {
-        // This opens: Settings > CalCalculator
-        // User needs to navigate to: Privacy & Security > Health > CalCalculator
-        let settingsURL = URL(string: UIApplication.openSettingsURLString)
-        guard let url = settingsURL else {
+        // Direct approach: Open Settings app to the app's settings page
+        // User can then navigate to: Privacy & Security > Health > CalCalculator
+        guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else {
             print("❌ [HealthKitCard] Failed to create settings URL")
             return
         }
         
-        print("🔵 [HealthKitCard] Opening settings: \(url.absoluteString)")
-        let success = await UIApplication.shared.open(url)
-        if success {
-            print("✅ [HealthKitCard] Successfully opened settings")
+        print("🔵 [HealthKitCard] Opening settings: \(settingsURL.absoluteString)")
+        
+        // Use the synchronous open method with completion handler for better reliability
+        if UIApplication.shared.canOpenURL(settingsURL) {
+            UIApplication.shared.open(settingsURL) { success in
+                if success {
+                    print("✅ [HealthKitCard] Successfully opened settings")
+                } else {
+                    print("❌ [HealthKitCard] Failed to open settings")
+                }
+            }
         } else {
-            print("❌ [HealthKitCard] Failed to open settings")
+            print("❌ [HealthKitCard] Cannot open settings URL")
         }
     }
     

@@ -18,6 +18,6 @@ enum Config {
     static let mailsubject: String = ""
     static let mailbody: String = "Hello! Here are some suggestions to enhance the app:"
     static let sentryDNS: String = "https://17c717a2646ca702fff364f1a8e7dafb@o4505877729116160.ingest.us.sentry.io/4509282019311616"
-    static let groupUserDefaultIdentifier: String = "group.com.calcalculator.shared"
+    static let groupUserDefaultIdentifier: String = "group.CalCalculatorAiPlaygournd.shared"
 }
 

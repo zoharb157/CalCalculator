@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftData
+import SwiftUI
 
 enum MealCategory: String, Codable, CaseIterable {
     case breakfast = "breakfast"
@@ -24,6 +25,15 @@ enum MealCategory: String, Codable, CaseIterable {
         case .lunch: return "sun.max.fill"
         case .dinner: return "moon.fill"
         case .snack: return "leaf.fill"
+        }
+    }
+    
+    var color: Color {
+        switch self {
+        case .breakfast: return .orange
+        case .lunch: return .blue
+        case .dinner: return .purple
+        case .snack: return .green
         }
     }
 }
