@@ -78,6 +78,7 @@ platform :ios do
         skip_build: false,
         clean: false,
         skip_package_dependencies_resolution: true,
+        app_identifier: BUNDLE_IDENTIFIER,
         xcargs: "-allowProvisioningUpdates -skipPackagePluginValidation"
       )
       UI.success("✅ Unit tests passed!")
