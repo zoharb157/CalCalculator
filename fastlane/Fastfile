@@ -265,6 +265,7 @@ platform :ios do
     ENV["APP_STORE_CONNECT_KEY_FILEPATH"] = key_filepath
     
     # Use API key authentication - produce will use ENV variables we set above
+    # Username is required by produce but API key will be used if ENV vars are set
     produce(
       app_identifier: BUNDLE_IDENTIFIER,
       app_name: APP_NAME,
@@ -272,7 +273,7 @@ platform :ios do
       app_version: "1.0",
       sku: BUNDLE_IDENTIFIER,
       team_id: TEAM_ID,
-      username: ENV["FASTLANE_USER"] || "zoharb157@gmail.com" # Fallback username for produce
+      username: ENV["FASTLANE_USER"] || "zoharb157@gmail.com"
     )
     
     UI.success("✅ App '#{APP_NAME}' (#{BUNDLE_IDENTIFIER}) created in App Store Connect!")
