@@ -1,19 +1,112 @@
 default_platform(:ios)
 
 platform :ios do
-  # Configuration constants
-  KEY_ID = ENV["APP_STORE_CONNECT_API_KEY_ID"] || ""
-  ISSUER_ID = ENV["APP_STORE_CONNECT_ISSUER_ID"] || ""
-  KEY_FILEPATH = ENV["APP_STORE_CONNECT_KEY_FILEPATH"] || "./fastlane/AuthKey.p8"
-  PROJECT = "CalCalculatorAiPlaygournd.xcodeproj"
-  SCHEME = "CalCalculator"
-  APP_NAME = "CalCalculator"
-  BUNDLE_IDENTIFIER = "CalCalculatorAiPlaygournd"
-  TEAM_ID = "5NS9ZUMYCS"
+  # ============================================================================
+  # CONFIGURATION - All values from environment variables or defaults
+  # ============================================================================
+  
+  PROJECT = ENV["FASTLANE_PROJECT"] || "CalCalculatorAiPlaygournd.xcodeproj"
+  SCHEME = ENV["FASTLANE_SCHEME"] || "CalCalculator"
+  APP_NAME = ENV["FASTLANE_APP_NAME"] || "CalCalculator"
+  BUNDLE_IDENTIFIER = ENV["FASTLANE_BUNDLE_IDENTIFIER"] || "CalCalculatorAiPlaygournd"
+  TEAM_ID = ENV["FASTLANE_TEAM_ID"] || ENV["TEAM_ID"] || "5NS9ZUMYCS"
+  
+  # App Store Connect API credentials (must be set via environment variables)
+  APP_STORE_CONNECT_KEY_ID = ENV["APP_STORE_CONNECT_API_KEY_ID"]
+  APP_STORE_CONNECT_ISSUER_ID = ENV["APP_STORE_CONNECT_ISSUER_ID"]
+  APP_STORE_CONNECT_KEY_FILEPATH = ENV["APP_STORE_CONNECT_KEY_FILEPATH"] || File.expand_path("AuthKey.p8", __dir__)
+  
+  # AWS CodeCommit credentials (for private Swift packages)
+  AWS_ACCESS_KEY_ID = ENV["AWS_ACCESS_KEY_ID"]
+  AWS_SECRET_ACCESS_KEY = ENV["AWS_SECRET_ACCESS_KEY"]
+  AWS_DEFAULT_REGION = ENV["AWS_DEFAULT_REGION"] || "us-east-1"
 
-  # Helper method to get release notes from git commits
+  # ============================================================================
+  # HELPER METHODS
+  # ============================================================================
+
+  # Configure AWS CodeCommit Git credentials for private Swift packages
+  def setup_aws_codecommit_credentials
+    return unless AWS_ACCESS_KEY_ID && AWS_SECRET_ACCESS_KEY
+    
+    UI.message("🔐 Configuring AWS CodeCommit credentials...")
+    
+    # Install AWS CLI if not available (for CI environments)
+    unless system("which aws > /dev/null 2>&1")
+      UI.message("📦 Installing AWS CLI...")
+      sh("curl -s https://awscli.amazonaws.com/awscli-exe-macos.zip -o /tmp/awscliv2.zip")
+      sh("unzip -q /tmp/awscliv2.zip -d /tmp")
+      sh("sudo /tmp/aws/install")
+    end
+    
+    # URL encode credentials for Git URL rewriting
+    access_key_encoded = AWS_ACCESS_KEY_ID.gsub("@", "%40")
+    secret_key_encoded = AWS_SECRET_ACCESS_KEY.gsub("@", "%40")
+                                      .gsub(":", "%3A")
+                                      .gsub("/", "%2F")
+                                      .gsub("=", "%3D")
+    
+    # Configure Git URL rewriting with embedded credentials
+    sh("git config --global url.\\\"https://#{access_key_encoded}:#{secret_key_encoded}@git-codecommit.#{AWS_DEFAULT_REGION}.amazonaws.com/\\\".insteadOf \\\"https://git-codecommit.#{AWS_DEFAULT_REGION}.amazonaws.com/\\\"")
+    
+    # Also set up credential helper as fallback
+    sh("git config --global credential.helper '!aws codecommit credential-helper $@'")
+    sh("git config --global credential.UseHttpPath true")
+    
+    # Set AWS environment variables for AWS CLI
+    ENV["AWS_ACCESS_KEY_ID"] = AWS_ACCESS_KEY_ID
+    ENV["AWS_SECRET_ACCESS_KEY"] = AWS_SECRET_ACCESS_KEY
+    ENV["AWS_DEFAULT_REGION"] = AWS_DEFAULT_REGION
+    
+    UI.success("✅ AWS CodeCommit credentials configured")
+  end
+
+  # Verify App Store Connect API credentials are available
+  def verify_app_store_connect_credentials
+    if APP_STORE_CONNECT_KEY_ID.nil? || APP_STORE_CONNECT_KEY_ID.empty?
+      UI.user_error!("❌ APP_STORE_CONNECT_API_KEY_ID environment variable is not set")
+    end
+    
+    if APP_STORE_CONNECT_ISSUER_ID.nil? || APP_STORE_CONNECT_ISSUER_ID.empty?
+      UI.user_error!("❌ APP_STORE_CONNECT_ISSUER_ID environment variable is not set")
+    end
+    
+    unless File.exist?(APP_STORE_CONNECT_KEY_FILEPATH)
+      UI.user_error!("❌ App Store Connect API key file not found at: #{APP_STORE_CONNECT_KEY_FILEPATH}\n" \
+                     "Please set APP_STORE_CONNECT_KEY_FILEPATH environment variable or place AuthKey.p8 in fastlane/ directory")
+    end
+    
+    UI.success("✅ App Store Connect API credentials verified")
+  end
+
+  # Get App Store Connect API key object
+  def get_app_store_connect_api_key
+    verify_app_store_connect_credentials
+    
+    app_store_connect_api_key(
+      key_id: APP_STORE_CONNECT_KEY_ID,
+      issuer_id: APP_STORE_CONNECT_ISSUER_ID,
+      key_filepath: APP_STORE_CONNECT_KEY_FILEPATH
+    )
+  end
+
+  # Check if app exists in App Store Connect
+  # Returns true if app exists, false otherwise
+  def app_exists_in_app_store_connect?
+    begin
+      api_key = get_app_store_connect_api_key
+      Spaceship::ConnectAPI.token = api_key
+      app = Spaceship::ConnectAPI::App.find(BUNDLE_IDENTIFIER)
+      return !app.nil?
+    rescue => ex
+      # If check fails, assume app doesn't exist
+      # create_app_if_needed will handle creation or "already exists" errors
+      return false
+    end
+  end
+
+  # Get release notes from git commits
   def get_release_notes
-    # Get commit messages since last tag
     last_tag = `git describe --tags --abbrev=0 2>/dev/null`.strip
     if last_tag.empty?
       commits = `git log --pretty=format:"• %s" -10`.strip
@@ -28,45 +121,79 @@ platform :ios do
     end
   end
 
-  #
-  # Main deployment lane
-  #
-  desc "Deploy to TestFlight"
-  lane :deploy_to_testflight do
-    run_unit_tests
-    _bump_build
-    _build_app_for_testflight
-    _upload_build
-  end
-
-  #
-  # Run unit tests
-  #
-  desc "Run unit tests"
-  lane :run_unit_tests do
-    # Configure AWS credentials for CodeCommit if available
-    # This is needed even for scan because xcodebuild -showBuildSettings may resolve packages
-    if ENV["AWS_ACCESS_KEY_ID"] && ENV["AWS_SECRET_ACCESS_KEY"]
-      access_key = ENV["AWS_ACCESS_KEY_ID"]
-      secret_key = ENV["AWS_SECRET_ACCESS_KEY"]
-      # URL encode credentials (basic encoding)
-      access_key_encoded = access_key.gsub("@", "%40")
-      secret_key_encoded = secret_key.gsub("@", "%40").gsub(":", "%3A").gsub("/", "%2F").gsub("=", "%3D")
-      # Configure Git URL rewriting with embedded credentials
-      sh("git config --global url.\\\"https://#{access_key_encoded}:#{secret_key_encoded}@git-codecommit.us-east-1.amazonaws.com/\\\".insteadOf \\\"https://git-codecommit.us-east-1.amazonaws.com/\\\"")
-      # Also set up credential helper as fallback
-      sh("git config --global credential.helper '!aws codecommit credential-helper $@'")
-      sh("git config --global credential.UseHttpPath true")
+  # Find the most recent IPA file
+  def find_ipa_file
+    project_dir = File.expand_path("..", __dir__)
+    
+    # Common locations for IPA files
+    search_paths = [
+      File.join(project_dir, "*.ipa"),
+      File.join(project_dir, "build", "*.ipa"),
+      File.join(project_dir, "output", "*.ipa"),
+      File.join(Dir.home, "Library", "Developer", "Xcode", "Archives", "**", "*.ipa")
+    ]
+    
+    ipa_files = []
+    search_paths.each do |pattern|
+      ipa_files.concat(Dir.glob(pattern))
     end
     
-    # Increase timeout for xcodebuild -showBuildSettings (default is 3 seconds)
+    if ipa_files.empty?
+      UI.user_error!("❌ No IPA file found. Please build the app first using '_build_app_for_testflight' lane.")
+    end
+    
+    # Return the most recently modified IPA
+    latest_ipa = ipa_files.max_by { |f| File.mtime(f) }
+    UI.message("📦 Found IPA: #{latest_ipa}")
+    return latest_ipa
+  end
+
+  # ============================================================================
+  # MAIN LANES
+  # ============================================================================
+
+  desc "Deploy to TestFlight (fully automated)"
+  lane :deploy_to_testflight do
+    UI.header("🚀 Starting TestFlight Deployment")
+    
+    # Setup AWS credentials for private packages
+    setup_aws_codecommit_credentials
+    
+    # Verify App Store Connect credentials
+    verify_app_store_connect_credentials
+    
+    # Check if app exists, create if needed
+    unless app_exists_in_app_store_connect?
+      UI.important("📱 App not found in App Store Connect, attempting to create...")
+      create_app_if_needed
+    end
+    
+    # Run tests
+    run_unit_tests
+    
+    # Increment build number
+    _bump_build
+    
+    # Build and archive
+    _build_app_for_testflight
+    
+    # Upload to TestFlight
+    _upload_build
+    
+    UI.success("✅ Successfully deployed to TestFlight!")
+  end
+
+  desc "Run unit tests"
+  lane :run_unit_tests do
+    UI.header("🧪 Running Unit Tests")
+    
+    setup_aws_codecommit_credentials
+    
+    # Increase timeout for xcodebuild operations
     ENV["FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT"] = "60"
     ENV["FASTLANE_XCODEBUILD_SETTINGS_RETRIES"] = "2"
     
     begin
-      # Run tests using scan action
-      # Xcode will auto-discover test files if test target is configured
-      # If no test target exists, build will succeed but no tests will run
       scan(
         project: PROJECT,
         scheme: SCHEME,
@@ -83,9 +210,13 @@ platform :ios do
       )
       UI.success("✅ Unit tests passed!")
     rescue => ex
-      # If tests fail or test target not configured, provide helpful message
-      if ex.message.include?("test") || ex.message.include?("Test") || ex.message.include?("scheme") || ex.message.include?("timeout") || ex.message.include?("jwt-kit") || ex.message.include?("Sendable")
-        UI.important("⚠️  Tests could not be run: #{ex.message}")
+      error_msg = ex.message.to_s
+      
+      # Handle known issues gracefully
+      if error_msg.include?("test") || error_msg.include?("Test") || 
+         error_msg.include?("scheme") || error_msg.include?("timeout") ||
+         error_msg.include?("jwt-kit") || error_msg.include?("Sendable")
+        UI.important("⚠️  Tests could not be run: #{error_msg}")
         UI.important("This might be because:")
         UI.important("  1. No test target is configured in the Xcode project")
         UI.important("  2. Test files need to be added to a test target")
@@ -93,27 +224,79 @@ platform :ios do
         UI.important("  4. Package dependency resolution is taking too long")
         UI.important("  5. jwt-kit package has Swift 6 strict concurrency errors (known issue)")
         UI.important("")
-        UI.important("To fix: Add a Unit Testing Bundle target in Xcode and add test files to it")
         UI.important("Note: jwt-kit errors are in a third-party package and don't affect app functionality")
-        UI.important("Project builds successfully - continuing with deployment...")
+        UI.important("Continuing with deployment...")
       else
         raise ex
       end
     end
   end
 
-  #
-  # Increment build number
-  #
+  desc "Create app in App Store Connect if it doesn't exist"
+  lane :create_app_if_needed do
+    UI.header("📱 Checking App Store Connect")
+    
+    verify_app_store_connect_credentials
+    
+    # Try to check if app exists
+    begin
+      if app_exists_in_app_store_connect?
+        UI.success("✅ App '#{APP_NAME}' (#{BUNDLE_IDENTIFIER}) already exists in App Store Connect")
+        return
+      end
+    rescue => ex
+      UI.important("⚠️  Could not verify app existence: #{ex.message}")
+      UI.important("Will attempt to create app...")
+    end
+    
+    UI.message("📱 Creating app '#{APP_NAME}' (#{BUNDLE_IDENTIFIER}) in App Store Connect...")
+    
+    begin
+      # Set environment variables for produce (it reads from ENV)
+      ENV["APP_STORE_CONNECT_API_KEY_ID"] = APP_STORE_CONNECT_KEY_ID
+      ENV["APP_STORE_CONNECT_ISSUER_ID"] = APP_STORE_CONNECT_ISSUER_ID
+      ENV["APP_STORE_CONNECT_KEY_FILEPATH"] = APP_STORE_CONNECT_KEY_FILEPATH
+      
+      # Use produce action with API key authentication
+      # Note: produce requires username but will use API key if ENV vars are set
+      produce(
+        app_identifier: BUNDLE_IDENTIFIER,
+        app_name: APP_NAME,
+        language: "en-US",
+        app_version: "1.0",
+        sku: BUNDLE_IDENTIFIER,
+        team_id: TEAM_ID,
+        username: ENV["FASTLANE_USER"] || ENV["APPLE_ID"] || "zoharb157@gmail.com"
+      )
+      
+      UI.success("✅ App '#{APP_NAME}' (#{BUNDLE_IDENTIFIER}) created in App Store Connect!")
+    rescue => ex
+      error_msg = ex.message.to_s
+      
+      if error_msg.include?("already exists") || error_msg.include?("already registered")
+        UI.success("✅ App already exists (created by another process)")
+      elsif error_msg.include?("Unauthorized") || error_msg.include?("Authentication")
+        UI.important("⚠️  Authentication failed. App creation requires manual setup.")
+        UI.important("Please create the app manually at https://appstoreconnect.apple.com")
+        UI.important("Or ensure your API key has 'App Manager' or 'Admin' role")
+        UI.important("Continuing with deployment (will fail if app doesn't exist)...")
+      else
+        UI.important("⚠️  Could not create app automatically: #{error_msg}")
+        UI.important("You may need to create it manually at https://appstoreconnect.apple.com")
+        UI.important("Continuing with deployment (will fail if app doesn't exist)...")
+      end
+    end
+  end
+
   desc "Increment build number"
   lane :_bump_build do
-    # Manually increment build number for newer Xcode format
-    # Fastlane runs from fastlane/ directory, so go up one level
+    UI.header("🔢 Incrementing Build Number")
+    
     project_dir = File.expand_path("..", __dir__)
     project_path = File.join(project_dir, PROJECT, "project.pbxproj")
     
-    if !File.exist?(project_path)
-      UI.user_error!("Project file not found at: #{project_path}")
+    unless File.exist?(project_path)
+      UI.user_error!("❌ Project file not found at: #{project_path}")
     end
     
     content = File.read(project_path)
@@ -124,34 +307,18 @@ platform :ios do
       new_build = (current_build[1].to_i + 1).to_s
       content.gsub!(/CURRENT_PROJECT_VERSION = \d+;/, "CURRENT_PROJECT_VERSION = #{new_build};")
       File.write(project_path, content)
-      UI.message("Build number incremented to: #{new_build}")
+      UI.success("✅ Build number incremented to: #{new_build}")
     else
-      UI.important("Could not find CURRENT_PROJECT_VERSION, skipping increment")
+      UI.important("⚠️  Could not find CURRENT_PROJECT_VERSION, skipping increment")
     end
   end
 
-  #
-  # Build and archive the app
-  #
   desc "Build and archive the app"
   lane :_build_app_for_testflight do
-    # Configure AWS credentials for CodeCommit if available
-    if ENV["AWS_ACCESS_KEY_ID"] && ENV["AWS_SECRET_ACCESS_KEY"]
-      access_key = ENV["AWS_ACCESS_KEY_ID"]
-      secret_key = ENV["AWS_SECRET_ACCESS_KEY"]
-      # URL encode credentials (basic encoding)
-      access_key_encoded = access_key.gsub("@", "%40")
-      secret_key_encoded = secret_key.gsub("@", "%40").gsub(":", "%3A").gsub("/", "%2F").gsub("=", "%3D")
-      # Configure Git URL rewriting with embedded credentials
-      sh("git config --global url.\\\"https://#{access_key_encoded}:#{secret_key_encoded}@git-codecommit.us-east-1.amazonaws.com/\\\".insteadOf \\\"https://git-codecommit.us-east-1.amazonaws.com/\\\"")
-      # Also set up credential helper as fallback
-      sh("git config --global credential.helper '!aws codecommit credential-helper $@'")
-      sh("git config --global credential.UseHttpPath true")
-    end
+    UI.header("🔨 Building App for TestFlight")
     
-    # Build app - package dependencies will be resolved with Git credentials configured
-    # Note: jwt-kit package has Swift 6 strict concurrency errors, but we can't control package build settings
-    # The build may fail if jwt-kit errors are blocking. This is a known issue with jwt-kit v5.3.0
+    setup_aws_codecommit_credentials
+    
     begin
       build_app(
         workspace: nil,
@@ -164,130 +331,95 @@ platform :ios do
           teamID: TEAM_ID,
           signingStyle: "automatic"
         },
-        skip_package_dependencies_resolution: false, # Need to resolve packages to get dependencies
+        skip_package_dependencies_resolution: false,
         xcargs: "-allowProvisioningUpdates -skipPackagePluginValidation"
       )
+      
+      UI.success("✅ App built and archived successfully!")
     rescue => ex
       error_msg = ex.message.to_s
+      
       if error_msg.include?("jwt-kit") || error_msg.include?("Sendable") || error_msg.include?("conformance to 'Sendable'")
         UI.user_error!("❌ Build failed due to jwt-kit Swift 6 strict concurrency errors.\n\n" \
-          "This is a known issue with jwt-kit v5.3.0 and Xcode 16.2 (Swift 6).\n\n" \
-          "Possible solutions:\n" \
-          "1. Contact SDK/CommonSwiftUI maintainers to update jwt-kit to a Swift 6 compatible version\n" \
-          "2. Wait for jwt-kit to release a fix for Swift 6 compatibility\n" \
-          "3. Use an older Xcode version (not recommended)\n\n" \
-          "The errors are in the third-party jwt-kit package, not in your app code.\n" \
-          "Error: #{error_msg}")
+                       "This is a known issue with jwt-kit v5.3.0 and Xcode 16.2 (Swift 6).\n\n" \
+                       "Possible solutions:\n" \
+                       "1. Contact SDK/CommonSwiftUI maintainers to update jwt-kit to a Swift 6 compatible version\n" \
+                       "2. Wait for jwt-kit to release a fix for Swift 6 compatibility\n" \
+                       "3. Use an older Xcode version (not recommended)\n\n" \
+                       "The errors are in the third-party jwt-kit package, not in your app code.\n" \
+                       "Error: #{error_msg}")
       elsif error_msg.include?("No profiles") || error_msg.include?("No Accounts") || error_msg.include?("provisioning profile")
         UI.user_error!("❌ Build failed due to missing provisioning profiles.\n\n" \
-          "The bundle ID '#{BUNDLE_IDENTIFIER}' is not registered in the Apple Developer Portal.\n\n" \
-          "To fix:\n" \
-          "1. Go to https://developer.apple.com/account/resources/identifiers/list\n" \
-          "2. Click '+' to add a new App ID\n" \
-          "3. Enter '#{BUNDLE_IDENTIFIER}' as the Bundle ID\n" \
-          "4. Select 'App' as the type\n" \
-          "5. Enable any required capabilities (Push Notifications, etc.)\n" \
-          "6. Save and wait a few minutes for provisioning profiles to be generated\n\n" \
-          "Alternatively, you can use Fastlane's 'produce' action to create the app:\n" \
-          "  bundle exec fastlane create_app\n\n" \
-          "Error: #{error_msg}")
+                       "The bundle ID '#{BUNDLE_IDENTIFIER}' is not registered in the Apple Developer Portal.\n\n" \
+                       "To fix:\n" \
+                       "1. Run: bundle exec fastlane create_app_if_needed\n" \
+                       "2. Or create it manually at https://developer.apple.com/account/resources/identifiers/list\n\n" \
+                       "Error: #{error_msg}")
       else
         raise ex
       end
     end
   end
 
-  #
-  # Upload to TestFlight
-  #
-  desc "Upload to TestFlight"
+  desc "Upload build to TestFlight"
   lane :_upload_build do
+    UI.header("📤 Uploading to TestFlight")
+    
+    verify_app_store_connect_credentials
+    
+    # Find IPA file
+    ipa_path = find_ipa_file
+    
+    # Get release notes
     changelog = get_release_notes
     
-    # Check if API key is available
-    if KEY_ID.empty? || ISSUER_ID.empty? || !File.exist?(KEY_FILEPATH)
-      UI.user_error!("App Store Connect API credentials not configured. Please set APP_STORE_CONNECT_API_KEY_ID, APP_STORE_CONNECT_ISSUER_ID, and APP_STORE_CONNECT_KEY_FILEPATH environment variables.")
+    begin
+      upload_to_testflight(
+        ipa: ipa_path,
+        api_key: get_app_store_connect_api_key,
+        skip_waiting_for_build_processing: true,
+        skip_submission: true,
+        distribute_external: false,
+        notify_external_testers: false,
+        changelog: changelog,
+        uses_non_exempt_encryption: false
+      )
+      
+      UI.success("✅ Successfully uploaded to TestFlight!")
+      
+      # Get version and build number for logging
+      begin
+        version_number = get_version_number(xcodeproj: PROJECT)
+        build_number = get_build_number(xcodeproj: PROJECT)
+        UI.message("📱 Version: #{version_number}, Build: #{build_number}")
+      rescue => ex
+        UI.important("⚠️  Could not get version/build number: #{ex.message}")
+      end
+    rescue => ex
+      error_msg = ex.message.to_s
+      
+      if error_msg.include?("Authentication") || error_msg.include?("Unauthorized")
+        UI.user_error!("❌ Authentication failed. Please verify your App Store Connect API credentials.")
+      elsif error_msg.include?("No such app")
+        UI.user_error!("❌ App '#{BUNDLE_IDENTIFIER}' not found in App Store Connect.\n" \
+                       "Please run: bundle exec fastlane create_app_if_needed")
+      else
+        raise ex
+      end
     end
-
-    upload_to_testflight(
-      api_key: app_store_connect_api_key(
-        key_id: KEY_ID,
-        issuer_id: ISSUER_ID,
-        key_filepath: KEY_FILEPATH
-      ),
-      skip_waiting_for_build_processing: true,
-      skip_submission: true,
-      distribute_external: false,
-      notify_external_testers: false,
-      changelog: changelog,
-      uses_non_exempt_encryption: false
-    )
-
-    UI.success("Successfully uploaded to TestFlight!")
-    
-    # Get version and build number for logging
-    version_number = get_version_number(xcodeproj: PROJECT)
-    build_number = get_build_number(xcodeproj: PROJECT)
-    UI.message("Version: #{version_number}, Build: #{build_number}")
   end
 
-  #
-  # Create app in App Store Connect
-  #
-  desc "Create app in App Store Connect"
-  lane :create_app do
-    # Read credentials from environment at runtime
-    key_id = ENV["APP_STORE_CONNECT_API_KEY_ID"] || ""
-    issuer_id = ENV["APP_STORE_CONNECT_ISSUER_ID"] || ""
-    # Default to AuthKey.p8 in the fastlane directory (same directory as this Fastfile)
-    default_key_path = File.expand_path("AuthKey.p8", __dir__)
-    key_filepath = ENV["APP_STORE_CONNECT_KEY_FILEPATH"] || default_key_path
-    
-    UI.message("🔑 Checking API credentials...")
-    UI.message("   Key ID: #{key_id.empty? ? '❌ Not set' : '✅ Set'}")
-    UI.message("   Issuer ID: #{issuer_id.empty? ? '❌ Not set' : '✅ Set'}")
-    UI.message("   Key file: #{File.exist?(key_filepath) ? '✅ Found' : '❌ Not found'} (#{key_filepath})")
-    
-    if key_id.empty? || issuer_id.empty? || !File.exist?(key_filepath)
-      UI.user_error!("❌ App Store Connect API credentials not configured.\n\n" \
-        "Please set the following environment variables:\n" \
-        "  export APP_STORE_CONNECT_API_KEY_ID='9D2A5A93W3'\n" \
-        "  export APP_STORE_CONNECT_ISSUER_ID='19020611-ed38-4968-8ca9-4592b8171acc'\n" \
-        "  export APP_STORE_CONNECT_KEY_FILEPATH='./fastlane/AuthKey.p8'\n\n" \
-        "Then run: bundle exec fastlane create_app")
-    end
-    
-    UI.message("📱 Creating app '#{APP_NAME}' (#{BUNDLE_IDENTIFIER}) in App Store Connect...")
-    
-    # Set environment variables for produce action (it reads from ENV, not from api_key parameter)
-    ENV["APP_STORE_CONNECT_API_KEY_ID"] = key_id
-    ENV["APP_STORE_CONNECT_ISSUER_ID"] = issuer_id
-    ENV["APP_STORE_CONNECT_KEY_FILEPATH"] = key_filepath
-    
-    # Use API key authentication - produce will use ENV variables we set above
-    # Username is required by produce but API key will be used if ENV vars are set
-    # Application-specific password can be used to bypass 2FA
-    produce(
-      app_identifier: BUNDLE_IDENTIFIER,
-      app_name: APP_NAME,
-      language: "en-US",
-      app_version: "1.0",
-      sku: BUNDLE_IDENTIFIER,
-      team_id: TEAM_ID,
-      username: ENV["FASTLANE_USER"] || "zoharb157@gmail.com"
-      # Note: If FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD is set, it will bypass 2FA
-    )
-    
-    UI.success("✅ App '#{APP_NAME}' (#{BUNDLE_IDENTIFIER}) created in App Store Connect!")
-    UI.message("📦 You can now build and upload to TestFlight using: bundle exec fastlane deploy_to_testflight")
-  end
+  # ============================================================================
+  # ALIASES FOR CI/CD
+  # ============================================================================
 
-  #
-  # Test only lane (for CI)
-  #
-  desc "Run tests only"
+  desc "Run tests only (for CI)"
   lane :test do
     run_unit_tests
   end
-end
 
+  desc "Create app in App Store Connect (manual trigger)"
+  lane :create_app do
+    create_app_if_needed
+  end
+end

@@ -1,80 +1,144 @@
-fastlane documentation
-----
+# Fastlane Configuration
 
-# Installation
+This Fastlane configuration is **fully automated** and designed to work seamlessly in CI/CD environments.
 
-Make sure you have the latest version of the Xcode command line tools installed:
+## Features
 
-```sh
-xcode-select --install
+- ✅ **Fully Automated**: No manual intervention required
+- ✅ **CI/CD Ready**: Works in GitHub Actions and other CI systems
+- ✅ **Environment-Based**: All configuration via environment variables
+- ✅ **Auto-Detection**: Automatically finds IPA files, checks app existence, etc.
+- ✅ **Error Handling**: Graceful error handling with clear messages
+
+## Required Environment Variables
+
+### App Store Connect API (for TestFlight deployment)
+
+```bash
+APP_STORE_CONNECT_API_KEY_ID=your_key_id
+APP_STORE_CONNECT_ISSUER_ID=your_issuer_id
+APP_STORE_CONNECT_KEY_FILEPATH=./fastlane/AuthKey.p8
 ```
 
-For _fastlane_ installation instructions, see [Installing _fastlane_](https://docs.fastlane.tools/#installing-fastlane)
+### AWS CodeCommit (for private Swift packages)
 
-# Available Actions
-
-## iOS
-
-### ios deploy_to_testflight
-
-```sh
-[bundle exec] fastlane ios deploy_to_testflight
+```bash
+AWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
+AWS_DEFAULT_REGION=us-east-1
 ```
 
-Deploy to TestFlight
+### Optional Configuration
 
-### ios run_unit_tests
+All of these have sensible defaults but can be overridden:
 
-```sh
-[bundle exec] fastlane ios run_unit_tests
+```bash
+FASTLANE_PROJECT=CalCalculatorAiPlaygournd.xcodeproj
+FASTLANE_SCHEME=CalCalculator
+FASTLANE_APP_NAME=CalCalculator
+FASTLANE_BUNDLE_IDENTIFIER=CalCalculatorAiPlaygournd
+FASTLANE_TEAM_ID=5NS9ZUMYCS
 ```
 
-Run unit tests
+## Available Lanes
 
-### ios _bump_build
+### `deploy_to_testflight`
+**Fully automated TestFlight deployment**
 
-```sh
-[bundle exec] fastlane ios _bump_build
+```bash
+bundle exec fastlane deploy_to_testflight
 ```
 
-Increment build number
+This lane:
+1. Sets up AWS CodeCommit credentials
+2. Verifies App Store Connect credentials
+3. Checks if app exists (creates if needed)
+4. Runs unit tests
+5. Increments build number
+6. Builds and archives the app
+7. Uploads to TestFlight
 
-### ios _build_app_for_testflight
+### `run_unit_tests`
+**Run unit tests only**
 
-```sh
-[bundle exec] fastlane ios _build_app_for_testflight
+```bash
+bundle exec fastlane run_unit_tests
+# or
+bundle exec fastlane test
 ```
 
-Build and archive the app
+### `create_app_if_needed`
+**Create app in App Store Connect if it doesn't exist**
 
-### ios _upload_build
-
-```sh
-[bundle exec] fastlane ios _upload_build
+```bash
+bundle exec fastlane create_app_if_needed
+# or
+bundle exec fastlane create_app
 ```
 
-Upload to TestFlight
+This will only create the app if it doesn't already exist.
 
-### ios create_app
+## CI/CD Integration
 
-```sh
-[bundle exec] fastlane ios create_app
+### GitHub Actions
+
+The workflow automatically:
+- Sets up all required environment variables from GitHub Secrets
+- Configures AWS CodeCommit credentials
+- Sets up App Store Connect API key
+- Runs tests and deploys to TestFlight
+
+### Required GitHub Secrets
+
+- `APP_STORE_CONNECT_API_KEY_ID`
+- `APP_STORE_CONNECT_ISSUER_ID`
+- `APP_STORE_CONNECT_KEY` (base64-encoded `.p8` file)
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+
+## Local Development
+
+### First Time Setup
+
+1. Place your App Store Connect API key in `fastlane/AuthKey.p8`
+2. Set environment variables (or use `.env` file with `dotenv` gem)
+3. Run: `bundle exec fastlane deploy_to_testflight`
+
+### Manual Override
+
+If you need to override any configuration:
+
+```bash
+FASTLANE_SCHEME=MyScheme bundle exec fastlane deploy_to_testflight
 ```
 
-Create app in App Store Connect
+## Troubleshooting
 
-### ios test
+### "App not found in App Store Connect"
+- Run: `bundle exec fastlane create_app_if_needed`
+- Or create manually at https://appstoreconnect.apple.com
 
-```sh
-[bundle exec] fastlane ios test
-```
+### "Authentication failed"
+- Verify your App Store Connect API credentials
+- Check that the `.p8` file is correct and not expired
+- Ensure the Key ID and Issuer ID match your API key
 
-Run tests only
+### "No provisioning profiles"
+- The app must exist in App Store Connect first
+- Run: `bundle exec fastlane create_app_if_needed`
+- Wait a few minutes for provisioning profiles to be generated
 
-----
+### "jwt-kit compilation errors"
+- This is a known issue with jwt-kit v5.3.0 and Swift 6
+- The errors are in a third-party package, not your app
+- Contact SDK maintainers for an update
 
-This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.
+## Architecture
 
-More information about _fastlane_ can be found on [fastlane.tools](https://fastlane.tools).
+The Fastfile is organized into:
+- **Configuration**: Environment-based constants
+- **Helper Methods**: Reusable functions for credentials, file finding, etc.
+- **Main Lanes**: Public-facing lanes for common tasks
+- **Private Lanes**: Internal lanes prefixed with `_`
 
-The documentation of _fastlane_ can be found on [docs.fastlane.tools](https://docs.fastlane.tools).
+All lanes are designed to be idempotent and handle errors gracefully.
