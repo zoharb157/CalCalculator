@@ -12,11 +12,13 @@ struct CaloriesEntry: TimelineEntry {
     let date: Date
     let macros: MacroNutrients
     let isPlaceholder: Bool
+    let isSubscribed: Bool
     
-    init(date: Date = .now, macros: MacroNutrients = .placeholder, isPlaceholder: Bool = false) {
+    init(date: Date = .now, macros: MacroNutrients = .placeholder, isPlaceholder: Bool = false, isSubscribed: Bool = true) {
         self.date = date
         self.macros = macros
         self.isPlaceholder = isPlaceholder
+        self.isSubscribed = isSubscribed
     }
     
     // MARK: - Static Properties
@@ -24,12 +26,14 @@ struct CaloriesEntry: TimelineEntry {
     static let placeholder = CaloriesEntry(
         date: .now,
         macros: .placeholder,
-        isPlaceholder: true
+        isPlaceholder: true,
+        isSubscribed: true
     )
     
     static let empty = CaloriesEntry(
         date: .now,
         macros: .empty,
-        isPlaceholder: false
+        isPlaceholder: false,
+        isSubscribed: true
     )
 }

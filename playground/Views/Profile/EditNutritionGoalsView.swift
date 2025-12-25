@@ -94,6 +94,26 @@ struct EditNutritionGoalsView: View {
                 isEditingFat = false
             }
         }
+        .onChange(of: isEditingCalories) { _, newValue in
+            if newValue {
+                tempCalories = viewModel.calorieGoal
+            }
+        }
+        .onChange(of: isEditingProtein) { _, newValue in
+            if newValue {
+                tempProtein = viewModel.proteinGoal
+            }
+        }
+        .onChange(of: isEditingCarbs) { _, newValue in
+            if newValue {
+                tempCarbs = viewModel.carbsGoal
+            }
+        }
+        .onChange(of: isEditingFat) { _, newValue in
+            if newValue {
+                tempFat = viewModel.fatGoal
+            }
+        }
     }
     
     // MARK: - Macro Goals Section

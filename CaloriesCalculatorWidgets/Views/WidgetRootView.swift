@@ -18,21 +18,36 @@ struct WidgetRootView: View {
         Group {
             switch widgetFamily {
             case .systemSmall:
-                SmallWidgetView(macros: entry.macros)
+                WidgetLockedContent(isSubscribed: entry.isSubscribed) {
+                    SmallWidgetView(macros: entry.macros)
+                }
             case .systemMedium:
-                MediumWidgetView(macros: entry.macros)
+                WidgetLockedContent(isSubscribed: entry.isSubscribed) {
+                    MediumWidgetView(macros: entry.macros)
+                }
             case .systemLarge:
-                LargeWidgetView(macros: entry.macros)
+                WidgetLockedContent(isSubscribed: entry.isSubscribed) {
+                    LargeWidgetView(macros: entry.macros)
+                }
             case .systemExtraLarge:
-                LargeWidgetView(macros: entry.macros)
+                WidgetLockedContent(isSubscribed: entry.isSubscribed) {
+                    LargeWidgetView(macros: entry.macros)
+                }
             case .accessoryCircular:
-                AccessoryCircularView(macros: entry.macros)
+                WidgetAccessoryLockedContent(isSubscribed: entry.isSubscribed) {
+                    AccessoryCircularView(macros: entry.macros)
+                }
             case .accessoryRectangular:
-                AccessoryRectangularView(macros: entry.macros)
+                WidgetAccessoryLockedContent(isSubscribed: entry.isSubscribed) {
+                    AccessoryRectangularView(macros: entry.macros)
+                }
             case .accessoryInline:
+                // Inline widgets don't support overlay, just show content
                 AccessoryInlineView(macros: entry.macros)
             @unknown default:
-                SmallWidgetView(macros: entry.macros)
+                WidgetLockedContent(isSubscribed: entry.isSubscribed) {
+                    SmallWidgetView(macros: entry.macros)
+                }
             }
         }
         .containerBackground(for: .widget) {
