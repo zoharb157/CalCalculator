@@ -42,6 +42,7 @@ final class HealthKitManager {
     
     // MARK: - Authorization
     
+    /// Request HealthKit authorization - this shows the system permission dialog
     func requestAuthorization() async throws {
         guard let store = healthStore else {
             throw HealthKitError.notAvailable
@@ -64,24 +65,22 @@ final class HealthKitManager {
         ]
         
         try await store.requestAuthorization(toShare: typesToWrite, read: typesToRead)
-        
-        // Check actual authorization status for a key type (steps)
-        checkAuthorizationStatus()
     }
     
-    /// Check if we have authorization to read health data
-    func checkAuthorizationStatus() {
+    /// Check current authorization status without requesting
+    /// Call this on app launch to determine which UI to show
+    func checkCurrentAuthorizationStatus() {
         guard let store = healthStore else {
             isAuthorized = false
             authorizationDenied = true
             return
         }
         
-        // Check authorization for step count as a representative type
-        let stepType = HKQuantityType(.stepCount)
-        let status = store.authorizationStatus(for: stepType)
+        // Check write permission as proxy for whether user has seen the dialog
+        let bodyMassType = HKQuantityType(.bodyMass)
+        let writeStatus = store.authorizationStatus(for: bodyMassType)
         
-        switch status {
+        switch writeStatus {
         case .sharingAuthorized:
             isAuthorized = true
             authorizationDenied = false
@@ -89,6 +88,7 @@ final class HealthKitManager {
             isAuthorized = false
             authorizationDenied = true
         case .notDetermined:
+            // User hasn't seen the permission dialog yet
             isAuthorized = false
             authorizationDenied = false
         @unknown default:
@@ -97,22 +97,71 @@ final class HealthKitManager {
         }
     }
     
-    /// Check read authorization by attempting to fetch data
-    func verifyReadAccess() async {
-        guard healthStore != nil else {
+    /// Request authorization and then verify access by fetching data
+    func requestAndVerifyAuthorization() async {
+        guard let store = healthStore else {
             isAuthorized = false
             authorizationDenied = true
             return
         }
         
-        // Try to fetch steps - if we get data or zero, we have access
-        // The only way to truly know is to check if query succeeds
-        let stepsValue = await fetchStepsValue()
-        let caloriesValue = await fetchActiveCaloriesValue()
+        // Request authorization - this shows the system dialog
+        do {
+            try await requestAuthorization()
+        } catch {
+            isAuthorized = false
+            authorizationDenied = true
+            return
+        }
         
-        // If both are 0 and it's not early morning, likely no permission
-        // But we can't truly detect read denial, so we check write status
-        checkAuthorizationStatus()
+        // After user responds, check the status and fetch data
+        await verifyAuthorizationWithData(store: store)
+    }
+    
+    /// Verify authorization by checking status and fetching data
+    private func verifyAuthorizationWithData(store: HKHealthStore) async {
+        // Fetch data to verify read access
+        await fetchTodayData()
+        
+        // If we got any data, we definitely have read access
+        if steps > 0 || activeCalories > 0 || exerciseMinutes > 0 || heartRate > 0 || distance > 0 || sleepHours > 0 {
+            isAuthorized = true
+            authorizationDenied = false
+            return
+        }
+        
+        // No data - check write permission as proxy
+        let bodyMassType = HKQuantityType(.bodyMass)
+        let writeStatus = store.authorizationStatus(for: bodyMassType)
+        
+        switch writeStatus {
+        case .sharingAuthorized:
+            // User granted write, likely granted read too - just no activity yet
+            isAuthorized = true
+            authorizationDenied = false
+        case .sharingDenied:
+            // User denied - show settings prompt
+            isAuthorized = false
+            authorizationDenied = true
+        case .notDetermined:
+            // Shouldn't happen after requesting, but treat as denied
+            isAuthorized = false
+            authorizationDenied = true
+        @unknown default:
+            isAuthorized = false
+            authorizationDenied = true
+        }
+    }
+    
+    /// Refresh data and authorization status (call when returning from settings)
+    func refreshAuthorizationAndData() async {
+        guard let store = healthStore else {
+            isAuthorized = false
+            authorizationDenied = true
+            return
+        }
+        
+        await verifyAuthorizationWithData(store: store)
     }
     
     // MARK: - Fetch Today's Data

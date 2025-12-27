@@ -49,7 +49,15 @@ struct HealthKitCard: View {
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
             // Re-check authorization when app comes back from settings
             Task {
-                await loadHealthData()
+                isLoading = true
+                await healthKitManager.refreshAuthorizationAndData()
+                isLoading = false
+                
+                if healthKitManager.isAuthorized {
+                    withAnimation(.easeOut(duration: 1.0)) {
+                        animateRings = true
+                    }
+                }
             }
         }
     }
@@ -266,11 +274,14 @@ struct HealthKitCard: View {
             
             Button {
                 Task {
-                    do {
-                        try await healthKitManager.requestAuthorization()
-                        await loadHealthData()
-                    } catch {
-                        // Error requesting authorization
+                    // Request authorization - this shows the system Health permission dialog
+                    await healthKitManager.requestAndVerifyAuthorization()
+                    
+                    // Trigger animation if authorized
+                    if healthKitManager.isAuthorized {
+                        withAnimation(.easeOut(duration: 1.0)) {
+                            animateRings = true
+                        }
                     }
                 }
             } label: {
@@ -393,31 +404,19 @@ struct HealthKitCard: View {
         isLoading = true
         animateRings = false
         
-        // First check authorization status
-        healthKitManager.checkAuthorizationStatus()
+        // Check current status without requesting permission
+        healthKitManager.checkCurrentAuthorizationStatus()
         
-        if !healthKitManager.isAuthorized && !healthKitManager.authorizationDenied {
-            // Not determined - need to request
-            do {
-                try await healthKitManager.requestAuthorization()
-            } catch {
-                isLoading = false
-                return
+        // If already authorized, fetch data
+        if healthKitManager.isAuthorized {
+            await healthKitManager.fetchTodayData()
+            
+            withAnimation(.easeOut(duration: 1.0)) {
+                animateRings = true
             }
         }
         
-        if healthKitManager.authorizationDenied {
-            isLoading = false
-            return
-        }
-        
-        await healthKitManager.fetchTodayData()
         isLoading = false
-        
-        // Trigger ring animation after data loads
-        withAnimation(.easeOut(duration: 1.0)) {
-            animateRings = true
-        }
     }
     
     // MARK: - Formatting

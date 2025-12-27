@@ -381,38 +381,25 @@ final class ProgressViewModel {
             return
         }
         
-        // Check authorization status first
-        healthKitManager.checkAuthorizationStatus()
+        // Check current status without auto-requesting
+        healthKitManager.checkCurrentAuthorizationStatus()
         
         if healthKitManager.authorizationDenied {
             healthKitAuthorizationDenied = true
             return
         }
         
-        do {
-            try await healthKitManager.requestAuthorization()
-            
-            // Re-check after requesting
-            healthKitManager.checkAuthorizationStatus()
-            
-            if healthKitManager.authorizationDenied {
-                healthKitAuthorizationDenied = true
-                return
-            }
-            
-            healthKitAuthorizationDenied = false
+        // If authorized, fetch data
+        if healthKitManager.isAuthorized {
             await healthKitManager.fetchTodayData()
             
+            healthKitAuthorizationDenied = false
             steps = healthKitManager.steps
             activeCalories = healthKitManager.activeCalories
             exerciseMinutes = healthKitManager.exerciseMinutes
             heartRate = healthKitManager.heartRate
             distance = healthKitManager.distance
             sleepHours = healthKitManager.sleepHours
-        } catch {
-            // HealthKit not available or not authorized
-            healthKitAuthorizationDenied = true
-            print("HealthKit error: \(error.localizedDescription)")
         }
     }
     

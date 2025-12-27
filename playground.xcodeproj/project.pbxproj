@@ -26,14 +26,14 @@
 /* Begin PBXCopyFilesBuildPhase section */
 		E51C57F52EFD2FF5002A2D96 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
+			buildActionMask = 8;
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
 				E51C57F42EFD2FF5002A2D96 /* CaloriesCalculatorWidgetsExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
+			runOnlyForDeploymentPostprocessing = 1;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
@@ -386,15 +386,13 @@
 				DEVELOPMENT_TEAM = F6KF69XTT8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationQueriesSchemes = "x-apple-health";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs camera access to take photos of your meals for calorie tracking.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "CalCalculator needs access to read your health data to display activity metrics and weight history.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "CalCalculator needs access to save your weight measurements to Apple Health.";
-				INFOPLIST_KEY_LSApplicationQueriesSchemes = (
-					"x-apple-health",
-				);
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs photo library access to select photos of your meals for calorie tracking.";
-				INFOPLIST_KEY_NSUserTrackingUsageDescription = "This app uses tracking to provide personalized content and improve your experience. Your data is used only for app functionality and analytics.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "This app uses tracking to provide personalized content and improve your experience. Your data is used only for app functionality and analytics.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen.storyboard;
@@ -431,15 +429,13 @@
 				DEVELOPMENT_TEAM = F6KF69XTT8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationQueriesSchemes = "x-apple-health";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs camera access to take photos of your meals for calorie tracking.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "CalCalculator needs access to read your health data to display activity metrics and weight history.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "CalCalculator needs access to save your weight measurements to Apple Health.";
-				INFOPLIST_KEY_LSApplicationQueriesSchemes = (
-					"x-apple-health",
-				);
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs photo library access to select photos of your meals for calorie tracking.";
-				INFOPLIST_KEY_NSUserTrackingUsageDescription = "This app uses tracking to provide personalized content and improve your experience. Your data is used only for app functionality and analytics.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "This app uses tracking to provide personalized content and improve your experience. Your data is used only for app functionality and analytics.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen.storyboard;

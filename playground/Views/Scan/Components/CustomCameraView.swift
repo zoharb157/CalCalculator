@@ -78,6 +78,7 @@ struct CustomCameraView: View {
             
             // Mode-specific overlay
             overlayForCurrentMode
+                .ignoresSafeArea()
             
             // Controls
             VStack {
