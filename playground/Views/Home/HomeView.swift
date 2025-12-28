@@ -45,7 +45,7 @@ struct HomeView: View {
     }
     
     var body: some View {
-        let baseViepush w = mainContent
+        let baseView = mainContent
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: UUID.self) { mealId in
