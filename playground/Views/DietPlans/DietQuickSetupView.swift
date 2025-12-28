@@ -367,3 +367,4 @@ struct DietQuickSetupView: View {
         .modelContainer(for: [DietPlan.self, ScheduledMeal.self])
 }
 
+

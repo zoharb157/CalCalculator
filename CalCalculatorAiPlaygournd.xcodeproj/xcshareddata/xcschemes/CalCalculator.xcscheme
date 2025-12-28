@@ -32,7 +32,7 @@
                BlueprintIdentifier = "E51C57DF2EFD2FF4002A2D96"
                BuildableName = "CaloriesCalculatorWidgetsExtension.appex"
                BlueprintName = "CaloriesCalculatorWidgetsExtension"
-               ReferencedContainer = "container:../playground.xcodeproj">
+               ReferencedContainer = "container:CalCalculatorAiPlaygournd.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
          <BuildActionEntry

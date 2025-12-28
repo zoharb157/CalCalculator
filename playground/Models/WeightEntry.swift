@@ -46,3 +46,4 @@ final class WeightEntry {
         return formatter.string(from: date)
     }
 }
+

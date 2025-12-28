@@ -80,10 +80,20 @@ struct PremiumLockedContent<Content: View>: View {
     }
     
     var body: some View {
-        ZStack {
-            content
-                .blur(radius: isSubscribed ? 0 : 8)
-                .opacity(isSubscribed ? 1.0 : 0.3)
+        ZStack(alignment: .center) {
+            if isSubscribed {
+                content
+            } else {
+                // Apply blur with reduced intensity to preserve card boundaries
+                content
+                    .blur(radius: 4)
+                    .opacity(0.6)
+                    // Add subtle border to maintain card separation
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                    )
+            }
             
             if !isSubscribed {
                 VStack {
@@ -115,6 +125,7 @@ struct PremiumLockedContent<Content: View>: View {
                         .clipShape(Capsule())
                         .shadow(color: Color.black.opacity(0.15), radius: 3, x: 0, y: 2)
                     }
+                    .padding(.bottom, 16)
                     
                     Spacer()
                 }

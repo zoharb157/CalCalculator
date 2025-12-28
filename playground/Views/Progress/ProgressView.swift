@@ -218,7 +218,7 @@ struct CurrentWeightCard: View {
             
             HStack(spacing: 12) {
                 Button(action: onWeightTap) {
-                    HStack {
+                    HStack(spacing: 8) {
                         Image(systemName: "plus.circle.fill")
                         Text("Log Weight")
                         if !isSubscribed {
@@ -231,6 +231,7 @@ struct CurrentWeightCard: View {
                     .fontWeight(.semibold)
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 16)
                     .padding(.vertical, 12)
                     .background(Color.blue)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -238,7 +239,7 @@ struct CurrentWeightCard: View {
                 }
                 
                 Button(action: onViewProgress) {
-                    HStack {
+                    HStack(spacing: 8) {
                         Image(systemName: "chart.line.uptrend.xyaxis")
                         Text("Progress")
                         if !isSubscribed {
@@ -251,6 +252,7 @@ struct CurrentWeightCard: View {
                     .fontWeight(.semibold)
                     .foregroundColor(.blue)
                     .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 16)
                     .padding(.vertical, 12)
                     .background(Color.blue.opacity(0.1))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -549,6 +551,10 @@ struct HealthDataSection: View {
                 )
             }
         }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 4)
     }
     
     private func formatNumber(_ number: Int) -> String {

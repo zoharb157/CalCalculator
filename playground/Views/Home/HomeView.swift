@@ -45,16 +45,14 @@ struct HomeView: View {
     }
     
     var body: some View {
-        NavigationStack {
-            ZStack {
-                contentView
-                floatingMenuOverlay
-            }
+        let baseViepush w = mainContent
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: UUID.self) { mealId in
                 MealDetailView(mealId: mealId, repository: repository)
             }
+        
+        return baseView
             .refreshable {
                 HapticManager.shared.impact(.light)
                 await viewModel.refreshTodayData()
@@ -155,7 +153,6 @@ struct HomeView: View {
                     confettiCounter += 1
                 }
             }
-        }
     }
     
     // MARK: - Badge Checking
@@ -182,6 +179,15 @@ struct HomeView: View {
     }
     
     // MARK: - Private Views
+    
+    private var mainContent: some View {
+        NavigationStack {
+            ZStack {
+                contentView
+                floatingMenuOverlay
+            }
+        }
+    }
     
     private var contentView: some View {
         VStack(spacing: 0) {

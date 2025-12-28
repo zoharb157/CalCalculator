@@ -22,6 +22,7 @@ struct playgroundApp: App {
     @State private var appearanceMode: AppearanceMode
     @State var sdk: TheSDK
     @State private var subscriptionStatus: Bool = false
+    @State private var previousSubscriptionStatus: Bool = false
     @State private var languageRefreshID = UUID()
     
     init() {
@@ -102,6 +103,8 @@ struct playgroundApp: App {
                         do {
                             try await sdk.updateIsSubscribed()
                             await MainActor.run {
+                                // Store initial state before updating
+                                previousSubscriptionStatus = subscriptionStatus
                                 updateSubscriptionStatus()
                                 print("📱 Subscription status updated on app launch: \(subscriptionStatus)")
                             }
@@ -113,6 +116,7 @@ struct playgroundApp: App {
                 .onChange(of: sdk.isSubscribed) { oldValue, newValue in
                     // Subscription status changed - update reactive state
                     updateSubscriptionStatus()
+                    previousSubscriptionStatus = newValue
                     print("📱 Subscription status changed: \(newValue)")
                 }
                 .onChange(of: UserSettings.shared.debugOverrideSubscription) { oldValue, newValue in
@@ -123,6 +127,7 @@ struct playgroundApp: App {
                 .onChange(of: UserSettings.shared.debugIsSubscribed) { oldValue, newValue in
                     // Debug subscription value changed - update reactive state
                     updateSubscriptionStatus()
+                    previousSubscriptionStatus = newValue
                     print("🔧 Debug isSubscribed: \(newValue)")
                 }
                 .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in

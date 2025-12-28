@@ -1,0 +1,30 @@
+{
+  "configurations" : [
+    {
+      "id" : "B0E012FC-1721-4696-A8B8-A27A1058060A",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "performanceAntipatternCheckerEnabled" : true,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:CalCalculatorAiPlaygournd.xcodeproj",
+      "identifier" : "A31433142EF0897D00EFE039",
+      "name" : "playground"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:CalCalculatorAiPlaygournd.xcodeproj",
+        "identifier" : "CEB037952EFD7A2C008E8EFE",
+        "name" : "CalCalculatorTests"
+      }
+    }
+  ],
+  "version" : 1
+}

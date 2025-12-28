@@ -190,3 +190,4 @@ struct DietSummaryView: View {
         .modelContainer(for: [DietPlan.self, ScheduledMeal.self, Meal.self])
 }
 
+
