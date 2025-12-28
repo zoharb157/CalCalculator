@@ -5,12 +5,12 @@
 //  Created by Tareq Khalili on 15/12/2025.
 //
 
-import SwiftUI
-import SwiftData
-import MavenCommonSwiftUI
-import SDK
 import Firebase
 import FirebaseAnalytics
+import MavenCommonSwiftUI
+import SDK
+import SwiftData
+import SwiftUI
 import UIKit
 import WidgetKit
 
@@ -24,7 +24,7 @@ struct playgroundApp: App {
     @State private var subscriptionStatus: Bool = false
     @State private var previousSubscriptionStatus: Bool = false
     @State private var languageRefreshID = UUID()
-    
+
     init() {
         do {
             let schema = Schema([
@@ -36,15 +36,18 @@ struct playgroundApp: App {
                 DietPlan.self,
                 ScheduledMeal.self,
                 MealTemplate.self,
-                MealReminder.self
+                MealReminder.self,
             ])
-            
+
             // Ensure Application Support directory exists before SwiftData tries to create the store
             let fileManager = FileManager.default
-            if let appSupportURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
-                try? fileManager.createDirectory(at: appSupportURL, withIntermediateDirectories: true)
+            if let appSupportURL = fileManager.urls(
+                for: .applicationSupportDirectory, in: .userDomainMask
+            ).first {
+                try? fileManager.createDirectory(
+                    at: appSupportURL, withIntermediateDirectories: true)
             }
-            
+
             let modelConfiguration = ModelConfiguration(
                 schema: schema,
                 isStoredInMemoryOnly: false
@@ -56,38 +59,43 @@ struct playgroundApp: App {
         } catch {
             fatalError("Could not initialize ModelContainer: \(error)")
         }
-        
+
         // UserDefaults read is fast, so this is fine to do synchronously
         _appearanceMode = State(initialValue: UserProfileRepository.shared.getAppearanceMode())
-        sdk = .init(config: .init(baseURL: Config.baseURL,
-                                  logOptions: .all,
-                                  apnsHandler: { event in
-            switch event {
-            case let .didReceive(notification, details):
-                guard details == .appOpened else { return }
-                if let urlString = notification["webviewUrl"] as? String,
-                   let url = URL(string: urlString) {
-                    print("📱 Deep link received: \(url)")
-                }
-            default:
-                break
-            }
-        }))
+        sdk = .init(
+            config: .init(
+                baseURL: Config.baseURL,
+                logOptions: .all,
+                apnsHandler: { event in
+                    switch event {
+                    case .didReceive(let notification, let details):
+                        guard details == .appOpened else { return }
+                        if let urlString = notification["webviewUrl"] as? String,
+                            let url = URL(string: urlString)
+                        {
+                            print("📱 Deep link received: \(url)")
+                        }
+                    default:
+                        break
+                    }
+                }))
     }
-    
+
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .modelContainer(modelContainer)
                 .preferredColorScheme(appearanceMode.colorScheme)
                 .environment(\.localization, LocalizationManager.shared)
-                .id(languageRefreshID) // Force view refresh when language changes
-                .onReceive(NotificationCenter.default.publisher(for: .appearanceModeChanged)) { notification in
+                .id(languageRefreshID)  // Force view refresh when language changes
+                .onReceive(NotificationCenter.default.publisher(for: .appearanceModeChanged)) {
+                    notification in
                     if let mode = notification.object as? AppearanceMode {
                         appearanceMode = mode
                     }
                 }
-                .onReceive(NotificationCenter.default.publisher(for: .languageChanged)) { notification in
+                .onReceive(NotificationCenter.default.publisher(for: .languageChanged)) {
+                    notification in
                     // Force view refresh when language changes
                     if let languageCode = notification.object as? String {
                         print("🌐 Language changed to: \(languageCode)")
@@ -95,8 +103,8 @@ struct playgroundApp: App {
                         languageRefreshID = UUID()
                     }
                 }
-                .environment(sdk) // Use direct environment like example app
-                .environment(\.isSubscribed, subscriptionStatus) // Inject reactive subscription status
+                .environment(sdk)  // Use direct environment like example app
+                .environment(\.isSubscribed, subscriptionStatus)  // Inject reactive subscription status
                 .task {
                     // Update subscription status on app opening (non-blocking, low priority)
                     Task.detached(priority: .utility) {
@@ -106,7 +114,9 @@ struct playgroundApp: App {
                                 // Store initial state before updating
                                 previousSubscriptionStatus = subscriptionStatus
                                 updateSubscriptionStatus()
-                                print("📱 Subscription status updated on app launch: \(subscriptionStatus)")
+                                print(
+                                    "📱 Subscription status updated on app launch: \(subscriptionStatus)"
+                                )
                             }
                         } catch {
                             print("⚠️ Failed to update subscription status on launch: \(error)")
@@ -130,11 +140,17 @@ struct playgroundApp: App {
                     previousSubscriptionStatus = newValue
                     print("🔧 Debug isSubscribed: \(newValue)")
                 }
-                .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+                .onReceive(
+                    NotificationCenter.default.publisher(
+                        for: UIApplication.didBecomeActiveNotification)
+                ) { _ in
                     // Refresh widget when app becomes active
                     WidgetCenter.shared.reloadAllTimelines()
                 }
-                .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
+                .onReceive(
+                    NotificationCenter.default.publisher(
+                        for: UIApplication.didEnterBackgroundNotification)
+                ) { _ in
                     // Refresh widget when app enters background
                     WidgetCenter.shared.reloadAllTimelines()
                 }
@@ -144,14 +160,19 @@ struct playgroundApp: App {
                     let repository = MealRepository(context: context)
                     repository.syncWidgetData()
                 }
-                .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+                .onReceive(
+                    NotificationCenter.default.publisher(
+                        for: UIApplication.didBecomeActiveNotification)
+                ) { _ in
                     // Refresh subscription status when app becomes active (non-blocking)
                     Task.detached(priority: .utility) {
                         do {
                             try await sdk.updateIsSubscribed()
                             await MainActor.run {
                                 updateSubscriptionStatus()
-                                print("📱 Subscription status refreshed on app becoming active: \(subscriptionStatus)")
+                                print(
+                                    "📱 Subscription status refreshed on app becoming active: \(subscriptionStatus)"
+                                )
                             }
                         } catch {
                             print("⚠️ Failed to refresh subscription status: \(error)")
@@ -160,7 +181,7 @@ struct playgroundApp: App {
                 }
         }
     }
-    
+
     /// Update reactive subscription status based on debug override or SDK value
     /// Also syncs the subscription status to the widget via shared UserDefaults
     private func updateSubscriptionStatus() {
@@ -170,24 +191,24 @@ struct playgroundApp: App {
         } else {
             subscriptionStatus = sdk.isSubscribed
         }
-        
+
         // Sync subscription status to widget via shared UserDefaults
         syncSubscriptionStatusToWidget(subscriptionStatus)
     }
-    
+
     /// Syncs subscription status to the widget using App Groups shared UserDefaults
     private func syncSubscriptionStatusToWidget(_ isSubscribed: Bool) {
         let appGroupIdentifier = "group.CalCalculatorAiPlaygournd.shared"
         let isSubscribedKey = "widget.isSubscribed"
-        
+
         guard let sharedDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
             print("⚠️ Failed to access shared UserDefaults for widget subscription sync")
             return
         }
-        
+
         sharedDefaults.set(isSubscribed, forKey: isSubscribedKey)
         print("📱 Widget subscription status synced: \(isSubscribed)")
-        
+
         // Reload widget timelines to reflect the change
         WidgetCenter.shared.reloadAllTimelines()
     }
@@ -204,4 +225,5 @@ extension Notification.Name {
     static let languageChanged = Notification.Name("languageChanged")
     static let mealReminderAction = Notification.Name("mealReminderAction")
     static let dietPlanChanged = Notification.Name("dietPlanChanged")
+    static let foodLogged = Notification.Name("foodLogged")
 }
