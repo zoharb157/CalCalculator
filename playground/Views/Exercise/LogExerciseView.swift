@@ -9,14 +9,16 @@ import SwiftUI
 struct LogExerciseView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selectedType: ExerciseType?
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
         NavigationStack {
             VStack(spacing: 24) {
-                Text("Log Exercise")
+                Text(localizationManager.localizedString(for: AppStrings.Exercise.saveExercise))
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .padding(.top)
+                    .id("save-exercise-title-\(localizationManager.currentLanguage)")
                 
                 VStack(spacing: 16) {
                     ExerciseOptionCard(
@@ -59,7 +61,8 @@ struct LogExerciseView: View {
                 
                 Spacer()
             }
-            .navigationTitle("Exercise")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Food.exercise))
+                .id("exercise-nav-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {

@@ -89,20 +89,8 @@ struct ContentView: View {
                                 authState = .goalsGeneration
                             }
                             
-                            // Check subscription in background (non-blocking)
-                            Task.detached(priority: .utility) {
-                                do {
-                                    try await sdk.updateIsSubscribed()
-                                    // If not subscribed, show paywall when ready
-                                    await MainActor.run {
-                                        if !sdk.isSubscribed {
-                                            paywallItem = .init(page: .splash, callback: nil)
-                                        }
-                                    }
-                                } catch {
-                                    print("⚠️ Failed to check subscription: \(error)")
-                                }
-                            }
+                            // NOTE: Subscription status is ONLY checked when HTML paywall closes
+                            // No automatic checks here
                         }
                     }
                     
@@ -117,8 +105,16 @@ struct ContentView: View {
                     }
                     
                 case .signIn:
-                    // TODO: Implement sign in view
-                    Text("Sign In View")
+                    // Sign in is handled via LoginView in the authentication flow
+                    LoginView(
+                        onGetStarted: {
+                            authState = .onboarding
+                        },
+                        onSignIn: {
+                            // Sign in functionality can be added here if needed
+                            authState = .authenticated
+                        }
+                    )
                         .task {
                             guard !hasCheckedSubscription else { return }
                             hasCheckedSubscription = true
@@ -126,20 +122,8 @@ struct ContentView: View {
                             // Don't block - proceed immediately
                             authState = .authenticated
                             
-                            // Check subscription in background (non-blocking)
-                            Task.detached(priority: .utility) {
-                                do {
-                                    try await sdk.updateIsSubscribed()
-                                    // If not subscribed, show paywall when ready
-                                    await MainActor.run {
-                                        if !sdk.isSubscribed {
-                                            paywallItem = .init(page: .splash, callback: nil)
-                                        }
-                                    }
-                                } catch {
-                                    print("⚠️ Failed to check subscription: \(error)")
-                                }
-                            }
+                            // NOTE: Subscription status is ONLY checked when HTML paywall closes
+                            // No automatic checks here
                         }
                     
                 case .authenticated:
@@ -148,7 +132,7 @@ struct ContentView: View {
                         .mealReminderHandler(scanViewModel: mainTabView.scanViewModel)
                 }
             } else {
-                ProgressView("Loading...")
+                ProgressView()
                     .task {
                         let repoStart = Date()
                         // Pre-warm the model context and database with a simple query

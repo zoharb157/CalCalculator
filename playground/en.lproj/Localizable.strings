@@ -1,0 +1,309 @@
+/* Common */
+"Save" = "Save";
+"Cancel" = "Cancel";
+"Done" = "Done";
+"Delete" = "Delete";
+"Edit" = "Edit";
+"OK" = "OK";
+"Yes" = "Yes";
+"No" = "No";
+"Close" = "Close";
+"Back" = "Back";
+"Next" = "Next";
+"Continue" = "Continue";
+"Loading..." = "Loading...";
+"Error" = "Error";
+"Success" = "Success";
+
+/* Home */
+"Home" = "Home";
+"Macronutrients" = "Macronutrients";
+"Recently uploaded" = "Recently uploaded";
+"Calories left" = "Calories left";
+"Gained" = "Gained";
+"Lost" = "Lost";
+"Net" = "Net";
+"Consumed" = "Consumed";
+"Burned" = "Burned";
+"No meals yet" = "No meals yet";
+"Tap + to add your first meal of the day" = "Tap + to add your first meal of the day";
+
+/* Progress */
+"Progress" = "Progress";
+"Current Weight" = "Current Weight";
+"Weight Changes" = "Weight Changes";
+"Progress Photos" = "Progress Photos";
+"Daily Average Calories" = "Daily Average Calories";
+"BMI" = "BMI";
+"HealthKit" = "HealthKit";
+"Save Weight" = "Save Weight";
+"Log Weight" = "Log Weight";
+"View Progress" = "View Progress";
+"3 day" = "3 day";
+"7 day" = "7 day";
+"14 day" = "14 day";
+"30 day" = "30 day";
+"90 day" = "90 day";
+"All Time" = "All Time";
+"No change" = "No change";
+
+/* Food */
+"Save Food" = "Save Food";
+"Log Food" = "Log Food";
+"Food saved successfully!" = "Food saved successfully!";
+"Save Meal" = "Save Meal";
+"Describe" = "Describe";
+"Scan" = "Scan";
+"Exercise" = "Exercise";
+"Diet" = "Diet";
+"Today's Activity" = "Today's Activity";
+"View All" = "View All";
+"Meals" = "Meals";
+"Workouts" = "Workouts";
+"No Logs Yet" = "No Logs Yet";
+"Start logging your meals and exercises to see them here" = "Start logging your meals and exercises to see them here";
+"No Activity Yet" = "No Activity Yet";
+"Start saving your meals and exercises to see them here" = "Start saving your meals and exercises to see them here";
+
+/* Exercise */
+"Save Exercise" = "Save Exercise";
+"Log Exercise" = "Log Exercise";
+"Exercise saved successfully!" = "Exercise saved successfully!";
+"Select Exercise Type" = "Select Exercise Type";
+"Duration" = "Duration";
+"Intensity" = "Intensity";
+"Calories" = "Calories";
+"Describe Exercise" = "Describe Exercise";
+"Manual Entry" = "Manual Entry";
+
+/* Diet Plan */
+"Diet Plan" = "Diet Plan";
+"My Diet" = "My Diet";
+"Create Diet Plan" = "Create Diet Plan";
+"Edit Diet Plan" = "Edit Diet Plan";
+"Delete Diet Plan" = "Delete Diet Plan";
+"No Diet Plan" = "No Diet Plan";
+"Create a diet plan to schedule repetitive meals and track your adherence" = "Create a diet plan to schedule repetitive meals and track your adherence";
+"Today's Diet Plan" = "Today's Diet Plan";
+"meals completed" = "meals completed";
+"Scheduled Meals" = "Scheduled Meals";
+"No meals scheduled" = "No meals scheduled";
+"Add Scheduled Meal" = "Add Scheduled Meal";
+"Daily Calorie Goal" = "Daily Calorie Goal";
+"Adherence" = "Adherence";
+"Adherence Trend" = "Adherence Trend";
+"Today's Schedule" = "Today's Schedule";
+"Insights" = "Insights";
+"Weekly Statistics" = "Weekly Statistics";
+"No data available" = "No data available";
+"Off-Diet Meals" = "Off-Diet Meals";
+"calories from off-diet meals" = "calories from off-diet meals";
+"You can only have one active diet plan at a time. Creating a new plan will replace this one." = "You can only have one active diet plan at a time. Creating a new plan will replace this one.";
+"Please add at least one scheduled meal before saving the diet plan." = "Please add at least one scheduled meal before saving the diet plan.";
+"No Meals Scheduled" = "No Meals Scheduled";
+
+/* Profile */
+"Profile" = "Profile";
+"Settings" = "Settings";
+"Language" = "Language";
+"Select Language" = "Select Language";
+"Export Data" = "Export Data";
+"Weight Data" = "Weight Data";
+"Nutrition Data" = "Nutrition Data";
+"Export your weight tracking history as a PDF file." = "Export your weight tracking history as a PDF file.";
+"Export your meal logs and nutrition data as PDF files." = "Export your meal logs and nutrition data as PDF files.";
+"Export all your data in a comprehensive PDF report." = "Export all your data in a comprehensive PDF report.";
+"Generating PDF..." = "Generating PDF...";
+"Export Error" = "Export Error";
+"An unknown error occurred." = "An unknown error occurred.";
+
+/* Weight */
+"Save Your Weight" = "Save Your Weight";
+"Track your progress by saving your current weight" = "Track your progress by saving your current weight";
+"Weight" = "Weight";
+"Target Weight" = "Target Weight";
+"Start Weight" = "Start Weight";
+"Goal Weight" = "Goal Weight";
+"Last" = "Last";
+"No weight logged" = "No weight logged";
+
+/* Premium */
+"Premium Required" = "Premium Required";
+"Upgrade to unlock" = "Upgrade to unlock";
+"Are you sure you want to skip the free trial?" = "Are you sure you want to skip the free trial?";
+"Claim your free trial now without paying" = "Claim your free trial now without paying";
+"Start Free Trial" = "Start Free Trial";
+"Not now" = "Not now";
+"Premium feature" = "Premium feature";
+
+/* History */
+"History" = "History";
+"No History Yet" = "No History Yet";
+"Your meal history will appear here\nonce you start tracking" = "Your meal history will appear here\nonce you start tracking";
+"No Results" = "No Results";
+"No entries found for the selected time period" = "No entries found for the selected time period";
+"Clear Filters" = "Clear Filters";
+
+/* Onboarding */
+"Welcome" = "Welcome";
+"Get Started" = "Get Started";
+"Skip" = "Skip";
+
+/* Errors */
+"Something went wrong" = "Something went wrong";
+"Try Again" = "Try Again";
+"No Food Detected" = "No Food Detected";
+"Camera Error" = "Camera Error";
+"Permission Denied" = "Permission Denied";
+
+/* Notifications */
+"Time to Log Your Weight" = "Time to Log Your Weight";
+"Track your progress by logging your weight this morning." = "Track your progress by logging your weight this morning.";
+
+/* Additional UI Strings */
+"View All" = "View All";
+"Quick Save" = "Quick Save";
+"What did you eat?" = "What did you eat?";
+"Estimated Calories" = "Estimated Calories";
+"kcal" = "kcal";
+"Quick Presets" = "Quick Presets";
+"Category" = "Category";
+"What exercise did you do?" = "What exercise did you do?";
+"minutes" = "minutes";
+"Calories Burned" = "Calories Burned";
+"Capture Your Meal" = "Capture Your Meal";
+"Take a photo or choose from your library" = "Take a photo or choose from your library";
+"Take Photo" = "Take Photo";
+"Voice Log" = "Voice Log";
+"Describe Your Food" = "Describe Your Food";
+"Tell us what you ate" = "Tell us what you ate";
+"Describe your meal in natural language and we'll calculate the nutrition for you" = "Describe your meal in natural language and we'll calculate the nutrition for you";
+"I had..." = "I had...";
+"Try saying:" = "Try saying:";
+"Meal Category" = "Meal Category";
+"Save weight" = "Save weight";
+"Start:" = "Start:";
+"Goal:" = "Goal:";
+"Body Mass Index" = "Body Mass Index";
+"View Daily Breakdown" = "View Daily Breakdown";
+"Health Data" = "Health Data";
+"Health Access Required" = "Health Access Required";
+"Go to Settings > Privacy & Security > Health > CalCalculator" = "Go to Settings > Privacy & Security > Health > CalCalculator";
+"Open Settings" = "Open Settings";
+"Delete Entry" = "Delete Entry";
+"This cannot be undone." = "This cannot be undone.";
+"cal" = "cal";
+"calories" = "calories";
+"No meals" = "No meals";
+"Today's progress" = "Today's progress";
+"Tap to view details for this day" = "Tap to view details for this day";
+"Meals" = "Meals";
+"Consumed" = "Consumed";
+"Workouts" = "Workouts";
+"Burned" = "Burned";
+"Save Food" = "Save Food";
+"Save Exercise" = "Save Exercise";
+"Save Meal" = "Save Meal";
+"Save [type]" = "Save %@";
+"Delete \"%@\"?" = "Delete \"%@\"?";
+"Delete %@ exercise?" = "Delete %@ exercise?";
+"Microphone Access" = "Microphone Access";
+"Voice logging requires microphone access. Please enable it in Settings to use this feature." = "Voice logging requires microphone access. Please enable it in Settings to use this feature.";
+"Settings" = "Settings";
+"An error occurred" = "An error occurred";
+"Food logged successfully!" = "Food logged successfully!";
+
+
+/* Progress Additional */
+"Save weight" = "Save weight";
+"Start" = "Start";
+"Goal" = "Goal";
+"Body Mass Index" = "Body Mass Index";
+"View Daily Breakdown" = "View Daily Breakdown";
+"Health Data" = "Health Data";
+"Health Access Required" = "Health Access Required";
+"Go to Settings > Privacy & Security > Health > CalCalculator" = "Go to Settings > Privacy & Security > Health > CalCalculator";
+"Open Settings" = "Open Settings";
+"Weight Progress" = "Weight Progress";
+"Current" = "Current";
+"Change" = "Change";
+"Weight Trend" = "Weight Trend";
+"No Weight Data" = "No Weight Data";
+"Save your weight to see progress over time" = "Save your weight to see progress over time";
+"entries" = "entries";
+"No entries yet" = "No entries yet";
+"Calories Breakdown" = "Calories Breakdown";
+"Daily Average" = "Daily Average";
+"days tracked" = "days tracked";
+"Calorie Trend" = "Calorie Trend";
+"No Calorie Data" = "No Calorie Data";
+"Start tracking meals to see your calorie trends" = "Start tracking meals to see your calorie trends";
+"Daily Breakdown" = "Daily Breakdown";
+"days" = "days";
+"avg" = "avg";
+"Highest" = "Highest";
+"Lowest" = "Lowest";
+
+/* Exercise Additional */
+"Your workout burned" = "Your workout burned";
+"Cals" = "Cals";
+"Burned Calories" = "Burned Calories";
+"Saving..." = "Saving...";
+
+/* Food Additional */
+"Quick Save" = "Quick Save";
+"What did you eat?" = "What did you eat?";
+"Estimated Calories" = "Estimated Calories";
+"Quick Presets" = "Quick Presets";
+"Category" = "Category";
+"What exercise did you do?" = "What exercise did you do?";
+"minutes" = "minutes";
+"Saved Successfully!" = "Saved Successfully!";
+"Your food has been logged." = "Your food has been logged.";
+"Your exercise has been logged." = "Your exercise has been logged.";
+"Describe Your Food" = "Describe Your Food";
+"Tell us what you ate" = "Tell us what you ate";
+"Describe your meal in natural language and we'll calculate the nutrition for you" = "Describe your meal in natural language and we'll calculate the nutrition for you";
+"I had..." = "I had...";
+"Try saying:" = "Try saying:";
+"Meal Category" = "Meal Category";
+"Analyze with AI" = "Analyze with AI";
+"Analyzing your meal..." = "Analyzing your meal...";
+"Using AI to identify ingredients and calculate nutrition" = "Using AI to identify ingredients and calculate nutrition";
+"Analysis Complete" = "Analysis Complete";
+"Remove" = "Remove";
+"Start Over" = "Start Over";
+"cal burned" = "cal burned";
+"Voice Log" = "Voice Log";
+"Transcribed:" = "Transcribed:";
+"Coming Soon" = "Coming Soon";
+"Recently uploaded" = "Recently uploaded";
+"Delete" = "Delete";
+
+/* Diet Plan Additional */
+"Add meals to your diet plan to see them here" = "Add meals to your diet plan to see them here";
+"Goal not met" = "Goal not met";
+"calories" = "calories";
+
+/* History Additional */
+"Loading history..." = "Loading history...";
+"No entries found for \"%@\"" = "No entries found for \"%@\"";
+"Delete %@ exercise? This cannot be undone." = "Delete %@ exercise? This cannot be undone.";
+"Consumed" = "Consumed";
+"Burned" = "Burned";
+"Net" = "Net";
+"meals" = "meals";
+"exercises" = "exercises";
+"Loading logs..." = "Loading logs...";
+"No Logs Yet" = "No Logs Yet";
+"Start logging your meals and exercises to see them here" = "Start logging your meals and exercises to see them here";
+
+/* Goals Generation */
+"Generating Your Plan" = "Generating Your Plan";
+"Your Personalized Goals" = "Your Personalized Goals";
+"Based on your profile and objectives" = "Based on your profile and objectives";
+
+/* Scanning */
+"AI is processing your food image" = "AI is processing your food image";
+
+"over" = "over";

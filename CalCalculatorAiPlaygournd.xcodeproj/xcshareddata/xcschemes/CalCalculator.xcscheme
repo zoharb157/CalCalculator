@@ -29,9 +29,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "E51C57DF2EFD2FF4002A2D96"
-               BuildableName = "CaloriesCalculatorWidgetsExtension.appex"
-               BlueprintName = "CaloriesCalculatorWidgetsExtension"
+               BlueprintIdentifier = "CEB314FD2F01500600986732"
+               BuildableName = "CaloriesCalculatorWidgetsExtensionExtension.appex"
+               BlueprintName = "CaloriesCalculatorWidgetsExtensionExtension"
                ReferencedContainer = "container:CalCalculatorAiPlaygournd.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -43,6 +43,15 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES"
       shouldAutocreateTestPlan = "YES">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "A31433142EF0897D00EFE039"
+            BuildableName = "CalCalculator.app"
+            BlueprintName = "playground"
+            ReferencedContainer = "container:CalCalculatorAiPlaygournd.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
       <Testables>
          <TestableReference
             skipped = "NO"

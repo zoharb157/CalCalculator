@@ -14,6 +14,7 @@ struct ProfileView: View {
     
     @State private var viewModel = ProfileViewModel()
     @Environment(TheSDK.self) private var sdk
+    @Environment(\.localization) private var localization
     private var settings = UserSettings.shared
     
     // Sheet presentation states
@@ -48,7 +49,7 @@ struct ProfileView: View {
                 .padding(.bottom, 100)
             }
             .background(Color(UIColor.systemGroupedBackground))
-            .navigationTitle("Profile")
+            .navigationTitle(localization.localizedString(for: "Profile"))
             .navigationBarTitleDisplayMode(.large)
         }
         .sheet(isPresented: $showingPersonalDetails) {

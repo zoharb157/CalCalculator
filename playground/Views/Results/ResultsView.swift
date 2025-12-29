@@ -19,6 +19,7 @@ struct ResultsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isSubscribed) private var isSubscribed
     @Environment(TheSDK.self) private var sdk
+    @ObservedObject private var localizationManager = LocalizationManager.shared
 
     /// Callback to notify parent when meal is saved
     var onMealSaved: (() -> Void)?
@@ -33,7 +34,8 @@ struct ResultsView: View {
     var body: some View {
         NavigationStack {
             contentScrollView
-                .navigationTitle("Analysis Results")
+                .navigationTitle(localizationManager.localizedString(for: AppStrings.Results.analysisResults))
+                    .id("analysis-results-title-\(localizationManager.currentLanguage)")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     toolbarContent
@@ -115,7 +117,8 @@ struct ResultsView: View {
             HStack(spacing: 8) {
                 Image(systemName: "wand.and.stars")
                     .font(.body)
-                Text("Fix Result")
+                Text(localizationManager.localizedString(for: AppStrings.Results.fixResult))
+                    .id("fix-result-\(localizationManager.currentLanguage)")
                     .fontWeight(.medium)
             }
             .foregroundStyle(.blue)
@@ -133,10 +136,12 @@ struct ResultsView: View {
         NavigationStack {
             VStack(spacing: 24) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("What is this food?")
+                    Text(localizationManager.localizedString(for: AppStrings.Results.whatIsThisFood))
+                        .id("what-is-food-\(localizationManager.currentLanguage)")
                         .font(.headline)
 
-                    Text("Describe the food to help us analyze it more accurately.")
+                    Text(localizationManager.localizedString(for: AppStrings.Results.describeFoodForAnalysis))
+                        .id("describe-food-\(localizationManager.currentLanguage)")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -169,7 +174,8 @@ struct ResultsView: View {
                             ProgressView()
                                 .tint(.white)
                         } else {
-                            Text("Re-analyze")
+                            Text(localizationManager.localizedString(for: AppStrings.Results.reAnalyze))
+                                .id("re-analyze-\(localizationManager.currentLanguage)")
                                 .fontWeight(.semibold)
                         }
                     }
@@ -191,11 +197,12 @@ struct ResultsView: View {
                 .padding(.bottom)
             }
             .padding(.top)
-            .navigationTitle("Fix Result")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Results.fixResult))
+                .id("fix-result-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
                         showingFixResult = false
                         foodHintText = ""
                     }
@@ -238,7 +245,7 @@ struct ResultsView: View {
         }
 
         ToolbarItem(placement: .confirmationAction) {
-            Button("Save") {
+            Button(localizationManager.localizedString(for: AppStrings.Common.save)) {
                 saveMeal()
             }
             .fontWeight(.semibold)

@@ -13,6 +13,7 @@ struct PersonalDetailsView: View {
     // MARK: - Properties
     
     @Bindable var viewModel: ProfileViewModel
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     @Environment(\.dismiss) private var dismiss
     
     // Editing states
@@ -62,13 +63,15 @@ struct PersonalDetailsView: View {
                 .padding(.bottom, 40)
             }
             .background(Color(UIColor.systemGroupedBackground))
-            .navigationTitle("Personal Details")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.personalDetails))
+                .id("personal-details-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.done)) {
                         dismiss()
                     }
+                    .id("done-personal-details-\(localizationManager.currentLanguage)")
                     .fontWeight(.semibold)
                 }
             }
@@ -101,19 +104,23 @@ struct PersonalDetailsView: View {
         .sheet(isPresented: $isEditingUsername) {
             editUsernameSheet
         }
-        .confirmationDialog("Change Profile Photo", isPresented: $showingPhotoOptions) {
-            Button("Take Photo") {
+        .confirmationDialog(localizationManager.localizedString(for: AppStrings.Profile.changeProfilePhoto), isPresented: $showingPhotoOptions) {
+            Button(localizationManager.localizedString(for: AppStrings.Scanning.takePhoto)) {
                 showingCamera = true
             }
-            Button("Choose from Library") {
+            .id("take-photo-\(localizationManager.currentLanguage)")
+            Button(localizationManager.localizedString(for: AppStrings.Scanning.chooseFromLibrary)) {
                 showingImagePicker = true
             }
+            .id("choose-library-\(localizationManager.currentLanguage)")
             if profileImage != nil {
-                Button("Remove Photo", role: .destructive) {
+                Button(localizationManager.localizedString(for: AppStrings.Profile.removePhoto), role: .destructive) {
                     removeProfilePhoto()
                 }
+                .id("remove-photo-\(localizationManager.currentLanguage)")
             }
-            Button("Cancel", role: .cancel) {}
+            Button(localizationManager.localizedString(for: AppStrings.Common.cancel), role: .cancel) {}
+                .id("cancel-photo-\(localizationManager.currentLanguage)")
         }
         .photosPicker(isPresented: $showingImagePicker, selection: $selectedPhotoItem, matching: .images)
         .onChange(of: selectedPhotoItem) { oldValue, newValue in
@@ -256,7 +263,8 @@ struct PersonalDetailsView: View {
                 tempLastName = viewModel.lastName
                 isEditingName = true
             } label: {
-                Text("Edit Name")
+                Text(localizationManager.localizedString(for: AppStrings.Profile.editName))
+                    .id("edit-name-label-\(localizationManager.currentLanguage)")
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundColor(.blue)
@@ -385,7 +393,8 @@ struct PersonalDetailsView: View {
         HStack(spacing: 16) {
             // BMI Value
             VStack(alignment: .leading, spacing: 4) {
-                Text("BMI")
+                Text(localizationManager.localizedString(for: AppStrings.Profile.bmi))
+                    .id("bmi-label-\(localizationManager.currentLanguage)")
                     .font(.caption)
                     .foregroundColor(.secondary)
                 
@@ -399,7 +408,8 @@ struct PersonalDetailsView: View {
             
             // BMI Category
             VStack(alignment: .trailing, spacing: 4) {
-                Text("Category")
+                Text(localizationManager.localizedString(for: AppStrings.Profile.category))
+                    .id("category-label-\(localizationManager.currentLanguage)")
                     .font(.caption)
                     .foregroundColor(.secondary)
                 
@@ -419,7 +429,8 @@ struct PersonalDetailsView: View {
     private var weightProgressCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Progress to Goal")
+                Text(localizationManager.localizedString(for: AppStrings.Profile.progressToGoal))
+                    .id("progress-goal-label-\(localizationManager.currentLanguage)")
                     .font(.subheadline)
                     .fontWeight(.medium)
                 
@@ -468,19 +479,22 @@ struct PersonalDetailsView: View {
                     TextField("Last Name", text: $tempLastName)
                 }
             }
-            .navigationTitle("Edit Name")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.editName))
+                .id("edit-name-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { isEditingName = false }
+                    Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) { isEditingName = false }
+                        .id("cancel-name-\(localizationManager.currentLanguage)")
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.save)) {
                         viewModel.firstName = tempFirstName
                         viewModel.lastName = tempLastName
                         isEditingName = false
                         HapticManager.shared.notification(.success)
                     }
+                    .id("save-name-\(localizationManager.currentLanguage)")
                     .fontWeight(.semibold)
                 }
             }
@@ -501,19 +515,22 @@ struct PersonalDetailsView: View {
                 Spacer()
             }
             .padding(.top, 40)
-            .navigationTitle("Current Weight")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.currentWeight))
+                .id("current-weight-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { isEditingWeight = false }
+                    Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) { isEditingWeight = false }
+                        .id("cancel-weight-\(localizationManager.currentLanguage)")
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.save)) {
                         viewModel.currentWeight = tempWeight
                         isEditingWeight = false
                         HapticManager.shared.notification(.success)
                     }
                     .fontWeight(.semibold)
+                    .id("save-weight-\(localizationManager.currentLanguage)")
                 }
             }
         }
@@ -533,19 +550,22 @@ struct PersonalDetailsView: View {
                 Spacer()
             }
             .padding(.top, 40)
-            .navigationTitle("Goal Weight")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.goalWeight))
+                .id("goal-weight-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { isEditingGoalWeight = false }
+                    Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) { isEditingGoalWeight = false }
+                        .id("cancel-goal-weight-\(localizationManager.currentLanguage)")
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.save)) {
                         viewModel.goalWeight = tempGoalWeight
                         isEditingGoalWeight = false
                         HapticManager.shared.notification(.success)
                     }
                     .fontWeight(.semibold)
+                    .id("save-goal-weight-\(localizationManager.currentLanguage)")
                 }
             }
         }
@@ -562,11 +582,12 @@ struct PersonalDetailsView: View {
                 HStack(spacing: 24) {
                     // Feet picker
                     VStack {
-                        Text("Feet")
+                        Text(localizationManager.localizedString(for: AppStrings.Profile.feet))
                             .font(.caption)
                             .foregroundColor(.secondary)
+                            .id("feet-label-\(localizationManager.currentLanguage)")
                         
-                        Picker("Feet", selection: $tempHeightFeet) {
+                        Picker(localizationManager.localizedString(for: AppStrings.Profile.feet), selection: $tempHeightFeet) {
                             ForEach(4...7, id: \.self) { feet in
                                 Text("\(feet)").tag(feet)
                             }
@@ -577,7 +598,8 @@ struct PersonalDetailsView: View {
                     
                     // Inches picker
                     VStack {
-                        Text("Inches")
+                        Text(localizationManager.localizedString(for: AppStrings.Profile.inches))
+                            .id("inches-label-\(localizationManager.currentLanguage)")
                             .font(.caption)
                             .foregroundColor(.secondary)
                         
@@ -594,19 +616,22 @@ struct PersonalDetailsView: View {
                 Spacer()
             }
             .padding(.top, 40)
-            .navigationTitle("Height")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.height))
+                .id("height-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { isEditingHeight = false }
+                    Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) { isEditingHeight = false }
+                        .id("cancel-height-\(localizationManager.currentLanguage)")
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.save)) {
                         viewModel.heightFeet = tempHeightFeet
                         viewModel.heightInches = tempHeightInches
                         isEditingHeight = false
                         HapticManager.shared.notification(.success)
                     }
+                    .id("save-height-\(localizationManager.currentLanguage)")
                     .fontWeight(.semibold)
                 }
             }
@@ -630,19 +655,22 @@ struct PersonalDetailsView: View {
                 Spacer()
             }
             .padding(.top, 40)
-            .navigationTitle("Date of Birth")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.dateOfBirth))
+                .id("date-of-birth-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { isEditingDateOfBirth = false }
+                    Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) { isEditingDateOfBirth = false }
+                        .id("cancel-dob-\(localizationManager.currentLanguage)")
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.save)) {
                         viewModel.dateOfBirth = tempDateOfBirth
                         isEditingDateOfBirth = false
                         HapticManager.shared.notification(.success)
                     }
                     .fontWeight(.semibold)
+                    .id("save-dob-\(localizationManager.currentLanguage)")
                 }
             }
         }
@@ -671,19 +699,22 @@ struct PersonalDetailsView: View {
                     }
                 }
             }
-            .navigationTitle("Gender")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.gender))
+                .id("gender-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { isEditingGender = false }
+                    Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) { isEditingGender = false }
+                        .id("cancel-gender-\(localizationManager.currentLanguage)")
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.save)) {
                         viewModel.gender = tempGender
                         isEditingGender = false
                         HapticManager.shared.notification(.success)
                     }
                     .fontWeight(.semibold)
+                    .id("save-gender-\(localizationManager.currentLanguage)")
                 }
             }
         }
@@ -728,18 +759,21 @@ struct PersonalDetailsView: View {
                 Spacer()
             }
             .padding(.top, 40)
-            .navigationTitle("Daily Step Goal")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.dailyStepGoal))
+                .id("daily-step-goal-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { isEditingStepGoal = false }
+                    Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) { isEditingStepGoal = false }
+                        .id("cancel-step-goal-\(localizationManager.currentLanguage)")
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.save)) {
                         viewModel.dailyStepGoal = tempStepGoal
                         isEditingStepGoal = false
                         HapticManager.shared.notification(.success)
                     }
+                    .id("save-step-goal-\(localizationManager.currentLanguage)")
                     .fontWeight(.semibold)
                 }
             }
@@ -756,23 +790,28 @@ struct PersonalDetailsView: View {
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                 } header: {
-                    Text("Username")
+                    Text(localizationManager.localizedString(for: AppStrings.Profile.username))
+                        .id("username-header-\(localizationManager.currentLanguage)")
                 } footer: {
-                    Text("Your username will be displayed as @\(tempUsername.isEmpty ? "username" : tempUsername)")
+                    Text(String(format: localizationManager.localizedString(for: AppStrings.Profile.yourUsernameWillBeDisplayed), tempUsername.isEmpty ? "username" : tempUsername))
+                        .id("username-footer-\(localizationManager.currentLanguage)")
                 }
             }
-            .navigationTitle("Edit Username")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.editUsername))
+                .id("edit-username-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { isEditingUsername = false }
+                    Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) { isEditingUsername = false }
+                        .id("cancel-username-\(localizationManager.currentLanguage)")
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.save)) {
                         viewModel.username = tempUsername.lowercased().replacingOccurrences(of: " ", with: "")
                         isEditingUsername = false
                         HapticManager.shared.notification(.success)
                     }
+                    .id("save-username-\(localizationManager.currentLanguage)")
                     .fontWeight(.semibold)
                 }
             }

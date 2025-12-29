@@ -9,6 +9,7 @@ import SwiftUI
 
 struct NotesSection: View {
     let notes: String
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -24,7 +25,8 @@ struct NotesSection: View {
     // MARK: - Private Views
     
     private var headerLabel: some View {
-        Label("Notes", systemImage: "info.circle")
+        Label(localizationManager.localizedString(for: AppStrings.Results.notes), systemImage: "info.circle")
+            .id("notes-label-\(localizationManager.currentLanguage)")
             .font(.subheadline)
             .foregroundColor(.secondary)
     }

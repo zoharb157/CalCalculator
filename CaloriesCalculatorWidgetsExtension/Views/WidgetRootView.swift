@@ -42,8 +42,16 @@ struct WidgetRootView: View {
                     AccessoryRectangularView(macros: entry.macros)
                 }
             case .accessoryInline:
-                // Inline widgets don't support overlay, just show content
-                AccessoryInlineView(macros: entry.macros)
+                // Show premium lock for inline widgets if not subscribed
+                if entry.isSubscribed {
+                    AccessoryInlineView(macros: entry.macros)
+                } else {
+                    Label {
+                        Text("Premium Required")
+                    } icon: {
+                        Image(systemName: "lock.fill")
+                    }
+                }
             @unknown default:
                 WidgetLockedContent(isSubscribed: entry.isSubscribed) {
                     SmallWidgetView(macros: entry.macros)

@@ -17,6 +17,7 @@ struct ProgressDashboardView: View {
     
     @State private var showWeightInput = false
     @State private var showPaywall = false
+    @State private var showDeclineConfirmation = false
     
     var body: some View {
         NavigationStack {
@@ -30,6 +31,8 @@ struct ProgressDashboardView: View {
                             CurrentWeightCard(
                                 weight: viewModel.displayWeight,
                                 unit: viewModel.weightUnit,
+                                startWeight: viewModel.weightHistory.first?.weight ?? viewModel.displayWeight,
+                                goalWeight: viewModel.displayTargetWeight,
                                 daysUntilCheck: viewModel.daysUntilNextWeightCheck,
                                 isSubscribed: isSubscribed,
                                 onWeightTap: {
@@ -48,15 +51,15 @@ struct ProgressDashboardView: View {
                                 }
                             )
                             
-                            // BMI Card - Locked with blur + Premium button
-                            if let bmi = viewModel.bmi, let category = viewModel.bmiCategory {
-                                PremiumLockedContent {
-                                    BMICard(bmi: bmi, category: category, isSubscribed: true)
-                                }
-                            }
+                            // Weight Changes Card
+                            WeightChangesCard(
+                                weightHistory: viewModel.weightHistory,
+                                currentWeight: viewModel.displayWeight,
+                                useMetricUnits: viewModel.useMetricUnits
+                            )
                             
-                            // Daily Calories Card - Locked with blur + Premium button
-                            PremiumLockedContent {
+                            // Daily Average Calories Card - Locked with blur + Premium button (Progress page = reduced blur)
+                            PremiumLockedContent(isProgressPage: true) {
                                 DailyCaloriesCard(
                                     averageCalories: viewModel.averageCalories,
                                     calorieGoal: UserSettings.shared.calorieGoal,
@@ -71,22 +74,28 @@ struct ProgressDashboardView: View {
                                 )
                             }
                             
-                            // HealthKit Data Section - Locked with blur + Premium button
+                            // BMI Card - Locked with blur + Premium button (Progress page = reduced blur)
+                            if let bmi = viewModel.bmi, let category = viewModel.bmiCategory {
+                                PremiumLockedContent(isProgressPage: true) {
+                                    BMICard(bmi: bmi, category: category, isSubscribed: true)
+                                }
+                            }
+                            
+                            // HealthKit Data Section - FREE (no premium lock)
                             // Show enable settings prompt if authorization denied
                             if viewModel.healthKitAuthorizationDenied {
                                 HealthKitSettingsPromptCard()
                             } else {
-                                PremiumLockedContent {
-                                    HealthDataSection(
-                                        steps: viewModel.steps,
-                                        activeCalories: viewModel.activeCalories,
-                                        exerciseMinutes: viewModel.exerciseMinutes,
-                                        heartRate: viewModel.heartRate,
-                                        distance: viewModel.distance,
-                                        sleepHours: viewModel.sleepHours,
-                                        isSubscribed: isSubscribed
-                                    )
-                                }
+                                // HealthKit is now free - show without premium lock
+                                HealthDataSection(
+                                    steps: viewModel.steps,
+                                    activeCalories: viewModel.activeCalories,
+                                    exerciseMinutes: viewModel.exerciseMinutes,
+                                    heartRate: viewModel.heartRate,
+                                    distance: viewModel.distance,
+                                    sleepHours: viewModel.sleepHours,
+                                    isSubscribed: isSubscribed
+                                )
                             }
                         }
                         .padding()
@@ -94,27 +103,70 @@ struct ProgressDashboardView: View {
                 }
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("Progress")
+            .navigationTitle(LocalizationManager.shared.localizedString(for: AppStrings.Progress.title))
+                .id("progress-title-\(LocalizationManager.shared.currentLanguage)")
             .refreshable {
                 await viewModel.loadData()
             }
             .task {
                 await viewModel.loadData()
                 
-                // Show weight prompt after a delay, only if needed
-                if viewModel.shouldPromptForWeight {
-                    // Wait 1.5 seconds so user can see the screen first
-                    try? await Task.sleep(nanoseconds: 1_500_000_000)
-                    if viewModel.shouldPromptForWeight { // Check again in case user dismissed
-                        showWeightInput = true
-                        viewModel.markWeightPromptShown()
+                // Check if widget updated weight
+                let appGroupIdentifier = "group.CalCalculatorAiPlaygournd.shared"
+                if let sharedDefaults = UserDefaults(suiteName: appGroupIdentifier),
+                   sharedDefaults.bool(forKey: "widget.weightUpdatedFromWidget"),
+                   let newWeight = sharedDefaults.object(forKey: "widget.pendingWeightUpdate") as? Double {
+                    // Clear the flags
+                    sharedDefaults.set(false, forKey: "widget.weightUpdatedFromWidget")
+                    sharedDefaults.removeObject(forKey: "widget.pendingWeightUpdate")
+                    
+                    // Update weight if subscribed
+                    if isSubscribed {
+                        Task {
+                            await viewModel.updateWeight(newWeight)
+                        }
                     }
+                }
+                
+                // Check if widget requested weight input
+                if let sharedDefaults = UserDefaults(suiteName: appGroupIdentifier),
+                   sharedDefaults.bool(forKey: "openWeightInput") {
+                    // Clear the flag
+                    sharedDefaults.set(false, forKey: "openWeightInput")
+                    // Show weight input if subscribed
+                    if isSubscribed {
+                        showWeightInput = true
+                    } else {
+                        showPaywall = true
+                    }
+                }
+                
+                // Show weight prompt immediately if needed
+                if viewModel.shouldPromptForWeight {
+                    showWeightInput = true
+                    viewModel.markWeightPromptShown()
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
                 // Re-check HealthKit authorization when app comes back from settings
+                // This automatically returns to the same view state
                 Task {
                     await viewModel.loadHealthKitData()
+                    
+                    // Check if widget updated weight while app was in background
+                    let appGroupIdentifier = "group.CalCalculatorAiPlaygournd.shared"
+                    if let sharedDefaults = UserDefaults(suiteName: appGroupIdentifier),
+                       sharedDefaults.bool(forKey: "widget.weightUpdatedFromWidget"),
+                       let newWeight = sharedDefaults.object(forKey: "widget.pendingWeightUpdate") as? Double {
+                        // Clear the flags
+                        sharedDefaults.set(false, forKey: "widget.weightUpdatedFromWidget")
+                        sharedDefaults.removeObject(forKey: "widget.pendingWeightUpdate")
+                        
+                        // Update weight if subscribed
+                        if isSubscribed {
+                            await viewModel.updateWeight(newWeight)
+                        }
+                    }
                 }
             }
             .sheet(isPresented: $showWeightInput) {
@@ -128,6 +180,18 @@ struct ProgressDashboardView: View {
                     }
                 )
                 .presentationDetents([.medium])
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .weightReminderAction)) { notification in
+                // Show weight input when notification is tapped
+                if isSubscribed {
+                    showWeightInput = true
+                } else {
+                    showPaywall = true
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .widgetWeightUpdated)) { _ in
+                // Handle weight update from widget (notification from app become active)
+                checkWidgetUpdates()
             }
             .sheet(isPresented: $viewModel.showWeightProgressSheet) {
                 WeightProgressSheet(
@@ -157,10 +221,81 @@ struct ProgressDashboardView: View {
                 SDKView(
                     model: sdk,
                     page: .splash,
-                    show: $showPaywall,
+                    show: Binding(
+                        get: { showPaywall },
+                        set: { newValue in
+                            if !newValue && showPaywall {
+                                // Paywall was dismissed - THIS IS THE ONLY PLACE WE CHECK SUBSCRIPTION STATUS
+                                Task { @MainActor in
+                                    // Update subscription status from SDK
+                                    do {
+                                        try await sdk.updateIsSubscribed()
+                                        // Update reactive subscription status in app
+                                        NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
+                                    } catch {
+                                        print("⚠️ Failed to update subscription status: \(error)")
+                                    }
+                                    
+                                    // Check SDK directly - show decline confirmation if not subscribed
+                                    if !sdk.isSubscribed {
+                                        showDeclineConfirmation = true
+                                    } else {
+                                        // User subscribed - reset analysis count
+                                        AnalysisLimitManager.shared.resetAnalysisCount()
+                                    }
+                                }
+                            }
+                            showPaywall = newValue
+                        }
+                    ),
                     backgroundColor: .white,
                     ignoreSafeArea: true
                 )
+            }
+            .overlay {
+                // Show confirmation modal on top of everything - no padding/blur around it
+                if showDeclineConfirmation {
+                    PaywallDeclineConfirmationView(
+                        isPresented: $showDeclineConfirmation,
+                        showPaywall: $showPaywall
+                    )
+                    .zIndex(1000) // Ensure it's on top
+                }
+            }
+        }
+    }
+    
+    // MARK: - Helper Methods
+    
+    /// Check for widget weight updates and weight input requests
+    private func checkWidgetUpdates() {
+        let appGroupIdentifier = "group.CalCalculatorAiPlaygournd.shared"
+        guard let sharedDefaults = UserDefaults(suiteName: appGroupIdentifier) else { return }
+        
+        // Check if widget updated weight
+        if sharedDefaults.bool(forKey: "widget.weightUpdatedFromWidget"),
+           let newWeight = sharedDefaults.object(forKey: "widget.pendingWeightUpdate") as? Double {
+            // Clear the flags
+            sharedDefaults.set(false, forKey: "widget.weightUpdatedFromWidget")
+            sharedDefaults.removeObject(forKey: "widget.pendingWeightUpdate")
+            
+            // Update weight if subscribed
+            if isSubscribed {
+                Task {
+                    await viewModel.updateWeight(newWeight)
+                }
+            }
+        }
+        
+        // Check if widget requested weight input
+        if sharedDefaults.bool(forKey: "openWeightInput") {
+            // Clear the flag
+            sharedDefaults.set(false, forKey: "openWeightInput")
+            // Show weight input if subscribed
+            if isSubscribed {
+                showWeightInput = true
+            } else {
+                showPaywall = true
             }
         }
     }
@@ -171,93 +306,64 @@ struct ProgressDashboardView: View {
 struct CurrentWeightCard: View {
     let weight: Double
     let unit: String
+    let startWeight: Double
+    let goalWeight: Double
     let daysUntilCheck: Int
     let isSubscribed: Bool
     let onWeightTap: () -> Void
     let onViewProgress: () -> Void
     
     var body: some View {
-        VStack(spacing: 16) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Current Weight")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+        VStack(alignment: .leading, spacing: 16) {
+            Text(LocalizationManager.shared.localizedString(for: AppStrings.Progress.currentWeight))
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .id("current-weight-\(LocalizationManager.shared.currentLanguage)")
+            
+            HStack(alignment: .firstTextBaseline) {
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(String(format: "%.0f", weight))
+                        .font(.system(size: 48, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
                     
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(String(format: "%.1f", weight))
-                            .font(.system(size: 42, weight: .bold, design: .rounded))
-                            .foregroundColor(.primary)
-                        
-                        Text(unit)
-                            .font(.title3)
-                            .foregroundColor(.secondary)
-                    }
+                    Text(unit)
+                        .font(.title3)
+                        .foregroundColor(.secondary)
                 }
                 
                 Spacer()
                 
-                // Next check countdown
-                VStack(alignment: .trailing, spacing: 4) {
-                    Text("Next check in")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    
+                // Save weight button on the right
+                Button(action: onWeightTap) {
                     HStack(spacing: 4) {
-                        Text("\(daysUntilCheck)")
-                            .font(.title)
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
-                        
-                        Text("days")
+                        Text(LocalizationManager.shared.localizedString(for: "Save weight"))
+                            .id("save-weight-\(LocalizationManager.shared.currentLanguage)")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        Image(systemName: "chevron.right")
                             .font(.caption)
-                            .foregroundColor(.secondary)
                     }
+                    .foregroundColor(.primary)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(Color(.systemGray6))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
             }
             
-            HStack(spacing: 12) {
-                Button(action: onWeightTap) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "plus.circle.fill")
-                        Text("Log Weight")
-                        if !isSubscribed {
-                            Spacer()
-                            Image(systemName: "lock.fill")
-                                .font(.caption)
-                        }
-                    }
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                    .background(Color.blue)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .opacity(isSubscribed ? 1.0 : 0.6)
-                }
+            // Start and Goal weights
+            HStack {
+                Text("\(LocalizationManager.shared.localizedString(for: "Start")): \(String(format: "%.1f", startWeight)) \(unit)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .id("start-weight-\(LocalizationManager.shared.currentLanguage)")
                 
-                Button(action: onViewProgress) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "chart.line.uptrend.xyaxis")
-                        Text("Progress")
-                        if !isSubscribed {
-                            Spacer()
-                            Image(systemName: "lock.fill")
-                                .font(.caption)
-                        }
-                    }
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.blue)
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                    .background(Color.blue.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .opacity(isSubscribed ? 1.0 : 0.6)
-                }
+                Spacer()
+                
+                Text("\(LocalizationManager.shared.localizedString(for: "Goal")): \(String(format: "%.1f", goalWeight)) \(unit)")
+                    .id("goal-weight-\(LocalizationManager.shared.currentLanguage)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
         }
         .padding()
@@ -284,7 +390,8 @@ struct BMICard: View {
         VStack(spacing: 16) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Body Mass Index")
+                    Text(LocalizationManager.shared.localizedString(for: "Body Mass Index"))
+                        .id("bmi-title-\(LocalizationManager.shared.currentLanguage)")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     
@@ -395,7 +502,8 @@ struct DailyCaloriesCard: View {
         VStack(spacing: 16) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Daily Average")
+                    Text(LocalizationManager.shared.localizedString(for: AppStrings.Progress.dailyAverageCalories))
+                        .id("daily-avg-calories-\(LocalizationManager.shared.currentLanguage)")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     
@@ -404,7 +512,8 @@ struct DailyCaloriesCard: View {
                             .font(.system(size: 36, weight: .bold, design: .rounded))
                             .foregroundColor(.primary)
                         
-                        Text("cal")
+                        Text(LocalizationManager.shared.localizedString(for: "cal"))
+                            .id("cal-unit-\(LocalizationManager.shared.currentLanguage)")
                             .font(.headline)
                             .foregroundColor(.secondary)
                     }
@@ -414,7 +523,8 @@ struct DailyCaloriesCard: View {
                 
                 // Goal comparison
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text("Goal")
+                    Text(LocalizationManager.shared.localizedString(for: "Goal"))
+                        .id("goal-label-\(LocalizationManager.shared.currentLanguage)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                     
@@ -447,7 +557,8 @@ struct DailyCaloriesCard: View {
             Button(action: onViewDetails) {
                 HStack {
                     Image(systemName: "chart.bar.fill")
-                    Text("View Daily Breakdown")
+                    Text(LocalizationManager.shared.localizedString(for: "View Daily Breakdown"))
+                        .id("view-daily-breakdown-\(LocalizationManager.shared.currentLanguage)")
                 }
                 .font(.subheadline)
                 .fontWeight(.medium)
@@ -492,7 +603,8 @@ struct HealthDataSection: View {
             HStack {
                 Image(systemName: "heart.fill")
                     .foregroundColor(.red)
-                Text("Health Data")
+                Text(LocalizationManager.shared.localizedString(for: "Health Data"))
+                    .id("health-data-\(LocalizationManager.shared.currentLanguage)")
                     .font(.headline)
             }
             
@@ -666,11 +778,13 @@ struct HealthKitSettingsPromptCard: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Health Access Required")
+                    Text(LocalizationManager.shared.localizedString(for: "Health Access Required"))
                         .font(.headline)
                         .foregroundColor(.primary)
+                        .id("health-access-required-\(LocalizationManager.shared.currentLanguage)")
                     
-                    Text("Go to Settings > Privacy & Security > Health > CalCalculator")
+                    Text(LocalizationManager.shared.localizedString(for: "Go to Settings > Privacy & Security > Health > CalCalculator"))
+                        .id("go-to-settings-\(LocalizationManager.shared.currentLanguage)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(3)
@@ -685,7 +799,8 @@ struct HealthKitSettingsPromptCard: View {
                 HStack {
                     Image(systemName: "gearshape.fill")
                         .font(.subheadline)
-                    Text("Open Settings")
+                    Text(LocalizationManager.shared.localizedString(for: "Open Settings"))
+                        .id("open-settings-\(LocalizationManager.shared.currentLanguage)")
                         .font(.subheadline)
                         .fontWeight(.semibold)
                 }

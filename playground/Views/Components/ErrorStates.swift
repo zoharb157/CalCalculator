@@ -13,6 +13,7 @@ struct ErrorBanner: View {
     let message: String
     let action: (() -> Void)?
     let dismiss: (() -> Void)?
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     init(message: String, action: (() -> Void)? = nil, dismiss: (() -> Void)? = nil) {
         self.message = message
@@ -34,7 +35,7 @@ struct ErrorBanner: View {
             
             if let action = action {
                 Button(action: action) {
-                    Text("Retry")
+                    Text(localizationManager.localizedString(for: AppStrings.Common.retry))
                         .font(.caption)
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
@@ -42,6 +43,7 @@ struct ErrorBanner: View {
                         .padding(.vertical, 6)
                         .background(Color.white.opacity(0.2))
                         .clipShape(Capsule())
+                        .id("retry-btn-\(localizationManager.currentLanguage)")
                 }
             }
             
@@ -65,6 +67,7 @@ struct FullScreenErrorView: View {
     let error: Error
     let retry: (() -> Void)?
     let dismiss: (() -> Void)?
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
         VStack(spacing: 24) {
@@ -73,9 +76,10 @@ struct FullScreenErrorView: View {
                 .foregroundColor(.orange)
             
             VStack(spacing: 8) {
-                Text("Something went wrong")
+                Text(localizationManager.localizedString(for: AppStrings.Common.somethingWentWrong))
                     .font(.title2)
                     .fontWeight(.semibold)
+                    .id("something-wrong-\(localizationManager.currentLanguage)")
                 
                 Text(error.localizedDescription)
                     .font(.subheadline)
@@ -88,7 +92,8 @@ struct FullScreenErrorView: View {
                 Button(action: retry) {
                     HStack {
                         Image(systemName: "arrow.clockwise")
-                        Text("Try Again")
+                        Text(localizationManager.localizedString(for: AppStrings.Common.tryAgain))
+                            .id("try-again-fullscreen-\(localizationManager.currentLanguage)")
                     }
                     .font(.headline)
                     .foregroundColor(.white)
@@ -101,7 +106,8 @@ struct FullScreenErrorView: View {
             
             if let dismiss = dismiss {
                 Button(action: dismiss) {
-                    Text("Dismiss")
+                    Text(localizationManager.localizedString(for: AppStrings.Common.dismiss))
+                        .id("dismiss-\(localizationManager.currentLanguage)")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -117,6 +123,7 @@ struct FullScreenErrorView: View {
 struct InlineErrorView: View {
     let message: String
     let retry: (() -> Void)?
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
         VStack(spacing: 12) {
@@ -133,7 +140,8 @@ struct InlineErrorView: View {
                 Button(action: retry) {
                     HStack {
                         Image(systemName: "arrow.clockwise")
-                        Text("Retry")
+                        Text(self.localizationManager.localizedString(for: AppStrings.Common.retry))
+                            .id("retry-fullscreen-\(self.localizationManager.currentLanguage)")
                     }
                     .font(.caption)
                     .foregroundColor(.blue)

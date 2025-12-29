@@ -11,6 +11,7 @@ struct IngredientsSection: View {
     let items: [MealItem]
     let onUpdatePortion: (MealItem, Double) -> Void
     let onDelete: (MealItem) -> Void
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -22,8 +23,9 @@ struct IngredientsSection: View {
     // MARK: - Private Views
     
     private var headerText: some View {
-        Text("Ingredients")
+        Text(localizationManager.localizedString(for: AppStrings.Results.ingredients))
             .font(.headline)
+            .id("ingredients-title-\(localizationManager.currentLanguage)")
     }
     
     private var ingredientsList: some View {
@@ -47,6 +49,7 @@ struct IngredientRow: View {
     let item: MealItem
     let onUpdatePortion: (Double) -> Void
     let onDelete: () -> Void
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @State private var isEditing = false
     @State private var portionText: String = ""
@@ -106,17 +109,19 @@ struct IngredientRow: View {
                 .keyboardType(.decimalPad)
                 .textFieldStyle(.roundedBorder)
                 .frame(width: 70)
+                .keyboardDoneButton()
             
             Text(item.unit)
                 .font(.caption)
                 .foregroundColor(.secondary)
             
-            Button("Done") {
+            Button(localizationManager.localizedString(for: AppStrings.Common.done)) {
                 if let newPortion = Double(portionText) {
                     onUpdatePortion(newPortion)
                 }
                 isEditing = false
             }
+            .id("done-ingredients-\(localizationManager.currentLanguage)")
             .font(.caption)
             .foregroundColor(.accentColor)
         }
@@ -165,7 +170,8 @@ struct IngredientRow: View {
     
     private var deleteButton: some View {
         Button(role: .destructive, action: onDelete) {
-            Label("Delete", systemImage: "trash")
+            Label(localizationManager.localizedString(for: AppStrings.Common.delete), systemImage: "trash")
+                .id("delete-ingredient-\(localizationManager.currentLanguage)")
         }
     }
 }

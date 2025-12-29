@@ -10,20 +10,26 @@ import SwiftUI
 import Combine
 
 /// Manager for handling app localization and language switching
+/// Supports runtime language switching without app restart
 @MainActor
 final class LocalizationManager: ObservableObject {
     static let shared = LocalizationManager()
     
     @Published var currentLanguage: String {
         didSet {
+            // Save to UserDefaults (no need for synchronize - auto-syncs)
             UserDefaults.standard.set(currentLanguage, forKey: "app_language")
-            UserDefaults.standard.synchronize()
             
-            // Set AppleLanguages for system localization (takes effect after app restart)
+            // Set AppleLanguages for system localization
             UserDefaults.standard.set([currentLanguage], forKey: "AppleLanguages")
-            UserDefaults.standard.synchronize()
+            
+            // Update the locale bundle
+            updateLocaleBundle()
         }
     }
+    
+    /// The bundle to use for localization (changes based on selected language)
+    private var localeBundle: Bundle = Bundle.main
     
     private init() {
         // Load saved language or default to system language
@@ -38,7 +44,36 @@ final class LocalizationManager: ObservableObject {
         
         // Set AppleLanguages on init
         UserDefaults.standard.set([currentLanguage], forKey: "AppleLanguages")
-        UserDefaults.standard.synchronize()
+        
+        // Initialize locale bundle
+        updateLocaleBundle()
+    }
+    
+    /// Update the locale bundle based on current language
+    private func updateLocaleBundle() {
+        let languageCode = String(currentLanguage.prefix(2)) // Get base language code (e.g., "en" from "en-US")
+        
+        // CRITICAL: Set AppleLanguages FIRST before any bundle operations
+        // This ensures Bundle.main.localizedString (used by Localizable.xcstrings) uses the correct language
+        UserDefaults.standard.set([languageCode], forKey: "AppleLanguages")
+        // Note: synchronize() is deprecated, but UserDefaults auto-syncs
+        // For immediate effect, we rely on the notification and view refresh
+        
+        // Try to find the language bundle (e.g., "en.lproj")
+        if let path = Bundle.main.path(forResource: languageCode, ofType: "lproj"),
+           let bundle = Bundle(path: path) {
+            localeBundle = bundle
+        } else if let path = Bundle.main.path(forResource: currentLanguage, ofType: "lproj"),
+                  let bundle = Bundle(path: path) {
+            localeBundle = bundle
+        } else {
+            // Fallback to main bundle (for Localizable.xcstrings)
+            localeBundle = Bundle.main
+        }
+        
+        // Force Bundle.main to reload language preferences
+        // This is critical for Localizable.xcstrings to work
+        NotificationCenter.default.post(name: NSLocale.currentLocaleDidChangeNotification, object: nil)
     }
     
     /// Get the current language code
@@ -51,32 +86,103 @@ final class LocalizationManager: ObservableObject {
         Locale(identifier: currentLanguage)
     }
     
-    /// Set the app language
+    /// Check if current language is RTL (Right-to-Left)
+    var isRTL: Bool {
+        let rtlLanguages = ["ar", "he", "fa", "ur"] // Arabic, Hebrew, Persian, Urdu
+        return rtlLanguages.contains(currentLanguage)
+    }
+    
+    /// Get layout direction for current language
+    var layoutDirection: LayoutDirection {
+        isRTL ? .rightToLeft : .leftToRight
+    }
+    
+    /// Set the app language (runtime switching)
     func setLanguage(_ languageCode: String) {
         guard currentLanguage != languageCode else { return }
         
+        print("🌐 [LocalizationManager] Setting language to: \(languageCode) (current: \(currentLanguage))")
+        
+        // Set AppleLanguages FIRST before changing currentLanguage
+        // This ensures Bundle operations use the correct language
+        UserDefaults.standard.set([languageCode], forKey: "AppleLanguages")
+        UserDefaults.standard.synchronize() // Force immediate sync
+        
+        // Update current language (this triggers didSet which calls updateLocaleBundle)
         currentLanguage = languageCode
         
         print("🌐 [LocalizationManager] Language set to: \(languageCode)")
         
-        // Post notification to reload the app
+        // Trigger objectWillChange to notify all observers
+        objectWillChange.send()
+        
+        // Post notification to reload the app UI
         NotificationCenter.default.post(name: .languageChanged, object: languageCode)
+        
+        // Force bundle update (already called in didSet, but ensure it's done)
+        updateLocaleBundle()
+        
+        // Verify AppleLanguages is set correctly
+        if let savedLanguages = UserDefaults.standard.array(forKey: "AppleLanguages") as? [String],
+           savedLanguages.first == languageCode {
+            print("✅ [LocalizationManager] AppleLanguages verified: \(savedLanguages)")
+        } else {
+            print("⚠️ [LocalizationManager] AppleLanguages not set correctly!")
+        }
     }
     
     /// Get localized string from the appropriate language bundle
+    /// This works with both .lproj bundles and Localizable.xcstrings
+    /// Priority: Language bundle > localeBundle > Bundle.main > key itself
+    /// 
+    /// IMPORTANT: Bundle.main.localizedString does NOT respect AppleLanguages at runtime.
+    /// It only reads AppleLanguages when the app launches. For runtime language switching,
+    /// we must use language-specific bundles (.lproj folders).
     func localizedString(for key: String, comment: String = "") -> String {
-        // Try to get from the selected language bundle
-        if let path = Bundle.main.path(forResource: currentLanguage, ofType: "lproj"),
-           let bundle = Bundle(path: path) {
-            let localized = bundle.localizedString(forKey: key, value: nil, table: nil)
-            // If we got a different value than the key, return it
-            if localized != key {
+        let languageCode = String(currentLanguage.prefix(2))
+        
+        // CRITICAL: Set AppleLanguages for next app launch (doesn't affect runtime)
+        UserDefaults.standard.set([languageCode], forKey: "AppleLanguages")
+        UserDefaults.standard.synchronize()
+        
+        // For runtime switching, we MUST use the language-specific bundle
+        // Try to find the language-specific bundle (.lproj folders)
+        if let path = Bundle.main.path(forResource: languageCode, ofType: "lproj"),
+           let languageBundle = Bundle(path: path) {
+            // Try with "Localizable" table first
+            let localized = languageBundle.localizedString(forKey: key, value: key, table: "Localizable")
+            if localized != key && localized != "" {
                 return localized
+            }
+            // Try without table name
+            let localizedNoTable = languageBundle.localizedString(forKey: key, value: key, table: nil)
+            if localizedNoTable != key && localizedNoTable != "" {
+                return localizedNoTable
             }
         }
         
-        // Fallback to main bundle
-        return NSLocalizedString(key, comment: comment)
+        // Try the locale bundle (cached from updateLocaleBundle)
+        let localeBundleLocalized = localeBundle.localizedString(forKey: key, value: key, table: nil)
+        if localeBundleLocalized != key && localeBundleLocalized != "" {
+            return localeBundleLocalized
+        }
+        
+        // Try Bundle.main as fallback (only works if app was launched with that language)
+        // This is for Localizable.xcstrings support, but won't work for runtime switching
+        let mainBundleLocalized = Bundle.main.localizedString(forKey: key, value: key, table: nil)
+        if mainBundleLocalized != key && mainBundleLocalized != "" {
+            return mainBundleLocalized
+        }
+        
+        // Final fallback: return the key itself if no translation found
+        // This allows the app to still function even if translations are missing
+        return key
+    }
+    
+    /// Get localized string with arguments
+    func localizedString(for key: String, arguments: CVarArg..., comment: String = "") -> String {
+        let format = localizedString(for: key, comment: comment)
+        return String(format: format, arguments: arguments)
     }
 }
 
@@ -97,7 +203,8 @@ extension LocalizationManager {
             "Korean": "ko",
             "Russian": "ru",
             "Arabic": "ar",
-            "Hindi": "hi"
+            "Hindi": "hi",
+            "Hebrew": "he" // Add Hebrew support
         ]
         return mapping[name] ?? "en"
     }
@@ -116,9 +223,16 @@ extension LocalizationManager {
             "ko": "Korean",
             "ru": "Russian",
             "ar": "Arabic",
-            "hi": "Hindi"
+            "hi": "Hindi",
+            "he": "Hebrew" // Add Hebrew support
         ]
         return mapping[code] ?? "English"
+    }
+    
+    /// Check if a language code is RTL
+    static func isRTL(languageCode: String) -> Bool {
+        let rtlLanguages = ["ar", "he", "fa", "ur"] // Arabic, Hebrew, Persian, Urdu
+        return rtlLanguages.contains(languageCode)
     }
 }
 
@@ -146,6 +260,21 @@ extension String {
     /// Get localized string with comment
     func localized(comment: String = "") -> String {
         LocalizationManager.shared.localizedString(for: self, comment: comment)
+    }
+    
+    /// Get localized string with format arguments
+    func localized(_ arguments: CVarArg..., comment: String = "") -> String {
+        let format = LocalizationManager.shared.localizedString(for: self, comment: comment)
+        return String(format: format, arguments: arguments)
+    }
+}
+
+// MARK: - SwiftUI LocalizedStringKey Helper
+
+extension LocalizedStringKey {
+    /// Create a LocalizedStringKey from a string that will be localized
+    init(_ key: String, comment: String = "") {
+        self.init(key, comment: comment)
     }
 }
 

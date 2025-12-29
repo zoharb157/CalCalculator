@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct HealthKitCard: View {
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @State private var healthKitManager = HealthKitManager.shared
     @State private var isLoading = true
@@ -217,11 +218,13 @@ struct HealthKitCard: View {
             }
             
             VStack(alignment: .leading, spacing: 4) {
-                Text("HealthKit Unavailable")
+                Text(localizationManager.localizedString(for: AppStrings.Home.healthKitUnavailable))
+                    .id("healthkit-unavailable-\(localizationManager.currentLanguage)")
                     .font(.headline)
                     .foregroundColor(.primary)
                 
-                Text("Health data is not available on this device")
+                Text(localizationManager.localizedString(for: AppStrings.Home.healthDataNotAvailable))
+                    .id("health-data-not-available-\(localizationManager.currentLanguage)")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -259,11 +262,13 @@ struct HealthKitCard: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Connect Health")
+                    Text(localizationManager.localizedString(for: AppStrings.Home.connectHealth))
+                        .id("connect-health-\(localizationManager.currentLanguage)")
                         .font(.headline)
                         .foregroundColor(.primary)
                     
-                    Text("View your daily activity and exercise data")
+                    Text(localizationManager.localizedString(for: AppStrings.Home.viewDailyActivity))
+                        .id("view-daily-activity-\(localizationManager.currentLanguage)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(2)
@@ -288,7 +293,8 @@ struct HealthKitCard: View {
                 HStack {
                     Image(systemName: "heart.fill")
                         .font(.subheadline)
-                    Text("Enable Health Access")
+                    Text(localizationManager.localizedString(for: AppStrings.Home.enableHealthAccess))
+                        .id("enable-health-access-\(localizationManager.currentLanguage)")
                         .font(.subheadline)
                         .fontWeight(.semibold)
                 }
@@ -340,7 +346,8 @@ struct HealthKitCard: View {
                         .font(.headline)
                         .foregroundColor(.primary)
                     
-                    Text("Go to Settings > Privacy & Security > Health > CalCalculator")
+                    Text(localizationManager.localizedString(for: AppStrings.Progress.goToSettings))
+                        .id("go-to-settings-\(localizationManager.currentLanguage)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(3)
@@ -355,7 +362,8 @@ struct HealthKitCard: View {
                 HStack {
                     Image(systemName: "gearshape.fill")
                         .font(.subheadline)
-                    Text("Open Settings")
+                    Text(localizationManager.localizedString(for: AppStrings.Progress.openSettings))
+                        .id("open-settings-\(localizationManager.currentLanguage)")
                         .font(.subheadline)
                         .fontWeight(.semibold)
                 }

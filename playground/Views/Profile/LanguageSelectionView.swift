@@ -9,6 +9,7 @@ import SwiftUI
 struct LanguageSelectionView: View {
     @Bindable var viewModel: ProfileViewModel
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
         NavigationStack {
@@ -18,9 +19,11 @@ struct LanguageSelectionView: View {
                         language: language,
                         isSelected: viewModel.selectedLanguage == language.name,
                         onSelect: {
+                            // Update language immediately
                             viewModel.selectedLanguage = language.name
-                            // Small delay to ensure state is saved before dismissing
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            
+                            // Dismiss immediately
+                            Task { @MainActor in
                                 dismiss()
                             }
                         }
@@ -28,7 +31,8 @@ struct LanguageSelectionView: View {
                 }
             }
             .listStyle(.insetGrouped)
-            .navigationTitle("Select Language")
+            .navigationTitle(localizationManager.localizedString(for: "Select Language"))
+                .id("lang-select-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {

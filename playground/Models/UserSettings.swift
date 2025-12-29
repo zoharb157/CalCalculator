@@ -31,6 +31,7 @@ final class UserSettings {
         static let debugOverrideSubscription = "debugOverrideSubscription"
         static let debugIsSubscribed = "debugIsSubscribed"
         static let hasSeenDietWelcome = "hasSeenDietWelcome"
+        static let subscriptionStatus = "subscriptionStatus" // Stored subscription status (only changed by debug flag or SDK)
     }
     
     // MARK: - Properties

@@ -10,6 +10,7 @@ import SwiftUI
 struct MealDetailView: View {
     let mealId: UUID
     let repository: MealRepository
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @Environment(\.dismiss) private var dismiss
     @State private var meal: Meal?
@@ -21,8 +22,9 @@ struct MealDetailView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("Meal Details")
+                    Text(localizationManager.localizedString(for: AppStrings.History.mealDetails))
                         .font(.headline)
+                        .id("meal-details-title-\(localizationManager.currentLanguage)")
                 }
             }
             .task {
@@ -47,19 +49,23 @@ struct MealDetailView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.2)
-            Text("Loading meal details...")
+            Text(localizationManager.localizedString(for: AppStrings.History.loadingMealDetails))
                 .font(.subheadline)
                 .foregroundColor(.secondary)
+                .id("loading-meal-details-\(localizationManager.currentLanguage)")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
+    @ViewBuilder
     private var errorView: some View {
+        let errorText = localizationManager.localizedString(for: AppStrings.History.unableToLoadMealDetails)
         ContentUnavailableView(
             "Meal Not Found",
             systemImage: "exclamationmark.triangle",
-            description: Text("Unable to load meal details")
+            description: Text(errorText)
         )
+        .id("unable-load-meal-\(localizationManager.currentLanguage)")
     }
     
     // MARK: - Meal Content
@@ -223,7 +229,8 @@ struct MealDetailView: View {
     
     private func macroRingsSection(for meal: Meal) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Nutrition Breakdown")
+            Text(localizationManager.localizedString(for: AppStrings.History.nutritionBreakdown))
+                .id("nutrition-breakdown-\(localizationManager.currentLanguage)")
                 .font(.headline)
             
             HStack(spacing: 20) {
@@ -290,8 +297,9 @@ struct MealDetailView: View {
     private func ingredientsSection(for meal: Meal) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Ingredients")
+                Text(localizationManager.localizedString(for: AppStrings.Results.ingredients))
                     .font(.headline)
+                    .id("ingredients-label-\(localizationManager.currentLanguage)")
                 Spacer()
                 Text("\(meal.items.count) items")
                     .font(.caption)
@@ -367,7 +375,8 @@ struct MealDetailView: View {
             HStack {
                 Image(systemName: "note.text")
                     .foregroundColor(.secondary)
-                Text("Notes")
+                Text(localizationManager.localizedString(for: AppStrings.Results.notes))
+                    .id("notes-meal-detail-\(localizationManager.currentLanguage)")
                     .font(.headline)
             }
             

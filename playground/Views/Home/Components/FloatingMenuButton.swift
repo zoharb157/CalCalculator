@@ -50,7 +50,7 @@ struct FloatingMenuButton: View {
 #Preview {
     VStack {
         FloatingMenuButton(icon: "camera.fill", title: "Scan food", color: .purple, isPremium: true) {}
-        FloatingMenuButton(icon: "dumbbell.fill", title: "Log exercise", color: .blue) {}
+        FloatingMenuButton(icon: "dumbbell.fill", title: "Save exercise", color: .blue) {}
     }
 }
 

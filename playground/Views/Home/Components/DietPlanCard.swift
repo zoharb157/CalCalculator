@@ -11,6 +11,7 @@ import SwiftData
 struct DietPlanCard: View {
     @Query(filter: #Predicate<DietPlan> { $0.isActive == true }) private var activePlans: [DietPlan]
     @Environment(\.modelContext) private var modelContext
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @State private var todaysMeals: [ScheduledMeal] = []
     @State private var completedMeals: Set<UUID> = []
@@ -23,17 +24,37 @@ struct DietPlanCard: View {
         if !activePlans.isEmpty, !todaysMeals.isEmpty {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Label("Today's Diet Plan", systemImage: "calendar.badge.clock")
+                    Label(localizationManager.localizedString(for: AppStrings.Home.todaysDietPlan), systemImage: "calendar.badge.clock")
+                        .id("todays-diet-plan-\(localizationManager.currentLanguage)")
                         .font(.headline)
                     
                     Spacer()
                     
-                    NavigationLink {
-                        EnhancedDietSummaryView()
-                    } label: {
-                        Text("View All")
-                            .font(.caption)
-                            .foregroundColor(.accentColor)
+                    HStack(spacing: 12) {
+                        if !activePlans.isEmpty {
+                            Button {
+                                // Edit diet plan - send notification to parent
+                                if let plan = activePlans.first {
+                                    NotificationCenter.default.post(
+                                        name: Notification.Name("editDietPlan"),
+                                        object: plan
+                                    )
+                                }
+                            } label: {
+                                Image(systemName: "pencil")
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                        
+                        NavigationLink {
+                            EnhancedDietSummaryView()
+                        } label: {
+                            Text(localizationManager.localizedString(for: AppStrings.Home.viewAll))
+                                .font(.caption)
+                                .foregroundColor(.accentColor)
+                                .id("view-all-diet-\(localizationManager.currentLanguage)")
+                        }
                     }
                 }
                 

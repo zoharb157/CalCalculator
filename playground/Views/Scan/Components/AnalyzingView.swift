@@ -9,6 +9,7 @@ import SwiftUI
 
 struct AnalyzingView: View {
     let progress: Double
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     @State private var animating = false
     @State private var currentTip = 0
     
@@ -110,13 +111,15 @@ struct AnalyzingView: View {
     }
     
     private var titleText: some View {
-        Text("Analyzing your meal...")
+        Text(localizationManager.localizedString(for: AppStrings.Food.analyzingYourMeal))
+            .id("analyzing-meal-\(localizationManager.currentLanguage)")
             .font(.title3)
             .fontWeight(.semibold)
     }
     
     private var descriptionText: some View {
-        Text("AI is processing your food image")
+        Text(localizationManager.localizedString(for: AppStrings.Scanning.aiProcessing))
+            .id("ai-processing-\(localizationManager.currentLanguage)")
             .font(.subheadline)
             .foregroundColor(.secondary)
             .multilineTextAlignment(.center)
@@ -141,16 +144,8 @@ struct AnalyzingView: View {
     // MARK: - Private Methods
     
     private func startTipRotation() {
-        Task {
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 2_000_000_000)
-                await MainActor.run {
-                    withAnimation {
-                        currentTip = (currentTip + 1) % tips.count
-                    }
-                }
-            }
-        }
+        // Tip rotation removed - tips will be shown statically
+        // If rotation is needed, it should be driven by actual analysis progress
     }
 }
 

@@ -11,6 +11,7 @@ import SwiftData
 struct MealReminderActionView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     let scheduledMealId: UUID
     let mealName: String
@@ -105,7 +106,8 @@ struct MealReminderActionView: View {
                 
                 Spacer()
             }
-            .navigationTitle("Meal Reminder")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.mealReminder))
+                .id("meal-reminder-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -125,11 +127,13 @@ struct MealReminderActionView: View {
                             .font(.system(size: 50))
                             .foregroundColor(.accentColor)
                         
-                        Text("Scan Your Food")
+                        Text(localizationManager.localizedString(for: AppStrings.DietPlan.scanYourFood))
                             .font(.title2)
                             .fontWeight(.semibold)
+                            .id("scan-food-title-\(localizationManager.currentLanguage)")
                         
-                        Text("This will open the camera to scan and analyze your food")
+                        Text(localizationManager.localizedString(for: AppStrings.DietPlan.openCameraToScan))
+                            .id("open-camera-scan-\(localizationManager.currentLanguage)")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -137,13 +141,15 @@ struct MealReminderActionView: View {
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color(.systemGroupedBackground))
-                    .navigationTitle("Add Food")
+                    .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.addFood))
+                        .id("add-food-title-\(localizationManager.currentLanguage)")
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbar {
                         ToolbarItem(placement: .navigationBarLeading) {
-                            Button("Cancel") {
+                            Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
                                 showingScan = false
                             }
+                            .id("cancel-add-food-\(localizationManager.currentLanguage)")
                         }
                     }
                 }

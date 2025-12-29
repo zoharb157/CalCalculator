@@ -7,23 +7,20 @@
 
 import SwiftUI
 import SwiftData
+import WidgetKit
 
 /// Time filter options for charts
 enum TimeFilter: String, CaseIterable, Identifiable {
-    case oneWeek = "1W"
-    case oneMonth = "1M"
-    case threeMonths = "3M"
+    case ninetyDays = "90D"
     case sixMonths = "6M"
     case oneYear = "1Y"
-    case all = "All"
+    case all = "ALL"
     
     var id: String { rawValue }
     
     var displayName: String {
         switch self {
-        case .oneWeek: return "Last 7 Days"
-        case .oneMonth: return "Last Month"
-        case .threeMonths: return "Last 3 Months"
+        case .ninetyDays: return "Last 90 Days"
         case .sixMonths: return "Last 6 Months"
         case .oneYear: return "Last Year"
         case .all: return "All Time"
@@ -32,19 +29,24 @@ enum TimeFilter: String, CaseIterable, Identifiable {
     
     var months: Int? {
         switch self {
-        case .oneWeek: return nil // Special case for days
-        case .oneMonth: return 1
-        case .threeMonths: return 3
+        case .ninetyDays: return nil // Special case for days (90 days)
         case .sixMonths: return 6
         case .oneYear: return 12
         case .all: return nil
         }
     }
     
+    var days: Int? {
+        switch self {
+        case .ninetyDays: return 90
+        default: return nil
+        }
+    }
+    
     var startDate: Date {
         switch self {
-        case .oneWeek:
-            return Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+        case .ninetyDays:
+            return Calendar.current.date(byAdding: .day, value: -90, to: Date()) ?? Date()
         case .all:
             return Calendar.current.date(byAdding: .year, value: -10, to: Date()) ?? Date()
         default:
@@ -156,7 +158,7 @@ final class ProgressViewModel {
     
     // Weight Data
     var weightHistory: [WeightDataPoint] = []
-    var weightTimeFilter: TimeFilter = .threeMonths
+    var weightTimeFilter: TimeFilter = .ninetyDays
     var weightEntries: [WeightEntry] = []
     
     // Weight Stats
@@ -223,6 +225,10 @@ final class ProgressViewModel {
     
     var displayWeight: Double {
         settings.displayWeight
+    }
+    
+    var displayTargetWeight: Double {
+        useMetricUnits ? targetWeight : targetWeight * 2.20462
     }
     
     var weightUnit: String {
@@ -316,6 +322,12 @@ final class ProgressViewModel {
                 weightHistory = [WeightDataPoint(date: lastDate, weight: displayWeight)]
             }
         }
+        
+        // Sync current weight to widget
+        if currentWeight > 0 {
+            let displayWeightValue = displayWeight
+            syncWeightDataToWidget(weight: displayWeightValue, weightInKg: currentWeight)
+        }
     }
     
     private func calculateWeightStats() {
@@ -406,7 +418,10 @@ final class ProgressViewModel {
     // MARK: - Weight Actions
     
     func updateWeight(_ weight: Double) async {
+        // Convert to kg if needed (weight parameter is in display units)
         let weightInKg = settings.useMetricUnits ? weight : weight / 2.20462
+        
+        // Update UserSettings (this also updates lastWeightDate)
         settings.updateWeight(weightInKg)
         
         // Save to SwiftData
@@ -422,6 +437,10 @@ final class ProgressViewModel {
             }
         }
         
+        // Sync weight data to widget via shared UserDefaults
+        // Use display weight (what user sees) for widget
+        syncWeightDataToWidget(weight: weight, weightInKg: weightInKg)
+        
         // Also save to HealthKit if available
         if healthKitManager.isHealthDataAvailable {
             do {
@@ -433,6 +452,25 @@ final class ProgressViewModel {
         }
         
         await loadWeightHistory()
+    }
+    
+    /// Sync weight data to widget via shared UserDefaults
+    private func syncWeightDataToWidget(weight: Double, weightInKg: Double) {
+        let appGroupIdentifier = "group.CalCalculatorAiPlaygournd.shared"
+        guard let sharedDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
+            print("⚠️ Failed to access shared UserDefaults for widget weight sync")
+            return
+        }
+        
+        // Store weight in display units (what user sees)
+        sharedDefaults.set(weight, forKey: "widget.currentWeight")
+        sharedDefaults.set(settings.useMetricUnits, forKey: "widget.useMetricUnits")
+        sharedDefaults.set(Date(), forKey: "widget.lastWeightDate")
+        
+        print("📱 Widget weight data synced: \(weight) \(settings.useMetricUnits ? "kg" : "lbs")")
+        
+        // Reload widget timelines
+        WidgetCenter.shared.reloadAllTimelines()
     }
     
     func deleteWeightEntry(_ entry: WeightEntry) {

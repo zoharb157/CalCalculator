@@ -10,6 +10,8 @@ import SwiftUI
 struct TextFoodLogView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.localization) private var localization
+    @ObservedObject private var localizationManager = LocalizationManager.shared
 
     @State private var viewModel: LogExperienceViewModel
     @State private var inputText: String = ""
@@ -43,7 +45,8 @@ struct TextFoodLogView: View {
                     inputView
                 }
             }
-            .navigationTitle("Describe Your Food")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Food.describeYourFood))
+                .id("describe-food-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -55,17 +58,21 @@ struct TextFoodLogView: View {
                     }
                 }
             }
-            .alert("Error", isPresented: $viewModel.showError) {
-                Button("OK", role: .cancel) {}
+            .alert(localizationManager.localizedString(for: AppStrings.Common.error), isPresented: $viewModel.showError) {
+                Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) {}
+                    .id("ok-text-log-\(localizationManager.currentLanguage)")
             } message: {
-                Text(viewModel.errorMessage ?? "An error occurred")
+                Text(viewModel.errorMessage ?? localizationManager.localizedString(for: AppStrings.Common.somethingWentWrong))
+                    .id("error-message-\(localizationManager.currentLanguage)")
             }
-            .alert("Success", isPresented: $viewModel.showSuccess) {
-                Button("Done") {
+            .alert(localizationManager.localizedString(for: AppStrings.Common.success), isPresented: $viewModel.showSuccess) {
+                Button(localizationManager.localizedString(for: AppStrings.Common.done)) {
                     dismiss()
                 }
+                .id("done-text-log-\(localizationManager.currentLanguage)")
             } message: {
-                Text(viewModel.successMessage ?? "Food logged successfully!")
+                Text(viewModel.successMessage ?? localizationManager.localizedString(for: AppStrings.Food.foodSaved))
+                    .id("success-message-\(localizationManager.currentLanguage)")
             }
         }
     }
@@ -86,12 +93,12 @@ struct TextFoodLogView: View {
                         )
                     )
 
-                Text("Tell us what you ate")
+                Text(localization.localizedString(for: "Tell us what you ate"))
                     .font(.title2)
                     .fontWeight(.bold)
 
                 Text(
-                    "Describe your meal in natural language and we'll calculate the nutrition for you"
+                    localization.localizedString(for: "Describe your meal in natural language and we'll calculate the nutrition for you")
                 )
                 .font(.subheadline)
                 .foregroundColor(.secondary)
@@ -102,7 +109,7 @@ struct TextFoodLogView: View {
 
             // Text input
             VStack(alignment: .leading, spacing: 8) {
-                TextField("I had...", text: $inputText, axis: .vertical)
+                TextField(localization.localizedString(for: "I had..."), text: $inputText, axis: .vertical)
                     .textFieldStyle(.plain)
                     .font(.body)
                     .lineLimit(3...6)
@@ -124,11 +131,12 @@ struct TextFoodLogView: View {
 
             // Suggestions
             VStack(alignment: .leading, spacing: 12) {
-                Text("Try saying:")
+                Text(localizationManager.localizedString(for: AppStrings.Food.trySaying))
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundColor(.secondary)
                     .padding(.horizontal)
+                    .id("try-saying-\(localizationManager.currentLanguage)")
 
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
@@ -147,7 +155,7 @@ struct TextFoodLogView: View {
 
             // Category selector
             VStack(alignment: .leading, spacing: 8) {
-                Text("Meal Category")
+                Text(localization.localizedString(for: "Meal Category"))
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundColor(.secondary)
@@ -172,7 +180,8 @@ struct TextFoodLogView: View {
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "sparkles")
-                    Text("Analyze with AI")
+                    Text(localizationManager.localizedString(for: AppStrings.Food.analyzeWithAI))
+                    .id("analyze-ai-text-\(localizationManager.currentLanguage)")
                 }
                 .font(.headline)
                 .foregroundColor(.white)
@@ -224,11 +233,13 @@ struct TextFoodLogView: View {
             }
 
             VStack(spacing: 12) {
-                Text("Analyzing your meal...")
+                Text(localizationManager.localizedString(for: AppStrings.Food.analyzingYourMeal))
+                .id("analyzing-meal-text-\(localizationManager.currentLanguage)")
                     .font(.title3)
                     .fontWeight(.semibold)
 
-                Text("Using AI to identify ingredients and calculate nutrition")
+                Text(localizationManager.localizedString(for: AppStrings.Food.usingAIToIdentify))
+                .id("using-ai-text-\(localizationManager.currentLanguage)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -259,7 +270,8 @@ struct TextFoodLogView: View {
                         .foregroundColor(.green)
                         .font(.title2)
 
-                    Text("Analysis Complete")
+                    Text(localizationManager.localizedString(for: AppStrings.Food.analysisComplete))
+                    .id("analysis-complete-\(localizationManager.currentLanguage)")
                         .font(.headline)
                 }
 
@@ -295,14 +307,15 @@ struct TextFoodLogView: View {
 
             // Foods list
             List {
-                Section("Identified Foods") {
+                Section(localizationManager.localizedString(for: AppStrings.Food.identifiedFoods)) {
                     ForEach(viewModel.analyzedFoods) { food in
                         FoodResultRow(food: food)
                             .swipeActions(edge: .trailing) {
                                 Button(role: .destructive) {
                                     viewModel.removeAnalyzedFood(food)
                                 } label: {
-                                    Label("Remove", systemImage: "trash")
+                                    Label(localizationManager.localizedString(for: AppStrings.Common.remove), systemImage: "trash")
+                                        .id("remove-text-log-\(localizationManager.currentLanguage)")
                                 }
                             }
                     }
@@ -326,7 +339,8 @@ struct TextFoodLogView: View {
                                 .tint(.white)
                         } else {
                             Image(systemName: "checkmark.circle.fill")
-                            Text("Log Meal")
+                            Text(localizationManager.localizedString(for: AppStrings.Food.saveMeal))
+                                .id("save-meal-text-log-\(localizationManager.currentLanguage)")
                         }
                     }
                     .font(.headline)
@@ -342,9 +356,10 @@ struct TextFoodLogView: View {
                     viewModel.analyzedFoods = []
                     inputText = ""
                 } label: {
-                    Text("Start Over")
+                    Text(localizationManager.localizedString(for: AppStrings.Food.startOver))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
+                        .id("start-over-\(localizationManager.currentLanguage)")
                 }
             }
             .padding()

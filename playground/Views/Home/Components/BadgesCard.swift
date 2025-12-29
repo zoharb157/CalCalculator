@@ -10,6 +10,7 @@ import SwiftUI
 struct BadgesCard: View {
     @State private var badgeManager = BadgeManager.shared
     let onTap: () -> Void
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     private var progressValue: Double {
         guard badgeManager.totalBadgeCount > 0 else { return 0 }
@@ -76,8 +77,9 @@ struct BadgesCard: View {
             }
             
             VStack(alignment: .leading, spacing: 2) {
-                Text("My Badges")
+                Text(localizationManager.localizedString(for: AppStrings.Home.myBadges))
                     .font(.headline)
+                    .id("my-badges-\(localizationManager.currentLanguage)")
                     .foregroundColor(.primary)
                 
                 Text("\(badgeManager.unlockedBadgeCount) of \(badgeManager.totalBadgeCount) earned")
@@ -229,7 +231,8 @@ struct BadgesCard: View {
                 Spacer()
                 
                 if let nextBadge = nextBadgeToEarn {
-                    Text("Next: \(nextBadge.displayName)")
+                    Text("\(localizationManager.localizedString(for: AppStrings.Home.next_)) \(nextBadge.displayName)")
+                        .id("next-badge-\(localizationManager.currentLanguage)")
                         .font(.caption2)
                         .foregroundColor(.orange)
                 }
@@ -246,7 +249,8 @@ struct BadgesCard: View {
                 .font(.caption)
                 .foregroundColor(.yellow)
             
-            Text("Tap to view all badges and achievements")
+                Text(localizationManager.localizedString(for: AppStrings.Home.tapToViewBadges))
+                    .id("tap-view-badges-\(localizationManager.currentLanguage)")
                 .font(.caption)
                 .foregroundColor(.secondary)
             

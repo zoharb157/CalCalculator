@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct TodaysProgressCard: View {
     let summary: DaySummary?
@@ -13,63 +14,115 @@ struct TodaysProgressCard: View {
     let remainingCalories: Int
     let progress: Double
     var goalAdjustment: String? = nil
+    var burnedCalories: Int = 0 // Calories burned from exercise
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     private var consumed: Int {
         summary?.totalCalories ?? 0
     }
     
+    private var netCalories: Int {
+        consumed - burnedCalories
+    }
+    
+    private var isSmallScreen: Bool {
+        UIScreen.main.bounds.width < 375 // iPhone SE and similar small devices
+    }
+    
+    private var calorieFontSize: CGFloat {
+        isSmallScreen ? 32 : 42
+    }
+    
+    private var progressSize: CGFloat {
+        isSmallScreen ? 80 : 100
+    }
+    
     var body: some View {
-        HStack(spacing: 20) {
-            // Left side - Text info
-            VStack(alignment: .leading, spacing: 8) {
-                
-                Text("\(consumed)")
-                    .font(.system(size: 42, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
-                    .contentTransition(.numericText())
-                    .animation(.spring(response: 0.6, dampingFraction: 0.8), value: consumed)
-                    .accessibilityLabel("\(consumed) calories consumed")
-                
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("of \(calorieGoal) cal")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                    
-                    // Goal adjustment indicator
-                    if let adjustment = goalAdjustment {
-                        Text(adjustment)
-                            .font(.caption2)
-                            .foregroundColor(.blue)
-                            .fontWeight(.medium)
+        VStack(spacing: isSmallScreen ? 12 : 16) {
+            // Top section - Calories gained vs lost
+            HStack(spacing: isSmallScreen ? 12 : 20) {
+                // Calories Gained (Consumed)
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.up.circle.fill")
+                            .font(.caption)
+                            .foregroundColor(.green)
+                        Text(localizationManager.localizedString(for: AppStrings.Home.gained))
+                            .font(isSmallScreen ? .caption2 : .caption)
+                            .id("gained-\(localizationManager.currentLanguage)")
+                            .foregroundColor(.secondary)
                     }
+                    Text("\(consumed)")
+                        .font(.system(size: isSmallScreen ? 24 : 28, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                        .contentTransition(.numericText())
+                        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: consumed)
                 }
                 
-                // Remaining calories badge
-                HStack(spacing: 4) {
-                    Image(systemName: remainingCalories > 0 ? "flame.fill" : "checkmark.circle.fill")
-                        .font(.caption)
-                    Text("\(remainingCalories) remaining")
-                        .font(.caption)
-                        .fontWeight(.medium)
+                Spacer()
+                
+                // Net Calories (Consumed - Burned)
+                VStack(alignment: .center, spacing: 4) {
+                    Text(localizationManager.localizedString(for: AppStrings.Home.net))
+                        .font(isSmallScreen ? .caption2 : .caption)
+                        .foregroundColor(.secondary)
+                        .id("net-\(localizationManager.currentLanguage)")
+                    Text("\(netCalories)")
+                        .font(.system(size: isSmallScreen ? 28 : 36, weight: .bold, design: .rounded))
+                        .foregroundColor(netCalories >= 0 ? .orange : .green)
                         .contentTransition(.numericText())
-                        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: remainingCalories)
+                        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: netCalories)
                 }
-                .foregroundColor(remainingCalories > 0 ? .orange : .green)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(
-                    (remainingCalories > 0 ? Color.orange : Color.green).opacity(0.15)
-                )
-                .clipShape(Capsule())
+                
+                Spacer()
+                
+                // Calories Lost (Burned)
+                VStack(alignment: .trailing, spacing: 4) {
+                    HStack(spacing: 4) {
+                        Text(localizationManager.localizedString(for: AppStrings.Home.lost))
+                            .font(isSmallScreen ? .caption2 : .caption)
+                            .id("lost-\(localizationManager.currentLanguage)")
+                            .foregroundColor(.secondary)
+                        Image(systemName: "arrow.down.circle.fill")
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                    }
+                    Text("\(burnedCalories)")
+                        .font(.system(size: isSmallScreen ? 24 : 28, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                        .contentTransition(.numericText())
+                        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: burnedCalories)
+                }
             }
             
-            Spacer()
-            
-            // Right side - Circular progress
-            CircularProgressView(progress: progress)
-                .frame(width: 100, height: 100)
+            // Bottom section - Remaining calories and progress
+            HStack(spacing: isSmallScreen ? 12 : 20) {
+                // Left side - Remaining calories
+                VStack(alignment: .leading, spacing: isSmallScreen ? 4 : 6) {
+                    Text("\(remainingCalories)")
+                        .font(.system(size: isSmallScreen ? 28 : 36, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                        .contentTransition(.numericText())
+                        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: remainingCalories)
+                        .minimumScaleFactor(0.8)
+                        .lineLimit(1)
+                    
+                    Text(localizationManager.localizedString(for: AppStrings.Home.caloriesLeft))
+                        .font(isSmallScreen ? .caption : .subheadline)
+                        .foregroundColor(.secondary)
+                        .minimumScaleFactor(0.9)
+                        .lineLimit(1)
+                        .id("calories-left-\(localizationManager.currentLanguage)")
+                }
+                
+                Spacer(minLength: isSmallScreen ? 4 : 8)
+                
+                // Right side - Circular progress
+                CircularProgressView(progress: progress)
+                    .frame(width: isSmallScreen ? 70 : 90, height: isSmallScreen ? 70 : 90)
+            }
         }
-        .padding()
+        .padding(isSmallScreen ? 12 : 16)
         .cardStyle(background: Color(.secondarySystemGroupedBackground))
     }
 }
@@ -85,7 +138,8 @@ struct TodaysProgressCard: View {
         ),
         calorieGoal: 2000,
         remainingCalories: 500,
-        progress: 0.75
+        progress: 0.75,
+        burnedCalories: 300
     )
     .padding()
 }
@@ -101,7 +155,8 @@ struct TodaysProgressCard: View {
         ),
         calorieGoal: 2000,
         remainingCalories: 0,
-        progress: 1.0
+        progress: 1.0,
+        burnedCalories: 200
     )
     .padding()
 }
@@ -117,7 +172,8 @@ struct TodaysProgressCard: View {
         ),
         calorieGoal: 2000,
         remainingCalories: -300,
-        progress: 1.15
+        progress: 1.15,
+        burnedCalories: 100
     )
     .padding()
 }

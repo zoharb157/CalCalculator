@@ -9,6 +9,7 @@ import SwiftUI
 
 struct TotalMacrosCard: View {
     let macros: MacroData
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
         VStack(spacing: 16) {
@@ -23,8 +24,9 @@ struct TotalMacrosCard: View {
     
     private var headerView: some View {
         HStack {
-            Text("Total Nutrition")
+            Text(localizationManager.localizedString(for: AppStrings.Results.totalNutrition))
                 .font(.headline)
+                .id("total-nutrition-\(localizationManager.currentLanguage)")
             Spacer()
         }
     }

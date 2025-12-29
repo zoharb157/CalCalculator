@@ -11,6 +11,7 @@ import SwiftData
 struct DietQuickSetupView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @State private var currentStep = 0
     @State private var planName = ""
@@ -51,13 +52,15 @@ struct DietQuickSetupView: View {
                 // Navigation buttons
                 navigationButtons
             }
-            .navigationTitle("Create Diet Plan")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.createDietPlan))
+                .id("create-diet-plan-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
                         dismiss()
                     }
+                    .id("cancel-quick-setup-\(localizationManager.currentLanguage)")
                 }
             }
             .sheet(isPresented: $showingMealEditor) {
@@ -97,7 +100,8 @@ struct DietQuickSetupView: View {
             }
             .padding(.horizontal)
             
-            Text("Step \(currentStep + 1) of \(steps.count): \(steps[currentStep])")
+            Text(localizationManager.localizedString(for: AppStrings.DietPlan.stepXOfY, arguments: currentStep + 1, steps.count, steps[currentStep]))
+                .id("step-indicator-\(localizationManager.currentLanguage)")
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
@@ -113,11 +117,13 @@ struct DietQuickSetupView: View {
                 .font(.system(size: 60))
                 .foregroundColor(.accentColor)
             
-            Text("Name Your Diet Plan")
+            Text(localizationManager.localizedString(for: AppStrings.DietPlan.nameYourDietPlan))
                 .font(.title2)
                 .fontWeight(.bold)
+                .id("name-diet-plan-\(localizationManager.currentLanguage)")
             
-            Text("Give your diet plan a memorable name")
+            Text(localizationManager.localizedString(for: AppStrings.DietPlan.giveDietPlanName))
+                .id("give-diet-plan-name-\(localizationManager.currentLanguage)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -132,12 +138,14 @@ struct DietQuickSetupView: View {
     
     private var templateStep: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Choose a Template (Optional)")
+            Text(localizationManager.localizedString(for: AppStrings.DietPlan.chooseTemplateOptional))
                 .font(.title2)
                 .fontWeight(.bold)
                 .padding(.horizontal)
+                .id("choose-template-\(localizationManager.currentLanguage)")
             
-            Text("Start with a template or create from scratch")
+            Text(localizationManager.localizedString(for: AppStrings.DietPlan.startWithTemplate))
+                .id("start-with-template-\(localizationManager.currentLanguage)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .padding(.horizontal)
@@ -152,7 +160,8 @@ struct DietQuickSetupView: View {
                             Image(systemName: selectedTemplate == nil ? "checkmark.circle.fill" : "circle")
                                 .foregroundColor(selectedTemplate == nil ? .accentColor : .secondary)
                             
-                            Text("Start from Scratch")
+                            Text(localizationManager.localizedString(for: AppStrings.DietPlan.startFromScratch))
+                                .id("start-from-scratch-\(localizationManager.currentLanguage)")
                                 .foregroundColor(.primary)
                             
                             Spacer()
@@ -197,9 +206,10 @@ struct DietQuickSetupView: View {
     private var mealsStep: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Schedule Your Meals")
+                Text(localizationManager.localizedString(for: AppStrings.DietPlan.scheduleYourMeals))
                     .font(.title2)
                     .fontWeight(.bold)
+                    .id("schedule-meals-\(localizationManager.currentLanguage)")
                 
                 Spacer()
                 
@@ -214,11 +224,14 @@ struct DietQuickSetupView: View {
             .padding(.horizontal)
             
             if meals.isEmpty {
+                let descriptionText = localizationManager.localizedString(for: AppStrings.DietPlan.addYourFirstScheduledMeal)
+                let titleText = localizationManager.localizedString(for: AppStrings.DietPlan.noMealsScheduled)
                 ContentUnavailableView(
-                    "No Meals Scheduled",
+                    titleText,
                     systemImage: "fork.knife.circle",
-                    description: Text("Add your first scheduled meal")
+                    description: Text(descriptionText)
                 )
+                .id("no-meals-scheduled-\(localizationManager.currentLanguage)")
             } else {
                 List {
                     ForEach(meals) { meal in
@@ -238,31 +251,35 @@ struct DietQuickSetupView: View {
     private var reviewStep: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                Text("Review Your Plan")
+                Text(localizationManager.localizedString(for: AppStrings.DietPlan.reviewYourPlan))
                     .font(.title2)
                     .fontWeight(.bold)
                     .padding(.horizontal)
+                    .id("review-plan-\(localizationManager.currentLanguage)")
                 
                 // Plan summary
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Text("Plan Name")
+                        Text(localizationManager.localizedString(for: AppStrings.DietPlan.planName))
                             .font(.headline)
+                            .id("plan-name-label-\(localizationManager.currentLanguage)")
                         Spacer()
-                        Text(planName.isEmpty ? "Untitled" : planName)
+                        Text(planName.isEmpty ? localizationManager.localizedString(for: AppStrings.Common.untitled) : planName)
                             .foregroundColor(.secondary)
                     }
                     
                     HStack {
-                        Text("Total Meals")
+                        Text(localizationManager.localizedString(for: AppStrings.DietPlan.totalMeals))
                             .font(.headline)
+                            .id("total-meals-label-\(localizationManager.currentLanguage)")
                         Spacer()
                         Text("\(meals.count)")
                             .foregroundColor(.secondary)
                     }
                     
                     HStack {
-                        Text("Days Active")
+                        Text(localizationManager.localizedString(for: AppStrings.DietPlan.daysActive))
+                            .id("days-active-label-\(localizationManager.currentLanguage)")
                             .font(.headline)
                         Spacer()
                         Text(uniqueDaysString)
@@ -277,9 +294,10 @@ struct DietQuickSetupView: View {
                 // Meals preview
                 if !meals.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Scheduled Meals")
+                        Text(localizationManager.localizedString(for: AppStrings.DietPlan.scheduledMeals))
                             .font(.headline)
                             .padding(.horizontal)
+                            .id("scheduled-meals-review-\(localizationManager.currentLanguage)")
                         
                         ForEach(meals.sorted(by: { $0.time < $1.time }), id: \.id) { meal in
                             ScheduledMealRow(meal: meal) {
@@ -307,27 +325,30 @@ struct DietQuickSetupView: View {
     private var navigationButtons: some View {
         HStack {
             if currentStep > 0 {
-                Button("Back") {
+                Button(localizationManager.localizedString(for: AppStrings.Common.back)) {
                     withAnimation {
                         currentStep -= 1
                     }
                 }
+                .id("back-quick-setup-\(localizationManager.currentLanguage)")
             }
             
             Spacer()
             
             if currentStep < steps.count - 1 {
-                Button("Next") {
+                Button(localizationManager.localizedString(for: AppStrings.Common.next)) {
                     withAnimation {
                         currentStep += 1
                     }
                 }
+                .id("next-quick-setup-\(localizationManager.currentLanguage)")
                 .buttonStyle(.borderedProminent)
                 .disabled(currentStep == 0 && planName.isEmpty)
             } else {
-                Button("Create Plan") {
+                Button(localizationManager.localizedString(for: AppStrings.DietPlan.createDietPlan)) {
                     createPlan()
                 }
+                .id("create-plan-btn-\(localizationManager.currentLanguage)")
                 .buttonStyle(.borderedProminent)
                 .disabled(planName.isEmpty || meals.isEmpty)
             }
@@ -342,6 +363,7 @@ struct DietQuickSetupView: View {
                 name: planName,
                 planDescription: selectedTemplate?.description,
                 isActive: true,
+                dailyCalorieGoal: nil, // Can be set later in editor
                 scheduledMeals: meals
             )
             
@@ -355,6 +377,10 @@ struct DietQuickSetupView: View {
             }
             
             NotificationCenter.default.post(name: .dietPlanChanged, object: nil)
+            
+            // Show success notification
+            HapticManager.shared.notification(.success)
+            
             dismiss()
         } catch {
             print("Failed to create plan: \(error)")

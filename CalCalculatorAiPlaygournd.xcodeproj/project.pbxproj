@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		CE4533C62EF81636006F848D /* MavenCommonSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = FF5B2D1B53224F94AE3D23B7 /* MavenCommonSwiftUI */; };
+		CEB315012F01500600986732 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEB315002F01500600986732 /* WidgetKit.framework */; };
+		CEB315032F01500600986732 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEB315022F01500600986732 /* SwiftUI.framework */; };
+		CEB315142F01500700986732 /* CaloriesCalculatorWidgetsExtensionExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CEB314FE2F01500600986732 /* CaloriesCalculatorWidgetsExtensionExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -18,12 +21,46 @@
 			remoteGlobalIDString = A31433142EF0897D00EFE039;
 			remoteInfo = playground;
 		};
+		CEB315122F01500700986732 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A314330D2EF0897D00EFE039 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CEB314FD2F01500600986732;
+			remoteInfo = CaloriesCalculatorWidgetsExtensionExtension;
+		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		CEB315152F01500700986732 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				CEB315142F01500700986732 /* CaloriesCalculatorWidgetsExtensionExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		A31433152EF0897D00EFE039 /* playground.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = playground.app; path = CalCalculator.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A31433152EF0897D00EFE039 /* CalCalculator.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CalCalculator.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CEB037962EFD7A2C008E8EFE /* CalCalculatorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CalCalculatorTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		CEB314FE2F01500600986732 /* CaloriesCalculatorWidgetsExtensionExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CaloriesCalculatorWidgetsExtensionExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		CEB315002F01500600986732 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		CEB315022F01500600986732 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		CEB315182F01500700986732 /* Exceptions for "CaloriesCalculatorWidgetsExtension" folder in "CaloriesCalculatorWidgetsExtensionExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = CEB314FD2F01500600986732 /* CaloriesCalculatorWidgetsExtensionExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A31433172EF0897D00EFE039 /* playground */ = {
@@ -34,6 +71,14 @@
 		CEB037972EFD7A2C008E8EFE /* CalCalculatorTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = CalCalculatorTests;
+			sourceTree = "<group>";
+		};
+		CEB315042F01500600986732 /* CaloriesCalculatorWidgetsExtension */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				CEB315182F01500700986732 /* Exceptions for "CaloriesCalculatorWidgetsExtension" folder in "CaloriesCalculatorWidgetsExtensionExtension" target */,
+			);
+			path = CaloriesCalculatorWidgetsExtension;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -54,6 +99,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CEB314FB2F01500600986732 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CEB315032F01500600986732 /* SwiftUI.framework in Frameworks */,
+				CEB315012F01500600986732 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -62,6 +116,8 @@
 			children = (
 				A31433172EF0897D00EFE039 /* playground */,
 				CEB037972EFD7A2C008E8EFE /* CalCalculatorTests */,
+				CEB315042F01500600986732 /* CaloriesCalculatorWidgetsExtension */,
+				CEB314FF2F01500600986732 /* Frameworks */,
 				A31433162EF0897D00EFE039 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -69,10 +125,20 @@
 		A31433162EF0897D00EFE039 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A31433152EF0897D00EFE039 /* playground.app */,
+				A31433152EF0897D00EFE039 /* CalCalculator.app */,
 				CEB037962EFD7A2C008E8EFE /* CalCalculatorTests.xctest */,
+				CEB314FE2F01500600986732 /* CaloriesCalculatorWidgetsExtensionExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		CEB314FF2F01500600986732 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				CEB315002F01500600986732 /* WidgetKit.framework */,
+				CEB315022F01500600986732 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -85,10 +151,12 @@
 				A31433112EF0897D00EFE039 /* Sources */,
 				A31433122EF0897D00EFE039 /* Frameworks */,
 				A31433132EF0897D00EFE039 /* Resources */,
+				CEB315152F01500700986732 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				CEB315132F01500700986732 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				A31433172EF0897D00EFE039 /* playground */,
@@ -98,7 +166,7 @@
 				FF5B2D1B53224F94AE3D23B7 /* MavenCommonSwiftUI */,
 			);
 			productName = playground;
-			productReference = A31433152EF0897D00EFE039 /* playground.app */;
+			productReference = A31433152EF0897D00EFE039 /* CalCalculator.app */;
 			productType = "com.apple.product-type.application";
 		};
 		CEB037952EFD7A2C008E8EFE /* CalCalculatorTests */ = {
@@ -124,6 +192,28 @@
 			productReference = CEB037962EFD7A2C008E8EFE /* CalCalculatorTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		CEB314FD2F01500600986732 /* CaloriesCalculatorWidgetsExtensionExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CEB315192F01500700986732 /* Build configuration list for PBXNativeTarget "CaloriesCalculatorWidgetsExtensionExtension" */;
+			buildPhases = (
+				CEB314FA2F01500600986732 /* Sources */,
+				CEB314FB2F01500600986732 /* Frameworks */,
+				CEB314FC2F01500600986732 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				CEB315042F01500600986732 /* CaloriesCalculatorWidgetsExtension */,
+			);
+			name = CaloriesCalculatorWidgetsExtensionExtension;
+			packageProductDependencies = (
+			);
+			productName = CaloriesCalculatorWidgetsExtensionExtension;
+			productReference = CEB314FE2F01500600986732 /* CaloriesCalculatorWidgetsExtensionExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -141,6 +231,9 @@
 						CreatedOnToolsVersion = 26.2;
 						TestTargetID = A31433142EF0897D00EFE039;
 					};
+					CEB314FD2F01500600986732 = {
+						CreatedOnToolsVersion = 26.2;
+					};
 				};
 			};
 			buildConfigurationList = A31433102EF0897D00EFE039 /* Build configuration list for PBXProject "CalCalculatorAiPlaygournd" */;
@@ -149,6 +242,18 @@
 			knownRegions = (
 				en,
 				Base,
+				es,
+				fr,
+				de,
+				it,
+				pt,
+				he,
+				ar,
+				ru,
+				zh,
+				ja,
+				ko,
+				hi,
 			);
 			mainGroup = A314330C2EF0897D00EFE039;
 			minimizedProjectReferenceProxies = 1;
@@ -162,6 +267,7 @@
 			targets = (
 				A31433142EF0897D00EFE039 /* playground */,
 				CEB037952EFD7A2C008E8EFE /* CalCalculatorTests */,
+				CEB314FD2F01500600986732 /* CaloriesCalculatorWidgetsExtensionExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -175,6 +281,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		CEB037942EFD7A2C008E8EFE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CEB314FC2F01500600986732 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -198,6 +311,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CEB314FA2F01500600986732 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -205,6 +325,11 @@
 			isa = PBXTargetDependency;
 			target = A31433142EF0897D00EFE039 /* playground */;
 			targetProxy = CEB0379A2EFD7A2C008E8EFE /* PBXContainerItemProxy */;
+		};
+		CEB315132F01500700986732 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CEB314FD2F01500600986732 /* CaloriesCalculatorWidgetsExtensionExtension */;
+			targetProxy = CEB315122F01500700986732 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -430,8 +555,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = Ad.CalCalculatorTests;
+				PRODUCT_BUNDLE_IDENTIFIER = CalCalculatorAiPlaygournd.CalCalculatorTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -452,7 +578,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = Ad.CalCalculatorTests;
+				PRODUCT_BUNDLE_IDENTIFIER = CalCalculatorAiPlaygournd.CalCalculatorTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -461,6 +587,72 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CalCalculator.app";
+			};
+			name = Release;
+		};
+		CEB315162F01500700986732 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = CaloriesCalculatorWidgetsExtension/CaloriesCalculatorWidgetsExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = 5NS9ZUMYCS;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CaloriesCalculatorWidgetsExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = CalCalculator;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = CalCalculatorAiPlaygournd.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SKIP_INSTALL_APP_INTENTS_METADATA = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CEB315172F01500700986732 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = CaloriesCalculatorWidgetsExtension/CaloriesCalculatorWidgetsExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = 5NS9ZUMYCS;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CaloriesCalculatorWidgetsExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = CalCalculator;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = CalCalculatorAiPlaygournd.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SKIP_INSTALL_APP_INTENTS_METADATA = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -490,6 +682,15 @@
 			buildConfigurations = (
 				CEB0379C2EFD7A2C008E8EFE /* Debug */,
 				CEB0379D2EFD7A2C008E8EFE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CEB315192F01500700986732 /* Build configuration list for PBXNativeTarget "CaloriesCalculatorWidgetsExtensionExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CEB315162F01500700986732 /* Debug */,
+				CEB315172F01500700986732 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

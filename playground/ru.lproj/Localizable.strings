@@ -1,0 +1,348 @@
+/* Common */
+"Save" = "Сохранить";
+"Cancel" = "Отмена";
+"Done" = "Готово";
+"Delete" = "Удалить";
+"Edit" = "Редактировать";
+"OK" = "ОК";
+"Yes" = "Да";
+"No" = "Нет";
+"Close" = "Закрыть";
+"Back" = "Назад";
+"Next" = "Далее";
+"Continue" = "Продолжить";
+"Loading..." = "Загрузка...";
+"Error" = "Ошибка";
+"Success" = "Успех";
+
+/* Home */
+"Home" = "Главная";
+"Macronutrients" = "Макронутриенты";
+"Recently uploaded" = "Недавно загружено";
+"Calories left" = "Осталось калорий";
+"Gained" = "Получено";
+"Lost" = "Потрачено";
+"Net" = "Чисто";
+"Consumed" = "Потреблено";
+"Burned" = "Сожжено";
+"No meals yet" = "Пока нет блюд";
+"Tap + to add your first meal of the day" = "Нажмите +, чтобы добавить первое блюдо дня";
+
+/* Progress */
+"Progress" = "Прогресс";
+"Current Weight" = "Текущий вес";
+"Weight Changes" = "Изменения веса";
+"Progress Photos" = "Фото прогресса";
+"Daily Average Calories" = "Среднее дневное количество калорий";
+"BMI" = "ИМТ";
+"HealthKit" = "HealthKit";
+"Save Weight" = "Сохранить вес";
+"Log Weight" = "Записать вес";
+"View Progress" = "Просмотр прогресса";
+"3 day" = "3 дня";
+"7 day" = "7 дней";
+"14 day" = "14 дней";
+"30 day" = "30 дней";
+"90 day" = "90 дней";
+"All Time" = "Все время";
+"No change" = "Нет изменений";
+
+/* Food */
+"Save Food" = "Сохранить еду";
+"Log Food" = "Записать еду";
+"Food saved successfully!" = "Еда успешно сохранена!";
+"Save Meal" = "Сохранить блюдо";
+"Describe" = "Описать";
+"Scan" = "Сканировать";
+"Exercise" = "Упражнение";
+"Diet" = "Диета";
+"Today's Activity" = "Активность сегодня";
+"View All" = "Показать все";
+"Meals" = "Блюда";
+"Workouts" = "Тренировки";
+"No Logs Yet" = "Пока нет записей";
+"Start logging your meals and exercises to see them here" = "Начните записывать свои блюда и упражнения, чтобы видеть их здесь";
+"No Activity Yet" = "Пока нет активности";
+"Start saving your meals and exercises to see them here" = "Начните сохранять свои блюда и упражнения, чтобы видеть их здесь";
+
+/* Exercise */
+"Save Exercise" = "Сохранить упражнение";
+"Log Exercise" = "Записать упражнение";
+"Exercise saved successfully!" = "Упражнение успешно сохранено!";
+"Select Exercise Type" = "Выберите тип упражнения";
+"Duration" = "Продолжительность";
+"Intensity" = "Интенсивность";
+"Calories" = "Калории";
+"Describe Exercise" = "Описать упражнение";
+"Manual Entry" = "Ручной ввод";
+
+/* Diet Plan */
+"Diet Plan" = "План питания";
+"My Diet" = "Моя диета";
+"Create Diet Plan" = "Создать план питания";
+"Edit Diet Plan" = "Редактировать план питания";
+"Delete Diet Plan" = "Удалить план питания";
+"No Diet Plan" = "Нет плана питания";
+"Create a diet plan to schedule repetitive meals and track your adherence" = "Создайте план питания для планирования повторяющихся блюд и отслеживания соблюдения";
+"Today's Diet Plan" = "План питания на сегодня";
+"meals completed" = "блюд завершено";
+"Scheduled Meals" = "Запланированные блюда";
+"No meals scheduled" = "Нет запланированных блюд";
+"Add Scheduled Meal" = "Добавить запланированное блюдо";
+"Daily Calorie Goal" = "Дневная цель по калориям";
+"Adherence" = "Соблюдение";
+"Adherence Trend" = "Тенденция соблюдения";
+"Today's Schedule" = "Расписание на сегодня";
+"Insights" = "Аналитика";
+"Weekly Statistics" = "Недельная статистика";
+"No data available" = "Нет доступных данных";
+"Off-Diet Meals" = "Блюда вне диеты";
+"calories from off-diet meals" = "калорий из блюд вне диеты";
+"You can only have one active diet plan at a time. Creating a new plan will replace this one." = "У вас может быть только один активный план питания за раз. Создание нового плана заменит этот.";
+"Please add at least one scheduled meal before saving the diet plan." = "Пожалуйста, добавьте хотя бы одно запланированное блюдо перед сохранением плана питания.";
+"No Meals Scheduled" = "Нет Запланированных Блюд";
+
+/* Profile */
+"Profile" = "Профиль";
+"Settings" = "Настройки";
+"Language" = "Язык";
+"Select Language" = "Выберите язык";
+"Export Data" = "Экспорт данных";
+"Weight Data" = "Данные о весе";
+"Nutrition Data" = "Данные о питании";
+"Export your weight tracking history as a PDF file." = "Экспортируйте историю отслеживания веса в виде PDF-файла.";
+"Export your meal logs and nutrition data as PDF files." = "Экспортируйте записи о блюдах и данные о питании в виде PDF-файлов.";
+"Export all your data in a comprehensive PDF report." = "Экспортируйте все свои данные в комплексный PDF-отчет.";
+"Generating PDF..." = "Создание PDF...";
+"Export Error" = "Ошибка экспорта";
+"An unknown error occurred." = "Произошла неизвестная ошибка.";
+
+/* Weight */
+"Save Your Weight" = "Сохраните свой вес";
+"Track your progress by saving your current weight" = "Отслеживайте свой прогресс, сохраняя текущий вес";
+"Weight" = "Вес";
+"Target Weight" = "Целевой вес";
+"Start Weight" = "Начальный вес";
+"Goal Weight" = "Целевой вес";
+"Last" = "Последний";
+"No weight logged" = "Вес не записан";
+
+/* Premium */
+"Premium Required" = "Требуется Premium";
+"Upgrade to unlock" = "Обновите, чтобы разблокировать";
+"Are you sure you want to skip the free trial?" = "Вы уверены, что хотите пропустить бесплатную пробную версию?";
+"Claim your free trial now without paying" = "Получите бесплатную пробную версию сейчас без оплаты";
+"Start Free Trial" = "Начать бесплатную пробную версию";
+"Not now" = "Не сейчас";
+"Premium feature" = "Функция Premium";
+
+/* History */
+"History" = "История";
+"No History Yet" = "Пока нет истории";
+"Your meal history will appear here\nonce you start tracking" = "Ваша история блюд появится здесь\nкак только вы начнете отслеживать";
+"No Results" = "Нет результатов";
+"No entries found for the selected time period" = "Записи не найдены для выбранного периода времени";
+"Clear Filters" = "Очистить фильтры";
+
+/* Onboarding */
+"Welcome" = "Добро пожаловать";
+"Get Started" = "Начать";
+"Skip" = "Пропустить";
+
+/* Errors */
+"Something went wrong" = "Что-то пошло не так";
+"Try Again" = "Попробовать снова";
+"No Food Detected" = "Еда не обнаружена";
+"Camera Error" = "Ошибка камеры";
+"Permission Denied" = "Доступ запрещен";
+
+/* Notifications */
+"Time to Log Your Weight" = "Время записать свой вес";
+"Track your progress by logging your weight this morning." = "Отслеживайте свой прогресс, записывая свой вес этим утром.";
+
+
+/* Additional UI Strings */
+"Today's Activity" = "Сегодняшняя активность";
+"View All" = "Показать все";
+"Quick Save" = "Быстрое сохранение";
+"What did you eat?" = "Что вы ели?";
+"Estimated Calories" = "Примерные калории";
+"kcal" = "ккал";
+"Quick Presets" = "Быстрые настройки";
+"Category" = "Категория";
+"What exercise did you do?" = "Какое упражнение вы делали?";
+"minutes" = "минуты";
+"Calories Burned" = "Сожжено калорий";
+"Capture Your Meal" = "Запечатлейте свое блюдо";
+"Take a photo or choose from your library" = "Сделайте фото или выберите из библиотеки";
+"Take Photo" = "Сделать фото";
+"Voice Log" = "Голосовой журнал";
+"Describe Your Food" = "Опишите свою еду";
+"Tell us what you ate" = "Расскажите, что вы ели";
+"Describe your meal in natural language and we'll calculate the nutrition for you" = "Опишите свое блюдо естественным языком, и мы рассчитаем питание за вас";
+"I had..." = "Я ел...";
+"Try saying:" = "Попробуйте сказать:";
+"Meal Category" = "Категория блюда";
+"Save weight" = "Сохранить вес";
+"Start:" = "Начало:";
+"Goal:" = "Цель:";
+"Body Mass Index" = "Индекс массы тела";
+"View Daily Breakdown" = "Просмотр дневной разбивки";
+"Health Data" = "Данные о здоровье";
+"Health Access Required" = "Требуется доступ к здоровью";
+"Go to Settings > Privacy & Security > Health > CalCalculator" = "Перейдите в Настройки > Конфиденциальность и безопасность > Здоровье > CalCalculator";
+"Open Settings" = "Открыть настройки";
+"Delete Entry" = "Удалить запись";
+"This cannot be undone." = "Это нельзя отменить.";
+"cal" = "ккал";
+"calories" = "калории";
+"No meals" = "Нет блюд";
+"Today's progress" = "Прогресс сегодня";
+"Tap to view details for this day" = "Нажмите, чтобы просмотреть детали этого дня";
+"Meals" = "Блюда";
+"Consumed" = "Потреблено";
+"Workouts" = "Тренировки";
+"Burned" = "Сожжено";
+"Save Food" = "Сохранить еду";
+"Save Exercise" = "Сохранить упражнение";
+"Save Meal" = "Сохранить блюдо";
+"Save [type]" = "Сохранить %@";
+"Delete \"%@\"?" = "Удалить \"%@\"?";
+"Delete %@ exercise?" = "Удалить упражнение %@?";
+"Microphone Access" = "Доступ к микрофону";
+"Voice logging requires microphone access. Please enable it in Settings to use this feature." = "Голосовой журнал требует доступа к микрофону. Пожалуйста, включите его в Настройках, чтобы использовать эту функцию.";
+"Settings" = "Настройки";
+"An error occurred" = "Произошла ошибка";
+"Food logged successfully!" = "Еда успешно записана!";
+
+/* Progress Additional */
+"Save weight" = "Сохранить вес";
+"Start" = "Начало";
+"Goal" = "Цель";
+"Body Mass Index" = "Индекс массы тела";
+"View Daily Breakdown" = "Просмотр дневной разбивки";
+"Health Data" = "Данные о здоровье";
+"Health Access Required" = "Требуется доступ к здоровью";
+"Go to Settings > Privacy & Security > Health > CalCalculator" = "Перейдите в Настройки > Конфиденциальность и безопасность > Здоровье > CalCalculator";
+"Open Settings" = "Открыть настройки";
+"Weight Progress" = "Прогресс веса";
+"Current" = "Текущий";
+"Change" = "Изменение";
+"Weight Trend" = "Тенденция веса";
+"No Weight Data" = "Нет данных о весе";
+"Save your weight to see progress over time" = "Сохраните свой вес, чтобы видеть прогресс со временем";
+"entries" = "записи";
+"No entries yet" = "Пока нет записей";
+"Calories Breakdown" = "Разбивка калорий";
+"Daily Average" = "Среднее за день";
+"days tracked" = "дней отслежено";
+"Calorie Trend" = "Тенденция калорий";
+"No Calorie Data" = "Нет данных о калориях";
+"Start tracking meals to see your calorie trends" = "Начните отслеживать приемы пищи, чтобы увидеть тенденции калорий";
+"Daily Breakdown" = "Дневная разбивка";
+"days" = "дней";
+"avg" = "средн.";
+"Highest" = "Самый высокий";
+"Lowest" = "Самый низкий";
+"Your workout burned" = "Ваша тренировка сожгла";
+"Cals" = "ккал";
+"Burned Calories" = "Сожжено калорий";
+"Saving..." = "Сохранение...";
+"Saved Successfully!" = "Успешно Сохранено!";
+"Your food has been logged." = "Ваша еда была записана.";
+"Your exercise has been logged." = "Ваше упражнение было записано.";
+"Transcribed:" = "Расшифровано:";
+"Coming Soon" = "Скоро";
+"Add meals to your diet plan to see them here" = "Добавьте блюда в свой план питания, чтобы увидеть их здесь";
+"Goal not met" = "Цель не достигнута";
+"Loading history..." = "Загрузка истории...";
+"No entries found for \"%@\"" = "Записи для \"%@\" не найдены";
+"Delete %@ exercise? This cannot be undone." = "Удалить упражнение %@? Это нельзя отменить.";
+"meals" = "блюд";
+"exercises" = "упражнений";
+"Loading logs..." = "Загрузка журналов...";
+"Start logging your meals and exercises to see them here" = "Начните записывать свои блюда и упражнения, чтобы увидеть их здесь";
+"Generating Your Plan" = "Создание вашего плана";
+"Your Personalized Goals" = "Ваши Персонализированные Цели";
+"Based on your profile and objectives" = "На основе вашего профиля и целей";
+"AI is processing your food image" = "ИИ обрабатывает ваше изображение еды";
+
+"over" = "свыше";
+
+/* Food Additional */
+"Category:" = "Категория:";
+"Analyzing your food..." = "Анализ вашей еды...";
+"Using AI to identify calories and nutrients" = "Использование ИИ для определения калорий и питательных веществ";
+"Quick Add" = "Быстрое Добавление";
+"Common Foods" = "Обычные Продукты";
+"Recent Foods" = "Недавние Продукты";
+"Saved Foods" = "Сохраненные Продукты";
+"Portion" = "Порция";
+"serving" = "порция";
+"oz" = "унция";
+"cup" = "чашка";
+"piece" = "штука";
+
+/* Exercise Additional */
+"Describe your workout" = "Опишите вашу тренировку";
+"Duration (minutes)" = "Продолжительность (минуты)";
+"Enter calories burned" = "Введите сожженные калории";
+"Set intensity" = "Установить интенсивность";
+"mins" = "мин";
+
+/* Diet Plan Additional */
+"Active" = "Активный";
+"Inactive" = "Неактивный";
+
+/* Additional Missing Strings */
+"Retry" = "Повторить";
+"Something went wrong" = "Что-то пошло не так";
+"Try Again" = "Попробовать снова";
+"Dismiss" = "Закрыть";
+"Dismiss keyboard" = "Закрыть клавиатуру";
+"Premium Feature" = "Премиум функция";
+"Premium" = "Премиум";
+"Upgrade to Premium" = "Обновить до Премиум";
+"Export Data" = "Экспорт данных";
+"Weight History" = "История веса";
+"Meal History" = "История приемов пищи";
+"Daily Nutrition Summary" = "Ежедневная сводка по питанию";
+"No weight entries yet" = "Записей веса пока нет";
+"Start tracking your weight to see your progress here" = "Начните отслеживать свой вес, чтобы увидеть прогресс здесь";
+"Preferences" = "Настройки";
+"Choose your preferred appearance" = "Выберите предпочитаемый внешний вид";
+"Scan Meal" = "Сканировать еду";
+"Capture Your Meal" = "Сфотографируйте вашу еду";
+"Take a photo or choose from your library" = "Сделайте фото или выберите из библиотеки";
+"Analysis Results" = "Результаты анализа";
+"Fix Result" = "Исправить результат";
+"What is this food?" = "Что это за еда?";
+"Ingredients" = "Ингредиенты";
+"Total Nutrition" = "Общее питание";
+"Notes" = "Заметки";
+"Meal Details" = "Детали приема пищи";
+"Loading meal details..." = "Загрузка деталей приема пищи...";
+"Unable to load meal details" = "Не удалось загрузить детали приема пищи";
+"Nutrition Breakdown" = "Разбивка по питанию";
+"No Meals" = "Нет приемов пищи";
+"No meals were recorded for this day" = "В этот день не было записано приемов пищи";
+"My Badges" = "Мои значки";
+"more" = "еще";
+"Tap to view all badges and achievements" = "Нажмите, чтобы увидеть все значки и достижения";
+"Today" = "Сегодня";
+"Save Your Weight" = "Сохраните свой вес";
+"Track your progress by saving your current weight" = "Отслеживайте свой прогресс, сохраняя текущий вес";
+"High" = "Высокая";
+"Medium" = "Средняя";
+"Low" = "Низкая";
+"Welcome to CalCalculator" = "Добро пожаловать в CalCalculator";
+"What is your gender?" = "Какой у вас пол?";
+"How old are you?" = "Сколько вам лет?";
+"Body Metrics" = "Показатели тела";
+"You can change this anytime in Settings." = "Вы можете изменить это в любое время в Настройках.";
+"Allow Notifications" = "Разрешить уведомления";
+"Enable Notifications" = "Включить уведомления";
+"CalCalculator" = "CalCalculator";
+"Track your nutrition with ease" = "Отслеживайте свое питание с легкостью";
+"Already have an account?" = "Уже есть аккаунт?";
+"Sign In" = "Войти";

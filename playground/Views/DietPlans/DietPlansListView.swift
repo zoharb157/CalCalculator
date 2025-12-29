@@ -9,8 +9,10 @@ import SwiftUI
 import SwiftData
 
 struct DietPlansListView: View {
-    @Query(sort: \DietPlan.createdAt, order: .reverse) private var dietPlans: [DietPlan]
+    @Query(filter: #Predicate<DietPlan> { $0.isActive == true }) private var activePlans: [DietPlan]
+    @Query(sort: \DietPlan.createdAt, order: .reverse) private var allPlans: [DietPlan]
     @Environment(\.modelContext) private var modelContext
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @State private var showingCreatePlan = false
     @State private var showingTemplates = false
@@ -21,44 +23,38 @@ struct DietPlansListView: View {
         DietPlanRepository(context: modelContext)
     }
     
+    private var hasActivePlan: Bool {
+        !activePlans.isEmpty
+    }
+    
     var body: some View {
         NavigationStack {
             Group {
-                if dietPlans.isEmpty {
+                if !hasActivePlan {
                     emptyStateView
                 } else {
-                    dietPlansList
+                    dietPlanView
                 }
             }
-            .navigationTitle("Diet Plans")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.title))
+                .id("diet-plan-title-\(localizationManager.currentLanguage)")
             .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Menu {
+                if hasActivePlan {
+                    ToolbarItem(placement: .primaryAction) {
                         Button {
-                            showingCreatePlan = true
+                            if let plan = activePlans.first {
+                                selectedPlan = plan
+                            }
                         } label: {
-                            Label("Create Custom Plan", systemImage: "plus")
+                            Label(localizationManager.localizedString(for: AppStrings.Common.edit), systemImage: "pencil")
+                            .id("edit-label-\(localizationManager.currentLanguage)")
                         }
-                        
-                        Button {
-                            showingTemplates = true
-                        } label: {
-                            Label("Use Template", systemImage: "doc.text")
-                        }
-                        
-                        Button {
-                            showingQuickSetup = true
-                        } label: {
-                            Label("Quick Setup", systemImage: "wand.and.stars")
-                        }
-                    } label: {
-                        Image(systemName: "plus")
                     }
                 }
             }
             .sheet(isPresented: $showingTemplates) {
                 DietPlanTemplatesView { template in
-                    // Template selected - create plan
+                    // Template selected - create/replace plan (only one active diet allowed)
                     let plan = template.createDietPlan()
                     do {
                         try dietPlanRepository.saveDietPlan(plan)
@@ -68,6 +64,9 @@ struct DietPlansListView: View {
                             try? await reminderService.scheduleAllReminders()
                         }
                         NotificationCenter.default.post(name: .dietPlanChanged, object: nil)
+                        
+                        // Show success notification
+                        HapticManager.shared.notification(.success)
                     } catch {
                         print("Failed to create plan from template: \(error)")
                     }
@@ -77,7 +76,8 @@ struct DietPlansListView: View {
                 DietQuickSetupView()
             }
             .sheet(isPresented: $showingCreatePlan) {
-                DietPlanEditorView(plan: nil, repository: dietPlanRepository)
+                // When creating, replace existing plan if any
+                DietPlanEditorView(plan: activePlans.first, repository: dietPlanRepository)
             }
             .sheet(item: $selectedPlan) { plan in
                 DietPlanEditorView(plan: plan, repository: dietPlanRepository)
@@ -91,7 +91,7 @@ struct DietPlansListView: View {
                 .font(.system(size: 60))
                 .foregroundColor(.secondary)
             
-            Text("No Diet Plans")
+            Text("No Diet Plan")
                 .font(.title2)
                 .fontWeight(.semibold)
             
@@ -104,7 +104,8 @@ struct DietPlansListView: View {
             Button {
                 showingCreatePlan = true
             } label: {
-                Label("Create Diet Plan", systemImage: "plus.circle.fill")
+                Label(localizationManager.localizedString(for: AppStrings.DietPlan.createDietPlan), systemImage: "plus.circle.fill")
+                    .id("create-diet-plan-label-\(localizationManager.currentLanguage)")
                     .font(.headline)
             }
             .buttonStyle(.borderedProminent)
@@ -113,34 +114,52 @@ struct DietPlansListView: View {
         .background(Color(.systemGroupedBackground))
     }
     
-    private var dietPlansList: some View {
+    private var dietPlanView: some View {
         List {
-            ForEach(dietPlans) { plan in
+            if let plan = activePlans.first {
                 DietPlanRow(plan: plan) {
                     selectedPlan = plan
                 }
+                
+                Section {
+                    Button {
+                        selectedPlan = plan
+                    } label: {
+                        Label(localizationManager.localizedString(for: AppStrings.DietPlan.editDietPlan), systemImage: "pencil")
+                            .foregroundColor(.blue)
+                            .id("edit-diet-plan-btn-\(localizationManager.currentLanguage)")
+                    }
+                    
+                    Button(role: .destructive) {
+                        deletePlan(plan)
+                    } label: {
+                        Label(localizationManager.localizedString(for: AppStrings.DietPlan.deleteDietPlan), systemImage: "trash")
+                            .foregroundColor(.red)
+                            .id("delete-diet-plan-btn-\(localizationManager.currentLanguage)")
+                    }
+                } footer: {
+                    Text(localizationManager.localizedString(for: AppStrings.DietPlan.onlyOneActivePlan))
+                        .font(.caption)
+                        .id("one-active-plan-footer-\(localizationManager.currentLanguage)")
+                }
             }
-            .onDelete(perform: deletePlans)
         }
     }
     
-    private func deletePlans(at offsets: IndexSet) {
-        for index in offsets {
-            let plan = dietPlans[index]
-            do {
-                try dietPlanRepository.deleteDietPlan(plan)
-                
-                // Reschedule reminders after deletion
-                Task {
-                    let reminderService = MealReminderService.shared(context: modelContext)
-                    try? await reminderService.scheduleAllReminders()
-                }
-                
-                // Post notification that diet plan changed
-                NotificationCenter.default.post(name: .dietPlanChanged, object: nil)
-            } catch {
-                print("Failed to delete diet plan: \(error)")
+    private func deletePlan(_ plan: DietPlan) {
+        do {
+            try dietPlanRepository.deleteDietPlan(plan)
+            
+            // Reschedule reminders after deletion
+            Task {
+                let reminderService = MealReminderService.shared(context: modelContext)
+                try? await reminderService.scheduleAllReminders()
             }
+            
+            // Post notification that diet plan changed
+            NotificationCenter.default.post(name: .dietPlanChanged, object: nil)
+        } catch {
+            print("Failed to delete diet plan: \(error)")
         }
     }
 }
@@ -148,6 +167,7 @@ struct DietPlansListView: View {
 struct DietPlanRow: View {
     let plan: DietPlan
     let onTap: () -> Void
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
         Button(action: onTap) {
@@ -165,16 +185,19 @@ struct DietPlanRow: View {
                     }
                     
                     HStack(spacing: 12) {
-                        Label("\(plan.scheduledMeals.count) meals", systemImage: "fork.knife")
+                        Label("\(plan.scheduledMeals.count) \(localizationManager.localizedString(for: AppStrings.History.meals))", systemImage: "fork.knife")
                             .font(.caption)
                             .foregroundColor(.secondary)
+                            .id("meals-count-row-\(localizationManager.currentLanguage)")
                         
                         if plan.isActive {
-                            Label("Active", systemImage: "checkmark.circle.fill")
+                            Label(localizationManager.localizedString(for: AppStrings.DietPlan.active), systemImage: "checkmark.circle.fill")
+                                .id("active-row-\(localizationManager.currentLanguage)")
                                 .font(.caption)
                                 .foregroundColor(.green)
                         } else {
-                            Label("Inactive", systemImage: "xmark.circle.fill")
+                            Label(localizationManager.localizedString(for: AppStrings.DietPlan.inactive), systemImage: "xmark.circle.fill")
+                                .id("inactive-row-\(localizationManager.currentLanguage)")
                                 .font(.caption)
                                 .foregroundColor(.gray)
                         }

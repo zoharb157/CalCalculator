@@ -10,6 +10,7 @@ import SwiftUI
 struct GoalsGenerationView: View {
     @State private var viewModel: GoalsGenerationViewModel
     let onComplete: () -> Void
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     init(onboardingData: [String: Any], onComplete: @escaping () -> Void) {
         self._viewModel = State(initialValue: GoalsGenerationViewModel(onboardingData: onboardingData))
@@ -73,7 +74,8 @@ struct GoalsGenerationView: View {
             
             // Status message
             VStack(spacing: 12) {
-                Text("Generating Your Plan")
+                Text(localizationManager.localizedString(for: AppStrings.GoalsGeneration.generatingYourPlan))
+                    .id("generating-plan-\(localizationManager.currentLanguage)")
                     .font(.title2)
                     .fontWeight(.bold)
                 
@@ -96,11 +98,13 @@ struct GoalsGenerationView: View {
             
             // Title
             VStack(spacing: 8) {
-                Text("Your Personalized Goals")
+                Text(localizationManager.localizedString(for: AppStrings.GoalsGeneration.yourPersonalizedGoals))
+                    .id("personalized-goals-\(localizationManager.currentLanguage)")
                     .font(.title2)
                     .fontWeight(.bold)
                 
-                Text("Based on your profile and objectives")
+                Text(localizationManager.localizedString(for: AppStrings.GoalsGeneration.basedOnProfile))
+                    .id("based-on-profile-\(localizationManager.currentLanguage)")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -119,7 +123,8 @@ struct GoalsGenerationView: View {
             viewModel.saveAndContinue()
             onComplete()
         } label: {
-            Text("Continue")
+            Text(localizationManager.localizedString(for: AppStrings.Common.continue_))
+                .id("continue-goals-\(localizationManager.currentLanguage)")
                 .font(.headline)
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
@@ -321,11 +326,10 @@ struct GoalsCardsView: View {
     }
     
     private func animateCards() {
+        // Animate all cards immediately
         for i in 0...3 {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.15) {
-                withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
-                    _ = appearedCards.insert(i)
-                }
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+                _ = appearedCards.insert(i)
             }
         }
     }

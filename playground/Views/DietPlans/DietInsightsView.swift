@@ -12,6 +12,7 @@ import Charts
 struct DietInsightsView: View {
     let activePlans: [DietPlan]
     let repository: DietPlanRepository
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
@@ -73,15 +74,16 @@ struct DietInsightsView: View {
                     ContentUnavailableView(
                         "No Insights Available",
                         systemImage: "chart.bar",
-                        description: Text("Start following your diet plan to see insights")
+                        description: Text(localizationManager.localizedString(for: AppStrings.DietPlan.startFollowingDietPlan))
                     )
                 }
             }
-            .navigationTitle("Diet Insights")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.dietInsights))
+                .id("diet-insights-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.done)) {
                         dismiss()
                     }
                 }

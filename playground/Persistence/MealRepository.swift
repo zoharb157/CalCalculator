@@ -137,6 +137,10 @@ final class MealRepository {
     }
     
     func saveExercise(_ exercise: Exercise) throws {
+        // Ensure exercise date is normalized to start of day for consistent querying
+        let calendar = Calendar.current
+        exercise.date = calendar.startOfDay(for: exercise.date)
+        
         context.insert(exercise)
         try context.save()
     }
@@ -198,6 +202,58 @@ final class MealRepository {
     }
     
     /// Fetch summaries for the current week (Sunday to Saturday)
+    /// Fetch summaries for a date range (defaults to 3 weeks: 1 week before, current week, 1 week after)
+    func fetchWeekSummaries(startDate: Date? = nil, endDate: Date? = nil) throws -> [Date: DaySummary] {
+        let startTime = Date()
+        let calendar = Calendar.current
+        let today = Date()
+        
+        // Default to 3 weeks range if not specified
+        let start: Date
+        let end: Date
+        
+        if let startDate = startDate, let endDate = endDate {
+            start = calendar.startOfDay(for: startDate)
+            end = calendar.startOfDay(for: endDate)
+        } else {
+            // Default: 3 weeks (1 week before, current week, 1 week after)
+            let weekday = calendar.component(.weekday, from: today)
+            guard let startOfCurrentWeek = calendar.date(byAdding: .day, value: -(weekday - 1), to: calendar.startOfDay(for: today)) else {
+                return [:]
+            }
+            guard let rangeStart = calendar.date(byAdding: .day, value: -7, to: startOfCurrentWeek) else {
+                return [:]
+            }
+            guard let rangeEnd = calendar.date(byAdding: .day, value: 21, to: rangeStart) else {
+                return [:]
+            }
+            start = rangeStart
+            end = rangeEnd
+        }
+        
+        var descriptor = FetchDescriptor<DaySummary>(
+            predicate: #Predicate<DaySummary> { summary in
+                summary.date >= start && summary.date < end
+            },
+            sortBy: [SortDescriptor(\.date, order: .forward)]
+        )
+        
+        let summaries = try context.fetch(descriptor)
+        
+        // Convert to dictionary keyed by date
+        var result: [Date: DaySummary] = [:]
+        for summary in summaries {
+            result[summary.date] = summary
+        }
+        
+        let elapsed = Date().timeIntervalSince(startTime)
+        if elapsed > 0.1 {
+            print("  ⚠️ [MealRepository] fetchWeekSummaries() fetched \(summaries.count) summaries in \(String(format: "%.3f", elapsed))s (slow!)")
+        }
+        
+        return result
+    }
+    
     func fetchCurrentWeekSummaries() throws -> [Date: DaySummary] {
         let startTime = Date()
         let calendar = Calendar.current

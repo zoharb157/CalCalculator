@@ -10,20 +10,50 @@ import SwiftUI
 struct WeekDaysHeader: View {
     let weekDays: [WeekDay]
     var onDaySelected: ((Date) -> Void)? = nil
+    @State private var hasAppeared = false
     
     var body: some View {
-        HStack(spacing: 8) {
-            ForEach(weekDays) { day in
-                WeekDayItem(day: day, onTap: {
-                    onDaySelected?(day.date)
-                })
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(weekDays) { day in
+                        WeekDayItem(day: day, onTap: {
+                            onDaySelected?(day.date)
+                            // Scroll to selected day
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                proxy.scrollTo(day.id, anchor: .center)
+                            }
+                        })
+                        .id(day.id)
+                    }
+                }
+                .padding(.vertical, 8)
+                .padding(.horizontal, 16)
+            }
+            .scrollTargetBehavior(.viewAligned)
+            .onAppear {
+                if !hasAppeared {
+                    hasAppeared = true
+                    // Scroll to today or selected day on first appear
+                    if let selectedDay = weekDays.first(where: { $0.isSelected || $0.isToday }) {
+                        // Use next run loop to ensure layout is complete
+                        DispatchQueue.main.async {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                proxy.scrollTo(selectedDay.id, anchor: .center)
+                            }
+                        }
+                    }
+                }
+            }
+            .onChange(of: weekDays.first(where: { $0.isSelected })?.id) { _, newValue in
+                // Scroll to newly selected day
+                if let selectedId = newValue {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        proxy.scrollTo(selectedId, anchor: .center)
+                    }
+                }
             }
         }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 8)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
     }
 }
 
@@ -33,42 +63,48 @@ struct WeekDayItem: View {
     
     var body: some View {
         VStack(spacing: 6) {
-            // Day name
+            // Day name (abbreviated)
             Text(day.dayName)
                 .font(.caption2)
                 .fontWeight(.medium)
                 .foregroundColor(day.isSelected ? .white : (day.isToday ? .primary : .secondary))
             
-            // Circular progress
+            // Circular date indicator (matching reference design)
             ZStack {
+                // Background circle - white when selected, clear otherwise
+                Circle()
+                    .fill(day.isSelected ? Color.white : Color.clear)
+                    .frame(width: 36, height: 36)
+                
+                // Border circle
                 if day.isDotted {
-                    // Dotted background circle for days with no meals
+                    // Dotted border for days with no meals
                     Circle()
-                        .strokeBorder(day.isSelected ? Color.white.opacity(0.6) : Color.gray, style: StrokeStyle(lineWidth: 3, dash: [4, 3]))
+                        .strokeBorder(day.isSelected ? Color.clear : Color.gray.opacity(0.3), style: StrokeStyle(lineWidth: 2, dash: [3, 2]))
+                        .frame(width: 36, height: 36)
                 } else {
-                    // Background circle
+                    // Solid border
                     Circle()
-                        .stroke(day.isSelected ? Color.white.opacity(0.3) : Color.gray.opacity(0.2), lineWidth: 3)
+                        .strokeBorder(day.isSelected ? Color.clear : Color.gray.opacity(0.3), lineWidth: 2)
+                        .frame(width: 36, height: 36)
                     
-                    // Progress circle
-                    Circle()
-                        .trim(from: 0, to: min(day.progress, 1.0))
-                        .stroke(day.isSelected ? Color.white : day.progressColor, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                        .rotationEffect(.degrees(-90))
+                    // Progress circle (only show if not selected)
+                    if !day.isSelected {
+                        Circle()
+                            .trim(from: 0, to: min(day.progress, 1.0))
+                            .stroke(day.progressColor, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                            .rotationEffect(.degrees(-90))
+                            .frame(width: 36, height: 36)
+                    }
                 }
                 
                 // Day number
                 Text("\(day.dayNumber)")
-                    .font(.system(size: 12, weight: day.isSelected ? .bold : (day.isToday ? .bold : .medium), design: .rounded))
-                    .foregroundColor(day.isSelected ? .white : (day.isToday ? .primary : .secondary))
+                    .font(.system(size: 14, weight: day.isSelected ? .bold : (day.isToday ? .semibold : .regular), design: .rounded))
+                    .foregroundColor(day.isSelected ? .black : (day.isToday ? .primary : .secondary))
             }
-            .frame(width: 32, height: 32)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 4)
-        .padding(.horizontal, 4)
-        .background(day.isSelected ? Color.blue : (day.isToday ? Color.blue.opacity(0.1) : Color.clear))
-        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .contentShape(Rectangle())
         .onTapGesture {
             HapticManager.shared.impact(.light)

@@ -18,7 +18,26 @@ final class DietPlanRepository {
     
     // MARK: - Diet Plan Operations
     
+    /// Save a diet plan. If a plan already exists, it will be deactivated and replaced.
+    /// Only one active diet plan is allowed at a time.
+    /// - Throws: `DietPlanError.noMeals` if the plan has no scheduled meals
     func saveDietPlan(_ plan: DietPlan) throws {
+        // Validate that the plan has at least one scheduled meal
+        guard !plan.scheduledMeals.isEmpty else {
+            throw DietPlanError.noMeals
+        }
+        
+        // Deactivate all existing plans (only one active diet at a time)
+        let existingPlans = try fetchAllDietPlans()
+        for existingPlan in existingPlans {
+            if existingPlan.id != plan.id {
+                existingPlan.isActive = false
+            }
+        }
+        
+        // Ensure the new plan is active
+        plan.isActive = true
+        
         context.insert(plan)
         try context.save()
     }
@@ -289,6 +308,19 @@ final class DietPlanRepository {
             goalAchievedMeals: goalAchievedMeals,
             goalMissedMeals: goalMissedMeals
         )
+    }
+}
+
+// MARK: - Diet Plan Errors
+
+enum DietPlanError: LocalizedError {
+    case noMeals
+    
+    var errorDescription: String? {
+        switch self {
+        case .noMeals:
+            return "A diet plan must have at least one scheduled meal."
+        }
     }
 }
 

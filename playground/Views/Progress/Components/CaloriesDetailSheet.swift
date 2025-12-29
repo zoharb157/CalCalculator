@@ -13,6 +13,7 @@ struct CaloriesDetailSheet: View {
     let averageCalories: Int
     @Binding var selectedFilter: CaloriesTimeFilter
     let onFilterChange: () -> Void
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @Environment(\.dismiss) private var dismiss
     @State private var selectedDay: DailyCalorieData?
@@ -53,13 +54,15 @@ struct CaloriesDetailSheet: View {
                 .padding()
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("Calories Breakdown")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Progress.caloriesBreakdown))
+                .id("calories-breakdown-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.done)) {
                         dismiss()
                     }
+                    .id("done-calories-detail-\(localizationManager.currentLanguage)")
                 }
             }
             .onAppear {
@@ -84,11 +87,9 @@ struct CaloriesDetailSheet: View {
                         HapticManager.shared.impact(.light)
                         onFilterChange()
                         
-                        // Re-animate chart after data reload
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                            withAnimation(.easeOut(duration: 0.5)) {
-                                animateChart = true
-                            }
+                        // Re-animate chart immediately
+                        withAnimation(.easeOut(duration: 0.5)) {
+                            animateChart = true
                         }
                     } label: {
                         Text(filter.rawValue)
@@ -112,7 +113,8 @@ struct CaloriesDetailSheet: View {
         VStack(spacing: 16) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Daily Average")
+                    Text(localizationManager.localizedString(for: AppStrings.Progress.dailyAverage))
+                        .id("daily-average-\(localizationManager.currentLanguage)")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     
@@ -224,7 +226,8 @@ struct CaloriesDetailSheet: View {
         } else {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text("Calorie Trend")
+                    Text(localizationManager.localizedString(for: AppStrings.Progress.calorieTrend))
+                        .id("calorie-trend-\(localizationManager.currentLanguage)")
                         .font(.headline)
                     
                     Spacer()
@@ -255,7 +258,8 @@ struct CaloriesDetailSheet: View {
                             .foregroundStyle(.green.opacity(0.7))
                             .lineStyle(StrokeStyle(lineWidth: 2, dash: [5, 5]))
                             .annotation(position: .top, alignment: .trailing) {
-                                Text("Goal: \(goal)")
+                                Text("\(localizationManager.localizedString(for: AppStrings.Home.goalLabel)) \(goal)")
+                                    .id("goal-label-\(localizationManager.currentLanguage)")
                                     .font(.caption2)
                                     .foregroundColor(.green)
                                     .padding(.horizontal, 6)
@@ -342,10 +346,12 @@ struct CaloriesDetailSheet: View {
                 .font(.system(size: 48))
                 .foregroundColor(.secondary)
             
-            Text("No Calorie Data")
+            Text(localizationManager.localizedString(for: AppStrings.Progress.noCalorieData))
+                .id("no-calorie-data-\(localizationManager.currentLanguage)")
                 .font(.headline)
             
-            Text("Start tracking meals to see your calorie trends")
+            Text(localizationManager.localizedString(for: AppStrings.Progress.startTrackingMeals))
+                .id("start-tracking-\(localizationManager.currentLanguage)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
@@ -360,7 +366,8 @@ struct CaloriesDetailSheet: View {
     private var dailyBreakdownSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Daily Breakdown")
+                Text(localizationManager.localizedString(for: AppStrings.Progress.dailyBreakdown))
+                    .id("daily-breakdown-\(localizationManager.currentLanguage)")
                     .font(.headline)
                 
                 Spacer()
@@ -371,7 +378,8 @@ struct CaloriesDetailSheet: View {
             }
             
             if dailyData.isEmpty {
-                Text("No data available")
+                Text(localizationManager.localizedString(for: AppStrings.DietPlan.noDataAvailable))
+                    .id("no-data-\(localizationManager.currentLanguage)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity)
@@ -453,6 +461,7 @@ struct DayCalorieRow: View {
     let data: DailyCalorieData
     var isHighest: Bool = false
     var isLowest: Bool = false
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
         VStack(spacing: 12) {
@@ -464,7 +473,8 @@ struct DayCalorieRow: View {
                             .fontWeight(.medium)
                         
                         if isHighest {
-                            Text("Highest")
+                            Text(localizationManager.localizedString(for: AppStrings.Progress.highest))
+                                .id("highest-\(localizationManager.currentLanguage)")
                                 .font(.caption2)
                                 .fontWeight(.medium)
                                 .foregroundColor(.red)
@@ -473,7 +483,8 @@ struct DayCalorieRow: View {
                                 .background(Color.red.opacity(0.1))
                                 .clipShape(Capsule())
                         } else if isLowest {
-                            Text("Lowest")
+                            Text(localizationManager.localizedString(for: AppStrings.Progress.lowest))
+                                .id("lowest-\(localizationManager.currentLanguage)")
                                 .font(.caption2)
                                 .fontWeight(.medium)
                                 .foregroundColor(.green)

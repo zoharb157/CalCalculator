@@ -11,7 +11,7 @@ struct EmptyMealsView: View {
     var onScanTapped: (() -> Void)? = nil
     
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 12) {
             emptyIcon
             titleText
             descriptionText
@@ -20,29 +20,29 @@ struct EmptyMealsView: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 40)
+        .padding(.vertical, 12)
     }
     
     // MARK: - Private Views
     
     private var emptyIcon: some View {
         Image(systemName: "fork.knife.circle")
-            .font(.system(size: 60))
+            .font(.system(size: 40))
             .foregroundColor(.gray.opacity(0.5))
     }
     
     private var titleText: some View {
-        Text("No meals yet")
-            .font(.headline)
+        LocalizedText(AppStrings.Home.noMealsYet)
+            .font(.system(size: 15, weight: .semibold))
             .foregroundColor(.primary)
     }
     
     private var descriptionText: some View {
-        Text("Start tracking your nutrition by scanning your first meal")
-            .font(.subheadline)
+        LocalizedText(AppStrings.Home.tapToAddFirstMeal)
+            .font(.system(size: 13))
             .foregroundColor(.secondary)
             .multilineTextAlignment(.center)
-            .padding(.horizontal, 32)
+            .padding(.horizontal, 24)
     }
     
     @ViewBuilder
@@ -54,12 +54,12 @@ struct EmptyMealsView: View {
             }) {
                 HStack {
                     Image(systemName: "camera.fill")
-                    Text("Scan Meal")
+                    LocalizedText(AppStrings.Food.scan)
                 }
-                .font(.headline)
+                .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(.white)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 12)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 10)
                 .background(
                     LinearGradient(
                         colors: [.blue, .blue.opacity(0.8)],
@@ -68,7 +68,7 @@ struct EmptyMealsView: View {
                     )
                 )
                 .clipShape(Capsule())
-                .shadow(color: .blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                .shadow(color: .blue.opacity(0.3), radius: 6, x: 0, y: 3)
             }
         }
     }

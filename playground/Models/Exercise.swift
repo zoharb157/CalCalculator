@@ -33,7 +33,8 @@ final class Exercise: Identifiable {
         self.duration = duration
         self.intensity = intensity
         self.notes = notes
-        self.date = date
+        // Normalize date to start of day for consistent querying (like WeightEntry)
+        self.date = Calendar.current.startOfDay(for: date)
     }
 }
 

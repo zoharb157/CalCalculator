@@ -87,6 +87,7 @@ struct OnboardingStepScreen: View {
                     .padding(.horizontal, 24)
                     .padding(.bottom, 100)
                 }
+                .scrollDismissesKeyboard(.interactively)
 
                 // Footer buttons with blur effect
                 VStack(spacing: 0) {
@@ -130,6 +131,14 @@ struct OnboardingStepScreen: View {
                     .padding(.vertical, 16)
                 }
                 .background(.ultraThinMaterial)
+            }
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }
             }
         }
     }

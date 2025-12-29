@@ -11,6 +11,7 @@ import SwiftData
 struct DietPlanTemplatesView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     let onTemplateSelected: (DietPlanTemplate) -> Void
     
@@ -28,13 +29,15 @@ struct DietPlanTemplatesView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Diet Plan Templates")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.dietPlanTemplates))
+                .id("diet-plan-templates-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
                         dismiss()
                     }
+                    .id("cancel-templates-\(localizationManager.currentLanguage)")
                 }
             }
             .sheet(item: $selectedTemplate) { template in
@@ -50,6 +53,7 @@ struct DietPlanTemplatesView: View {
 struct TemplateCard: View {
     let template: DietPlanTemplate
     let onTap: () -> Void
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
         Button(action: onTap) {
@@ -79,7 +83,8 @@ struct TemplateCard: View {
                 
                 // Quick stats
                 HStack(spacing: 16) {
-                    Label("\(template.meals.count) meals", systemImage: "fork.knife")
+                    Label("\(template.meals.count) \(localizationManager.localizedString(for: AppStrings.Food.meals))", systemImage: "fork.knife")
+                        .id("meals-count-\(localizationManager.currentLanguage)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                     
@@ -102,6 +107,7 @@ struct TemplatePreviewView: View {
     
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @State private var customizing = false
     
@@ -134,8 +140,9 @@ struct TemplatePreviewView: View {
                     
                     // Meals preview
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Scheduled Meals")
+                        Text(localizationManager.localizedString(for: AppStrings.DietPlan.scheduledMeals))
                             .font(.headline)
+                            .id("scheduled-meals-template-\(localizationManager.currentLanguage)")
                         
                         ForEach(template.meals, id: \.name) { meal in
                             MealPreviewRow(meal: meal)
@@ -149,7 +156,8 @@ struct TemplatePreviewView: View {
                     Button {
                         useTemplate()
                     } label: {
-                        Label("Use This Template", systemImage: "checkmark.circle.fill")
+                        Label(localizationManager.localizedString(for: AppStrings.DietPlan.useThisTemplate), systemImage: "checkmark.circle.fill")
+                            .id("use-template-btn-\(localizationManager.currentLanguage)")
                             .font(.headline)
                             .frame(maxWidth: .infinity)
                             .padding()
@@ -160,13 +168,15 @@ struct TemplatePreviewView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Template Preview")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.templatePreview))
+                .id("template-preview-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
                         dismiss()
                     }
+                    .id("cancel-templates-\(localizationManager.currentLanguage)")
                 }
             }
         }
@@ -253,6 +263,7 @@ struct DietPlanTemplate: Identifiable {
             name: name,
             planDescription: description,
             isActive: true,
+            dailyCalorieGoal: nil, // Can be set later in editor
             scheduledMeals: scheduledMeals
         )
     }

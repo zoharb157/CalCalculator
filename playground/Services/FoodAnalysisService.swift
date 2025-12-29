@@ -375,12 +375,13 @@ final class CaloriesAPIService: FoodAnalysisServiceProtocol {
         breakdown: NutritionBreakdown?
     ) -> (protein: Double, carbs: Double, fat: Double) {
         guard let breakdown = breakdown, totalCalories > 0 else {
-            // Estimate using typical macro distribution: 15% protein, 50% carbs, 35% fat
+            // Estimate using standard macro distribution: 30% protein, 40% carbs, 30% fat
+            // This matches the standard split used in goal calculations
             let calories = Double(itemCalories)
             return (
-                protein: calories * 0.15 / 4,  // 4 cal per gram of protein
-                carbs: calories * 0.50 / 4,  // 4 cal per gram of carbs
-                fat: calories * 0.35 / 9  // 9 cal per gram of fat
+                protein: calories * 0.30 / 4,  // 4 cal per gram of protein
+                carbs: calories * 0.40 / 4,  // 4 cal per gram of carbs
+                fat: calories * 0.30 / 9  // 9 cal per gram of fat
             )
         }
 

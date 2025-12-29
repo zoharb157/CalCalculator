@@ -185,8 +185,8 @@ final class HomeViewModel {
             
             // Update week days to reflect new selection
             Task { @MainActor in
-                // Rebuild week days with new selected date
-                if let weekSummaries = try? repository.fetchCurrentWeekSummaries() {
+                // Rebuild week days with new selected date (fetch 3 weeks for scrolling)
+                if let weekSummaries = try? repository.fetchWeekSummaries() {
                     let newWeekDays = buildWeekDays(from: weekSummaries, selectedDate: selectedDate)
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                         weekDays = newWeekDays
@@ -202,18 +202,27 @@ final class HomeViewModel {
     /// Load data for the currently selected date
     private func loadDataForSelectedDate() async {
         let startTime = Date()
-        print("🟢 [HomeViewModel] loadDataForSelectedDate() started for: \(selectedDate)")
+        let calendar = Calendar.current
+        let targetDate = calendar.startOfDay(for: selectedDate)
+        let isToday = calendar.isDateInToday(targetDate)
+        
+        print("🟢 [HomeViewModel] loadDataForSelectedDate() started for: \(selectedDate) (normalized: \(targetDate), isToday: \(isToday))")
         
         isLoading = true
         defer { isLoading = false }
         
         do {
-            // Load summary for selected date
-            let summary = try repository.fetchDaySummary(for: selectedDate)
+            // Load summary for selected date - use appropriate method based on whether it's today
+            let summary: DaySummary?
+            if isToday {
+                summary = try repository.fetchTodaySummary()
+            } else {
+                summary = try repository.fetchDaySummary(for: targetDate)
+            }
             todaysSummary = summary
             
-            // Load meals for selected date
-            let meals = try repository.fetchMeals(for: selectedDate)
+            // Load meals for selected date (normalized to start of day)
+            let meals = try repository.fetchMeals(for: targetDate)
             recentMeals = meals.sorted { $0.timestamp > $1.timestamp }
             
             // Update UI with animation
@@ -223,6 +232,7 @@ final class HomeViewModel {
             
             let totalTime = Date().timeIntervalSince(startTime)
             print("🟢 [HomeViewModel] loadDataForSelectedDate() completed in \(String(format: "%.3f", totalTime))s")
+            print("🟢 [HomeViewModel] Loaded \(meals.count) meals, summary calories: \(summary?.totalCalories ?? 0) for date: \(targetDate)")
         } catch {
             let totalTime = Date().timeIntervalSince(startTime)
             print("🔴 [HomeViewModel] loadDataForSelectedDate() failed after \(String(format: "%.3f", totalTime))s: \(error)")
@@ -298,7 +308,8 @@ final class HomeViewModel {
             
             do {
                 // Fetch week summaries and exercises in parallel (both on main thread but truly parallel)
-                async let weekSummariesTask = try repository.fetchCurrentWeekSummaries()
+                // Fetch 3 weeks for scrollable week days header
+                async let weekSummariesTask = try repository.fetchWeekSummaries()
                 async let exercisesTask = try repository.fetchTodaysExercises()
                 
                 // Wait for both
@@ -340,9 +351,9 @@ final class HomeViewModel {
             recentMeals = try repository.fetchRecentMeals()
             print("  ✅ Recent meals: \(Date().timeIntervalSince(mealsStart))s")
             
-            // Fetch week summaries and build week days
+            // Fetch week summaries and build week days (3 weeks for scrolling)
             let weekStart = Date()
-            let weekSummaries = try repository.fetchCurrentWeekSummaries()
+            let weekSummaries = try repository.fetchWeekSummaries()
             print("  ✅ Week summaries: \(Date().timeIntervalSince(weekStart))s")
             
             let buildStart = Date()
@@ -430,16 +441,22 @@ final class HomeViewModel {
         rolloverCaloriesFromYesterday = rolloverAmount
     }
     
-    /// Build WeekDay array for the current week (Sun-Sat)
+    /// Build WeekDay array for multiple weeks (scrollable)
+    /// Builds 3 weeks: 1 week before today, current week, 1 week after
     private func buildWeekDays(from summaries: [Date: DaySummary], selectedDate: Date) -> [WeekDay] {
         let calendar = Calendar.current
         let today = Date()
         let calorieGoalValue = effectiveCalorieGoal
         let calorieGoalDouble = Double(calorieGoalValue)
         
-        // Get the start of the week (Sunday)
+        // Get the start of the current week (Sunday)
         let weekday = calendar.component(.weekday, from: today)
-        guard let startOfWeek = calendar.date(byAdding: .day, value: -(weekday - 1), to: calendar.startOfDay(for: today)) else {
+        guard let startOfCurrentWeek = calendar.date(byAdding: .day, value: -(weekday - 1), to: calendar.startOfDay(for: today)) else {
+            return []
+        }
+        
+        // Start from 1 week before current week
+        guard let startOfRange = calendar.date(byAdding: .day, value: -7, to: startOfCurrentWeek) else {
             return []
         }
         
@@ -448,8 +465,9 @@ final class HomeViewModel {
         
         var days: [WeekDay] = []
         
-        for dayOffset in 0..<7 {
-            guard let date = calendar.date(byAdding: .day, value: dayOffset, to: startOfWeek) else { continue }
+        // Build 21 days (3 weeks: 1 week before, current week, 1 week after)
+        for dayOffset in 0..<21 {
+            guard let date = calendar.date(byAdding: .day, value: dayOffset, to: startOfRange) else { continue }
             
             let dayStart = calendar.startOfDay(for: date)
             let summary = summaries[dayStart]
@@ -615,10 +633,11 @@ final class HomeViewModel {
         UserProfileRepository.shared.getRolloverCalories()
     }
     
-    /// Description of goal adjustments for display
+    /// Description of goal adjustments for display - clearly shows added vs subtracted
     var goalAdjustmentDescription: String? {
         var adjustments: [String] = []
         
+        // Added calories (positive adjustments)
         if isBurnedCaloriesEnabled && todaysBurnedCalories > 0 {
             adjustments.append("+\(todaysBurnedCalories) burned")
         }
@@ -626,6 +645,9 @@ final class HomeViewModel {
         if isRolloverCaloriesEnabled && rolloverCaloriesFromYesterday > 0 {
             adjustments.append("+\(rolloverCaloriesFromYesterday) rollover")
         }
+        
+        // Note: Currently only positive adjustments exist, but structure supports negative ones
+        // If we add negative adjustments in the future, they would appear with "-" prefix
         
         return adjustments.isEmpty ? nil : adjustments.joined(separator: ", ")
     }

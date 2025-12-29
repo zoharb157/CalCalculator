@@ -12,11 +12,19 @@ import SDK
 struct ScanView: View {
     @Bindable var viewModel: ScanViewModel
     @State private var selectedItem: PhotosPickerItem?
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @Environment(\.isSubscribed) private var isSubscribed
     @Environment(TheSDK.self) private var sdk
     
     @State private var showPaywall = false
+    @State private var previousViewState: ViewState? // Store previous view state before opening settings
+    
+    enum ViewState {
+        case selectedImage
+        case noFoodDetected
+        case captureOptions
+    }
     
     /// Callback when meal is saved successfully
     var onMealSaved: (() -> Void)?
@@ -27,7 +35,8 @@ struct ScanView: View {
     var body: some View {
         NavigationStack {
             mainContent
-                .navigationTitle("Scan Meal")
+                .navigationTitle(localizationManager.localizedString(for: AppStrings.Scanning.scanMeal))
+                    .id("scan-meal-title-\(localizationManager.currentLanguage)")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarLeading) {
@@ -42,6 +51,12 @@ struct ScanView: View {
                             }
                         }
                     }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+                    // When app returns from settings, viewModel state is automatically maintained
+                    // The view will automatically show the correct screen based on viewModel state
+                    // No explicit restoration needed - SwiftUI handles it
+                    previousViewState = nil // Clear stored state
                 }
                 .fullScreenCover(isPresented: $viewModel.showingCamera) {
                     cameraSheet
@@ -185,9 +200,10 @@ struct ScanView: View {
     
     @ViewBuilder
     private var errorAlertActions: some View {
-        Button("OK", role: .cancel) {}
+        Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) {}
+            .id("ok-scan-\(localizationManager.currentLanguage)")
         if viewModel.canRetry {
-            Button("Retry") {
+            Button(localizationManager.localizedString(for: AppStrings.Common.retry)) {
                 if let image = viewModel.selectedImage {
                     viewModel.retryCount += 1
                     Task {
@@ -195,17 +211,20 @@ struct ScanView: View {
                     }
                 }
             }
+            .id("retry-scan-\(localizationManager.currentLanguage)")
         }
         if viewModel.error == .cameraPermissionDenied {
-            Button("Open Settings") {
+            Button(localizationManager.localizedString(for: AppStrings.Common.openSettings)) {
                 openSettings()
             }
+            .id("open-settings-\(localizationManager.currentLanguage)")
         }
         if viewModel.error == .authenticationRequired {
-            Button("Log In") {
+            Button(localizationManager.localizedString(for: AppStrings.Common.logIn)) {
                 // Navigate to login screen
                 // This would be handled by the app's navigation system
             }
+            .id("log-in-\(localizationManager.currentLanguage)")
         }
     }
     
@@ -228,6 +247,15 @@ struct ScanView: View {
     }
     
     private func openSettings() {
+        // Store current view state before opening settings
+        if viewModel.selectedImage != nil {
+            previousViewState = .selectedImage
+        } else if viewModel.showingNoFoodDetected {
+            previousViewState = .noFoodDetected
+        } else {
+            previousViewState = .captureOptions
+        }
+        
         // Direct approach: Open Settings app to the app's settings page
         guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else {
             print("❌ [ScanView] Failed to create settings URL")
@@ -251,15 +279,38 @@ struct ScanView: View {
     }
     
     private func analyzeImage() {
-        guard isSubscribed else {
-            // Don't start analyzing if not subscribed - just show paywall
-            // This ensures we return to the image selection screen when paywall closes
-            showPaywall = true
+        // Check free analysis limit for non-subscribed users
+        let limitManager = AnalysisLimitManager.shared
+        guard let image = viewModel.selectedImage else { return }
+        
+        if !isSubscribed {
+            // Check if user can perform analysis
+            guard limitManager.canPerformAnalysis(isSubscribed: false) else {
+                // No free analyses left - show paywall
+                showPaywall = true
+                return
+            }
+            
+            // Record analysis BEFORE starting to prevent race condition
+            // This ensures only one free analysis can be in progress at a time
+            guard limitManager.recordAnalysis() else {
+                // Limit was reached between check and record (shouldn't happen, but handle gracefully)
+                showPaywall = true
+                return
+            }
+            
+            // Start analysis
+            viewModel.isAnalyzing = true
+            viewModel.analysisProgress = 0.1
+            Task {
+                // Re-check subscription status before analyzing (in case user subscribed)
+                // If user subscribed during the check, they get unlimited analyses
+                await viewModel.analyzeImage(image)
+            }
             return
         }
-        guard let image = viewModel.selectedImage else { return }
-        // Set analyzing state immediately - this takes priority in contentBody
-        // Even if camera is still dismissing, we'll show analyzing view
+        
+        // Subscribed users - proceed normally
         viewModel.isAnalyzing = true
         viewModel.analysisProgress = 0.1
         Task {

@@ -17,7 +17,7 @@ struct CaloriesWidget: Widget {
             WidgetRootView(entry: entry)
         }
         .configurationDisplayName("Calories Tracker")
-        .description("Track your daily calorie and macro intake at a glance.")
+        .description("Track your daily calorie and macro intake at a glance. Premium feature.")
         .supportedFamilies([
             .systemSmall,
             .systemMedium,

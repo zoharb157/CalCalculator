@@ -11,6 +11,7 @@ import UIKit
 #endif
 
 struct ReferralCodeView: View {
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     // MARK: - State
     
@@ -44,13 +45,15 @@ struct ReferralCodeView: View {
                 .padding(.bottom, 40)
             }
             .background(Color(UIColor.systemGroupedBackground))
-            .navigationTitle("Referral Code")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.referralCode))
+                .id("referral-code-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.done)) {
                         dismiss()
                     }
+                    .id("done-referral-\(localizationManager.currentLanguage)")
                     .fontWeight(.semibold)
                 }
             }

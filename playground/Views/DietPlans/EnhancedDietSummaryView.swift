@@ -12,6 +12,7 @@ import Charts
 struct EnhancedDietSummaryView: View {
     @Query(filter: #Predicate<DietPlan> { $0.isActive == true }) private var activePlans: [DietPlan]
     @Environment(\.modelContext) private var modelContext
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @State private var selectedDate = Date()
     @State private var selectedTimeRange: DietTimeRange = .week
@@ -19,27 +20,10 @@ struct EnhancedDietSummaryView: View {
     @State private var weeklyAdherence: [DailyAdherence] = []
     @State private var isLoading = false
     @State private var showingInsights = false
+    @State private var showingEditPlan = false
     
     private var dietPlanRepository: DietPlanRepository {
         DietPlanRepository(context: modelContext)
-    }
-    
-    enum DietTimeRange: String, CaseIterable {
-        case today = "Today"
-        case week = "This Week"
-        case month = "This Month"
-        
-        var startDate: Date {
-            let calendar = Calendar.current
-            switch self {
-            case .today:
-                return calendar.startOfDay(for: Date())
-            case .week:
-                return calendar.date(byAdding: .day, value: -7, to: Date()) ?? Date()
-            case .month:
-                return calendar.date(byAdding: .month, value: -1, to: Date()) ?? Date()
-            }
-        }
     }
     
     var body: some View {
@@ -77,13 +61,24 @@ struct EnhancedDietSummaryView: View {
                 }
                 .padding()
             }
-            .navigationTitle("My Diet")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.myDiet))
+                .id("my-diet-title-\(localizationManager.currentLanguage)")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showingInsights = true
-                    } label: {
-                        Image(systemName: "chart.bar.fill")
+                    HStack(spacing: 16) {
+                        Button {
+                            if let plan = activePlans.first {
+                                showingEditPlan = true
+                            }
+                        } label: {
+                            Image(systemName: "pencil")
+                        }
+                        
+                        Button {
+                            showingInsights = true
+                        } label: {
+                            Image(systemName: "chart.bar.fill")
+                        }
                     }
                 }
             }
@@ -99,6 +94,11 @@ struct EnhancedDietSummaryView: View {
             }
             .sheet(isPresented: $showingInsights) {
                 DietInsightsView(activePlans: activePlans, repository: dietPlanRepository)
+            }
+            .sheet(isPresented: $showingEditPlan) {
+                if let plan = activePlans.first {
+                    DietPlanEditorView(plan: plan, repository: dietPlanRepository)
+                }
             }
         }
     }
@@ -120,7 +120,8 @@ struct EnhancedDietSummaryView: View {
         VStack(spacing: 16) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Adherence")
+                    Text(localizationManager.localizedString(for: AppStrings.DietPlan.adherence))
+                        .id("adherence-\(localizationManager.currentLanguage)")
                         .font(.headline)
                         .foregroundColor(.secondary)
                     
@@ -189,7 +190,8 @@ struct EnhancedDietSummaryView: View {
     
     private var adherenceTrendChart: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Adherence Trend")
+            Text(localizationManager.localizedString(for: AppStrings.DietPlan.adherenceTrend))
+                .id("adherence-trend-\(localizationManager.currentLanguage)")
                 .font(.headline)
                 .padding(.horizontal)
             
@@ -212,7 +214,8 @@ struct EnhancedDietSummaryView: View {
     
     private func todaysScheduleSection(data: DietAdherenceData) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Today's Schedule")
+            Text(localizationManager.localizedString(for: AppStrings.DietPlan.todaySchedule))
+                .id("today-schedule-\(localizationManager.currentLanguage)")
                 .font(.headline)
                 .padding(.horizontal)
             
@@ -220,9 +223,10 @@ struct EnhancedDietSummaryView: View {
                 ContentUnavailableView(
                     "No Meals Scheduled",
                     systemImage: "calendar.badge.exclamationmark",
-                    description: Text("Add meals to your diet plan to see them here")
+                    description: Text(localizationManager.localizedString(for: "Add meals to your diet plan to see them here"))
                 )
                 .frame(height: 150)
+                .id("add-meals-desc-\(localizationManager.currentLanguage)")
             } else {
                 mealCardsView(data: data)
             }
@@ -247,8 +251,80 @@ struct EnhancedDietSummaryView: View {
                     isCompleted: isCompleted,
                     isMissed: isMissed,
                     goalAchieved: goalAchieved,
-                    goalMissed: goalMissed
+                    goalMissed: goalMissed,
+                    onTap: {
+                        if !isCompleted {
+                            completeMeal(meal)
+                        }
+                    }
                 )
+            }
+        }
+    }
+    
+    private func completeMeal(_ scheduledMeal: ScheduledMeal) {
+        Task {
+            do {
+                // Create a meal from the scheduled meal template or basic meal
+                let meal: Meal
+                if let template = scheduledMeal.mealTemplate {
+                    meal = template.createMeal(at: Date(), category: scheduledMeal.category)
+                } else {
+                    meal = Meal(
+                        name: scheduledMeal.name,
+                        timestamp: Date(),
+                        category: scheduledMeal.category,
+                        items: []
+                    )
+                }
+                
+                // Save the meal
+                let mealRepository = MealRepository(context: modelContext)
+                try mealRepository.saveMeal(meal)
+                
+                // Mark reminder as completed
+                if let reminder = try dietPlanRepository.fetchMealReminder(
+                    by: scheduledMeal.id,
+                    for: Date()
+                ) {
+                    try dietPlanRepository.updateMealReminderCompletion(reminder, completedMealId: meal.id)
+                } else {
+                    // Create new reminder if it doesn't exist
+                    let reminder = MealReminder(
+                        scheduledMealId: scheduledMeal.id,
+                        reminderDate: Date(),
+                        wasCompleted: true,
+                        completedMealId: meal.id,
+                        completedAt: Date()
+                    )
+                    try dietPlanRepository.saveMealReminder(reminder)
+                }
+                
+                // Evaluate goal achievement if template exists
+                if scheduledMeal.mealTemplate != nil {
+                    let (achieved, deviation) = dietPlanRepository.evaluateMealGoalAchievement(
+                        actualMeal: meal,
+                        scheduledMeal: scheduledMeal
+                    )
+                    if let reminder = try dietPlanRepository.fetchMealReminder(
+                        by: scheduledMeal.id,
+                        for: Date()
+                    ) {
+                        try dietPlanRepository.updateMealReminderGoalAchievement(
+                            reminder,
+                            goalAchieved: achieved,
+                            goalDeviation: deviation
+                        )
+                    }
+                }
+                
+                HapticManager.shared.notification(.success)
+                
+                // Reload data to reflect the change
+                loadAdherenceData()
+            } catch {
+                print("Failed to complete meal: \(error)")
+                HapticManager.shared.notification(.error)
             }
         }
     }
@@ -257,7 +333,8 @@ struct EnhancedDietSummaryView: View {
     
     private var insightsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Insights")
+            Text(localizationManager.localizedString(for: AppStrings.DietPlan.insights))
+                .id("insights-\(localizationManager.currentLanguage)")
                 .font(.headline)
                 .padding(.horizontal)
             
@@ -290,12 +367,14 @@ struct EnhancedDietSummaryView: View {
     
     private var weeklyStatsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Weekly Statistics")
+            Text(localizationManager.localizedString(for: AppStrings.DietPlan.weeklyStatistics))
+                .id("weekly-stats-\(localizationManager.currentLanguage)")
                 .font(.headline)
                 .padding(.horizontal)
             
             if weeklyAdherence.isEmpty {
-                Text("No data available")
+                Text(localizationManager.localizedString(for: AppStrings.DietPlan.noDataAvailable))
+                    .id("no-data-\(localizationManager.currentLanguage)")
                     .foregroundColor(.secondary)
                     .padding()
             } else {
@@ -329,13 +408,15 @@ struct EnhancedDietSummaryView: View {
             HStack {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundColor(.orange)
-                Text("Off-Diet Meals")
+                Text(localizationManager.localizedString(for: AppStrings.DietPlan.offDietMeals))
+                    .id("off-diet-meals-\(localizationManager.currentLanguage)")
                     .font(.headline)
             }
             .padding(.horizontal)
             
             VStack(alignment: .leading, spacing: 8) {
-                Text("\(data.offDietCalories) calories from off-diet meals")
+                Text("\(data.offDietCalories) \(localizationManager.localizedString(for: AppStrings.DietPlan.caloriesFromOffDiet))")
+                    .id("off-diet-calories-\(localizationManager.currentLanguage)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .padding(.horizontal)
@@ -496,56 +577,71 @@ struct ScheduledMealCard: View {
     let isMissed: Bool
     let goalAchieved: Bool
     let goalMissed: Bool
+    var onTap: (() -> Void)? = nil
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: meal.category.icon)
-                .foregroundColor(isCompleted ? .green : (isMissed ? .red : .gray))
-                .font(.title3)
-                .frame(width: 40)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(meal.name)
-                    .font(.headline)
+        Button(action: {
+            onTap?()
+        }) {
+            HStack(spacing: 12) {
+                Image(systemName: meal.category.icon)
+                    .foregroundColor(isCompleted ? .green : (isMissed ? .red : .gray))
+                    .font(.title3)
+                    .frame(width: 40)
                 
-                HStack {
-                    Label(meal.formattedTime, systemImage: "clock")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(meal.name)
+                        .font(.headline)
+                        .foregroundColor(.primary)
                     
-                    if isCompleted && goalMissed {
-                        Text("Goal not met")
-                            .font(.caption2)
-                            .foregroundColor(.orange)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color.orange.opacity(0.2))
-                            .cornerRadius(4)
+                    HStack {
+                        Label(meal.formattedTime, systemImage: "clock")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        if isCompleted && goalMissed {
+                            Text(localizationManager.localizedString(for: "Goal not met"))
+                                .id("goal-not-met-\(localizationManager.currentLanguage)")
+                                .font(.caption2)
+                                .foregroundColor(.orange)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.orange.opacity(0.2))
+                                .cornerRadius(4)
+                        }
                     }
                 }
-            }
-            
-            Spacer()
-            
-            if isCompleted {
-                if goalAchieved {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                } else if goalMissed {
-                    Image(systemName: "exclamationmark.circle.fill")
-                        .foregroundColor(.orange)
+                
+                Spacer()
+                
+                if isCompleted {
+                    if goalAchieved {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                    } else if goalMissed {
+                        Image(systemName: "exclamationmark.circle.fill")
+                            .foregroundColor(.orange)
+                    } else {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.blue)
+                    }
+                } else if isMissed {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.red)
                 } else {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.blue)
+                    // Show tap indicator for incomplete meals
+                    Image(systemName: "circle")
+                        .foregroundColor(.gray)
+                        .font(.title3)
                 }
-            } else if isMissed {
-                Image(systemName: "xmark.circle.fill")
-                    .foregroundColor(.red)
             }
+            .padding()
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(12)
         }
-        .padding()
-        .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .buttonStyle(.plain)
+        .disabled(isCompleted) // Disable if already completed
     }
 }
 
@@ -608,6 +704,7 @@ struct DietStatCard: View {
 
 struct OffDietMealRow: View {
     let meal: Meal
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
         HStack {
@@ -616,7 +713,8 @@ struct OffDietMealRow: View {
                     .font(.subheadline)
                     .fontWeight(.medium)
                 
-                Text("\(meal.totalCalories) calories")
+                Text("\(meal.totalCalories) \(localizationManager.localizedString(for: "calories"))")
+                    .id("meal-calories-\(localizationManager.currentLanguage)")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }

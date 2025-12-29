@@ -26,9 +26,15 @@ struct CaloriesTimelineProvider: TimelineProvider {
             // Use placeholder data for widget gallery preview
             entry = .placeholder
         } else {
-            // Load actual data from shared storage
-            let macros = WidgetDataManager.shared.loadMacroNutrients()
+            // Load subscription status first
             let isSubscribed = WidgetDataManager.shared.loadIsSubscribed()
+            
+            // Only load actual data if user is subscribed
+            // Non-premium users should see empty data
+            let macros = isSubscribed 
+                ? WidgetDataManager.shared.loadMacroNutrients()
+                : .empty
+            
             entry = CaloriesEntry(date: .now, macros: macros, isSubscribed: isSubscribed)
         }
         
@@ -36,9 +42,15 @@ struct CaloriesTimelineProvider: TimelineProvider {
     }
     
     func getTimeline(in context: Context, completion: @escaping (Timeline<CaloriesEntry>) -> Void) {
-        // Load macro data and subscription status from shared storage
-        let macros = WidgetDataManager.shared.loadMacroNutrients()
+        // Load subscription status first
         let isSubscribed = WidgetDataManager.shared.loadIsSubscribed()
+        
+        // Only load actual data if user is subscribed
+        // Non-premium users should see empty data with premium lock
+        let macros = isSubscribed 
+            ? WidgetDataManager.shared.loadMacroNutrients()
+            : .empty
+        
         let entry = CaloriesEntry(date: .now, macros: macros, isSubscribed: isSubscribed)
         
         // Use .never policy - widget refreshes only via WidgetCenter.shared.reloadAllTimelines()

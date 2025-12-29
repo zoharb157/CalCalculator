@@ -10,6 +10,7 @@ import SwiftUI
 struct HistoryView: View {
     @Bindable var viewModel: HistoryViewModel
     let repository: MealRepository
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @State private var selectedDate: SelectedDate?
     @State private var searchText: String = ""
@@ -68,7 +69,8 @@ struct HistoryView: View {
     var body: some View {
         NavigationStack {
             content
-                .navigationTitle("History")
+                .navigationTitle(localizationManager.localizedString(for: AppStrings.History.title))
+                    .id("history-title-\(localizationManager.currentLanguage)")
                 .background(Color(.systemGroupedBackground))
                 .searchable(text: $searchText, prompt: "Search by date, day, or month")
                 .refreshable {
@@ -215,7 +217,8 @@ struct HistoryView: View {
             VStack(spacing: 20) {
                 ProgressView()
                     .scaleEffect(1.5)
-                Text("Loading history...")
+                Text(localizationManager.localizedString(for: AppStrings.History.loadingHistory))
+                    .id("loading-history-\(localizationManager.currentLanguage)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -246,11 +249,13 @@ struct HistoryView: View {
                 .font(.system(size: 64))
                 .foregroundStyle(.secondary)
             
-            Text("No History Yet")
+            Text(localizationManager.localizedString(for: AppStrings.History.noHistoryYet))
+                .id("no-history-\(localizationManager.currentLanguage)")
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            Text("Your meal history will appear here\nonce you start tracking")
+            Text(localizationManager.localizedString(for: AppStrings.History.historyDescription))
+                .id("history-description-\(localizationManager.currentLanguage)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -265,17 +270,20 @@ struct HistoryView: View {
                 .font(.system(size: 48))
                 .foregroundStyle(.secondary)
             
-            Text("No Results")
+            Text(localizationManager.localizedString(for: AppStrings.History.noResults))
+                .id("no-results-\(localizationManager.currentLanguage)")
                 .font(.title2)
                 .fontWeight(.semibold)
             
             if !searchText.isEmpty {
-                Text("No entries found for \"\(searchText)\"")
+                Text(localizationManager.localizedString(for: AppStrings.History.noEntriesFoundForSearch, arguments: searchText))
+                    .id("no-entries-search-\(localizationManager.currentLanguage)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
             } else {
-                Text("No entries found for the selected time period")
+                Text(localizationManager.localizedString(for: AppStrings.History.noEntriesFound))
+                    .id("no-entries-time-\(localizationManager.currentLanguage)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -287,7 +295,8 @@ struct HistoryView: View {
                     selectedTimeFilter = .all
                 }
             } label: {
-                Text("Clear Filters")
+                Text(localizationManager.localizedString(for: AppStrings.History.clearFilters))
+                    .id("clear-filters-\(localizationManager.currentLanguage)")
                     .font(.subheadline)
                     .fontWeight(.medium)
             }
@@ -356,14 +365,16 @@ struct StatsSummaryCard: View {
     let totalCalories: Int
     let averageCalories: Int
     let timeFilter: HistoryTimeFilter
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
         VStack(spacing: 12) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Summary")
+                    Text(localizationManager.localizedString(for: AppStrings.Home.summary))
                         .font(.headline)
                         .foregroundColor(.primary)
+                        .id("summary-label-\(localizationManager.currentLanguage)")
                     
                     Text(timeFilter.displayName)
                         .font(.caption)

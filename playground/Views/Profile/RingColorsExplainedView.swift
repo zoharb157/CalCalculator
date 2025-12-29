@@ -8,6 +8,7 @@ import SwiftUI
 
 struct RingColorsExplainedView: View {
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
         NavigationStack {
@@ -52,13 +53,15 @@ struct RingColorsExplainedView: View {
                 }
                 .padding(.vertical)
             }
-            .navigationTitle("Ring Colors Explained")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.ringColorsExplained))
+                .id("ring-colors-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.done)) {
                         dismiss()
                     }
+                    .id("done-ring-colors-\(localizationManager.currentLanguage)")
                 }
             }
         }

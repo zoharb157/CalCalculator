@@ -2,10 +2,11 @@
 //  LogExperienceCard.swift
 //  playground
 //
-//  Card showing today's log summary with quick actions
+//  Card showing today's activity summary with quick actions
 //
 
 import SwiftUI
+import SwiftData
 
 struct LogExperienceCard: View {
     let mealsCount: Int
@@ -15,15 +16,27 @@ struct LogExperienceCard: View {
 
     let onLogFood: () -> Void
     let onLogExercise: () -> Void
-    let onScanMeal: () -> Void
     var onTextLog: (() -> Void)? = nil
     var onViewHistory: (() -> Void)? = nil
+    var onViewDiet: (() -> Void)? = nil
+    
+    @Query(filter: #Predicate<DietPlan> { $0.isActive == true }) private var activePlans: [DietPlan]
+    @Environment(\.modelContext) private var modelContext
+    @ObservedObject private var localizationManager = LocalizationManager.shared
+    
+    @State private var todaysMealsCount: Int = 0
+    @State private var completedMealsCount: Int = 0
+    
+    private var dietPlanRepository: DietPlanRepository {
+        DietPlanRepository(context: modelContext)
+    }
 
     var body: some View {
         VStack(spacing: 16) {
             // Header
             HStack {
-                Label("Today's Log", systemImage: "list.bullet.clipboard.fill")
+                Label(localizationManager.localizedString(for: AppStrings.Food.todayActivity), systemImage: "list.bullet.clipboard.fill")
+                    .id("today-activity-label-\(localizationManager.currentLanguage)")
                     .font(.headline)
                     .foregroundColor(.primary)
 
@@ -32,7 +45,8 @@ struct LogExperienceCard: View {
                 if let onViewHistory = onViewHistory {
                     Button(action: onViewHistory) {
                         HStack(spacing: 4) {
-                            Text("View All")
+                            Text(localizationManager.localizedString(for: AppStrings.Food.viewAll))
+                                .id("view-all-\(localizationManager.currentLanguage)")
                                 .font(.caption)
                             Image(systemName: "chevron.right")
                                 .font(.caption2)
@@ -81,16 +95,19 @@ struct LogExperienceCard: View {
 
             // Quick Actions
             HStack(spacing: 8) {
-                QuickLogButton(
-                    icon: "camera.fill",
-                    title: "Scan",
-                    color: .purple,
-                    action: onScanMeal
-                )
+                // Diet Plan Button - always show (premium feature)
+                if let onViewDiet = onViewDiet {
+                    QuickLogButton(
+                        icon: "calendar.badge.clock",
+                        title: localizationManager.localizedString(for: AppStrings.DietPlan.myDiet),
+                        color: .blue,
+                        action: onViewDiet
+                    )
+                }
 
                 QuickLogButton(
                     icon: "pencil.line",
-                    title: "Log Food",
+                    title: localizationManager.localizedString(for: AppStrings.Food.saveFood),
                     color: .green,
                     action: onLogFood
                 )
@@ -98,7 +115,7 @@ struct LogExperienceCard: View {
                 if let onTextLog = onTextLog {
                     QuickLogButton(
                         icon: "text.bubble.fill",
-                        title: "Describe",
+                        title: localizationManager.localizedString(for: AppStrings.Food.describeYourFood),
                         color: .indigo,
                         action: onTextLog
                     )
@@ -106,14 +123,53 @@ struct LogExperienceCard: View {
 
                 QuickLogButton(
                     icon: "dumbbell.fill",
-                    title: "Exercise",
+                    title: localizationManager.localizedString(for: AppStrings.Food.exercise),
                     color: .orange,
                     action: onLogExercise
                 )
+                .id("quick-actions-\(localizationManager.currentLanguage)")
             }
         }
         .padding()
         .cardStyle(background: Color(.secondarySystemGroupedBackground))
+        .task {
+            loadTodaysDietInfo()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .dietPlanChanged)) { _ in
+            loadTodaysDietInfo()
+        }
+    }
+    
+    private func loadTodaysDietInfo() {
+        Task {
+            let calendar = Calendar.current
+            let today = Date()
+            let dayOfWeek = calendar.component(.weekday, from: today)
+            
+            var meals: [ScheduledMeal] = []
+            for plan in activePlans {
+                meals.append(contentsOf: plan.scheduledMeals(for: dayOfWeek))
+            }
+            
+            // Get completed meals
+            var completedCount = 0
+            if !activePlans.isEmpty {
+                do {
+                    let adherence = try dietPlanRepository.getDietAdherence(
+                        for: today,
+                        activePlans: activePlans
+                    )
+                    completedCount = adherence.completedMeals.count
+                } catch {
+                    // Ignore error, use 0
+                }
+            }
+            
+            await MainActor.run {
+                todaysMealsCount = meals.count
+                completedMealsCount = completedCount
+            }
+        }
     }
 }
 
@@ -183,6 +239,7 @@ struct CompactLogExperienceCard: View {
     let mealsCount: Int
     let totalCalories: Int
     let onTap: () -> Void
+    @ObservedObject private var localizationManager = LocalizationManager.shared
 
     var body: some View {
         Button(action: onTap) {
@@ -206,14 +263,17 @@ struct CompactLogExperienceCard: View {
 
                 // Info
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Today's Log")
+                    Text(localizationManager.localizedString(for: AppStrings.Food.todayActivity))
                         .font(.headline)
                         .foregroundColor(.primary)
+                        .id("today-activity-info-\(localizationManager.currentLanguage)")
 
                     HStack(spacing: 8) {
-                        Label("\(mealsCount) meals", systemImage: "fork.knife")
+                        Label("\(mealsCount) \(localizationManager.localizedString(for: AppStrings.Food.meals))", systemImage: "fork.knife")
+                            .id("meals-count-\(localizationManager.currentLanguage)")
                         Text("•")
-                        Text("\(totalCalories) cal")
+                        Text("\(totalCalories) \(localizationManager.localizedString(for: AppStrings.Progress.cal))")
+                            .id("calories-count-\(localizationManager.currentLanguage)")
                     }
                     .font(.subheadline)
                     .foregroundColor(.secondary)
@@ -238,6 +298,7 @@ struct LogSummaryBanner: View {
     let mealsLogged: Int
     let exercisesLogged: Int
     let caloriesRemaining: Int
+    @ObservedObject private var localizationManager = LocalizationManager.shared
 
     var body: some View {
         HStack(spacing: 16) {
@@ -269,9 +330,10 @@ struct LogSummaryBanner: View {
                     .foregroundColor(caloriesRemaining > 0 ? .orange : .green)
                 Text("\(abs(caloriesRemaining))")
                     .fontWeight(.semibold)
-                Text(caloriesRemaining > 0 ? "left" : "over")
+                Text(caloriesRemaining > 0 ? localizationManager.localizedString(for: AppStrings.Home.caloriesLeft) : localizationManager.localizedString(for: AppStrings.Home.over))
                     .font(.caption)
                     .foregroundColor(.secondary)
+                    .id("calories-remaining-\(localizationManager.currentLanguage)-\(caloriesRemaining > 0)")
             }
         }
         .font(.subheadline)
@@ -292,8 +354,9 @@ struct LogSummaryBanner: View {
         totalCaloriesBurned: 320,
         onLogFood: {},
         onLogExercise: {},
-        onScanMeal: {}
+        onViewDiet: {}
     )
+    .modelContainer(for: [DietPlan.self, ScheduledMeal.self], inMemory: true)
     .padding()
 }
 

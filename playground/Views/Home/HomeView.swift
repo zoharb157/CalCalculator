@@ -8,6 +8,7 @@
 import MavenCommonSwiftUI
 import SDK
 import SwiftUI
+import SwiftData
 
 struct HomeView: View {
     @Bindable var viewModel: HomeViewModel
@@ -17,6 +18,8 @@ struct HomeView: View {
 
     @Environment(\.isSubscribed) private var isSubscribed
     @Environment(TheSDK.self) private var sdk
+    @Environment(\.locale) private var locale
+    @ObservedObject private var localizationManager = LocalizationManager.shared
 
     private var settings = UserSettings.shared
     @State private var badgeManager = BadgeManager.shared
@@ -27,12 +30,12 @@ struct HomeView: View {
     @State private var showBadgesSheet = false
     @State private var showQuickLogSheet = false
     @State private var showTextLogSheet = false
-    @State private var showingFloatingMenu = false
     @State private var confettiCounter = 0
     @State private var showBadgeAlert = false
     @State private var showingCreateDiet = false
     @State private var showingPaywall = false
     @Environment(\.modelContext) private var modelContext
+    @Query(filter: #Predicate<DietPlan> { $0.isActive == true }) private var activeDietPlans: [DietPlan]
 
     init(
         viewModel: HomeViewModel,
@@ -116,6 +119,11 @@ struct HomeView: View {
                     viewModel.updateLiveActivityIfNeeded()
                 }
             }
+            .onReceive(NotificationCenter.default.publisher(for: .languageChanged)) { _ in
+                // Force view refresh when language changes
+                // This ensures all localized strings update immediately
+            }
+            .id("home-view-\(localizationManager.currentLanguage)")
             .sheet(isPresented: $showScanSheet) {
                 ScanView(
                     viewModel: scanViewModel,
@@ -145,13 +153,43 @@ struct HomeView: View {
                 BadgesView()
             }
             .sheet(isPresented: $showingCreateDiet) {
-                DietPlansListView()
+                if let existingPlan = activeDietPlans.first {
+                    // If plan exists, show editor directly
+                    DietPlanEditorView(plan: existingPlan, repository: DietPlanRepository(context: modelContext))
+                } else {
+                    // If no plan, show list to create one
+                    DietPlansListView()
+                }
             }
             .fullScreenCover(isPresented: $showingPaywall) {
                 SDKView(
                     model: sdk,
                     page: .splash,
-                    show: $showingPaywall,
+                    show: Binding(
+                        get: { showingPaywall },
+                        set: { newValue in
+                            if !newValue && showingPaywall {
+                                // Paywall was dismissed - THIS IS THE ONLY PLACE WE CHECK SUBSCRIPTION STATUS
+                                Task { @MainActor in
+                                    // Update subscription status from SDK
+                                    do {
+                                        try await sdk.updateIsSubscribed()
+                                        // Update reactive subscription status in app
+                                        NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
+                                    } catch {
+                                        print("⚠️ Failed to update subscription status: \(error)")
+                                    }
+                                    
+                                    // Check SDK directly
+                                    if sdk.isSubscribed {
+                                        // User subscribed - reset analysis count
+                                        AnalysisLimitManager.shared.resetAnalysisCount()
+                                    }
+                                }
+                            }
+                            showingPaywall = newValue
+                        }
+                    ),
                     backgroundColor: .white,
                     ignoreSafeArea: true
                 )
@@ -163,6 +201,9 @@ struct HomeView: View {
                         badgeManager.dismissBadgeAlert()
                     }
                 }
+            }
+            .overlay(alignment: .bottomTrailing) {
+                floatingMenuOverlay
             }
             .onChange(of: badgeManager.showBadgeAlert) { _, newValue in
                 if newValue {
@@ -198,10 +239,7 @@ struct HomeView: View {
 
     private var mainContent: some View {
         NavigationStack {
-            ZStack {
-                contentView
-                floatingMenuOverlay
-            }
+            contentView
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: UUID.self) { mealId in
@@ -227,7 +265,14 @@ struct HomeView: View {
                 macroSection
                 badgesSection
                 healthKitSection
-                mealsSection
+                
+                // Recently uploaded section - show meals or empty state
+                if !viewModel.recentMeals.isEmpty {
+                    mealsSection
+                } else if Calendar.current.isDateInToday(viewModel.selectedDate) {
+                    // Show empty state only for today
+                    recentlyUploadedEmptySection
+                }
             }
             .listStyle(.plain)
         }
@@ -235,6 +280,10 @@ struct HomeView: View {
 
     @State private var showLogHistorySheet = false
 
+    @State private var showDietSummarySheet = false
+    @State private var showingEditDietPlan = false
+    @State private var selectedDietPlan: DietPlan?
+    
     private var logExperienceSection: some View {
         LogExperienceCard(
             mealsCount: viewModel.recentMeals.count,
@@ -247,14 +296,18 @@ struct HomeView: View {
             onLogExercise: {
                 showLogExerciseSheet = true
             },
-            onScanMeal: {
-                showScanSheet = true
-            },
             onTextLog: {
                 showTextLogSheet = true
             },
             onViewHistory: {
                 showLogHistorySheet = true
+            },
+            onViewDiet: {
+                if isSubscribed {
+                    showDietSummarySheet = true
+                } else {
+                    showingPaywall = true
+                }
             }
         )
         .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
@@ -263,152 +316,62 @@ struct HomeView: View {
         .sheet(isPresented: $showLogHistorySheet) {
             LogHistoryView(repository: repository)
         }
+        .sheet(isPresented: $showDietSummarySheet) {
+            NavigationStack {
+                EnhancedDietSummaryView()
+            }
+        }
+        .sheet(isPresented: $showingEditDietPlan) {
+            if let plan = selectedDietPlan {
+                DietPlanEditorView(plan: plan, repository: DietPlanRepository(context: modelContext))
+            }
+        }
     }
 
+    // MARK: - FAB Button Constants
+    
+    private enum FABConstants {
+        static let fabSize: CGFloat = 60
+        static let fabPadding: CGFloat = 20
+    }
+    
     @ViewBuilder
     private var floatingMenuOverlay: some View {
-        ZStack {
-            // Dimmed background when menu is open
-            if showingFloatingMenu {
-                Color.black.opacity(0.4)
-                    .ignoresSafeArea()
-                    .onTapGesture {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                            showingFloatingMenu = false
-                        }
-                    }
-            }
-
+        // Only show + button if selected date is today
+        if Calendar.current.isDateInToday(viewModel.selectedDate) {
             VStack {
                 Spacer()
 
                 HStack {
                     Spacer()
 
-                    VStack(alignment: .trailing, spacing: 12) {
-                        // Menu items (shown when expanded)
-                        if showingFloatingMenu {
-                            FloatingMenuItem(
-                                icon: "calendar.badge.plus",
-                                title: "Create Diet Plan",
-                                color: .blue
-                            ) {
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                    showingFloatingMenu = false
-                                }
-                                if isSubscribed {
-                                    showingCreateDiet = true
-                                } else {
-                                    showingPaywall = true
-                                }
-                            }
-                            .transition(
-                                .asymmetric(
-                                    insertion: .scale.combined(with: .opacity).combined(
-                                        with: .offset(x: 0, y: 20)),
-                                    removal: .scale.combined(with: .opacity)
-                                ))
-
-                            FloatingMenuItem(
-                                icon: "dumbbell.fill",
-                                title: "Log Exercise",
-                                color: .orange
-                            ) {
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                    showingFloatingMenu = false
-                                }
-                                showLogExerciseSheet = true
-                            }
-                            .transition(
-                                .asymmetric(
-                                    insertion: .scale.combined(with: .opacity).combined(
-                                        with: .offset(x: 0, y: 20)),
-                                    removal: .scale.combined(with: .opacity)
-                                ))
-
-                            FloatingMenuItem(
-                                icon: "text.bubble.fill",
-                                title: "Describe Food",
-                                color: .indigo
-                            ) {
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                    showingFloatingMenu = false
-                                }
-                                showTextLogSheet = true
-                            }
-                            .transition(
-                                .asymmetric(
-                                    insertion: .scale.combined(with: .opacity).combined(
-                                        with: .offset(x: 0, y: 20)),
-                                    removal: .scale.combined(with: .opacity)
-                                ))
-
-                            FloatingMenuItem(
-                                icon: "pencil.line",
-                                title: "Log Food",
-                                color: .green
-                            ) {
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                    showingFloatingMenu = false
-                                }
-                                showLogFoodSheet = true
-                            }
-                            .transition(
-                                .asymmetric(
-                                    insertion: .scale.combined(with: .opacity).combined(
-                                        with: .offset(x: 0, y: 20)),
-                                    removal: .scale.combined(with: .opacity)
-                                ))
-
-                            FloatingMenuItem(
-                                icon: "camera.fill",
-                                title: "Scan Meal",
-                                color: .purple
-                            ) {
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                    showingFloatingMenu = false
-                                }
-                                showScanSheet = true
-                            }
-                            .transition(
-                                .asymmetric(
-                                    insertion: .scale.combined(with: .opacity).combined(
-                                        with: .offset(x: 0, y: 20)),
-                                    removal: .scale.combined(with: .opacity)
-                                ))
-                        }
-
-                        // Main FAB button
-                        Button {
-                            HapticManager.shared.impact(.light)
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                showingFloatingMenu.toggle()
-                            }
-                        } label: {
-                            Image(systemName: showingFloatingMenu ? "xmark" : "plus")
-                                .font(.title2)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(.white)
-                                .frame(width: 60, height: 60)
-                                .background(
-                                    LinearGradient(
-                                        colors: showingFloatingMenu
-                                            ? [.gray, .gray.opacity(0.8)]
-                                            : [.blue, .blue.opacity(0.8)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
+                    // FAB button - opens camera directly to scan food
+                    Button {
+                        HapticManager.shared.impact(.light)
+                        showScanSheet = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.white)
+                            .frame(width: FABConstants.fabSize, height: FABConstants.fabSize)
+                            .background(
+                                LinearGradient(
+                                    colors: [.blue, .blue.opacity(0.8)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
                                 )
-                                .clipShape(Circle())
-                                .shadow(
-                                    color: (showingFloatingMenu ? Color.gray : Color.blue).opacity(
-                                        0.4), radius: 8, x: 0, y: 4
-                                )
-                                .rotationEffect(.degrees(showingFloatingMenu ? 180 : 0))
-                        }
+                            )
+                            .clipShape(Circle())
+                            .shadow(
+                                color: Color.blue.opacity(0.4),
+                                radius: 8,
+                                x: 0,
+                                y: 4
+                            )
                     }
-                    .padding(.trailing, 20)
-                    .padding(.bottom, 20)
+                    .padding(.trailing, FABConstants.fabPadding)
+                    .padding(.bottom, FABConstants.fabPadding)
                 }
             }
         }
@@ -431,14 +394,15 @@ struct HomeView: View {
             calorieGoal: viewModel.effectiveCalorieGoal,
             remainingCalories: viewModel.remainingCalories,
             progress: viewModel.calorieProgress,
-            goalAdjustment: viewModel.goalAdjustmentDescription
+            goalAdjustment: viewModel.goalAdjustmentDescription,
+            burnedCalories: viewModel.todaysBurnedCalories
         )
         .opacity((viewModel.hasDataLoaded) ? 1.0 : 0.3)
         .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
         .listRowSeparator(.hidden)
         .listRowBackground(Color.clear)
     }
-
+    
     @ViewBuilder
     private var dietPlanSection: some View {
         if isSubscribed {
@@ -446,6 +410,12 @@ struct HomeView: View {
                 .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
+                .onReceive(NotificationCenter.default.publisher(for: Notification.Name("editDietPlan"))) { notification in
+                    if let plan = notification.object as? DietPlan {
+                        selectedDietPlan = plan
+                        showingEditDietPlan = true
+                    }
+                }
         }
     }
 
@@ -461,11 +431,19 @@ struct HomeView: View {
     }
 
     private var macroSection: some View {
-        PremiumLockedContent {
-            MacroCardsSection(
-                summary: viewModel.todaysSummary,
-                goals: settings.macroGoals
-            )
+        VStack(alignment: .leading, spacing: 12) {
+            LocalizedText(AppStrings.Home.macronutrients, comment: "Section title for macronutrients")
+                .font(.headline)
+                .foregroundColor(.primary)
+                .padding(.horizontal, 4)
+                .id("macronutrients-\(localizationManager.currentLanguage)")
+            
+            PremiumLockedContent {
+                MacroCardsSection(
+                    summary: viewModel.todaysSummary,
+                    goals: settings.macroGoals
+                )
+            }
         }
         .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
         .listRowSeparator(.hidden)
@@ -479,68 +457,40 @@ struct HomeView: View {
             .listRowBackground(Color.clear)
     }
 
+    // Recently uploaded empty section - matches reference design
+    @ViewBuilder
+    private var recentlyUploadedEmptySection: some View {
+        Section {
+            RecentlyUploadedEmptyCard(onAddMeal: {
+                showScanSheet = true
+            })
+            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
+        } header: {
+            LocalizedText(AppStrings.Home.recentlyUploaded, comment: "Section header for recently uploaded meals")
+                .font(.headline)
+                .foregroundColor(.primary)
+                .id("recently-uploaded-\(localizationManager.currentLanguage)")
+        }
+    }
+    
+    // Meals section with images - shown at the end when there are meals
     @ViewBuilder
     private var mealsSection: some View {
-        Group {
-            if !viewModel.recentMeals.isEmpty {
-                RecentMealsSection(
-                    meals: viewModel.recentMeals,
-                    repository: repository,
-                    onDelete: { meal in
-                        Task {
-                            await viewModel.deleteMeal(meal)
-                        }
-                    }
-                )
-                .transition(.opacity.combined(with: .move(edge: .bottom)))
-            } else {
-                EmptyMealsView(onScanTapped: {
-                    showScanSheet = true
-                })
-                .opacity((viewModel.hasDataLoaded) ? 1.0 : 0.3)
-                .listRowInsets(EdgeInsets(top: 40, leading: 0, bottom: 0, trailing: 0))
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
-            }
-        }
-    }
-}
-
-// MARK: - Floating Menu Item
-
-struct FloatingMenuItem: View {
-    let icon: String
-    let title: String
-    let color: Color
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                Text(title)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.primary)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(Color(UIColor.systemBackground))
-                    .cornerRadius(8)
-                    .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
-
-                ZStack {
-                    Circle()
-                        .fill(color)
-                        .frame(width: 48, height: 48)
-
-                    Image(systemName: icon)
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.white)
+        RecentMealsSection(
+            meals: viewModel.recentMeals,
+            repository: repository,
+            onDelete: { meal in
+                Task {
+                    await viewModel.deleteMeal(meal)
                 }
-                .shadow(color: color.opacity(0.4), radius: 4, x: 0, y: 2)
             }
-        }
+        )
+        .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
 }
+
 
 #Preview {
     let persistence = PersistenceController.shared

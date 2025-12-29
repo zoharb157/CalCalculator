@@ -5,6 +5,7 @@
 //  Created by Tareq Khalili on 15/12/2025.
 //
 
+import Combine
 import Firebase
 import FirebaseAnalytics
 import MavenCommonSwiftUI
@@ -24,6 +25,8 @@ struct playgroundApp: App {
     @State private var subscriptionStatus: Bool = false
     @State private var previousSubscriptionStatus: Bool = false
     @State private var languageRefreshID = UUID()
+    @State private var currentLocale: Locale = LocalizationManager.shared.currentLocale
+    @State private var currentLayoutDirection: LayoutDirection = LocalizationManager.shared.layoutDirection
 
     init() {
         do {
@@ -87,6 +90,8 @@ struct playgroundApp: App {
                 .modelContainer(modelContainer)
                 .preferredColorScheme(appearanceMode.colorScheme)
                 .environment(\.localization, LocalizationManager.shared)
+                .environment(\.layoutDirection, currentLayoutDirection)
+                .environment(\.locale, currentLocale)
                 .id(languageRefreshID)  // Force view refresh when language changes
                 .onReceive(NotificationCenter.default.publisher(for: .appearanceModeChanged)) {
                     notification in
@@ -99,46 +104,69 @@ struct playgroundApp: App {
                     // Force view refresh when language changes
                     if let languageCode = notification.object as? String {
                         print("🌐 Language changed to: \(languageCode)")
-                        // Update ID to force SwiftUI to recreate the view hierarchy
+                        
+                        // CRITICAL: Update environment values FIRST
+                        // This ensures LocalizedStringKey uses the new locale
+                        currentLocale = Locale(identifier: languageCode)
+                        currentLayoutDirection = LocalizationManager.shared.layoutDirection
+                        
+                        // Update localization environment to trigger @ObservedObject updates
+                        LocalizationManager.shared.objectWillChange.send()
+                        
+                        // CRITICAL: Update ID to force SwiftUI to recreate the entire view hierarchy
+                        // This ensures all views (including those using LocalizedStringKey) refresh
                         languageRefreshID = UUID()
+                        
+                        // Update environment values immediately
+                        Task { @MainActor in
+                            // Update environment values again to ensure they're current
+                            currentLocale = LocalizationManager.shared.currentLocale
+                            currentLayoutDirection = LocalizationManager.shared.layoutDirection
+                            
+                            // Force another refresh to catch any views that didn't update
+                            languageRefreshID = UUID()
+                            
+                            // Ensure environment values are updated and notify all observers
+                            LocalizationManager.shared.objectWillChange.send()
+                            
+                            // NOTE: Do NOT post another notification here - it causes infinite loop!
+                            // The notification was already posted by LocalizationManager
+                        }
                     }
                 }
                 .environment(sdk)  // Use direct environment like example app
                 .environment(\.isSubscribed, subscriptionStatus)  // Inject reactive subscription status
                 .task {
-                    // Update subscription status on app opening (non-blocking, low priority)
-                    Task.detached(priority: .utility) {
-                        do {
-                            try await sdk.updateIsSubscribed()
-                            await MainActor.run {
-                                // Store initial state before updating
-                                previousSubscriptionStatus = subscriptionStatus
-                                updateSubscriptionStatus()
-                                print(
-                                    "📱 Subscription status updated on app launch: \(subscriptionStatus)"
-                                )
-                            }
-                        } catch {
-                            print("⚠️ Failed to update subscription status on launch: \(error)")
-                        }
-                    }
-                }
-                .onChange(of: sdk.isSubscribed) { oldValue, newValue in
-                    // Subscription status changed - update reactive state
+                    // Initialize subscription status on app launch (respects debug override)
+                    // This ensures debug flag works immediately
                     updateSubscriptionStatus()
-                    previousSubscriptionStatus = newValue
-                    print("📱 Subscription status changed: \(newValue)")
                 }
+                // NOTE: Subscription status is ONLY updated when HTML paywall closes
+                // No automatic checks on app launch or onChange listeners
                 .onChange(of: UserSettings.shared.debugOverrideSubscription) { oldValue, newValue in
-                    // Debug override changed - update reactive state
+                    // Debug override changed - update reactive state (DEVELOPER ONLY)
                     updateSubscriptionStatus()
                     print("🔧 Debug override subscription: \(newValue ? "enabled" : "disabled")")
                 }
                 .onChange(of: UserSettings.shared.debugIsSubscribed) { oldValue, newValue in
-                    // Debug subscription value changed - update reactive state
+                    // Debug subscription value changed - update reactive state (DEVELOPER ONLY)
                     updateSubscriptionStatus()
                     previousSubscriptionStatus = newValue
                     print("🔧 Debug isSubscribed: \(newValue)")
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .subscriptionStatusUpdated)) { _ in
+                    // Subscription status updated from paywall dismiss - update reactive state
+                    updateSubscriptionStatus()
+                    let wasSubscribed = previousSubscriptionStatus
+                    previousSubscriptionStatus = subscriptionStatus
+                    
+                    // If user just subscribed, reset analysis count
+                    if !wasSubscribed && subscriptionStatus {
+                        AnalysisLimitManager.shared.resetAnalysisCount()
+                        print("📱 Analysis count reset due to subscription")
+                    }
+                    
+                    print("📱 Subscription status updated from paywall: \(subscriptionStatus)")
                 }
                 .onReceive(
                     NotificationCenter.default.publisher(
@@ -164,19 +192,32 @@ struct playgroundApp: App {
                     NotificationCenter.default.publisher(
                         for: UIApplication.didBecomeActiveNotification)
                 ) { _ in
-                    // Refresh subscription status when app becomes active (non-blocking)
-                    Task.detached(priority: .utility) {
+                    // NOTE: Subscription status is ONLY updated when HTML paywall closes
+                    // No automatic checks when app becomes active
+                    
+                    // Schedule weight reminder when app becomes active
+                    Task {
                         do {
-                            try await sdk.updateIsSubscribed()
-                            await MainActor.run {
-                                updateSubscriptionStatus()
-                                print(
-                                    "📱 Subscription status refreshed on app becoming active: \(subscriptionStatus)"
-                                )
-                            }
+                            try await WeightReminderService.shared.scheduleDailyReminder()
                         } catch {
-                            print("⚠️ Failed to refresh subscription status: \(error)")
+                            print("⚠️ Failed to schedule weight reminder: \(error)")
                         }
+                    }
+                    
+                    // Check if widget updated weight and notify ProgressView
+                    let appGroupIdentifier = "group.CalCalculatorAiPlaygournd.shared"
+                    if let sharedDefaults = UserDefaults(suiteName: appGroupIdentifier),
+                       sharedDefaults.bool(forKey: "widget.weightUpdatedFromWidget") {
+                        // Post notification so ProgressView can handle it
+                        NotificationCenter.default.post(name: .widgetWeightUpdated, object: nil)
+                    }
+                }
+                .task {
+                    // Schedule weight reminder on app launch
+                    do {
+                        try await WeightReminderService.shared.scheduleDailyReminder()
+                    } catch {
+                        print("⚠️ Failed to schedule weight reminder on launch: \(error)")
                     }
                 }
         }
@@ -184,16 +225,28 @@ struct playgroundApp: App {
 
     /// Update reactive subscription status based on debug override or SDK value
     /// Also syncs the subscription status to the widget via shared UserDefaults
+    /// Stores the value in UserDefaults so it persists across app launches
     private func updateSubscriptionStatus() {
         let settings = UserSettings.shared
+        let newStatus: Bool
+        
         if settings.debugOverrideSubscription {
-            subscriptionStatus = settings.debugIsSubscribed
+            // Debug override takes priority - use debug flag value
+            newStatus = settings.debugIsSubscribed
         } else {
-            subscriptionStatus = sdk.isSubscribed
+            // Use SDK value (only updated when paywall closes)
+            newStatus = sdk.isSubscribed
         }
+        
+        // Update state
+        subscriptionStatus = newStatus
+        
+        // Store in UserDefaults so it persists and can be read on app launch
+        // This ensures the value is only changed by debug flag or SDK
+        UserDefaults.standard.set(newStatus, forKey: "subscriptionStatus")
 
         // Sync subscription status to widget via shared UserDefaults
-        syncSubscriptionStatusToWidget(subscriptionStatus)
+        syncSubscriptionStatusToWidget(newStatus)
     }
 
     /// Syncs subscription status to the widget using App Groups shared UserDefaults
@@ -224,6 +277,9 @@ extension Notification.Name {
     static let addBurnedCaloriesToggled = Notification.Name("addBurnedCaloriesToggled")
     static let languageChanged = Notification.Name("languageChanged")
     static let mealReminderAction = Notification.Name("mealReminderAction")
+    static let weightReminderAction = Notification.Name("weightReminderAction")
+    static let widgetWeightUpdated = Notification.Name("widgetWeightUpdated")
     static let dietPlanChanged = Notification.Name("dietPlanChanged")
     static let foodLogged = Notification.Name("foodLogged")
+    static let subscriptionStatusUpdated = Notification.Name("subscriptionStatusUpdated")
 }

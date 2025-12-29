@@ -11,6 +11,7 @@ import SDK
 struct LockedFeatureOverlay: View {
     @Environment(\.isSubscribed) private var isSubscribed
     @Environment(TheSDK.self) private var sdk
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     @State private var showPaywall = false
     
     let message: String?
@@ -36,14 +37,16 @@ struct LockedFeatureOverlay: View {
                             .foregroundColor(.white)
                             .multilineTextAlignment(.center)
                     } else {
-                        Text("Premium Feature")
+                        Text(localizationManager.localizedString(for: AppStrings.Premium.premiumFeature))
                             .font(.headline)
                             .foregroundColor(.white)
+                            .id("premium-feature-\(localizationManager.currentLanguage)")
                     }
                     
-                    Button("Unlock") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.unlock)) {
                         showPaywall = true
                     }
+                    .id("unlock-btn-\(localizationManager.currentLanguage)")
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
                 }
@@ -67,15 +70,20 @@ struct LockedFeatureOverlay: View {
     }
 }
 
-/// Blurs content and shows Premium button overlay (matches reference app style)
+/// Shows content with empty data for non-subscribers, or full content for subscribers
+/// For Progress page: uses reduced blur to show data behind
 struct PremiumLockedContent<Content: View>: View {
     @Environment(\.isSubscribed) private var isSubscribed
     @Environment(TheSDK.self) private var sdk
     @State private var showPaywall = false
+    @State private var showDeclineConfirmation = false
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     let content: Content
+    let isProgressPage: Bool // Special handling for Progress page with reduced blur
     
-    init(@ViewBuilder content: () -> Content) {
+    init(isProgressPage: Bool = false, @ViewBuilder content: () -> Content) {
+        self.isProgressPage = isProgressPage
         self.content = content()
     }
     
@@ -84,15 +92,17 @@ struct PremiumLockedContent<Content: View>: View {
             if isSubscribed {
                 content
             } else {
-                // Apply blur with reduced intensity to preserve card boundaries
-                content
-                    .blur(radius: 4)
-                    .opacity(0.6)
-                    // Add subtle border to maintain card separation
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                    )
+                if isProgressPage {
+                    // Progress page: show content with moderate blur (teaser-style)
+                    content
+                        .blur(radius: 3) // Moderate blur - visible but clearly locked
+                        .opacity(0.6) // Reduced opacity to indicate premium lock
+                } else {
+                    // Other pages: show content with blur and reduced opacity
+                    content
+                        .blur(radius: 4) // Standard blur for premium content
+                        .opacity(0.5) // Reduced opacity to indicate premium lock
+                }
             }
             
             if !isSubscribed {
@@ -105,8 +115,9 @@ struct PremiumLockedContent<Content: View>: View {
                         HStack(spacing: 6) {
                             Image(systemName: "crown.fill")
                                 .font(.system(size: 13, weight: .bold))
-                            Text("Premium")
+                            Text(localizationManager.localizedString(for: AppStrings.Premium.premium))
                                 .font(.system(size: 15, weight: .bold))
+                                .id("premium-text-\(localizationManager.currentLanguage)")
                         }
                         .foregroundColor(.black)
                         .padding(.horizontal, 18)
@@ -125,6 +136,8 @@ struct PremiumLockedContent<Content: View>: View {
                         .clipShape(Capsule())
                         .shadow(color: Color.black.opacity(0.15), radius: 3, x: 0, y: 2)
                     }
+                    .accessibilityLabel(localizationManager.localizedString(for: AppStrings.Premium.upgradeToPremium))
+                    .accessibilityHint("Opens the premium subscription screen")
                     .padding(.bottom, 16)
                     
                     Spacer()
@@ -135,10 +148,46 @@ struct PremiumLockedContent<Content: View>: View {
             SDKView(
                 model: sdk,
                 page: .splash,
-                show: $showPaywall,
+                show: Binding(
+                    get: { showPaywall },
+                    set: { newValue in
+                        if !newValue && showPaywall {
+                            // Paywall was dismissed - THIS IS THE ONLY PLACE WE CHECK SUBSCRIPTION STATUS
+                            Task { @MainActor in
+                                // Update subscription status from SDK
+                                do {
+                                    try await sdk.updateIsSubscribed()
+                                    // Update reactive subscription status in app
+                                    NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
+                                } catch {
+                                    print("⚠️ Failed to update subscription status: \(error)")
+                                }
+                                
+                                // Check SDK directly - show decline confirmation if not subscribed
+                                if !sdk.isSubscribed {
+                                    showDeclineConfirmation = true
+                                } else {
+                                    // User subscribed - reset analysis count
+                                    AnalysisLimitManager.shared.resetAnalysisCount()
+                                }
+                            }
+                        }
+                        showPaywall = newValue
+                    }
+                ),
                 backgroundColor: .white,
                 ignoreSafeArea: true
             )
+        }
+        .overlay {
+            // Show confirmation modal on top of everything - no padding/blur around it
+            if showDeclineConfirmation {
+                PaywallDeclineConfirmationView(
+                    isPresented: $showDeclineConfirmation,
+                    showPaywall: $showPaywall
+                )
+                .zIndex(1000) // Ensure it's on top
+            }
         }
     }
 }

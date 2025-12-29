@@ -13,6 +13,7 @@ struct EditNutritionGoalsView: View {
     
     @Bindable var viewModel: ProfileViewModel
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     // Editing states
     @State private var isEditingCalories = false
@@ -41,7 +42,8 @@ struct EditNutritionGoalsView: View {
                 .padding(.bottom, 40)
             }
             .background(Color(UIColor.systemGroupedBackground))
-            .navigationTitle("Nutrition Goals")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.nutritionGoals))
+                .id("nutrition-goals-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -226,7 +228,8 @@ struct EditNutritionGoalsView: View {
                     .foregroundColor(.red)
                     .multilineTextAlignment(.center)
             } else {
-                Text("Calculates optimal macros based on your profile and current calorie goal")
+                Text(localizationManager.localizedString(for: AppStrings.Profile.calculatesOptimalMacros))
+                    .id("optimal-macros-\(localizationManager.currentLanguage)")
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -278,7 +281,8 @@ struct EditNutritionGoalsView: View {
                 Text("\(tempCalories)")
                     .font(.system(size: 56, weight: .bold))
                 
-                Text("calories per day")
+                Text(localizationManager.localizedString(for: AppStrings.Profile.caloriesPerDay))
+                    .id("calories-per-day-\(localizationManager.currentLanguage)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 
@@ -313,11 +317,13 @@ struct EditNutritionGoalsView: View {
                 
                 // Recommended calories info
                 VStack(spacing: 8) {
-                    Text("Recommended: \(viewModel.calculateRecommendedCalories()) cal")
+                    Text(String(format: localizationManager.localizedString(for: AppStrings.Profile.recommendedCalories), viewModel.calculateRecommendedCalories()))
+                        .id("recommended-cal-\(localizationManager.currentLanguage)")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     
-                    Text("Based on your profile and goals")
+                    Text(localizationManager.localizedString(for: AppStrings.Profile.basedOnProfileAndGoals))
+                        .id("based-on-goals-\(localizationManager.currentLanguage)")
                         .font(.caption)
                         .foregroundColor(.secondary.opacity(0.7))
                 }
@@ -326,14 +332,16 @@ struct EditNutritionGoalsView: View {
                 Spacer()
             }
             .padding(.top, 40)
-            .navigationTitle("Calorie Goal")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.calorieGoal))
+                .id("calorie-goal-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { isEditingCalories = false }
+                    Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) { isEditingCalories = false }
+                        .id("cancel-calories-\(localizationManager.currentLanguage)")
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.save)) {
                         viewModel.calorieGoal = tempCalories
                         if viewModel.autoAdjustMacros {
                             Task {
@@ -342,6 +350,7 @@ struct EditNutritionGoalsView: View {
                         }
                         isEditingCalories = false
                     }
+                    .id("save-calories-\(localizationManager.currentLanguage)")
                     .fontWeight(.semibold)
                 }
             }
@@ -381,14 +390,16 @@ struct EditNutritionGoalsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
                         isEditingProtein = false
                         isEditingCarbs = false
                         isEditingFat = false
                     }
+                    .id("cancel-macros-\(localizationManager.currentLanguage)")
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: onSave)
+                    Button(localizationManager.localizedString(for: AppStrings.Common.save), action: onSave)
+                        .id("save-macros-\(localizationManager.currentLanguage)")
                         .fontWeight(.semibold)
                 }
             }

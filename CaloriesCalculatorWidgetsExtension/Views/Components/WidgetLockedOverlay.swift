@@ -21,8 +21,8 @@ struct WidgetLockedContent<Content: View>: View {
     var body: some View {
         ZStack {
             content
-                .blur(radius: isSubscribed ? 0 : 6)
-                .opacity(isSubscribed ? 1.0 : 0.4)
+                .blur(radius: isSubscribed ? 0 : 8)
+                .opacity(isSubscribed ? 1.0 : 0.3)
             
             if !isSubscribed {
                 premiumOverlay
@@ -31,17 +31,38 @@ struct WidgetLockedContent<Content: View>: View {
     }
     
     private var premiumOverlay: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 10) {
+            // Lock icon
+            Image(systemName: "lock.fill")
+                .font(.system(size: 24, weight: .semibold))
+                .foregroundColor(.white)
+                .padding(12)
+                .background(
+                    Circle()
+                        .fill(Color.black.opacity(0.3))
+                )
+            
+            // Premium required message
+            VStack(spacing: 4) {
+                Text("Premium Required")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.white)
+                
+                Text("Upgrade to unlock")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.white.opacity(0.9))
+            }
+            
             // Premium badge with crown icon
             HStack(spacing: 4) {
                 Image(systemName: "crown.fill")
-                    .font(.system(size: 11, weight: .bold))
+                    .font(.system(size: 10, weight: .bold))
                 Text("Premium")
-                    .font(.system(size: 12, weight: .bold))
+                    .font(.system(size: 11, weight: .bold))
             }
             .foregroundColor(.black)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 7)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
             .background(
                 // Gold/yellow gradient matching the main app
                 LinearGradient(
@@ -54,8 +75,13 @@ struct WidgetLockedContent<Content: View>: View {
                 )
             )
             .clipShape(Capsule())
-            .shadow(color: Color.black.opacity(0.15), radius: 2, x: 0, y: 1)
+            .shadow(color: Color.black.opacity(0.2), radius: 3, x: 0, y: 2)
         }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.black.opacity(0.7))
+        )
     }
 }
 
@@ -75,11 +101,23 @@ struct WidgetAccessoryLockedContent<Content: View>: View {
         } else {
             ZStack {
                 content
-                    .blur(radius: 4)
-                    .opacity(0.3)
+                    .blur(radius: 6)
+                    .opacity(0.2)
                 
-                Image(systemName: "lock.fill")
-                    .font(.system(size: 16, weight: .semibold))
+                VStack(spacing: 6) {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.white)
+                    
+                    Text("Premium")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.white)
+                }
+                .padding(8)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.black.opacity(0.6))
+                )
             }
         }
     }

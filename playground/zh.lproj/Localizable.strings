@@ -1,0 +1,348 @@
+/* Common */
+"Save" = "保存";
+"Cancel" = "取消";
+"Done" = "完成";
+"Delete" = "删除";
+"Edit" = "编辑";
+"OK" = "确定";
+"Yes" = "是";
+"No" = "否";
+"Close" = "关闭";
+"Back" = "返回";
+"Next" = "下一步";
+"Continue" = "继续";
+"Loading..." = "加载中...";
+"Error" = "错误";
+"Success" = "成功";
+
+/* Home */
+"Home" = "首页";
+"Macronutrients" = "宏量营养素";
+"Recently uploaded" = "最近上传";
+"Calories left" = "剩余卡路里";
+"Gained" = "获得";
+"Lost" = "消耗";
+"Net" = "净";
+"Consumed" = "已摄入";
+"Burned" = "已消耗";
+"No meals yet" = "还没有餐食";
+"Tap + to add your first meal of the day" = "点击 + 添加今天的第一餐";
+
+/* Progress */
+"Progress" = "进度";
+"Current Weight" = "当前体重";
+"Weight Changes" = "体重变化";
+"Progress Photos" = "进度照片";
+"Daily Average Calories" = "日均卡路里";
+"BMI" = "BMI";
+"HealthKit" = "HealthKit";
+"Save Weight" = "保存体重";
+"Log Weight" = "记录体重";
+"View Progress" = "查看进度";
+"3 day" = "3天";
+"7 day" = "7天";
+"14 day" = "14天";
+"30 day" = "30天";
+"90 day" = "90天";
+"All Time" = "全部";
+"No change" = "无变化";
+
+/* Food */
+"Save Food" = "保存食物";
+"Log Food" = "记录食物";
+"Food saved successfully!" = "食物保存成功！";
+"Save Meal" = "保存餐食";
+"Describe" = "描述";
+"Scan" = "扫描";
+"Exercise" = "运动";
+"Diet" = "饮食";
+"Today's Activity" = "今日活动";
+"View All" = "查看全部";
+"Meals" = "餐食";
+"Workouts" = "锻炼";
+"No Logs Yet" = "还没有记录";
+"Start logging your meals and exercises to see them here" = "开始记录您的餐食和运动，即可在此查看";
+"No Activity Yet" = "还没有活动";
+"Start saving your meals and exercises to see them here" = "开始保存您的餐食和运动，即可在此查看";
+
+/* Exercise */
+"Save Exercise" = "保存运动";
+"Log Exercise" = "记录运动";
+"Exercise saved successfully!" = "运动保存成功！";
+"Select Exercise Type" = "选择运动类型";
+"Duration" = "时长";
+"Intensity" = "强度";
+"Calories" = "卡路里";
+"Describe Exercise" = "描述运动";
+"Manual Entry" = "手动输入";
+
+/* Diet Plan */
+"Diet Plan" = "饮食计划";
+"My Diet" = "我的饮食";
+"Create Diet Plan" = "创建饮食计划";
+"Edit Diet Plan" = "编辑饮食计划";
+"Delete Diet Plan" = "删除饮食计划";
+"No Diet Plan" = "没有饮食计划";
+"Create a diet plan to schedule repetitive meals and track your adherence" = "创建饮食计划以安排重复餐食并跟踪您的坚持情况";
+"Today's Diet Plan" = "今日饮食计划";
+"meals completed" = "餐食已完成";
+"Scheduled Meals" = "计划餐食";
+"No meals scheduled" = "没有计划餐食";
+"Add Scheduled Meal" = "添加计划餐食";
+"Daily Calorie Goal" = "每日卡路里目标";
+"Adherence" = "坚持度";
+"Adherence Trend" = "坚持度趋势";
+"Today's Schedule" = "今日安排";
+"Insights" = "洞察";
+"Weekly Statistics" = "周统计";
+"No data available" = "无可用数据";
+"Off-Diet Meals" = "计划外餐食";
+"calories from off-diet meals" = "计划外餐食的卡路里";
+"You can only have one active diet plan at a time. Creating a new plan will replace this one." = "您一次只能有一个活跃的饮食计划。创建新计划将替换此计划。";
+"Please add at least one scheduled meal before saving the diet plan." = "请在保存饮食计划之前至少添加一个计划餐食。";
+"No Meals Scheduled" = "没有计划餐食";
+
+/* Profile */
+"Profile" = "个人资料";
+"Settings" = "设置";
+"Language" = "语言";
+"Select Language" = "选择语言";
+"Export Data" = "导出数据";
+"Weight Data" = "体重数据";
+"Nutrition Data" = "营养数据";
+"Export your weight tracking history as a PDF file." = "将您的体重跟踪历史导出为PDF文件。";
+"Export your meal logs and nutrition data as PDF files." = "将您的餐食记录和营养数据导出为PDF文件。";
+"Export all your data in a comprehensive PDF report." = "将所有数据导出为综合PDF报告。";
+"Generating PDF..." = "正在生成PDF...";
+"Export Error" = "导出错误";
+"An unknown error occurred." = "发生未知错误。";
+
+/* Weight */
+"Save Your Weight" = "保存您的体重";
+"Track your progress by saving your current weight" = "通过保存当前体重来跟踪您的进度";
+"Weight" = "体重";
+"Target Weight" = "目标体重";
+"Start Weight" = "起始体重";
+"Goal Weight" = "目标体重";
+"Last" = "最后";
+"No weight logged" = "未记录体重";
+
+/* Premium */
+"Premium Required" = "需要高级版";
+"Upgrade to unlock" = "升级以解锁";
+"Are you sure you want to skip the free trial?" = "您确定要跳过免费试用吗？";
+"Claim your free trial now without paying" = "立即免费领取试用，无需付费";
+"Start Free Trial" = "开始免费试用";
+"Not now" = "暂不";
+"Premium feature" = "高级功能";
+
+/* History */
+"History" = "历史";
+"No History Yet" = "还没有历史";
+"Your meal history will appear here\nonce you start tracking" = "您的餐食历史将在此显示\n一旦您开始跟踪";
+"No Results" = "无结果";
+"No entries found for the selected time period" = "所选时间段内未找到条目";
+"Clear Filters" = "清除筛选";
+
+/* Onboarding */
+"Welcome" = "欢迎";
+"Get Started" = "开始";
+"Skip" = "跳过";
+
+/* Errors */
+"Something went wrong" = "出了点问题";
+"Try Again" = "重试";
+"No Food Detected" = "未检测到食物";
+"Camera Error" = "相机错误";
+"Permission Denied" = "权限被拒绝";
+
+/* Notifications */
+"Time to Log Your Weight" = "记录体重的时间到了";
+"Track your progress by logging your weight this morning." = "通过记录今天早上的体重来跟踪您的进度。";
+
+
+/* Additional UI Strings */
+"Today's Activity" = "今日活动";
+"View All" = "查看全部";
+"Quick Save" = "快速保存";
+"What did you eat?" = "您吃了什么？";
+"Estimated Calories" = "估计卡路里";
+"kcal" = "大卡";
+"Quick Presets" = "快速预设";
+"Category" = "类别";
+"What exercise did you do?" = "您做了什么运动？";
+"minutes" = "分钟";
+"Calories Burned" = "消耗的卡路里";
+"Capture Your Meal" = "拍摄您的餐食";
+"Take a photo or choose from your library" = "拍照或从您的图库中选择";
+"Take Photo" = "拍照";
+"Voice Log" = "语音记录";
+"Describe Your Food" = "描述您的食物";
+"Tell us what you ate" = "告诉我们您吃了什么";
+"Describe your meal in natural language and we'll calculate the nutrition for you" = "用自然语言描述您的餐食，我们将为您计算营养";
+"I had..." = "我吃了...";
+"Try saying:" = "试试说：";
+"Meal Category" = "餐食类别";
+"Save weight" = "保存体重";
+"Start:" = "开始：";
+"Goal:" = "目标：";
+"Body Mass Index" = "身体质量指数";
+"View Daily Breakdown" = "查看每日明细";
+"Health Data" = "健康数据";
+"Health Access Required" = "需要健康访问权限";
+"Go to Settings > Privacy & Security > Health > CalCalculator" = "前往设置 > 隐私与安全性 > 健康 > CalCalculator";
+"Open Settings" = "打开设置";
+"Delete Entry" = "删除条目";
+"This cannot be undone." = "此操作无法撤销。";
+"cal" = "大卡";
+"calories" = "卡路里";
+"No meals" = "没有餐食";
+"Today's progress" = "今日进度";
+"Tap to view details for this day" = "点击查看此日详情";
+"Meals" = "餐食";
+"Consumed" = "已摄入";
+"Workouts" = "锻炼";
+"Burned" = "已消耗";
+"Save Food" = "保存食物";
+"Save Exercise" = "保存运动";
+"Save Meal" = "保存餐食";
+"Save [type]" = "保存%@";
+"Delete \"%@\"?" = "删除\"%@\"？";
+"Delete %@ exercise?" = "删除%@运动？";
+"Microphone Access" = "麦克风访问";
+"Voice logging requires microphone access. Please enable it in Settings to use this feature." = "语音记录需要麦克风访问权限。请在设置中启用以使用此功能。";
+"Settings" = "设置";
+"An error occurred" = "发生错误";
+"Food logged successfully!" = "食物记录成功！";
+
+/* Progress Additional */
+"Save weight" = "保存体重";
+"Start" = "开始";
+"Goal" = "目标";
+"Body Mass Index" = "身体质量指数";
+"View Daily Breakdown" = "查看每日明细";
+"Health Data" = "健康数据";
+"Health Access Required" = "需要健康访问权限";
+"Go to Settings > Privacy & Security > Health > CalCalculator" = "前往设置 > 隐私与安全性 > 健康 > CalCalculator";
+"Open Settings" = "打开设置";
+"Weight Progress" = "体重进度";
+"Current" = "当前";
+"Change" = "变化";
+"Weight Trend" = "体重趋势";
+"No Weight Data" = "没有体重数据";
+"Save your weight to see progress over time" = "保存您的体重以查看随时间推移的进度";
+"entries" = "条目";
+"No entries yet" = "还没有条目";
+"Calories Breakdown" = "卡路里明细";
+"Daily Average" = "日均";
+"days tracked" = "已跟踪天数";
+"Calorie Trend" = "卡路里趋势";
+"No Calorie Data" = "没有卡路里数据";
+"Start tracking meals to see your calorie trends" = "开始跟踪餐食以查看您的卡路里趋势";
+"Daily Breakdown" = "每日明细";
+"days" = "天";
+"avg" = "平均";
+"Highest" = "最高";
+"Lowest" = "最低";
+"Your workout burned" = "您的锻炼消耗了";
+"Cals" = "大卡";
+"Burned Calories" = "消耗的卡路里";
+"Saving..." = "保存中...";
+"Saved Successfully!" = "保存成功！";
+"Your food has been logged." = "您的食物已记录。";
+"Your exercise has been logged." = "您的运动已记录。";
+"Transcribed:" = "转录：";
+"Coming Soon" = "即将推出";
+"Add meals to your diet plan to see them here" = "将餐食添加到您的饮食计划以在此处查看";
+"Goal not met" = "未达到目标";
+"Loading history..." = "加载历史记录...";
+"No entries found for \"%@\"" = "未找到 \"%@\" 的条目";
+"Delete %@ exercise? This cannot be undone." = "删除 %@ 运动？此操作无法撤销。";
+"meals" = "餐食";
+"exercises" = "运动";
+"Loading logs..." = "加载记录...";
+"Start logging your meals and exercises to see them here" = "开始记录您的餐食和运动以在此处查看";
+"Generating Your Plan" = "正在生成您的计划";
+"Your Personalized Goals" = "您的个性化目标";
+"Based on your profile and objectives" = "基于您的个人资料和目标";
+"AI is processing your food image" = "AI 正在处理您的食物图像";
+
+"over" = "超过";
+
+/* Food Additional */
+"Category:" = "类别：";
+"Analyzing your food..." = "正在分析您的食物...";
+"Using AI to identify calories and nutrients" = "使用AI识别卡路里和营养素";
+"Quick Add" = "快速添加";
+"Common Foods" = "常见食物";
+"Recent Foods" = "最近食物";
+"Saved Foods" = "已保存食物";
+"Portion" = "份量";
+"serving" = "份";
+"oz" = "盎司";
+"cup" = "杯";
+"piece" = "片";
+
+/* Exercise Additional */
+"Describe your workout" = "描述您的锻炼";
+"Duration (minutes)" = "持续时间（分钟）";
+"Enter calories burned" = "输入消耗的卡路里";
+"Set intensity" = "设置强度";
+"mins" = "分钟";
+
+/* Diet Plan Additional */
+"Active" = "活跃";
+"Inactive" = "非活跃";
+
+/* Additional Missing Strings */
+"Retry" = "重试";
+"Something went wrong" = "出了点问题";
+"Try Again" = "重试";
+"Dismiss" = "关闭";
+"Dismiss keyboard" = "关闭键盘";
+"Premium Feature" = "高级功能";
+"Premium" = "高级";
+"Upgrade to Premium" = "升级到高级版";
+"Export Data" = "导出数据";
+"Weight History" = "体重历史";
+"Meal History" = "用餐历史";
+"Daily Nutrition Summary" = "每日营养摘要";
+"No weight entries yet" = "还没有体重记录";
+"Start tracking your weight to see your progress here" = "开始记录体重以在此查看您的进度";
+"Preferences" = "偏好设置";
+"Choose your preferred appearance" = "选择您喜欢的外观";
+"Scan Meal" = "扫描餐食";
+"Capture Your Meal" = "拍摄您的餐食";
+"Take a photo or choose from your library" = "拍照或从相册中选择";
+"Analysis Results" = "分析结果";
+"Fix Result" = "修正结果";
+"What is this food?" = "这是什么食物？";
+"Ingredients" = "成分";
+"Total Nutrition" = "总营养";
+"Notes" = "备注";
+"Meal Details" = "餐食详情";
+"Loading meal details..." = "正在加载餐食详情...";
+"Unable to load meal details" = "无法加载餐食详情";
+"Nutrition Breakdown" = "营养分解";
+"No Meals" = "没有餐食";
+"No meals were recorded for this day" = "这一天没有记录餐食";
+"My Badges" = "我的徽章";
+"more" = "更多";
+"Tap to view all badges and achievements" = "点击查看所有徽章和成就";
+"Today" = "今天";
+"Save Your Weight" = "保存您的体重";
+"Track your progress by saving your current weight" = "通过保存您当前的体重来跟踪您的进度";
+"High" = "高";
+"Medium" = "中";
+"Low" = "低";
+"Welcome to CalCalculator" = "欢迎使用 CalCalculator";
+"What is your gender?" = "您的性别是什么？";
+"How old are you?" = "您多大了？";
+"Body Metrics" = "身体指标";
+"You can change this anytime in Settings." = "您可以随时在设置中更改此选项。";
+"Allow Notifications" = "允许通知";
+"Enable Notifications" = "启用通知";
+"CalCalculator" = "CalCalculator";
+"Track your nutrition with ease" = "轻松跟踪您的营养";
+"Already have an account?" = "已有账户？";
+"Sign In" = "登录";

@@ -72,3 +72,4 @@ ExportOptions*.plist
 # Test/Example files
 Ios-Bundle-test
 translate-ios-example
+build/

@@ -1,0 +1,347 @@
+/* Common */
+"Save" = "Salva";
+"Cancel" = "Annulla";
+"Done" = "Fatto";
+"Delete" = "Elimina";
+"Edit" = "Modifica";
+"OK" = "OK";
+"Yes" = "Sì";
+"No" = "No";
+"Close" = "Chiudi";
+"Back" = "Indietro";
+"Next" = "Avanti";
+"Continue" = "Continua";
+"Loading..." = "Caricamento...";
+"Error" = "Errore";
+"Success" = "Successo";
+
+/* Home */
+"Home" = "Home";
+"Macronutrients" = "Macronutrienti";
+"Recently uploaded" = "Caricato di recente";
+"Calories left" = "Calorie rimanenti";
+"Gained" = "Guadagnato";
+"Lost" = "Perso";
+"Net" = "Netto";
+"Consumed" = "Consumato";
+"Burned" = "Bruciato";
+"No meals yet" = "Nessun pasto ancora";
+"Tap + to add your first meal of the day" = "Tocca + per aggiungere il tuo primo pasto della giornata";
+
+/* Progress */
+"Progress" = "Progressi";
+"Current Weight" = "Peso Attuale";
+"Weight Changes" = "Variazioni di Peso";
+"Progress Photos" = "Foto dei Progressi";
+"Daily Average Calories" = "Media Giornaliera di Calorie";
+"BMI" = "IMC";
+"HealthKit" = "HealthKit";
+"Save Weight" = "Salva Peso";
+"Log Weight" = "Registra Peso";
+"View Progress" = "Visualizza Progressi";
+"3 day" = "3 giorni";
+"7 day" = "7 giorni";
+"14 day" = "14 giorni";
+"30 day" = "30 giorni";
+"90 day" = "90 giorni";
+"All Time" = "Sempre";
+"No change" = "Nessun cambiamento";
+
+/* Food */
+"Save Food" = "Salva Cibo";
+"Log Food" = "Registra Cibo";
+"Food saved successfully!" = "Cibo salvato con successo!";
+"Save Meal" = "Salva Pasto";
+"Describe" = "Descrivi";
+"Scan" = "Scansiona";
+"Exercise" = "Esercizio";
+"Diet" = "Dieta";
+"Today's Activity" = "Attività di Oggi";
+"View All" = "Vedi Tutto";
+"Meals" = "Pasti";
+"Workouts" = "Allenamenti";
+"No Logs Yet" = "Nessun Registro Ancora";
+"Start logging your meals and exercises to see them here" = "Inizia a registrare i tuoi pasti e esercizi per vederli qui";
+"No Activity Yet" = "Nessuna Attività Ancora";
+"Start saving your meals and exercises to see them here" = "Inizia a salvare i tuoi pasti e esercizi per vederli qui";
+
+/* Exercise */
+"Save Exercise" = "Salva Esercizio";
+"Log Exercise" = "Registra Esercizio";
+"Exercise saved successfully!" = "Esercizio salvato con successo!";
+"Select Exercise Type" = "Seleziona Tipo di Esercizio";
+"Duration" = "Durata";
+"Intensity" = "Intensità";
+"Calories" = "Calorie";
+"Describe Exercise" = "Descrivi Esercizio";
+"Manual Entry" = "Inserimento Manuale";
+
+/* Diet Plan */
+"Diet Plan" = "Piano Alimentare";
+"My Diet" = "La Mia Dieta";
+"Create Diet Plan" = "Crea Piano Alimentare";
+"Edit Diet Plan" = "Modifica Piano Alimentare";
+"Delete Diet Plan" = "Elimina Piano Alimentare";
+"No Diet Plan" = "Nessun Piano Alimentare";
+"Create a diet plan to schedule repetitive meals and track your adherence" = "Crea un piano alimentare per programmare pasti ripetitivi e tracciare la tua aderenza";
+"Today's Diet Plan" = "Piano Alimentare di Oggi";
+"meals completed" = "pasti completati";
+"Scheduled Meals" = "Pasti Programmati";
+"No meals scheduled" = "Nessun pasto programmato";
+"Add Scheduled Meal" = "Aggiungi Pasto Programmato";
+"Daily Calorie Goal" = "Obiettivo Calorico Giornaliero";
+"Adherence" = "Aderenza";
+"Adherence Trend" = "Tendenza di Aderenza";
+"Today's Schedule" = "Programma di Oggi";
+"Insights" = "Approfondimenti";
+"Weekly Statistics" = "Statistiche Settimanali";
+"No data available" = "Nessun dato disponibile";
+"Off-Diet Meals" = "Pasti Fuori Dieta";
+"calories from off-diet meals" = "calorie da pasti fuori dieta";
+"You can only have one active diet plan at a time. Creating a new plan will replace this one." = "Puoi avere solo un piano alimentare attivo alla volta. Creare un nuovo piano sostituirà questo.";
+"Please add at least one scheduled meal before saving the diet plan." = "Per favore aggiungi almeno un pasto programmato prima di salvare il piano alimentare.";
+"No Meals Scheduled" = "Nessun Pasto Programmato";
+
+/* Profile */
+"Profile" = "Profilo";
+"Settings" = "Impostazioni";
+"Language" = "Lingua";
+"Select Language" = "Seleziona Lingua";
+"Export Data" = "Esporta Dati";
+"Weight Data" = "Dati del Peso";
+"Nutrition Data" = "Dati Nutrizionali";
+"Export your weight tracking history as a PDF file." = "Esporta la tua cronologia di tracciamento del peso come file PDF.";
+"Export your meal logs and nutrition data as PDF files." = "Esporta i tuoi registri dei pasti e dati nutrizionali come file PDF.";
+"Export all your data in a comprehensive PDF report." = "Esporta tutti i tuoi dati in un rapporto PDF completo.";
+"Generating PDF..." = "Generazione PDF...";
+"Export Error" = "Errore di Esportazione";
+"An unknown error occurred." = "Si è verificato un errore sconosciuto.";
+
+/* Weight */
+"Save Your Weight" = "Salva il Tuo Peso";
+"Track your progress by saving your current weight" = "Traccia i tuoi progressi salvando il tuo peso attuale";
+"Weight" = "Peso";
+"Target Weight" = "Peso Obiettivo";
+"Start Weight" = "Peso Iniziale";
+"Goal Weight" = "Peso Obiettivo";
+"Last" = "Ultimo";
+"No weight logged" = "Nessun peso registrato";
+
+/* Premium */
+"Premium Required" = "Premium Richiesto";
+"Upgrade to unlock" = "Aggiorna per sbloccare";
+"Are you sure you want to skip the free trial?" = "Sei sicuro di voler saltare la prova gratuita?";
+"Claim your free trial now without paying" = "Richiedi la tua prova gratuita ora senza pagare";
+"Start Free Trial" = "Inizia Prova Gratuita";
+"Not now" = "Non ora";
+"Premium feature" = "Funzione premium";
+
+/* History */
+"History" = "Cronologia";
+"No History Yet" = "Nessuna Cronologia Ancora";
+"Your meal history will appear here\nonce you start tracking" = "La tua cronologia dei pasti apparirà qui\nuna volta che inizi a tracciare";
+"No Results" = "Nessun Risultato";
+"No entries found for the selected time period" = "Nessuna voce trovata per il periodo di tempo selezionato";
+"Clear Filters" = "Cancella Filtri";
+
+/* Onboarding */
+"Welcome" = "Benvenuto";
+"Get Started" = "Inizia";
+"Skip" = "Salta";
+
+/* Errors */
+"Something went wrong" = "Qualcosa è andato storto";
+"Try Again" = "Riprova";
+"No Food Detected" = "Nessun Cibo Rilevato";
+"Camera Error" = "Errore Fotocamera";
+"Permission Denied" = "Permesso Negato";
+
+/* Notifications */
+"Time to Log Your Weight" = "Tempo di Registrare il Tuo Peso";
+"Track your progress by logging your weight this morning." = "Traccia i tuoi progressi registrando il tuo peso questa mattina.";
+
+
+/* Additional UI Strings */
+"View All" = "Vedi Tutto";
+"Quick Save" = "Salvataggio Rapido";
+"What did you eat?" = "Cosa hai mangiato?";
+"Estimated Calories" = "Calorie Stimate";
+"kcal" = "kcal";
+"Quick Presets" = "Impostazioni Rapide";
+"Category" = "Categoria";
+"What exercise did you do?" = "Che esercizio hai fatto?";
+"minutes" = "minuti";
+"Calories Burned" = "Calorie Bruciate";
+"Capture Your Meal" = "Cattura il Tuo Pasto";
+"Take a photo or choose from your library" = "Scatta una foto o scegli dalla tua libreria";
+"Take Photo" = "Scatta Foto";
+"Voice Log" = "Registro Vocale";
+"Describe Your Food" = "Descrivi il Tuo Cibo";
+"Tell us what you ate" = "Raccontaci cosa hai mangiato";
+"Describe your meal in natural language and we'll calculate the nutrition for you" = "Descrivi il tuo pasto in linguaggio naturale e calcoleremo la nutrizione per te";
+"I had..." = "Ho mangiato...";
+"Try saying:" = "Prova a dire:";
+"Meal Category" = "Categoria Pasto";
+"Save weight" = "Salva peso";
+"Start:" = "Inizio:";
+"Goal:" = "Obiettivo:";
+"Body Mass Index" = "Indice di Massa Corporea";
+"View Daily Breakdown" = "Visualizza Dettaglio Giornaliero";
+"Health Data" = "Dati Salute";
+"Health Access Required" = "Accesso Salute Richiesto";
+"Go to Settings > Privacy & Security > Health > CalCalculator" = "Vai a Impostazioni > Privacy e Sicurezza > Salute > CalCalculator";
+"Open Settings" = "Apri Impostazioni";
+"Delete Entry" = "Elimina Voce";
+"This cannot be undone." = "Questo non può essere annullato.";
+"cal" = "cal";
+"calories" = "calorie";
+"No meals" = "Nessun pasto";
+"Today's progress" = "Progressi di oggi";
+"Tap to view details for this day" = "Tocca per visualizzare i dettagli di questo giorno";
+"Meals" = "Pasti";
+"Consumed" = "Consumato";
+"Workouts" = "Allenamenti";
+"Burned" = "Bruciato";
+"Save Food" = "Salva Cibo";
+"Save Exercise" = "Salva Esercizio";
+"Save Meal" = "Salva Pasto";
+"Save [type]" = "Salva %@";
+"Delete \"%@\"?" = "Eliminare \"%@\"?";
+"Delete %@ exercise?" = "Eliminare esercizio %@?";
+"Microphone Access" = "Accesso Microfono";
+"Voice logging requires microphone access. Please enable it in Settings to use this feature." = "Il registro vocale richiede l'accesso al microfono. Si prega di abilitarlo nelle Impostazioni per utilizzare questa funzione.";
+"Settings" = "Impostazioni";
+"An error occurred" = "Si è verificato un errore";
+"Food logged successfully!" = "Cibo registrato con successo!";
+
+/* Progress Additional */
+"Save weight" = "Salva peso";
+"Start" = "Inizio";
+"Goal" = "Obiettivo";
+"Body Mass Index" = "Indice di Massa Corporea";
+"View Daily Breakdown" = "Visualizza Dettaglio Giornaliero";
+"Health Data" = "Dati Salute";
+"Health Access Required" = "Accesso Salute Richiesto";
+"Go to Settings > Privacy & Security > Health > CalCalculator" = "Vai a Impostazioni > Privacy e Sicurezza > Salute > CalCalculator";
+"Open Settings" = "Apri Impostazioni";
+"Weight Progress" = "Progresso del Peso";
+"Current" = "Attuale";
+"Change" = "Cambiamento";
+"Weight Trend" = "Tendenza del Peso";
+"No Weight Data" = "Nessun Dato di Peso";
+"Save your weight to see progress over time" = "Salva il tuo peso per vedere i progressi nel tempo";
+"entries" = "voci";
+"No entries yet" = "Nessuna voce ancora";
+"Calories Breakdown" = "Dettaglio Calorie";
+"Daily Average" = "Media Giornaliera";
+"days tracked" = "giorni tracciati";
+"Calorie Trend" = "Tendenza Calorie";
+"No Calorie Data" = "Nessun Dato di Calorie";
+"Start tracking meals to see your calorie trends" = "Inizia a tracciare i pasti per vedere le tue tendenze caloriche";
+"Daily Breakdown" = "Dettaglio Giornaliero";
+"days" = "giorni";
+"avg" = "media";
+"Highest" = "Più Alto";
+"Lowest" = "Più Basso";
+"Your workout burned" = "Il tuo allenamento ha bruciato";
+"Cals" = "Cal";
+"Burned Calories" = "Calorie Bruciate";
+"Saving..." = "Salvataggio...";
+"Saved Successfully!" = "Salvato con Successo!";
+"Your food has been logged." = "Il tuo cibo è stato registrato.";
+"Your exercise has been logged." = "Il tuo esercizio è stato registrato.";
+"Transcribed:" = "Trascritto:";
+"Coming Soon" = "Prossimamente";
+"Add meals to your diet plan to see them here" = "Aggiungi pasti al tuo piano dietetico per vederli qui";
+"Goal not met" = "Obiettivo non raggiunto";
+"Loading history..." = "Caricamento cronologia...";
+"No entries found for \"%@\"" = "Nessuna voce trovata per \"%@\"";
+"Delete %@ exercise? This cannot be undone." = "Eliminare esercizio %@? Questo non può essere annullato.";
+"meals" = "pasti";
+"exercises" = "esercizi";
+"Loading logs..." = "Caricamento registri...";
+"Start logging your meals and exercises to see them here" = "Inizia a registrare i tuoi pasti ed esercizi per vederli qui";
+"Generating Your Plan" = "Generazione del Tuo Piano";
+"Your Personalized Goals" = "I Tuoi Obiettivi Personalizzati";
+"Based on your profile and objectives" = "Basato sul tuo profilo e obiettivi";
+"AI is processing your food image" = "L'IA sta elaborando la tua immagine del cibo";
+
+"over" = "oltre";
+
+/* Food Additional */
+"Category:" = "Categoria:";
+"Analyzing your food..." = "Analisi del tuo cibo...";
+"Using AI to identify calories and nutrients" = "Utilizzo dell'IA per identificare calorie e nutrienti";
+"Quick Add" = "Aggiunta Rapida";
+"Common Foods" = "Alimenti Comuni";
+"Recent Foods" = "Alimenti Recenti";
+"Saved Foods" = "Alimenti Salvati";
+"Portion" = "Porzione";
+"serving" = "porzione";
+"oz" = "oz";
+"cup" = "tazza";
+"piece" = "pezzo";
+
+/* Exercise Additional */
+"Describe your workout" = "Descrivi il tuo allenamento";
+"Duration (minutes)" = "Durata (minuti)";
+"Enter calories burned" = "Inserisci calorie bruciate";
+"Set intensity" = "Imposta intensità";
+"mins" = "min";
+
+/* Diet Plan Additional */
+"Active" = "Attivo";
+"Inactive" = "Inattivo";
+
+/* Additional Missing Strings */
+"Retry" = "Riprova";
+"Something went wrong" = "Qualcosa è andato storto";
+"Try Again" = "Riprova";
+"Dismiss" = "Ignora";
+"Dismiss keyboard" = "Chiudi tastiera";
+"Premium Feature" = "Funzione Premium";
+"Premium" = "Premium";
+"Upgrade to Premium" = "Passa a Premium";
+"Export Data" = "Esporta dati";
+"Weight History" = "Storico peso";
+"Meal History" = "Storico pasti";
+"Daily Nutrition Summary" = "Riepilogo nutrizionale giornaliero";
+"No weight entries yet" = "Nessuna voce peso ancora";
+"Start tracking your weight to see your progress here" = "Inizia a tracciare il tuo peso per vedere i tuoi progressi qui";
+"Preferences" = "Preferenze";
+"Choose your preferred appearance" = "Scegli il tuo aspetto preferito";
+"Scan Meal" = "Scansiona pasto";
+"Capture Your Meal" = "Cattura il tuo pasto";
+"Take a photo or choose from your library" = "Scatta una foto o scegli dalla tua libreria";
+"Analysis Results" = "Risultati analisi";
+"Fix Result" = "Correggi risultato";
+"What is this food?" = "Cos'è questo cibo?";
+"Ingredients" = "Ingredienti";
+"Total Nutrition" = "Nutrizione totale";
+"Notes" = "Note";
+"Meal Details" = "Dettagli pasto";
+"Loading meal details..." = "Caricamento dettagli pasto...";
+"Unable to load meal details" = "Impossibile caricare i dettagli del pasto";
+"Nutrition Breakdown" = "Ripartizione nutrizionale";
+"No Meals" = "Nessun pasto";
+"No meals were recorded for this day" = "Nessun pasto registrato per questo giorno";
+"My Badges" = "Le mie medaglie";
+"more" = "altro";
+"Tap to view all badges and achievements" = "Tocca per vedere tutte le medaglie e i risultati";
+"Today" = "Oggi";
+"Save Your Weight" = "Salva il tuo peso";
+"Track your progress by saving your current weight" = "Traccia i tuoi progressi salvando il tuo peso attuale";
+"High" = "Alto";
+"Medium" = "Medio";
+"Low" = "Basso";
+"Welcome to CalCalculator" = "Benvenuto in CalCalculator";
+"What is your gender?" = "Qual è il tuo genere?";
+"How old are you?" = "Quanti anni hai?";
+"Body Metrics" = "Metriche corporee";
+"You can change this anytime in Settings." = "Puoi cambiare questo in qualsiasi momento nelle Impostazioni.";
+"Allow Notifications" = "Consenti notifiche";
+"Enable Notifications" = "Abilita notifiche";
+"CalCalculator" = "CalCalculator";
+"Track your nutrition with ease" = "Traccia la tua nutrizione con facilità";
+"Already have an account?" = "Hai già un account?";
+"Sign In" = "Accedi";

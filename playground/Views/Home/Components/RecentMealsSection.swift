@@ -11,6 +11,7 @@ struct RecentMealsSection: View {
     let meals: [Meal]
     let repository: MealRepository
     let onDelete: (Meal) -> Void
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
         sectionContent
@@ -32,8 +33,10 @@ struct RecentMealsSection: View {
                 }
             }
         } header: {
-            Text("Recent Meals")
+            Text(localizationManager.localizedString(for: AppStrings.Home.recentlyUploaded))
+                .id("recently-uploaded-\(localizationManager.currentLanguage)")
                 .font(.headline)
+                .foregroundColor(.primary)
         }
     }
 
@@ -41,7 +44,8 @@ struct RecentMealsSection: View {
         Button(role: .destructive) {
             onDelete(meal)
         } label: {
-            Label("Delete", systemImage: "trash")
+            Label(localizationManager.localizedString(for: AppStrings.Home.delete), systemImage: "trash")
+                .id("delete-recent-\(localizationManager.currentLanguage)")
         }
     }
 }

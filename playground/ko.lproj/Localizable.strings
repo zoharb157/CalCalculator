@@ -1,0 +1,347 @@
+/* Common */
+"Save" = "저장";
+"Cancel" = "취소";
+"Done" = "완료";
+"Delete" = "삭제";
+"Edit" = "편집";
+"OK" = "확인";
+"Yes" = "예";
+"No" = "아니오";
+"Close" = "닫기";
+"Back" = "뒤로";
+"Next" = "다음";
+"Continue" = "계속";
+"Loading..." = "로딩 중...";
+"Error" = "오류";
+"Success" = "성공";
+
+/* Home */
+"Home" = "홈";
+"Macronutrients" = "대량 영양소";
+"Recently uploaded" = "최근 업로드";
+"Calories left" = "남은 칼로리";
+"Gained" = "획득";
+"Lost" = "소모";
+"Net" = "순";
+"Consumed" = "섭취";
+"Burned" = "소모";
+"No meals yet" = "아직 식사 없음";
+"Tap + to add your first meal of the day" = "+를 탭하여 오늘의 첫 식사를 추가하세요";
+
+/* Progress */
+"Progress" = "진행 상황";
+"Current Weight" = "현재 체중";
+"Weight Changes" = "체중 변화";
+"Progress Photos" = "진행 사진";
+"Daily Average Calories" = "일일 평균 칼로리";
+"BMI" = "BMI";
+"HealthKit" = "HealthKit";
+"Save Weight" = "체중 저장";
+"Log Weight" = "체중 기록";
+"View Progress" = "진행 상황 보기";
+"3 day" = "3일";
+"7 day" = "7일";
+"14 day" = "14일";
+"30 day" = "30일";
+"90 day" = "90일";
+"All Time" = "전체";
+"No change" = "변화 없음";
+
+/* Food */
+"Save Food" = "음식 저장";
+"Log Food" = "음식 기록";
+"Food saved successfully!" = "음식이 성공적으로 저장되었습니다!";
+"Save Meal" = "식사 저장";
+"Describe" = "설명";
+"Scan" = "스캔";
+"Exercise" = "운동";
+"Diet" = "다이어트";
+"Today's Activity" = "오늘의 활동";
+"View All" = "전체 보기";
+"Meals" = "식사";
+"Workouts" = "운동";
+"No Logs Yet" = "아직 기록 없음";
+"Start logging your meals and exercises to see them here" = "식사와 운동을 기록하기 시작하면 여기에 표시됩니다";
+"No Activity Yet" = "아직 활동 없음";
+"Start saving your meals and exercises to see them here" = "식사와 운동을 저장하기 시작하면 여기에 표시됩니다";
+
+/* Exercise */
+"Save Exercise" = "운동 저장";
+"Log Exercise" = "운동 기록";
+"Exercise saved successfully!" = "운동이 성공적으로 저장되었습니다!";
+"Select Exercise Type" = "운동 유형 선택";
+"Duration" = "지속 시간";
+"Intensity" = "강도";
+"Calories" = "칼로리";
+"Describe Exercise" = "운동 설명";
+"Manual Entry" = "수동 입력";
+
+/* Diet Plan */
+"Diet Plan" = "식단 계획";
+"My Diet" = "내 다이어트";
+"Create Diet Plan" = "식단 계획 만들기";
+"Edit Diet Plan" = "식단 계획 편집";
+"Delete Diet Plan" = "식단 계획 삭제";
+"No Diet Plan" = "식단 계획 없음";
+"Create a diet plan to schedule repetitive meals and track your adherence" = "반복적인 식사를 스케줄링하고 준수도를 추적하기 위한 식단 계획 만들기";
+"Today's Diet Plan" = "오늘의 식단 계획";
+"meals completed" = "식사 완료";
+"Scheduled Meals" = "예정된 식사";
+"No meals scheduled" = "예정된 식사 없음";
+"Add Scheduled Meal" = "예정된 식사 추가";
+"Daily Calorie Goal" = "일일 칼로리 목표";
+"Adherence" = "준수도";
+"Adherence Trend" = "준수도 추세";
+"Today's Schedule" = "오늘의 일정";
+"Insights" = "인사이트";
+"Weekly Statistics" = "주간 통계";
+"No data available" = "사용 가능한 데이터 없음";
+"Off-Diet Meals" = "식단 외 식사";
+"calories from off-diet meals" = "식단 외 식사로부터의 칼로리";
+"You can only have one active diet plan at a time. Creating a new plan will replace this one." = "한 번에 하나의 활성 식단 계획만 가질 수 있습니다. 새 계획을 만들면 이것이 대체됩니다.";
+"Please add at least one scheduled meal before saving the diet plan." = "식단 계획을 저장하기 전에 최소한 하나의 예정된 식사를 추가하세요.";
+"No Meals Scheduled" = "예정된 식사 없음";
+
+/* Profile */
+"Profile" = "프로필";
+"Settings" = "설정";
+"Language" = "언어";
+"Select Language" = "언어 선택";
+"Export Data" = "데이터 내보내기";
+"Weight Data" = "체중 데이터";
+"Nutrition Data" = "영양 데이터";
+"Export your weight tracking history as a PDF file." = "체중 추적 기록을 PDF 파일로 내보내기.";
+"Export your meal logs and nutrition data as PDF files." = "식사 로그와 영양 데이터를 PDF 파일로 내보내기.";
+"Export all your data in a comprehensive PDF report." = "모든 데이터를 포괄적인 PDF 보고서로 내보내기.";
+"Generating PDF..." = "PDF 생성 중...";
+"Export Error" = "내보내기 오류";
+"An unknown error occurred." = "알 수 없는 오류가 발생했습니다.";
+
+/* Weight */
+"Save Your Weight" = "체중 저장";
+"Track your progress by saving your current weight" = "현재 체중을 저장하여 진행 상황 추적";
+"Weight" = "체중";
+"Target Weight" = "목표 체중";
+"Start Weight" = "시작 체중";
+"Goal Weight" = "목표 체중";
+"Last" = "마지막";
+"No weight logged" = "기록된 체중 없음";
+
+/* Premium */
+"Premium Required" = "프리미엄 필요";
+"Upgrade to unlock" = "업그레이드하여 잠금 해제";
+"Are you sure you want to skip the free trial?" = "무료 체험을 건너뛰시겠습니까?";
+"Claim your free trial now without paying" = "지금 무료 체험을 받으세요 (결제 없음)";
+"Start Free Trial" = "무료 체험 시작";
+"Not now" = "나중에";
+"Premium feature" = "프리미엄 기능";
+
+/* History */
+"History" = "기록";
+"No History Yet" = "아직 기록 없음";
+"Your meal history will appear here\nonce you start tracking" = "추적을 시작하면 여기에 식사 기록이 표시됩니다";
+"No Results" = "결과 없음";
+"No entries found for the selected time period" = "선택한 기간에 대한 항목을 찾을 수 없습니다";
+"Clear Filters" = "필터 지우기";
+
+/* Onboarding */
+"Welcome" = "환영합니다";
+"Get Started" = "시작하기";
+"Skip" = "건너뛰기";
+
+/* Errors */
+"Something went wrong" = "문제가 발생했습니다";
+"Try Again" = "다시 시도";
+"No Food Detected" = "음식이 감지되지 않았습니다";
+"Camera Error" = "카메라 오류";
+"Permission Denied" = "권한이 거부되었습니다";
+
+/* Notifications */
+"Time to Log Your Weight" = "체중을 기록할 시간입니다";
+"Track your progress by logging your weight this morning." = "오늘 아침 체중을 기록하여 진행 상황을 추적하세요.";
+
+
+/* Additional UI Strings */
+"View All" = "전체 보기";
+"Quick Save" = "빠른 저장";
+"What did you eat?" = "무엇을 드셨나요?";
+"Estimated Calories" = "예상 칼로리";
+"kcal" = "kcal";
+"Quick Presets" = "빠른 사전 설정";
+"Category" = "카테고리";
+"What exercise did you do?" = "어떤 운동을 하셨나요?";
+"minutes" = "분";
+"Calories Burned" = "소모된 칼로리";
+"Capture Your Meal" = "식사 촬영";
+"Take a photo or choose from your library" = "사진을 찍거나 라이브러리에서 선택";
+"Take Photo" = "사진 찍기";
+"Voice Log" = "음성 로그";
+"Describe Your Food" = "음식 설명";
+"Tell us what you ate" = "무엇을 드셨는지 알려주세요";
+"Describe your meal in natural language and we'll calculate the nutrition for you" = "자연스러운 언어로 식사를 설명하면 영양을 계산해드립니다";
+"I had..." = "저는...을 먹었습니다";
+"Try saying:" = "이렇게 말해보세요:";
+"Meal Category" = "식사 카테고리";
+"Save weight" = "체중 저장";
+"Start:" = "시작:";
+"Goal:" = "목표:";
+"Body Mass Index" = "체질량 지수";
+"View Daily Breakdown" = "일일 세부 내역 보기";
+"Health Data" = "건강 데이터";
+"Health Access Required" = "건강 접근 권한 필요";
+"Go to Settings > Privacy & Security > Health > CalCalculator" = "설정 > 개인정보 보호 및 보안 > 건강 > CalCalculator로 이동";
+"Open Settings" = "설정 열기";
+"Delete Entry" = "항목 삭제";
+"This cannot be undone." = "이 작업은 취소할 수 없습니다.";
+"cal" = "cal";
+"calories" = "칼로리";
+"No meals" = "식사 없음";
+"Today's progress" = "오늘의 진행 상황";
+"Tap to view details for this day" = "이 날의 세부 정보를 보려면 탭하세요";
+"Meals" = "식사";
+"Consumed" = "섭취";
+"Workouts" = "운동";
+"Burned" = "소모";
+"Save Food" = "음식 저장";
+"Save Exercise" = "운동 저장";
+"Save Meal" = "식사 저장";
+"Save [type]" = "%@ 저장";
+"Delete \"%@\"?" = "\"%@\"을(를) 삭제하시겠습니까?";
+"Delete %@ exercise?" = "%@ 운동을 삭제하시겠습니까?";
+"Microphone Access" = "마이크 액세스";
+"Voice logging requires microphone access. Please enable it in Settings to use this feature." = "음성 로그에는 마이크 액세스가 필요합니다. 이 기능을 사용하려면 설정에서 활성화하세요.";
+"Settings" = "설정";
+"An error occurred" = "오류가 발생했습니다";
+"Food logged successfully!" = "음식이 성공적으로 기록되었습니다!";
+
+/* Progress Additional */
+"Save weight" = "체중 저장";
+"Start" = "시작";
+"Goal" = "목표";
+"Body Mass Index" = "체질량 지수";
+"View Daily Breakdown" = "일일 세부 내역 보기";
+"Health Data" = "건강 데이터";
+"Health Access Required" = "건강 접근 권한 필요";
+"Go to Settings > Privacy & Security > Health > CalCalculator" = "설정 > 개인정보 보호 및 보안 > 건강 > CalCalculator로 이동";
+"Open Settings" = "설정 열기";
+"Weight Progress" = "체중 진행 상황";
+"Current" = "현재";
+"Change" = "변화";
+"Weight Trend" = "체중 추세";
+"No Weight Data" = "체중 데이터 없음";
+"Save your weight to see progress over time" = "체중을 저장하여 시간 경과에 따른 진행 상황 확인";
+"entries" = "항목";
+"No entries yet" = "아직 항목 없음";
+"Calories Breakdown" = "칼로리 세부 내역";
+"Daily Average" = "일일 평균";
+"days tracked" = "추적된 일수";
+"Calorie Trend" = "칼로리 추세";
+"No Calorie Data" = "칼로리 데이터 없음";
+"Start tracking meals to see your calorie trends" = "식사 추적을 시작하여 칼로리 추세 확인";
+"Daily Breakdown" = "일일 세부 내역";
+"days" = "일";
+"avg" = "평균";
+"Highest" = "최고";
+"Lowest" = "최저";
+"Your workout burned" = "운동으로 소모된";
+"Cals" = "칼";
+"Burned Calories" = "소모된 칼로리";
+"Saving..." = "저장 중...";
+"Saved Successfully!" = "성공적으로 저장되었습니다!";
+"Your food has been logged." = "음식이 기록되었습니다.";
+"Your exercise has been logged." = "운동이 기록되었습니다.";
+"Transcribed:" = "전사:";
+"Coming Soon" = "곧 출시";
+"Add meals to your diet plan to see them here" = "식단 계획에 식사를 추가하여 여기에서 확인";
+"Goal not met" = "목표 미달";
+"Loading history..." = "기록 로딩 중...";
+"No entries found for \"%@\"" = "\"%@\"에 대한 항목을 찾을 수 없습니다";
+"Delete %@ exercise? This cannot be undone." = "%@ 운동을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.";
+"meals" = "식사";
+"exercises" = "운동";
+"Loading logs..." = "로그 로딩 중...";
+"Start logging your meals and exercises to see them here" = "식사와 운동을 기록하기 시작하면 여기에 표시됩니다";
+"Generating Your Plan" = "계획 생성 중";
+"Your Personalized Goals" = "맞춤형 목표";
+"Based on your profile and objectives" = "프로필과 목표를 기반으로";
+"AI is processing your food image" = "AI가 음식 이미지를 처리 중입니다";
+
+"over" = "초과";
+
+/* Food Additional */
+"Category:" = "카테고리:";
+"Analyzing your food..." = "음식 분석 중...";
+"Using AI to identify calories and nutrients" = "AI를 사용하여 칼로리와 영양소 식별";
+"Quick Add" = "빠른 추가";
+"Common Foods" = "일반 음식";
+"Recent Foods" = "최근 음식";
+"Saved Foods" = "저장된 음식";
+"Portion" = "인분";
+"serving" = "인분";
+"oz" = "oz";
+"cup" = "컵";
+"piece" = "개";
+
+/* Exercise Additional */
+"Describe your workout" = "운동 설명하기";
+"Duration (minutes)" = "지속 시간 (분)";
+"Enter calories burned" = "소모된 칼로리 입력";
+"Set intensity" = "강도 설정";
+"mins" = "분";
+
+/* Diet Plan Additional */
+"Active" = "활성";
+"Inactive" = "비활성";
+
+/* Additional Missing Strings */
+"Retry" = "다시 시도";
+"Something went wrong" = "문제가 발생했습니다";
+"Try Again" = "다시 시도";
+"Dismiss" = "닫기";
+"Dismiss keyboard" = "키보드 닫기";
+"Premium Feature" = "프리미엄 기능";
+"Premium" = "프리미엄";
+"Upgrade to Premium" = "프리미엄으로 업그레이드";
+"Export Data" = "데이터 내보내기";
+"Weight History" = "체중 기록";
+"Meal History" = "식사 기록";
+"Daily Nutrition Summary" = "일일 영양 요약";
+"No weight entries yet" = "아직 체중 기록이 없습니다";
+"Start tracking your weight to see your progress here" = "체중을 추적하기 시작하여 여기서 진행 상황을 확인하세요";
+"Preferences" = "환경 설정";
+"Choose your preferred appearance" = "선호하는 외관 선택";
+"Scan Meal" = "식사 스캔";
+"Capture Your Meal" = "식사 촬영";
+"Take a photo or choose from your library" = "사진을 찍거나 라이브러리에서 선택";
+"Analysis Results" = "분석 결과";
+"Fix Result" = "결과 수정";
+"What is this food?" = "이 음식은 무엇인가요?";
+"Ingredients" = "재료";
+"Total Nutrition" = "총 영양";
+"Notes" = "메모";
+"Meal Details" = "식사 세부정보";
+"Loading meal details..." = "식사 세부정보 로딩 중...";
+"Unable to load meal details" = "식사 세부정보를 불러올 수 없습니다";
+"Nutrition Breakdown" = "영양 분석";
+"No Meals" = "식사 없음";
+"No meals were recorded for this day" = "이 날짜에는 식사가 기록되지 않았습니다";
+"My Badges" = "내 배지";
+"more" = "더";
+"Tap to view all badges and achievements" = "탭하여 모든 배지와 업적 보기";
+"Today" = "오늘";
+"Save Your Weight" = "체중 저장";
+"Track your progress by saving your current weight" = "현재 체중을 저장하여 진행 상황 추적";
+"High" = "높음";
+"Medium" = "중간";
+"Low" = "낮음";
+"Welcome to CalCalculator" = "CalCalculator에 오신 것을 환영합니다";
+"What is your gender?" = "성별은 무엇인가요?";
+"How old are you?" = "나이가 어떻게 되나요?";
+"Body Metrics" = "신체 지표";
+"You can change this anytime in Settings." = "설정에서 언제든지 변경할 수 있습니다.";
+"Allow Notifications" = "알림 허용";
+"Enable Notifications" = "알림 활성화";
+"CalCalculator" = "CalCalculator";
+"Track your nutrition with ease" = "쉽게 영양을 추적하세요";
+"Already have an account?" = "이미 계정이 있으신가요?";
+"Sign In" = "로그인";

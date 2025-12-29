@@ -1,0 +1,347 @@
+/* Common */
+"Save" = "حفظ";
+"Cancel" = "إلغاء";
+"Done" = "تم";
+"Delete" = "حذف";
+"Edit" = "تعديل";
+"OK" = "موافق";
+"Yes" = "نعم";
+"No" = "لا";
+"Close" = "إغلاق";
+"Back" = "رجوع";
+"Next" = "التالي";
+"Continue" = "متابعة";
+"Loading..." = "جاري التحميل...";
+"Error" = "خطأ";
+"Success" = "نجاح";
+
+/* Home */
+"Home" = "الرئيسية";
+"Macronutrients" = "المغذيات الكبرى";
+"Recently uploaded" = "تم الرفع مؤخراً";
+"Calories left" = "السعرات المتبقية";
+"Gained" = "مكتسب";
+"Lost" = "مفقود";
+"Net" = "صافي";
+"Consumed" = "مستهلك";
+"Burned" = "محروق";
+"No meals yet" = "لا توجد وجبات بعد";
+"Tap + to add your first meal of the day" = "اضغط + لإضافة وجبتك الأولى في اليوم";
+
+/* Progress */
+"Progress" = "التقدم";
+"Current Weight" = "الوزن الحالي";
+"Weight Changes" = "تغيرات الوزن";
+"Progress Photos" = "صور التقدم";
+"Daily Average Calories" = "متوسط السعرات اليومية";
+"BMI" = "مؤشر كتلة الجسم";
+"HealthKit" = "HealthKit";
+"Save Weight" = "حفظ الوزن";
+"Log Weight" = "تسجيل الوزن";
+"View Progress" = "عرض التقدم";
+"3 day" = "3 أيام";
+"7 day" = "7 أيام";
+"14 day" = "14 يوماً";
+"30 day" = "30 يوماً";
+"90 day" = "90 يوماً";
+"All Time" = "كل الوقت";
+"No change" = "لا يوجد تغيير";
+
+/* Food */
+"Save Food" = "حفظ الطعام";
+"Log Food" = "تسجيل الطعام";
+"Food saved successfully!" = "تم حفظ الطعام بنجاح!";
+"Save Meal" = "حفظ الوجبة";
+"Describe" = "وصف";
+"Scan" = "مسح";
+"Exercise" = "تمرين";
+"Diet" = "نظام غذائي";
+"Today's Activity" = "نشاط اليوم";
+"View All" = "عرض الكل";
+"Meals" = "الوجبات";
+"Workouts" = "التدريبات";
+"No Logs Yet" = "لا توجد سجلات بعد";
+"Start logging your meals and exercises to see them here" = "ابدأ بتسجيل وجباتك وتمارينك لرؤيتها هنا";
+"No Activity Yet" = "لا يوجد نشاط بعد";
+"Start saving your meals and exercises to see them here" = "ابدأ بحفظ وجباتك وتمارينك لرؤيتها هنا";
+
+/* Exercise */
+"Save Exercise" = "حفظ التمرين";
+"Log Exercise" = "تسجيل التمرين";
+"Exercise saved successfully!" = "تم حفظ التمرين بنجاح!";
+"Select Exercise Type" = "اختر نوع التمرين";
+"Duration" = "المدة";
+"Intensity" = "الشدة";
+"Calories" = "السعرات";
+"Describe Exercise" = "وصف التمرين";
+"Manual Entry" = "إدخال يدوي";
+
+/* Diet Plan */
+"Diet Plan" = "خطة النظام الغذائي";
+"My Diet" = "نظامي الغذائي";
+"Create Diet Plan" = "إنشاء خطة نظام غذائي";
+"Edit Diet Plan" = "تعديل خطة النظام الغذائي";
+"Delete Diet Plan" = "حذف خطة النظام الغذائي";
+"No Diet Plan" = "لا توجد خطة نظام غذائي";
+"Create a diet plan to schedule repetitive meals and track your adherence" = "أنشئ خطة نظام غذائي لجدولة الوجبات المتكررة وتتبع التزامك";
+"Today's Diet Plan" = "خطة النظام الغذائي لليوم";
+"meals completed" = "وجبات مكتملة";
+"Scheduled Meals" = "الوجبات المجدولة";
+"No meals scheduled" = "لا توجد وجبات مجدولة";
+"Add Scheduled Meal" = "إضافة وجبة مجدولة";
+"Daily Calorie Goal" = "هدف السعرات اليومي";
+"Adherence" = "الالتزام";
+"Adherence Trend" = "اتجاه الالتزام";
+"Today's Schedule" = "جدول اليوم";
+"Insights" = "رؤى";
+"Weekly Statistics" = "إحصائيات أسبوعية";
+"No data available" = "لا توجد بيانات متاحة";
+"Off-Diet Meals" = "وجبات خارج النظام الغذائي";
+"calories from off-diet meals" = "سعرات من وجبات خارج النظام الغذائي";
+"You can only have one active diet plan at a time. Creating a new plan will replace this one." = "يمكنك الحصول على خطة نظام غذائي نشطة واحدة فقط في كل مرة. إنشاء خطة جديدة سيستبدل هذه.";
+"Please add at least one scheduled meal before saving the diet plan." = "يرجى إضافة وجبة مجدولة واحدة على الأقل قبل حفظ خطة النظام الغذائي.";
+"No Meals Scheduled" = "لا توجد وجبات مجدولة";
+
+/* Profile */
+"Profile" = "الملف الشخصي";
+"Settings" = "الإعدادات";
+"Language" = "اللغة";
+"Select Language" = "اختر اللغة";
+"Export Data" = "تصدير البيانات";
+"Weight Data" = "بيانات الوزن";
+"Nutrition Data" = "بيانات التغذية";
+"Export your weight tracking history as a PDF file." = "قم بتصدير تاريخ تتبع الوزن كملف PDF.";
+"Export your meal logs and nutrition data as PDF files." = "قم بتصدير سجلات وجباتك وبيانات التغذية كملفات PDF.";
+"Export all your data in a comprehensive PDF report." = "قم بتصدير جميع بياناتك في تقرير PDF شامل.";
+"Generating PDF..." = "جاري إنشاء PDF...";
+"Export Error" = "خطأ في التصدير";
+"An unknown error occurred." = "حدث خطأ غير معروف.";
+
+/* Weight */
+"Save Your Weight" = "احفظ وزنك";
+"Track your progress by saving your current weight" = "تتبع تقدمك عن طريق حفظ وزنك الحالي";
+"Weight" = "الوزن";
+"Target Weight" = "الوزن المستهدف";
+"Start Weight" = "الوزن الأولي";
+"Goal Weight" = "الوزن المطلوب";
+"Last" = "آخر";
+"No weight logged" = "لا يوجد وزن مسجل";
+
+/* Premium */
+"Premium Required" = "مطلوب بريميوم";
+"Upgrade to unlock" = "ترقية للفتح";
+"Are you sure you want to skip the free trial?" = "هل أنت متأكد أنك تريد تخطي التجربة المجانية؟";
+"Claim your free trial now without paying" = "احصل على تجربتك المجانية الآن دون دفع";
+"Start Free Trial" = "ابدأ التجربة المجانية";
+"Not now" = "ليس الآن";
+"Premium feature" = "ميزة بريميوم";
+
+/* History */
+"History" = "السجل";
+"No History Yet" = "لا يوجد سجل بعد";
+"Your meal history will appear here\nonce you start tracking" = "سيظهر سجل وجباتك هنا\nبمجرد أن تبدأ التتبع";
+"No Results" = "لا توجد نتائج";
+"No entries found for the selected time period" = "لم يتم العثور على إدخالات لفترة الوقت المحددة";
+"Clear Filters" = "مسح المرشحات";
+
+/* Onboarding */
+"Welcome" = "مرحباً";
+"Get Started" = "ابدأ";
+"Skip" = "تخطي";
+
+/* Errors */
+"Something went wrong" = "حدث خطأ ما";
+"Try Again" = "حاول مرة أخرى";
+"No Food Detected" = "لم يتم اكتشاف طعام";
+"Camera Error" = "خطأ في الكاميرا";
+"Permission Denied" = "تم رفض الإذن";
+
+/* Notifications */
+"Time to Log Your Weight" = "حان وقت تسجيل وزنك";
+"Track your progress by logging your weight this morning." = "تتبع تقدمك عن طريق تسجيل وزنك هذا الصباح.";
+
+
+/* Additional UI Strings */
+"View All" = "عرض الكل";
+"Quick Save" = "حفظ سريع";
+"What did you eat?" = "ماذا أكلت؟";
+"Estimated Calories" = "السعرات المقدرة";
+"kcal" = "سعرة";
+"Quick Presets" = "إعدادات سريعة";
+"Category" = "الفئة";
+"What exercise did you do?" = "ما التمرين الذي قمت به؟";
+"minutes" = "دقائق";
+"Calories Burned" = "السعرات المحروقة";
+"Capture Your Meal" = "التقاط وجبتك";
+"Take a photo or choose from your library" = "التقاط صورة أو اختيار من مكتبتك";
+"Take Photo" = "التقاط صورة";
+"Voice Log" = "سجل صوتي";
+"Describe Your Food" = "وصف طعامك";
+"Tell us what you ate" = "أخبرنا بما أكلت";
+"Describe your meal in natural language and we'll calculate the nutrition for you" = "صف وجبتك بلغة طبيعية وسنحسب التغذية لك";
+"I had..." = "أكلت...";
+"Try saying:" = "جرب قول:";
+"Meal Category" = "فئة الوجبة";
+"Save weight" = "حفظ الوزن";
+"Start:" = "البداية:";
+"Goal:" = "الهدف:";
+"Body Mass Index" = "مؤشر كتلة الجسم";
+"View Daily Breakdown" = "عرض التفصيل اليومي";
+"Health Data" = "بيانات الصحة";
+"Health Access Required" = "مطلوب الوصول للصحة";
+"Go to Settings > Privacy & Security > Health > CalCalculator" = "انتقل إلى الإعدادات > الخصوصية والأمان > الصحة > CalCalculator";
+"Open Settings" = "فتح الإعدادات";
+"Delete Entry" = "حذف الإدخال";
+"This cannot be undone." = "لا يمكن التراجع عن هذا.";
+"cal" = "سعرة";
+"calories" = "سعرات";
+"No meals" = "لا توجد وجبات";
+"Today's progress" = "تقدم اليوم";
+"Tap to view details for this day" = "اضغط لعرض تفاصيل هذا اليوم";
+"Meals" = "الوجبات";
+"Consumed" = "مستهلك";
+"Workouts" = "التدريبات";
+"Burned" = "محروق";
+"Save Food" = "حفظ الطعام";
+"Save Exercise" = "حفظ التمرين";
+"Save Meal" = "حفظ الوجبة";
+"Save [type]" = "حفظ %@";
+"Delete \"%@\"?" = "حذف \"%@\"؟";
+"Delete %@ exercise?" = "حذف تمرين %@؟";
+"Microphone Access" = "الوصول إلى الميكروفون";
+"Voice logging requires microphone access. Please enable it in Settings to use this feature." = "يتطلب التسجيل الصوتي الوصول إلى الميكروفون. يرجى تفعيله في الإعدادات لاستخدام هذه الميزة.";
+"Settings" = "الإعدادات";
+"An error occurred" = "حدث خطأ";
+"Food logged successfully!" = "تم تسجيل الطعام بنجاح!";
+
+/* Progress Additional */
+"Save weight" = "حفظ الوزن";
+"Start" = "البداية";
+"Goal" = "الهدف";
+"Body Mass Index" = "مؤشر كتلة الجسم";
+"View Daily Breakdown" = "عرض التفصيل اليومي";
+"Health Data" = "بيانات الصحة";
+"Health Access Required" = "مطلوب الوصول للصحة";
+"Go to Settings > Privacy & Security > Health > CalCalculator" = "انتقل إلى الإعدادات > الخصوصية والأمان > الصحة > CalCalculator";
+"Open Settings" = "فتح الإعدادات";
+"Weight Progress" = "تقدم الوزن";
+"Current" = "الحالي";
+"Change" = "التغيير";
+"Weight Trend" = "اتجاه الوزن";
+"No Weight Data" = "لا توجد بيانات وزن";
+"Save your weight to see progress over time" = "احفظ وزنك لرؤية التقدم بمرور الوقت";
+"entries" = "إدخالات";
+"No entries yet" = "لا توجد إدخالات بعد";
+"Calories Breakdown" = "تفصيل السعرات";
+"Daily Average" = "المتوسط اليومي";
+"days tracked" = "أيام متتبعة";
+"Calorie Trend" = "اتجاه السعرات";
+"No Calorie Data" = "لا توجد بيانات سعرات";
+"Start tracking meals to see your calorie trends" = "ابدأ في تتبع الوجبات لرؤية اتجاهات السعرات الحرارية";
+"Daily Breakdown" = "التفصيل اليومي";
+"days" = "أيام";
+"avg" = "متوسط";
+"Highest" = "الأعلى";
+"Lowest" = "الأدنى";
+"Your workout burned" = "حرق تمرينك";
+"Cals" = "سعرة";
+"Burned Calories" = "السعرات المحروقة";
+"Saving..." = "جاري الحفظ...";
+"Saved Successfully!" = "تم الحفظ بنجاح!";
+"Your food has been logged." = "تم تسجيل طعامك.";
+"Your exercise has been logged." = "تم تسجيل تمرينك.";
+"Transcribed:" = "منسوخ:";
+"Coming Soon" = "قريباً";
+"Add meals to your diet plan to see them here" = "أضف وجبات إلى خطة نظامك الغذائي لرؤيتها هنا";
+"Goal not met" = "الهدف لم يتحقق";
+"Loading history..." = "جاري تحميل السجل...";
+"No entries found for \"%@\"" = "لم يتم العثور على إدخالات لـ \"%@\"";
+"Delete %@ exercise? This cannot be undone." = "حذف تمرين %@؟ لا يمكن التراجع عن هذا.";
+"meals" = "وجبات";
+"exercises" = "تمارين";
+"Loading logs..." = "جاري تحميل السجلات...";
+"Start logging your meals and exercises to see them here" = "ابدأ في تسجيل وجباتك وتمارينك لرؤيتها هنا";
+"Generating Your Plan" = "إنشاء خطتك";
+"Your Personalized Goals" = "أهدافك المخصصة";
+"Based on your profile and objectives" = "بناءً على ملفك الشخصي وأهدافك";
+"AI is processing your food image" = "الذكاء الاصطناعي يعالج صورة طعامك";
+
+"over" = "فوق";
+
+/* Food Additional */
+"Category:" = "الفئة:";
+"Analyzing your food..." = "جاري تحليل طعامك...";
+"Using AI to identify calories and nutrients" = "استخدام الذكاء الاصطناعي لتحديد السعرات والمواد الغذائية";
+"Quick Add" = "إضافة سريعة";
+"Common Foods" = "أطعمة شائعة";
+"Recent Foods" = "أطعمة حديثة";
+"Saved Foods" = "أطعمة محفوظة";
+"Portion" = "حصة";
+"serving" = "حصة";
+"oz" = "أونصة";
+"cup" = "كوب";
+"piece" = "قطعة";
+
+/* Exercise Additional */
+"Describe your workout" = "اوصف تمرينك";
+"Duration (minutes)" = "المدة (بالدقائق)";
+"Enter calories burned" = "أدخل السعرات المحروقة";
+"Set intensity" = "تعيين الشدة";
+"mins" = "دقيقة";
+
+/* Diet Plan Additional */
+"Active" = "نشط";
+"Inactive" = "غير نشط";
+
+/* Additional Missing Strings */
+"Retry" = "إعادة المحاولة";
+"Something went wrong" = "حدث خطأ ما";
+"Try Again" = "حاول مرة أخرى";
+"Dismiss" = "إغلاق";
+"Dismiss keyboard" = "إغلاق لوحة المفاتيح";
+"Premium Feature" = "ميزة مميزة";
+"Premium" = "مميز";
+"Upgrade to Premium" = "الترقية إلى المميز";
+"Export Data" = "تصدير البيانات";
+"Weight History" = "تاريخ الوزن";
+"Meal History" = "تاريخ الوجبات";
+"Daily Nutrition Summary" = "ملخص التغذية اليومي";
+"No weight entries yet" = "لا توجد إدخالات وزن بعد";
+"Start tracking your weight to see your progress here" = "ابدأ في تتبع وزنك لرؤية تقدمك هنا";
+"Preferences" = "التفضيلات";
+"Choose your preferred appearance" = "اختر المظهر المفضل لديك";
+"Scan Meal" = "مسح الوجبة";
+"Capture Your Meal" = "التقاط وجبتك";
+"Take a photo or choose from your library" = "التقط صورة أو اختر من مكتبتك";
+"Analysis Results" = "نتائج التحليل";
+"Fix Result" = "إصلاح النتيجة";
+"What is this food?" = "ما هذا الطعام؟";
+"Ingredients" = "المكونات";
+"Total Nutrition" = "التغذية الكلية";
+"Notes" = "ملاحظات";
+"Meal Details" = "تفاصيل الوجبة";
+"Loading meal details..." = "جاري تحميل تفاصيل الوجبة...";
+"Unable to load meal details" = "تعذر تحميل تفاصيل الوجبة";
+"Nutrition Breakdown" = "تفصيل التغذية";
+"No Meals" = "لا توجد وجبات";
+"No meals were recorded for this day" = "لم يتم تسجيل وجبات لهذا اليوم";
+"My Badges" = "شاراتي";
+"more" = "المزيد";
+"Tap to view all badges and achievements" = "اضغط لعرض جميع الشارات والإنجازات";
+"Today" = "اليوم";
+"Save Your Weight" = "احفظ وزنك";
+"Track your progress by saving your current weight" = "تتبع تقدمك عن طريق حفظ وزنك الحالي";
+"High" = "عالي";
+"Medium" = "متوسط";
+"Low" = "منخفض";
+"Welcome to CalCalculator" = "مرحباً بك في CalCalculator";
+"What is your gender?" = "ما هو جنسك؟";
+"How old are you?" = "كم عمرك؟";
+"Body Metrics" = "مقاييس الجسم";
+"You can change this anytime in Settings." = "يمكنك تغيير هذا في أي وقت في الإعدادات.";
+"Allow Notifications" = "السماح بالإشعارات";
+"Enable Notifications" = "تفعيل الإشعارات";
+"CalCalculator" = "CalCalculator";
+"Track your nutrition with ease" = "تتبع تغذيتك بسهولة";
+"Already have an account?" = "هل لديك حساب بالفعل؟";
+"Sign In" = "تسجيل الدخول";

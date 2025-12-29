@@ -11,6 +11,7 @@ import SwiftData
 struct MealVerificationView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     let scheduledMealId: UUID
     let mealName: String
@@ -66,7 +67,8 @@ struct MealVerificationView: View {
                     promptView
                 }
             }
-            .navigationTitle("Verify Meal")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.verifyMeal))
+                .id("verify-meal-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -351,11 +353,8 @@ struct MealVerificationView: View {
             }
             await scanViewModel.analyzeImage(image)
             
-            // Wait for analysis to complete
-            while scanViewModel.isAnalyzing {
-                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
-            }
-            
+            // Wait for analysis to complete - check status without sleep
+            // Analysis will complete when scanViewModel.isAnalyzing becomes false
             if let meal = scanViewModel.pendingMeal {
                 await MainActor.run {
                     analysisResult = meal

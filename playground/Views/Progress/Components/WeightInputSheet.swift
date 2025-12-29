@@ -11,6 +11,7 @@ struct WeightInputSheet: View {
     let currentWeight: Double
     let unit: String
     let onSave: (Double) -> Void
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @Environment(\.dismiss) private var dismiss
     @State private var weightValue: String = ""
@@ -34,11 +35,13 @@ struct WeightInputSheet: View {
                 
                 // Title
                 VStack(spacing: 8) {
-                    Text("Log Your Weight")
+                    Text(localizationManager.localizedString(for: AppStrings.Weight.saveWeight))
                         .font(.title2)
                         .fontWeight(.bold)
+                        .id("save-your-weight-\(localizationManager.currentLanguage)")
                     
-                    Text("Track your progress by logging your current weight")
+                    Text(localizationManager.localizedString(for: AppStrings.Weight.trackProgress))
+                        .id("track-progress-weight-\(localizationManager.currentLanguage)")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -54,13 +57,15 @@ struct WeightInputSheet: View {
                             .multilineTextAlignment(.center)
                             .focused($isFocused)
                             .frame(maxWidth: 150)
+                            .keyboardDoneButton()
                         
                         Text(unit)
                             .font(.title2)
                             .foregroundColor(.secondary)
                     }
                     
-                    Text("Previous: \(String(format: "%.1f", currentWeight)) \(unit)")
+                    Text(localizationManager.localizedString(for: AppStrings.Progress.previousWeight, arguments: String(format: "%.1f", currentWeight), unit))
+                        .id("previous-weight-\(localizationManager.currentLanguage)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -81,7 +86,8 @@ struct WeightInputSheet: View {
                         dismiss()
                     }
                 } label: {
-                    Text("Save Weight")
+                    Text(localizationManager.localizedString(for: AppStrings.Progress.saveWeight))
+                        .id("save-weight-btn-\(localizationManager.currentLanguage)")
                         .font(.headline)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
@@ -105,9 +111,8 @@ struct WeightInputSheet: View {
         }
         .onAppear {
             weightValue = String(format: "%.1f", currentWeight)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                isFocused = true
-            }
+            // Focus immediately
+            isFocused = true
         }
     }
     

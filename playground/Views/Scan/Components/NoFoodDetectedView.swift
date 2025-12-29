@@ -12,6 +12,7 @@ struct NoFoodDetectedView: View {
     let image: Image?
     let onRetry: () -> Void
     let onRetake: () -> Void
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @State private var showingTips = false
     
@@ -85,11 +86,12 @@ struct NoFoodDetectedView: View {
                     .background(Color.orange.opacity(0.1))
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             } else {
-                Text("We couldn't identify any food in this image.")
+                Text(localizationManager.localizedString(for: AppStrings.Scanning.noFoodInImage))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
+                    .id("no-food-image-\(localizationManager.currentLanguage)")
             }
         }
         .padding(.horizontal)
@@ -158,7 +160,8 @@ struct NoFoodDetectedView: View {
     private var actionButtons: some View {
         VStack(spacing: 16) {
             Button(action: onRetry) {
-                Label("Try Again", systemImage: "arrow.clockwise")
+                Label(localizationManager.localizedString(for: AppStrings.Scanning.tryAgain), systemImage: "arrow.clockwise")
+                    .id("try-again-scan-\(localizationManager.currentLanguage)")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
@@ -168,7 +171,8 @@ struct NoFoodDetectedView: View {
             }
             
             Button(action: onRetake) {
-                Label("Take New Photo", systemImage: "camera.fill")
+                Label(localizationManager.localizedString(for: AppStrings.Scanning.takeNewPhoto), systemImage: "camera.fill")
+                    .id("take-new-photo-\(localizationManager.currentLanguage)")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)

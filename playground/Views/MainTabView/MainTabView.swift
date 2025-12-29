@@ -7,9 +7,11 @@
 
 import SwiftUI
 import SwiftData
+import SDK
 
 struct MainTabView: View {
     var repository: MealRepository
+    @ObservedObject private var localizationManager = LocalizationManager.shared
 
     @State private var selectedTab = 0
     @StateObject private var networkMonitor = NetworkMonitor.shared
@@ -20,10 +22,11 @@ struct MainTabView: View {
     @State var progressViewModel: ProgressViewModel
     @State var settingsViewModel: SettingsViewModel
     
+    @Environment(\.isSubscribed) private var isSubscribed
     @Query(filter: #Predicate<DietPlan> { $0.isActive == true }) private var activeDietPlans: [DietPlan]
     
     private var hasActiveDiet: Bool {
-        !activeDietPlans.isEmpty
+        !activeDietPlans.isEmpty && isSubscribed
     }
     
     init(repository: MealRepository) {
@@ -82,32 +85,37 @@ struct MainTabView: View {
                 }
             )
             .tabItem {
-                Label("Home", systemImage: "house.fill")
+                Label(localizationManager.localizedString(for: AppStrings.Home.title), systemImage: "house.fill")
+                    .id("tab-home-\(localizationManager.currentLanguage)")
             }
             .tag(0)
             
             ProgressDashboardView(viewModel: progressViewModel)
                 .tabItem {
-                    Label("Progress", systemImage: "chart.line.uptrend.xyaxis")
+                    Label(localizationManager.localizedString(for: AppStrings.Progress.title), systemImage: "chart.line.uptrend.xyaxis")
+                        .id("tab-progress-\(localizationManager.currentLanguage)")
                 }
                 .tag(1)
             
             HistoryOrDietView(
                 viewModel: historyViewModel,
                 repository: repository,
-                tabName: hasActiveDiet ? "My Diet" : "History"
+                tabName: hasActiveDiet ? localizationManager.localizedString(for: AppStrings.DietPlan.myDiet) : localizationManager.localizedString(for: AppStrings.History.title)
             )
                 .tabItem {
-                    Label(hasActiveDiet ? "My Diet" : "History", systemImage: "calendar")
+                    Label(hasActiveDiet ? localizationManager.localizedString(for: AppStrings.DietPlan.myDiet) : localizationManager.localizedString(for: AppStrings.History.title), systemImage: "calendar")
+                        .id("tab-history-\(localizationManager.currentLanguage)")
                 }
                 .tag(2)
 
             ProfileView()
                 .tabItem {
-                    Label("Profile", systemImage: "person.fill")
+                    Label(localizationManager.localizedString(for: AppStrings.Profile.title), systemImage: "person.fill")
+                        .id("tab-profile-\(localizationManager.currentLanguage)")
                 }
                 .tag(3)
             }
+            .id("main-tabview-\(localizationManager.currentLanguage)")
             
             // Offline banner
             if !networkMonitor.isConnected {
@@ -115,7 +123,8 @@ struct MainTabView: View {
                     HStack {
                         Image(systemName: "wifi.slash")
                             .foregroundColor(.white)
-                        Text("No Internet Connection")
+                        Text(localizationManager.localizedString(for: AppStrings.Main.noInternetConnection))
+                            .id("no-internet-\(localizationManager.currentLanguage)")
                             .font(.subheadline)
                             .fontWeight(.medium)
                             .foregroundColor(.white)
@@ -130,6 +139,10 @@ struct MainTabView: View {
             }
         }
         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: networkMonitor.isConnected)
+        .onReceive(NotificationCenter.default.publisher(for: .languageChanged)) { _ in
+            // Force TabView to refresh when language changes
+            // This ensures all tab labels update immediately
+        }
     }
 }
 

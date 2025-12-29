@@ -32,11 +32,8 @@ final class GoalsRepository {
     /// Generate goals based on onboarding data
     /// - Parameter onboardingData: Dictionary containing user's onboarding responses
     /// - Returns: Generated nutrition goals
-    /// - Note: Currently uses a static delay for demo purposes. Replace with actual API call when ready.
+    /// - Note: Currently generates goals immediately. Replace with actual API call when ready.
     func generateGoals(from onboardingData: [String: Any]) async throws -> GeneratedGoals {
-        // Simulate API delay for demo purposes
-        try await Task.sleep(nanoseconds: 3_500_000_000) // 3.5 seconds
-        
         // TODO: Replace with actual API call
         // For now, generate mock goals based on some basic calculations
         let goals = calculateMockGoals(from: onboardingData)

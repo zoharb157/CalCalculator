@@ -10,6 +10,7 @@ import SwiftUI
 struct VoiceLogView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @ObservedObject private var localizationManager = LocalizationManager.shared
 
     @State private var isListening = false
     @State private var transcribedText: String = ""
@@ -41,7 +42,8 @@ struct VoiceLogView: View {
                 helpText
             }
             .padding()
-            .navigationTitle("Voice Log")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Food.voiceLog))
+                .id("voice-log-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -132,7 +134,8 @@ struct VoiceLogView: View {
 
     private var transcribedTextView: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Transcribed:")
+            Text(localizationManager.localizedString(for: AppStrings.Food.transcribed))
+                .id("transcribed-\(localizationManager.currentLanguage)")
                 .font(.caption)
                 .foregroundColor(.secondary)
 
@@ -176,7 +179,8 @@ struct VoiceLogView: View {
 
     private var helpText: some View {
         VStack(spacing: 8) {
-            Text("Coming Soon")
+            Text(localizationManager.localizedString(for: AppStrings.Food.comingSoon))
+                .id("coming-soon-\(localizationManager.currentLanguage)")
                 .font(.headline)
                 .foregroundColor(.secondary)
 
@@ -201,15 +205,8 @@ struct VoiceLogView: View {
             isListening.toggle()
         }
 
-        // Auto-stop after 3 seconds for demo purposes
-        if isListening {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                withAnimation {
-                    isListening = false
-                    transcribedText = "Voice recognition coming soon..."
-                }
-            }
-        }
+        // Auto-stop removed - user should manually stop listening
+        // Voice recognition will complete when actual transcription finishes
     }
 
     private func openSettings() {

@@ -8,6 +8,25 @@
 import Foundation
 import SwiftData
 
+/// Time range options for diet plan views
+enum DietTimeRange: String, CaseIterable {
+    case today = "Today"
+    case week = "This Week"
+    case month = "This Month"
+    
+    var startDate: Date {
+        let calendar = Calendar.current
+        switch self {
+        case .today:
+            return calendar.startOfDay(for: Date())
+        case .week:
+            return calendar.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+        case .month:
+            return calendar.date(byAdding: .month, value: -1, to: Date()) ?? Date()
+        }
+    }
+}
+
 /// Represents a daily summary of nutritional intake
 @Model
 final class DaySummary {

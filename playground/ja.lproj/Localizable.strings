@@ -1,0 +1,347 @@
+/* Common */
+"Save" = "保存";
+"Cancel" = "キャンセル";
+"Done" = "完了";
+"Delete" = "削除";
+"Edit" = "編集";
+"OK" = "OK";
+"Yes" = "はい";
+"No" = "いいえ";
+"Close" = "閉じる";
+"Back" = "戻る";
+"Next" = "次へ";
+"Continue" = "続ける";
+"Loading..." = "読み込み中...";
+"Error" = "エラー";
+"Success" = "成功";
+
+/* Home */
+"Home" = "ホーム";
+"Macronutrients" = "マクロ栄養素";
+"Recently uploaded" = "最近アップロード";
+"Calories left" = "残りカロリー";
+"Gained" = "獲得";
+"Lost" = "消費";
+"Net" = "純";
+"Consumed" = "摂取";
+"Burned" = "消費";
+"No meals yet" = "まだ食事がありません";
+"Tap + to add your first meal of the day" = "+をタップして今日の最初の食事を追加";
+
+/* Progress */
+"Progress" = "進捗";
+"Current Weight" = "現在の体重";
+"Weight Changes" = "体重の変化";
+"Progress Photos" = "進捗写真";
+"Daily Average Calories" = "1日の平均カロリー";
+"BMI" = "BMI";
+"HealthKit" = "HealthKit";
+"Save Weight" = "体重を保存";
+"Log Weight" = "体重を記録";
+"View Progress" = "進捗を表示";
+"3 day" = "3日";
+"7 day" = "7日";
+"14 day" = "14日";
+"30 day" = "30日";
+"90 day" = "90日";
+"All Time" = "全期間";
+"No change" = "変化なし";
+
+/* Food */
+"Save Food" = "食事を保存";
+"Log Food" = "食事を記録";
+"Food saved successfully!" = "食事の保存に成功しました！";
+"Save Meal" = "食事を保存";
+"Describe" = "説明";
+"Scan" = "スキャン";
+"Exercise" = "運動";
+"Diet" = "ダイエット";
+"Today's Activity" = "今日の活動";
+"View All" = "すべて表示";
+"Meals" = "食事";
+"Workouts" = "ワークアウト";
+"No Logs Yet" = "まだ記録がありません";
+"Start logging your meals and exercises to see them here" = "食事と運動を記録し始めると、ここに表示されます";
+"No Activity Yet" = "まだ活動がありません";
+"Start saving your meals and exercises to see them here" = "食事と運動を保存し始めると、ここに表示されます";
+
+/* Exercise */
+"Save Exercise" = "運動を保存";
+"Log Exercise" = "運動を記録";
+"Exercise saved successfully!" = "運動の保存に成功しました！";
+"Select Exercise Type" = "運動の種類を選択";
+"Duration" = "時間";
+"Intensity" = "強度";
+"Calories" = "カロリー";
+"Describe Exercise" = "運動を説明";
+"Manual Entry" = "手動入力";
+
+/* Diet Plan */
+"Diet Plan" = "食事計画";
+"My Diet" = "私のダイエット";
+"Create Diet Plan" = "食事計画を作成";
+"Edit Diet Plan" = "食事計画を編集";
+"Delete Diet Plan" = "食事計画を削除";
+"No Diet Plan" = "食事計画なし";
+"Create a diet plan to schedule repetitive meals and track your adherence" = "繰り返しの食事をスケジュールし、遵守状況を追跡するための食事計画を作成";
+"Today's Diet Plan" = "今日の食事計画";
+"meals completed" = "食事完了";
+"Scheduled Meals" = "予定された食事";
+"No meals scheduled" = "予定された食事なし";
+"Add Scheduled Meal" = "予定された食事を追加";
+"Daily Calorie Goal" = "1日のカロリー目標";
+"Adherence" = "遵守";
+"Adherence Trend" = "遵守の傾向";
+"Today's Schedule" = "今日のスケジュール";
+"Insights" = "インサイト";
+"Weekly Statistics" = "週間統計";
+"No data available" = "データなし";
+"Off-Diet Meals" = "ダイエット外の食事";
+"calories from off-diet meals" = "ダイエット外の食事からのカロリー";
+"You can only have one active diet plan at a time. Creating a new plan will replace this one." = "一度に1つのアクティブな食事計画のみ可能です。新しい計画を作成すると、これが置き換えられます。";
+"Please add at least one scheduled meal before saving the diet plan." = "食事計画を保存する前に、少なくとも1つの予定された食事を追加してください。";
+"No Meals Scheduled" = "予定された食事なし";
+
+/* Profile */
+"Profile" = "プロフィール";
+"Settings" = "設定";
+"Language" = "言語";
+"Select Language" = "言語を選択";
+"Export Data" = "データをエクスポート";
+"Weight Data" = "体重データ";
+"Nutrition Data" = "栄養データ";
+"Export your weight tracking history as a PDF file." = "体重追跡履歴をPDFファイルとしてエクスポート。";
+"Export your meal logs and nutrition data as PDF files." = "食事ログと栄養データをPDFファイルとしてエクスポート。";
+"Export all your data in a comprehensive PDF report." = "すべてのデータを包括的なPDFレポートとしてエクスポート。";
+"Generating PDF..." = "PDFを生成中...";
+"Export Error" = "エクスポートエラー";
+"An unknown error occurred." = "不明なエラーが発生しました。";
+
+/* Weight */
+"Save Your Weight" = "体重を保存";
+"Track your progress by saving your current weight" = "現在の体重を保存して進捗を追跡";
+"Weight" = "体重";
+"Target Weight" = "目標体重";
+"Start Weight" = "開始体重";
+"Goal Weight" = "目標体重";
+"Last" = "最後";
+"No weight logged" = "体重が記録されていません";
+
+/* Premium */
+"Premium Required" = "プレミアムが必要";
+"Upgrade to unlock" = "アップグレードしてロック解除";
+"Are you sure you want to skip the free trial?" = "無料トライアルをスキップしてもよろしいですか？";
+"Claim your free trial now without paying" = "今すぐ無料トライアルを取得（支払い不要）";
+"Start Free Trial" = "無料トライアルを開始";
+"Not now" = "今はいい";
+"Premium feature" = "プレミアム機能";
+
+/* History */
+"History" = "履歴";
+"No History Yet" = "まだ履歴がありません";
+"Your meal history will appear here\nonce you start tracking" = "追跡を開始すると、ここに食事履歴が表示されます";
+"No Results" = "結果なし";
+"No entries found for the selected time period" = "選択した期間のエントリが見つかりませんでした";
+"Clear Filters" = "フィルターをクリア";
+
+/* Onboarding */
+"Welcome" = "ようこそ";
+"Get Started" = "始める";
+"Skip" = "スキップ";
+
+/* Errors */
+"Something went wrong" = "問題が発生しました";
+"Try Again" = "再試行";
+"No Food Detected" = "食べ物が検出されませんでした";
+"Camera Error" = "カメラエラー";
+"Permission Denied" = "権限が拒否されました";
+
+/* Notifications */
+"Time to Log Your Weight" = "体重を記録する時間です";
+"Track your progress by logging your weight this morning." = "今朝の体重を記録して進捗を追跡してください。";
+
+
+/* Additional UI Strings */
+"View All" = "すべて表示";
+"Quick Save" = "クイック保存";
+"What did you eat?" = "何を食べましたか？";
+"Estimated Calories" = "推定カロリー";
+"kcal" = "kcal";
+"Quick Presets" = "クイックプリセット";
+"Category" = "カテゴリー";
+"What exercise did you do?" = "どのような運動をしましたか？";
+"minutes" = "分";
+"Calories Burned" = "消費カロリー";
+"Capture Your Meal" = "食事を撮影";
+"Take a photo or choose from your library" = "写真を撮るか、ライブラリから選択";
+"Take Photo" = "写真を撮る";
+"Voice Log" = "音声ログ";
+"Describe Your Food" = "食べ物を説明";
+"Tell us what you ate" = "何を食べたか教えてください";
+"Describe your meal in natural language and we'll calculate the nutrition for you" = "自然な言葉で食事を説明すると、栄養を計算します";
+"I had..." = "私は...を食べました";
+"Try saying:" = "試してみてください：";
+"Meal Category" = "食事カテゴリー";
+"Save weight" = "体重を保存";
+"Start:" = "開始：";
+"Goal:" = "目標：";
+"Body Mass Index" = "ボディマス指数";
+"View Daily Breakdown" = "日次内訳を表示";
+"Health Data" = "ヘルスデータ";
+"Health Access Required" = "ヘルスアクセスが必要";
+"Go to Settings > Privacy & Security > Health > CalCalculator" = "設定 > プライバシーとセキュリティ > ヘルスケア > CalCalculator に移動";
+"Open Settings" = "設定を開く";
+"Delete Entry" = "エントリを削除";
+"This cannot be undone." = "これは元に戻せません。";
+"cal" = "cal";
+"calories" = "カロリー";
+"No meals" = "食事なし";
+"Today's progress" = "今日の進捗";
+"Tap to view details for this day" = "この日の詳細を表示するにはタップ";
+"Meals" = "食事";
+"Consumed" = "摂取";
+"Workouts" = "ワークアウト";
+"Burned" = "消費";
+"Save Food" = "食事を保存";
+"Save Exercise" = "運動を保存";
+"Save Meal" = "食事を保存";
+"Save [type]" = "%@を保存";
+"Delete \"%@\"?" = "\"%@\"を削除しますか？";
+"Delete %@ exercise?" = "%@運動を削除しますか？";
+"Microphone Access" = "マイクアクセス";
+"Voice logging requires microphone access. Please enable it in Settings to use this feature." = "音声ログにはマイクアクセスが必要です。この機能を使用するには、設定で有効にしてください。";
+"Settings" = "設定";
+"An error occurred" = "エラーが発生しました";
+"Food logged successfully!" = "食事が正常に記録されました！";
+
+/* Progress Additional */
+"Save weight" = "体重を保存";
+"Start" = "開始";
+"Goal" = "目標";
+"Body Mass Index" = "ボディマス指数";
+"View Daily Breakdown" = "日次内訳を表示";
+"Health Data" = "ヘルスデータ";
+"Health Access Required" = "ヘルスアクセスが必要";
+"Go to Settings > Privacy & Security > Health > CalCalculator" = "設定 > プライバシーとセキュリティ > ヘルスケア > CalCalculator に移動";
+"Open Settings" = "設定を開く";
+"Weight Progress" = "体重の進捗";
+"Current" = "現在";
+"Change" = "変化";
+"Weight Trend" = "体重の傾向";
+"No Weight Data" = "体重データなし";
+"Save your weight to see progress over time" = "体重を保存して、時間の経過とともに進捗を確認";
+"entries" = "エントリ";
+"No entries yet" = "まだエントリなし";
+"Calories Breakdown" = "カロリー内訳";
+"Daily Average" = "日次平均";
+"days tracked" = "追跡された日数";
+"Calorie Trend" = "カロリー傾向";
+"No Calorie Data" = "カロリーデータなし";
+"Start tracking meals to see your calorie trends" = "食事の追跡を開始して、カロリー傾向を確認";
+"Daily Breakdown" = "日次内訳";
+"days" = "日";
+"avg" = "平均";
+"Highest" = "最高";
+"Lowest" = "最低";
+"Your workout burned" = "あなたのワークアウトは消費しました";
+"Cals" = "Cal";
+"Burned Calories" = "消費カロリー";
+"Saving..." = "保存中...";
+"Saved Successfully!" = "正常に保存されました！";
+"Your food has been logged." = "食べ物が記録されました。";
+"Your exercise has been logged." = "運動が記録されました。";
+"Transcribed:" = "転写:";
+"Coming Soon" = "近日公開";
+"Add meals to your diet plan to see them here" = "食事計画に食事を追加してここで表示";
+"Goal not met" = "目標未達成";
+"Loading history..." = "履歴を読み込み中...";
+"No entries found for \"%@\"" = "\"%@\" のエントリが見つかりません";
+"Delete %@ exercise? This cannot be undone." = "%@運動を削除しますか？これは元に戻せません。";
+"meals" = "食事";
+"exercises" = "運動";
+"Loading logs..." = "ログを読み込み中...";
+"Start logging your meals and exercises to see them here" = "食事と運動の記録を開始して、ここで表示";
+"Generating Your Plan" = "プランを生成中";
+"Your Personalized Goals" = "あなたのパーソナライズされた目標";
+"Based on your profile and objectives" = "あなたのプロフィールと目標に基づいて";
+"AI is processing your food image" = "AIが食べ物の画像を処理しています";
+
+"over" = "超過";
+
+/* Food Additional */
+"Category:" = "カテゴリ：";
+"Analyzing your food..." = "食べ物を分析中...";
+"Using AI to identify calories and nutrients" = "AIを使用してカロリーと栄養素を識別";
+"Quick Add" = "クイック追加";
+"Common Foods" = "一般的な食品";
+"Recent Foods" = "最近の食品";
+"Saved Foods" = "保存された食品";
+"Portion" = "分量";
+"serving" = "人前";
+"oz" = "oz";
+"cup" = "カップ";
+"piece" = "個";
+
+/* Exercise Additional */
+"Describe your workout" = "ワークアウトを説明";
+"Duration (minutes)" = "時間（分）";
+"Enter calories burned" = "消費カロリーを入力";
+"Set intensity" = "強度を設定";
+"mins" = "分";
+
+/* Diet Plan Additional */
+"Active" = "アクティブ";
+"Inactive" = "非アクティブ";
+
+/* Additional Missing Strings */
+"Retry" = "再試行";
+"Something went wrong" = "問題が発生しました";
+"Try Again" = "再試行";
+"Dismiss" = "閉じる";
+"Dismiss keyboard" = "キーボードを閉じる";
+"Premium Feature" = "プレミアム機能";
+"Premium" = "プレミアム";
+"Upgrade to Premium" = "プレミアムにアップグレード";
+"Export Data" = "データをエクスポート";
+"Weight History" = "体重履歴";
+"Meal History" = "食事履歴";
+"Daily Nutrition Summary" = "日次栄養サマリー";
+"No weight entries yet" = "体重記録はまだありません";
+"Start tracking your weight to see your progress here" = "体重を記録して、ここで進捗を確認してください";
+"Preferences" = "設定";
+"Choose your preferred appearance" = "好みの外観を選択";
+"Scan Meal" = "食事をスキャン";
+"Capture Your Meal" = "食事を撮影";
+"Take a photo or choose from your library" = "写真を撮るか、ライブラリから選択";
+"Analysis Results" = "分析結果";
+"Fix Result" = "結果を修正";
+"What is this food?" = "この食べ物は何ですか？";
+"Ingredients" = "材料";
+"Total Nutrition" = "総栄養";
+"Notes" = "メモ";
+"Meal Details" = "食事の詳細";
+"Loading meal details..." = "食事の詳細を読み込み中...";
+"Unable to load meal details" = "食事の詳細を読み込めませんでした";
+"Nutrition Breakdown" = "栄養内訳";
+"No Meals" = "食事なし";
+"No meals were recorded for this day" = "この日の食事は記録されていません";
+"My Badges" = "マイバッジ";
+"more" = "もっと";
+"Tap to view all badges and achievements" = "タップしてすべてのバッジと実績を表示";
+"Today" = "今日";
+"Save Your Weight" = "体重を保存";
+"Track your progress by saving your current weight" = "現在の体重を保存して進捗を追跡";
+"High" = "高";
+"Medium" = "中";
+"Low" = "低";
+"Welcome to CalCalculator" = "CalCalculatorへようこそ";
+"What is your gender?" = "性別は？";
+"How old are you?" = "年齢は？";
+"Body Metrics" = "身体測定";
+"You can change this anytime in Settings." = "設定でいつでも変更できます。";
+"Allow Notifications" = "通知を許可";
+"Enable Notifications" = "通知を有効化";
+"CalCalculator" = "CalCalculator";
+"Track your nutrition with ease" = "簡単に栄養を追跡";
+"Already have an account?" = "すでにアカウントをお持ちですか？";
+"Sign In" = "サインイン";

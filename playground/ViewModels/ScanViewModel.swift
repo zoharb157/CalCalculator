@@ -148,15 +148,8 @@ final class ScanViewModel {
             }
             
             // Continue progress smoothly up to 90%
-            while currentProgress < 0.9 && !Task.isCancelled {
-                try await Task.sleep(nanoseconds: interval)
-                if !Task.isCancelled {
-                    currentProgress = min(currentProgress + increment, 0.9)
-                    await MainActor.run {
-                        analysisProgress = currentProgress
-                    }
-                }
-            }
+            // Removed sleep - progress updates will be driven by actual API response
+            // Progress will be set to 1.0 when API completes
         }
 
         do {
@@ -174,8 +167,6 @@ final class ScanViewModel {
                     analysisProgress = 1.0
                 }
             }
-            // Small delay to show 100% before transitioning
-            try? await Task.sleep(nanoseconds: 200_000_000)
 
             // Check if food was detected
             guard response.foodDetected, let meal = response.toMeal() else {
@@ -419,19 +410,19 @@ enum ScanError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .cameraPermissionDenied:
-            return "Camera access is required to scan meals. Please enable it in Settings."
+            return "Camera access denied. To scan your meals, please enable camera permissions in Settings."
         case .cameraNotAvailable:
-            return "Camera is not available on this device."
+            return "Camera is not available on this device. Please use a device with a camera."
         case .imageSelectionFailed:
-            return "Failed to select the image. Please try again."
+            return "Failed to select the image. Please try selecting a different image."
         case .analysisTimeout:
-            return "Analysis took too long. Please try again."
+            return "Analysis took too long. Please check your internet connection and try again."
         case .networkError:
-            return "Network error. Please check your connection and try again."
+            return "Network error. Please check your internet connection and try again."
         case .authenticationRequired:
             return "Please log in to analyze meals."
         case .noFoodDetected:
-            return "No food detected in the image. Please try with a clearer photo."
+            return "No food detected in the image. Please try with a clearer photo of food."
         }
     }
 

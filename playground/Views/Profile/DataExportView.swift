@@ -12,13 +12,15 @@ import PDFKit
 struct DataExportView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @Query(sort: \WeightEntry.date, order: .reverse) private var weightEntries: [WeightEntry]
     @Query(sort: \Meal.timestamp, order: .reverse) private var meals: [Meal]
     
     @State private var isExporting = false
-    @State private var exportSuccess = false
     @State private var exportError: String?
+    @State private var shareSheetURL: URL?
+    @State private var showShareSheet = false
     
     var body: some View {
         NavigationStack {
@@ -28,16 +30,16 @@ struct DataExportView: View {
                     ExportOptionRow(
                         icon: "scalemass.fill",
                         iconColor: .blue,
-                        title: "Weight History",
+                        title: localizationManager.localizedString(for: AppStrings.Profile.weightHistory),
                         subtitle: "\(weightEntries.count) entries",
                         isDisabled: weightEntries.isEmpty
                     ) {
                         exportWeightDataPDF()
                     }
                 } header: {
-                    Text("Weight Data")
+                    LocalizedText(AppStrings.Profile.weightData)
                 } footer: {
-                    Text("Export your weight tracking history as a PDF file.")
+                    LocalizedText(AppStrings.Profile.exportWeightDescription)
                 }
                 
                 // Meal Data Section
@@ -45,7 +47,7 @@ struct DataExportView: View {
                     ExportOptionRow(
                         icon: "fork.knife",
                         iconColor: .green,
-                        title: "Meal History",
+                        title: localizationManager.localizedString(for: AppStrings.Profile.mealHistory),
                         subtitle: "\(meals.count) meals logged",
                         isDisabled: meals.isEmpty
                     ) {
@@ -55,16 +57,16 @@ struct DataExportView: View {
                     ExportOptionRow(
                         icon: "chart.bar.fill",
                         iconColor: .orange,
-                        title: "Daily Nutrition Summary",
-                        subtitle: "Aggregated daily totals",
+                        title: localizationManager.localizedString(for: AppStrings.Profile.dailyNutritionSummary),
+                        subtitle: localizationManager.localizedString(for: AppStrings.Profile.aggregatedDailyTotals),
                         isDisabled: meals.isEmpty
                     ) {
                         exportDailyNutritionSummaryPDF()
                     }
                 } header: {
-                    Text("Nutrition Data")
+                    LocalizedText(AppStrings.Profile.nutritionData)
                 } footer: {
-                    Text("Export your meal logs and nutrition data as PDF files.")
+                    LocalizedText(AppStrings.Profile.exportNutritionDescription)
                 }
                 
                 // Export All Section
@@ -72,17 +74,18 @@ struct DataExportView: View {
                     ExportOptionRow(
                         icon: "square.and.arrow.up.fill",
                         iconColor: .purple,
-                        title: "Export All Data",
-                        subtitle: "Complete data backup",
+                        title: localizationManager.localizedString(for: AppStrings.Profile.exportAllData),
+                        subtitle: localizationManager.localizedString(for: AppStrings.Profile.completeDataBackup),
                         isDisabled: weightEntries.isEmpty && meals.isEmpty
                     ) {
                         exportAllDataPDF()
                     }
                 } footer: {
-                    Text("Export all your data in a comprehensive PDF report.")
+                    LocalizedText(AppStrings.Profile.exportAllDescription)
                 }
             }
-            .navigationTitle("Export Data")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.exportData))
+                .id("export-data-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -99,7 +102,7 @@ struct DataExportView: View {
                     VStack(spacing: 16) {
                         ProgressView()
                             .scaleEffect(1.5)
-                        Text("Generating PDF...")
+                        LocalizedText(AppStrings.Profile.generatingPDF)
                             .font(.headline)
                             .foregroundColor(.white)
                     }
@@ -109,10 +112,14 @@ struct DataExportView: View {
                     .shadow(radius: 10)
                 }
             }
-            .alert("Export Complete", isPresented: $exportSuccess) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text("Your data has been exported successfully.")
+            .onChange(of: showShareSheet) { oldValue, newValue in
+                if !newValue && oldValue {
+                    // Share sheet was dismissed - clean up temporary file immediately
+                    if let url = shareSheetURL {
+                        try? FileManager.default.removeItem(at: url)
+                        shareSheetURL = nil
+                    }
+                }
             }
             .alert("Export Error", isPresented: .init(
                 get: { exportError != nil },
@@ -121,6 +128,11 @@ struct DataExportView: View {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(exportError ?? "An unknown error occurred.")
+            }
+            .sheet(isPresented: $showShareSheet) {
+                if let url = shareSheetURL {
+                    ShareSheet(items: [url])
+                }
             }
         }
     }
@@ -647,10 +659,24 @@ struct DataExportView: View {
     }
     
     private func sharePDF(_ data: Data, filename: String) {
+        guard !data.isEmpty else {
+            DispatchQueue.main.async {
+                isExporting = false
+                exportError = "Failed to generate PDF. The data is empty."
+            }
+            return
+        }
+        
         let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
         
         do {
             try data.write(to: tempURL)
+            
+            // Verify file was written
+            guard FileManager.default.fileExists(atPath: tempURL.path) else {
+                throw NSError(domain: "ExportError", code: -1, userInfo: [NSLocalizedDescriptionKey: "File was not created successfully"])
+            }
+            
             DispatchQueue.main.async {
                 isExporting = false
                 shareFile(tempURL)
@@ -658,26 +684,16 @@ struct DataExportView: View {
         } catch {
             DispatchQueue.main.async {
                 isExporting = false
-                exportError = error.localizedDescription
+                exportError = "Failed to export PDF: \(error.localizedDescription)"
+                print("❌ Export error: \(error)")
             }
         }
     }
     
     private func shareFile(_ url: URL) {
-        let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
-        
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let rootVC = windowScene.windows.first?.rootViewController {
-            // Handle iPad
-            if let popover = activityVC.popoverPresentationController {
-                popover.sourceView = rootVC.view
-                popover.sourceRect = CGRect(x: rootVC.view.bounds.midX, y: rootVC.view.bounds.midY, width: 0, height: 0)
-                popover.permittedArrowDirections = []
-            }
-            rootVC.present(activityVC, animated: true) {
-                HapticManager.shared.notification(.success)
-            }
-        }
+        shareSheetURL = url
+        showShareSheet = true
+        HapticManager.shared.notification(.success)
     }
 }
 

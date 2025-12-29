@@ -415,7 +415,15 @@ struct ShareSheet: UIViewControllerRepresentable {
     let items: [Any]
     
     func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: items, applicationActivities: nil)
+        let activityVC = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        
+        // Handle iPad
+        if let popover = activityVC.popoverPresentationController {
+            popover.sourceView = UIView()
+            popover.permittedArrowDirections = .any
+        }
+        
+        return activityVC
     }
     
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}

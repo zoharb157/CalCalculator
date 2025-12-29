@@ -14,6 +14,7 @@ struct PreferencesView: View {
     @Bindable var viewModel: ProfileViewModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     // MARK: - Body
     
@@ -30,7 +31,8 @@ struct PreferencesView: View {
                 .padding(.bottom, 40)
             }
             .background(Color(UIColor.systemGroupedBackground))
-            .navigationTitle("Preferences")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.preferences))
+                .id("preferences-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -52,9 +54,10 @@ struct PreferencesView: View {
             ProfileSectionHeader(title: "Appearance")
             
             VStack(spacing: 16) {
-                Text("Choose your preferred appearance")
+                Text(localizationManager.localizedString(for: AppStrings.Profile.choosePreferredAppearance))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
+                    .id("choose-appearance-\(localizationManager.currentLanguage)")
                 
                 AppearanceModeSelector(selectedMode: $viewModel.appearanceMode)
             }

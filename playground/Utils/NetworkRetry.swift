@@ -37,10 +37,8 @@ struct NetworkRetry {
                     throw error
                 }
                 
-                // Wait before retrying (exponential backoff)
-                let delay = min(currentDelay, maxDelay)
-                print("⚠️ [NetworkRetry] Attempt \(attempt + 1) failed, retrying in \(delay)s...")
-                try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                // Retry immediately without delay
+                print("⚠️ [NetworkRetry] Attempt \(attempt + 1) failed, retrying immediately...")
                 currentDelay *= backoffMultiplier
             }
         }

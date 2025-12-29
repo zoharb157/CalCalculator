@@ -1,0 +1,347 @@
+/* Common */
+"Save" = "שמור";
+"Cancel" = "ביטול";
+"Done" = "סיום";
+"Delete" = "מחק";
+"Edit" = "ערוך";
+"OK" = "אישור";
+"Yes" = "כן";
+"No" = "לא";
+"Close" = "סגור";
+"Back" = "חזור";
+"Next" = "הבא";
+"Continue" = "המשך";
+"Loading..." = "טוען...";
+"Error" = "שגיאה";
+"Success" = "הצלחה";
+
+/* Home */
+"Home" = "בית";
+"Macronutrients" = "מקרו-תזונה";
+"Recently uploaded" = "הועלה לאחרונה";
+"Calories left" = "קלוריות נותרות";
+"Gained" = "הושג";
+"Lost" = "אבד";
+"Net" = "נטו";
+"Consumed" = "נצרך";
+"Burned" = "נשרף";
+"No meals yet" = "אין ארוחות עדיין";
+"Tap + to add your first meal of the day" = "הקש + כדי להוסיף את הארוחה הראשונה שלך ביום";
+
+/* Progress */
+"Progress" = "התקדמות";
+"Current Weight" = "משקל נוכחי";
+"Weight Changes" = "שינויי משקל";
+"Progress Photos" = "תמונות התקדמות";
+"Daily Average Calories" = "ממוצע קלוריות יומי";
+"BMI" = "BMI";
+"HealthKit" = "HealthKit";
+"Save Weight" = "שמור משקל";
+"Log Weight" = "רשום משקל";
+"View Progress" = "צפה בהתקדמות";
+"3 day" = "3 ימים";
+"7 day" = "7 ימים";
+"14 day" = "14 ימים";
+"30 day" = "30 ימים";
+"90 day" = "90 ימים";
+"All Time" = "כל הזמן";
+"No change" = "אין שינוי";
+
+/* Food */
+"Save Food" = "שמור אוכל";
+"Log Food" = "רשום אוכל";
+"Food saved successfully!" = "אוכל נשמר בהצלחה!";
+"Save Meal" = "שמור ארוחה";
+"Describe" = "תאר";
+"Scan" = "סרוק";
+"Exercise" = "אימון";
+"Diet" = "דיאטה";
+"Today's Activity" = "פעילות היום";
+"View All" = "הצג הכל";
+"Meals" = "ארוחות";
+"Workouts" = "אימונים";
+"No Logs Yet" = "אין רישומים עדיין";
+"Start logging your meals and exercises to see them here" = "התחל לרשום את הארוחות והאימונים שלך כדי לראות אותם כאן";
+"No Activity Yet" = "אין פעילות עדיין";
+"Start saving your meals and exercises to see them here" = "התחל לשמור את הארוחות והאימונים שלך כדי לראות אותם כאן";
+
+/* Exercise */
+"Save Exercise" = "שמור אימון";
+"Log Exercise" = "רשום אימון";
+"Exercise saved successfully!" = "אימון נשמר בהצלחה!";
+"Select Exercise Type" = "בחר סוג אימון";
+"Duration" = "משך";
+"Intensity" = "עוצמה";
+"Calories" = "קלוריות";
+"Describe Exercise" = "תאר אימון";
+"Manual Entry" = "הזנה ידנית";
+
+/* Diet Plan */
+"Diet Plan" = "תוכנית דיאטה";
+"My Diet" = "הדיאטה שלי";
+"Create Diet Plan" = "צור תוכנית דיאטה";
+"Edit Diet Plan" = "ערוך תוכנית דיאטה";
+"Delete Diet Plan" = "מחק תוכנית דיאטה";
+"No Diet Plan" = "אין תוכנית דיאטה";
+"Create a diet plan to schedule repetitive meals and track your adherence" = "צור תוכנית דיאטה לתזמון ארוחות חוזרות ולמעקב אחר ההיענות שלך";
+"Today's Diet Plan" = "תוכנית הדיאטה של היום";
+"meals completed" = "ארוחות הושלמו";
+"Scheduled Meals" = "ארוחות מתוזמנות";
+"No meals scheduled" = "אין ארוחות מתוזמנות";
+"Add Scheduled Meal" = "הוסף ארוחה מתוזמנת";
+"Daily Calorie Goal" = "יעד קלוריות יומי";
+"Adherence" = "היענות";
+"Adherence Trend" = "מגמת היענות";
+"Today's Schedule" = "לוח הזמנים של היום";
+"Insights" = "תובנות";
+"Weekly Statistics" = "סטטיסטיקות שבועיות";
+"No data available" = "אין נתונים זמינים";
+"Off-Diet Meals" = "ארוחות מחוץ לדיאטה";
+"calories from off-diet meals" = "קלוריות מארוחות מחוץ לדיאטה";
+"You can only have one active diet plan at a time. Creating a new plan will replace this one." = "אתה יכול להחזיק רק תוכנית דיאטה פעילה אחת בכל פעם. יצירת תוכנית חדשה תחליף את זו.";
+"Please add at least one scheduled meal before saving the diet plan." = "אנא הוסף לפחות ארוחה מתוזמנת אחת לפני שמירת תוכנית הדיאטה.";
+"No Meals Scheduled" = "אין ארוחות מתוזמנות";
+
+/* Profile */
+"Profile" = "פרופיל";
+"Settings" = "הגדרות";
+"Language" = "שפה";
+"Select Language" = "בחר שפה";
+"Export Data" = "ייצא נתונים";
+"Weight Data" = "נתוני משקל";
+"Nutrition Data" = "נתוני תזונה";
+"Export your weight tracking history as a PDF file." = "ייצא את היסטוריית מעקב המשקל שלך כקובץ PDF.";
+"Export your meal logs and nutrition data as PDF files." = "ייצא את רישומי הארוחות ונתוני התזונה שלך כקבצי PDF.";
+"Export all your data in a comprehensive PDF report." = "ייצא את כל הנתונים שלך בדוח PDF מקיף.";
+"Generating PDF..." = "מייצר PDF...";
+"Export Error" = "שגיאת ייצוא";
+"An unknown error occurred." = "אירעה שגיאה לא ידועה.";
+
+/* Weight */
+"Save Your Weight" = "שמור את המשקל שלך";
+"Track your progress by saving your current weight" = "עקוב אחר ההתקדמות שלך על ידי שמירת המשקל הנוכחי שלך";
+"Weight" = "משקל";
+"Target Weight" = "משקל יעד";
+"Start Weight" = "משקל התחלתי";
+"Goal Weight" = "משקל מטרה";
+"Last" = "אחרון";
+"No weight logged" = "אין משקל רשום";
+
+/* Premium */
+"Premium Required" = "נדרש פרימיום";
+"Upgrade to unlock" = "שדרג כדי לפתוח";
+"Are you sure you want to skip the free trial?" = "האם אתה בטוח שברצונך לדלג על הניסיון החינמי?";
+"Claim your free trial now without paying" = "השתמש בניסיון החינמי שלך עכשיו ללא תשלום";
+"Start Free Trial" = "התחל ניסיון חינמי";
+"Not now" = "לא עכשיו";
+"Premium feature" = "תכונה פרימיום";
+
+/* History */
+"History" = "היסטוריה";
+"No History Yet" = "אין היסטוריה עדיין";
+"Your meal history will appear here\nonce you start tracking" = "היסטוריית הארוחות שלך תופיע כאן\nברגע שתתחיל לעקוב";
+"No Results" = "אין תוצאות";
+"No entries found for the selected time period" = "לא נמצאו רשומות לתקופת הזמן שנבחרה";
+"Clear Filters" = "נקה מסננים";
+
+/* Onboarding */
+"Welcome" = "ברוך הבא";
+"Get Started" = "התחל";
+"Skip" = "דלג";
+
+/* Errors */
+"Something went wrong" = "משהו השתבש";
+"Try Again" = "נסה שוב";
+"No Food Detected" = "לא זוהה אוכל";
+"Camera Error" = "שגיאת מצלמה";
+"Permission Denied" = "הרשאה נדחתה";
+
+/* Notifications */
+"Time to Log Your Weight" = "זמן לרשום את המשקל שלך";
+"Track your progress by logging your weight this morning." = "עקוב אחר ההתקדמות שלך על ידי רישום המשקל שלך הבוקר.";
+
+
+/* Additional UI Strings */
+"View All" = "הצג הכל";
+"Quick Save" = "שמירה מהירה";
+"What did you eat?" = "מה אכלת?";
+"Estimated Calories" = "קלוריות משוערות";
+"kcal" = "קק\"ל";
+"Quick Presets" = "הגדרות מהירות";
+"Category" = "קטגוריה";
+"What exercise did you do?" = "איזה אימון עשית?";
+"minutes" = "דקות";
+"Calories Burned" = "קלוריות שנשרפו";
+"Capture Your Meal" = "צלם את הארוחה שלך";
+"Take a photo or choose from your library" = "צלם תמונה או בחר מהגלריה שלך";
+"Take Photo" = "צלם תמונה";
+"Voice Log" = "רישום קולי";
+"Describe Your Food" = "תאר את האוכל שלך";
+"Tell us what you ate" = "ספר לנו מה אכלת";
+"Describe your meal in natural language and we'll calculate the nutrition for you" = "תאר את הארוחה שלך בשפה טבעית ונחשב את הערכים התזונתיים עבורך";
+"I had..." = "אכלתי...";
+"Try saying:" = "נסה לומר:";
+"Meal Category" = "קטגוריית ארוחה";
+"Save weight" = "שמור משקל";
+"Start:" = "התחלה:";
+"Goal:" = "מטרה:";
+"Body Mass Index" = "מדד מסת גוף";
+"View Daily Breakdown" = "צפה בפירוט יומי";
+"Health Data" = "נתוני בריאות";
+"Health Access Required" = "נדרש גישה לבריאות";
+"Go to Settings > Privacy & Security > Health > CalCalculator" = "עבור להגדרות > פרטיות ואבטחה > בריאות > CalCalculator";
+"Open Settings" = "פתח הגדרות";
+"Delete Entry" = "מחק רשומה";
+"This cannot be undone." = "פעולה זו לא ניתנת לביטול.";
+"cal" = "קק\"ל";
+"calories" = "קלוריות";
+"No meals" = "אין ארוחות";
+"Today's progress" = "התקדמות היום";
+"Tap to view details for this day" = "הקש כדי לראות פרטים ליום זה";
+"Meals" = "ארוחות";
+"Consumed" = "נצרך";
+"Workouts" = "אימונים";
+"Burned" = "נשרף";
+"Save Food" = "שמור אוכל";
+"Save Exercise" = "שמור אימון";
+"Save Meal" = "שמור ארוחה";
+"Save [type]" = "שמור %@";
+"Delete \"%@\"?" = "למחוק \"%@\"?";
+"Delete %@ exercise?" = "למחוק אימון %@?";
+"Microphone Access" = "גישה למיקרופון";
+"Voice logging requires microphone access. Please enable it in Settings to use this feature." = "רישום קולי דורש גישה למיקרופון. אנא הפעל אותו בהגדרות כדי להשתמש בתכונה זו.";
+"Settings" = "הגדרות";
+"An error occurred" = "אירעה שגיאה";
+"Food logged successfully!" = "אוכל נרשם בהצלחה!";
+
+/* Progress Additional */
+"Save weight" = "שמור משקל";
+"Start" = "התחלה";
+"Goal" = "מטרה";
+"Body Mass Index" = "מדד מסת גוף";
+"View Daily Breakdown" = "צפה בפירוט יומי";
+"Health Data" = "נתוני בריאות";
+"Health Access Required" = "נדרש גישה לבריאות";
+"Go to Settings > Privacy & Security > Health > CalCalculator" = "עבור להגדרות > פרטיות ואבטחה > בריאות > CalCalculator";
+"Open Settings" = "פתח הגדרות";
+"Weight Progress" = "התקדמות משקל";
+"Current" = "נוכחי";
+"Change" = "שינוי";
+"Weight Trend" = "מגמת משקל";
+"No Weight Data" = "אין נתוני משקל";
+"Save your weight to see progress over time" = "שמור את המשקל שלך כדי לראות התקדמות לאורך זמן";
+"entries" = "רשומות";
+"No entries yet" = "אין רשומות עדיין";
+"Calories Breakdown" = "פירוט קלוריות";
+"Daily Average" = "ממוצע יומי";
+"days tracked" = "ימים במעקב";
+"Calorie Trend" = "מגמת קלוריות";
+"No Calorie Data" = "אין נתוני קלוריות";
+"Start tracking meals to see your calorie trends" = "התחל לעקוב אחר ארוחות כדי לראות את מגמות הקלוריות שלך";
+"Daily Breakdown" = "פירוט יומי";
+"days" = "ימים";
+"avg" = "ממוצע";
+"Highest" = "הגבוה ביותר";
+"Lowest" = "הנמוך ביותר";
+"Your workout burned" = "האימון שלך שרף";
+"Cals" = "קק\"ל";
+"Burned Calories" = "קלוריות שנשרפו";
+"Saving..." = "שומר...";
+"Saved Successfully!" = "נשמר בהצלחה!";
+"Your food has been logged." = "האוכל שלך נרשם.";
+"Your exercise has been logged." = "האימון שלך נרשם.";
+"Transcribed:" = "תעתוק:";
+"Coming Soon" = "בקרוב";
+"Add meals to your diet plan to see them here" = "הוסף ארוחות לתוכנית הדיאטה שלך כדי לראות אותן כאן";
+"Goal not met" = "מטרה לא הושגה";
+"Loading history..." = "טוען היסטוריה...";
+"No entries found for \"%@\"" = "לא נמצאו רשומות עבור \"%@\"";
+"Delete %@ exercise? This cannot be undone." = "למחוק אימון %@? זה לא יכול להיות מבוטל.";
+"meals" = "ארוחות";
+"exercises" = "אימונים";
+"Loading logs..." = "טוען רשומות...";
+"Start logging your meals and exercises to see them here" = "התחל לרשום את הארוחות והאימונים שלך כדי לראות אותם כאן";
+"Generating Your Plan" = "מייצר את התוכנית שלך";
+"Your Personalized Goals" = "המטרות המותאמות אישית שלך";
+"Based on your profile and objectives" = "תבסס על הפרופיל והמטרות שלך";
+"AI is processing your food image" = "בינה מלאכותית מעבדת את תמונת האוכל שלך";
+
+"over" = "מעל";
+
+/* Food Additional */
+"Category:" = "קטגוריה:";
+"Analyzing your food..." = "מנתח את האוכל שלך...";
+"Using AI to identify calories and nutrients" = "שימוש בבינה מלאכותית לזיהוי קלוריות וחומרים מזינים";
+"Quick Add" = "הוספה מהירה";
+"Common Foods" = "מזונות נפוצים";
+"Recent Foods" = "מזונות אחרונים";
+"Saved Foods" = "מזונות שמורים";
+"Portion" = "מנה";
+"serving" = "מנה";
+"oz" = "אונקיה";
+"cup" = "כוס";
+"piece" = "חתיכה";
+
+/* Exercise Additional */
+"Describe your workout" = "תאר את האימון שלך";
+"Duration (minutes)" = "משך (דקות)";
+"Enter calories burned" = "הכנס קלוריות שנשרפו";
+"Set intensity" = "הגדר עוצמה";
+"mins" = "דק'";
+
+/* Diet Plan Additional */
+"Active" = "פעיל";
+"Inactive" = "לא פעיל";
+
+/* Additional Missing Strings */
+"Retry" = "נסה שוב";
+"Something went wrong" = "משהו השתבש";
+"Try Again" = "נסה שוב";
+"Dismiss" = "סגור";
+"Dismiss keyboard" = "סגור מקלדת";
+"Premium Feature" = "תכונה פרימיום";
+"Premium" = "פרימיום";
+"Upgrade to Premium" = "שדרג לפרימיום";
+"Export Data" = "ייצא נתונים";
+"Weight History" = "היסטוריית משקל";
+"Meal History" = "היסטוריית ארוחות";
+"Daily Nutrition Summary" = "סיכום תזונה יומי";
+"No weight entries yet" = "עדיין אין רשומות משקל";
+"Start tracking your weight to see your progress here" = "התחל לעקוב אחר המשקל שלך כדי לראות את ההתקדמות שלך כאן";
+"Preferences" = "העדפות";
+"Choose your preferred appearance" = "בחר את המראה המועדף עליך";
+"Scan Meal" = "סרוק ארוחה";
+"Capture Your Meal" = "צלם את הארוחה שלך";
+"Take a photo or choose from your library" = "צלם תמונה או בחר מהספרייה שלך";
+"Analysis Results" = "תוצאות ניתוח";
+"Fix Result" = "תקן תוצאה";
+"What is this food?" = "מה זה האוכל הזה?";
+"Ingredients" = "מרכיבים";
+"Total Nutrition" = "תזונה כוללת";
+"Notes" = "הערות";
+"Meal Details" = "פרטי ארוחה";
+"Loading meal details..." = "טוען פרטי ארוחה...";
+"Unable to load meal details" = "לא ניתן לטעון פרטי ארוחה";
+"Nutrition Breakdown" = "פירוט תזונתי";
+"No Meals" = "אין ארוחות";
+"No meals were recorded for this day" = "לא נרשמו ארוחות ליום זה";
+"My Badges" = "התגים שלי";
+"more" = "עוד";
+"Tap to view all badges and achievements" = "הקש כדי לראות את כל התגים וההישגים";
+"Today" = "היום";
+"Save Your Weight" = "שמור את המשקל שלך";
+"Track your progress by saving your current weight" = "עקוב אחר ההתקדמות שלך על ידי שמירת המשקל הנוכחי שלך";
+"High" = "גבוה";
+"Medium" = "בינוני";
+"Low" = "נמוך";
+"Welcome to CalCalculator" = "ברוך הבא ל-CalCalculator";
+"What is your gender?" = "מה המגדר שלך?";
+"How old are you?" = "כמה אתה בן?";
+"Body Metrics" = "מדדי גוף";
+"You can change this anytime in Settings." = "אתה יכול לשנות את זה בכל עת בהגדרות.";
+"Allow Notifications" = "אפשר התראות";
+"Enable Notifications" = "הפעל התראות";
+"CalCalculator" = "CalCalculator";
+"Track your nutrition with ease" = "עקוב אחר התזונה שלך בקלות";
+"Already have an account?" = "כבר יש לך חשבון?";
+"Sign In" = "התחבר";

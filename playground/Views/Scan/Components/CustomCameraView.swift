@@ -61,6 +61,7 @@ enum CaptureResult {
 struct CustomCameraView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var camera = CameraController()
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     @State private var selectedMode: CaptureMode = .photo
     @State private var flashEnabled = false
     @State private var showingHintInput = false
@@ -298,7 +299,8 @@ struct CustomCameraView: View {
                 .padding(.bottom)
             }
             .padding(.top)
-            .navigationTitle("Confirm")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Scanning.confirm))
+                .id("confirm-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

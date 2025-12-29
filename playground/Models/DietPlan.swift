@@ -16,6 +16,7 @@ final class DietPlan: Identifiable {
     var planDescription: String? // Using planDescription to avoid conflict with NSObject.description
     var createdAt: Date
     var isActive: Bool
+    var dailyCalorieGoal: Int? // Optional daily calorie goal for the diet
     
     @Relationship(deleteRule: .cascade)
     var scheduledMeals: [ScheduledMeal]
@@ -26,6 +27,7 @@ final class DietPlan: Identifiable {
         planDescription: String? = nil,
         createdAt: Date = Date(),
         isActive: Bool = true,
+        dailyCalorieGoal: Int? = nil,
         scheduledMeals: [ScheduledMeal] = []
     ) {
         self.id = id
@@ -33,6 +35,7 @@ final class DietPlan: Identifiable {
         self.planDescription = planDescription
         self.createdAt = createdAt
         self.isActive = isActive
+        self.dailyCalorieGoal = dailyCalorieGoal
         self.scheduledMeals = scheduledMeals
     }
     

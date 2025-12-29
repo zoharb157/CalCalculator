@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct BadgesView: View {
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     // MARK: - State
     
@@ -34,13 +35,15 @@ struct BadgesView: View {
                 .padding(.bottom, 40)
             }
             .background(Color(UIColor.systemGroupedBackground))
-            .navigationTitle("My Badges")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.myBadges))
+                .id("my-badges-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.done)) {
                         dismiss()
                     }
+                    .id("done-badges-\(localizationManager.currentLanguage)")
                     .fontWeight(.semibold)
                 }
             }

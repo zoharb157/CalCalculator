@@ -45,7 +45,7 @@ struct SmallWidgetView: View {
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundStyle(WidgetColors.calories)
                         
-                        Text("Log food")
+                        Text("Save food")
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(WidgetColors.secondaryText)
                     } else {

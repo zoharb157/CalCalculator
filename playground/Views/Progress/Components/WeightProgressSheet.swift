@@ -13,6 +13,7 @@ struct WeightProgressSheet: View {
     @Binding var selectedFilter: TimeFilter
     let useMetricUnits: Bool
     let onFilterChange: () -> Void
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @Environment(\.dismiss) private var dismiss
     @State private var selectedPoint: WeightDataPoint?
@@ -81,13 +82,15 @@ struct WeightProgressSheet: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
-            .navigationTitle("Weight Progress")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Progress.weightProgress))
+                .id("weight-progress-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.done)) {
                         dismiss()
                     }
+                    .id("done-weight-progress-\(localizationManager.currentLanguage)")
                 }
             }
         }
@@ -126,9 +129,10 @@ struct WeightProgressSheet: View {
     private var summaryCard: some View {
         HStack(spacing: 24) {
             VStack(spacing: 4) {
-                Text("Start")
+                Text(localizationManager.localizedString(for: AppStrings.Progress.start))
                     .font(.caption)
                     .foregroundColor(.secondary)
+                    .id("start-weight-\(localizationManager.currentLanguage)")
                 
                 Text(String(format: "%.1f", displayWeights.first?.weight ?? 0))
                     .font(.title3)
@@ -143,7 +147,8 @@ struct WeightProgressSheet: View {
                 .foregroundColor(.secondary)
             
             VStack(spacing: 4) {
-                Text("Current")
+                Text(localizationManager.localizedString(for: AppStrings.Progress.current))
+                    .id("current-weight-\(localizationManager.currentLanguage)")
                     .font(.caption)
                     .foregroundColor(.secondary)
                 
@@ -159,7 +164,8 @@ struct WeightProgressSheet: View {
             Spacer()
             
             VStack(spacing: 4) {
-                Text("Change")
+                Text(localizationManager.localizedString(for: AppStrings.Progress.change))
+                    .id("change-weight-\(localizationManager.currentLanguage)")
                     .font(.caption)
                     .foregroundColor(.secondary)
                 
@@ -188,7 +194,7 @@ struct WeightProgressSheet: View {
     private var statsGrid: some View {
         HStack(spacing: 12) {
             StatCard(
-                title: "Average",
+                title: localizationManager.localizedString(for: AppStrings.Progress.average),
                 value: String(format: "%.1f", averageWeight),
                 unit: weightUnit,
                 icon: "chart.bar.fill",
@@ -196,7 +202,7 @@ struct WeightProgressSheet: View {
             )
             
             StatCard(
-                title: "Lowest",
+                title: localizationManager.localizedString(for: AppStrings.Progress.lowest),
                 value: String(format: "%.1f", lowestWeight),
                 unit: weightUnit,
                 icon: "arrow.down.circle.fill",
@@ -204,7 +210,7 @@ struct WeightProgressSheet: View {
             )
             
             StatCard(
-                title: "Highest",
+                title: localizationManager.localizedString(for: AppStrings.Progress.highest),
                 value: String(format: "%.1f", highestWeight),
                 unit: weightUnit,
                 icon: "arrow.up.circle.fill",
@@ -212,12 +218,13 @@ struct WeightProgressSheet: View {
             )
             
             StatCard(
-                title: "Entries",
+                title: localizationManager.localizedString(for: AppStrings.Progress.entriesLabel),
                 value: "\(displayWeights.count)",
                 unit: nil,
                 icon: "list.bullet",
                 color: .purple
             )
+            .id("stats-grid-\(localizationManager.currentLanguage)")
         }
     }
     
@@ -230,7 +237,8 @@ struct WeightProgressSheet: View {
         } else {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text("Weight Trend")
+                    Text(localizationManager.localizedString(for: AppStrings.Progress.weightTrend))
+                        .id("weight-trend-\(localizationManager.currentLanguage)")
                         .font(.headline)
                     
                     Spacer()
@@ -343,10 +351,12 @@ struct WeightProgressSheet: View {
                 .font(.system(size: 48))
                 .foregroundColor(.secondary)
             
-            Text("No Weight Data")
+            Text(localizationManager.localizedString(for: AppStrings.Progress.noWeightData))
+                .id("no-weight-data-\(localizationManager.currentLanguage)")
                 .font(.headline)
             
-            Text("Log your weight to see progress over time")
+            Text(localizationManager.localizedString(for: AppStrings.Progress.saveWeightToSeeProgress))
+                .id("save-weight-see-progress-\(localizationManager.currentLanguage)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
@@ -361,7 +371,8 @@ struct WeightProgressSheet: View {
     private var weightListSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("History")
+                Text(localizationManager.localizedString(for: AppStrings.Progress.history))
+                    .id("history-weight-\(localizationManager.currentLanguage)")
                     .font(.headline)
                 
                 Spacer()
@@ -372,7 +383,8 @@ struct WeightProgressSheet: View {
             }
             
             if displayWeights.isEmpty {
-                Text("No entries yet")
+                Text(localizationManager.localizedString(for: AppStrings.Progress.noEntriesYet))
+                    .id("no-entries-weight-\(localizationManager.currentLanguage)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity)
@@ -479,7 +491,7 @@ private struct WeightHistoryRow: View {
             WeightDataPoint(date: Date().addingTimeInterval(-86400 * 10), weight: 77, note: "Feeling good!"),
             WeightDataPoint(date: Date(), weight: 75.5)
         ],
-        selectedFilter: .constant(.threeMonths),
+        selectedFilter: .constant(.ninetyDays),
         useMetricUnits: true,
         onFilterChange: {}
     )

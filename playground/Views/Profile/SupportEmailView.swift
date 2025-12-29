@@ -13,6 +13,7 @@ import UIKit
 #endif
 
 struct SupportEmailView: View {
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     @Environment(\.dismiss) private var dismiss
     @State private var issueDescription = ""
     @State private var showingMailComposer = false
@@ -34,13 +35,15 @@ struct SupportEmailView: View {
                 messageSection
                 deviceInfoSection
             }
-            .navigationTitle("Support Request")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.supportRequest))
+                .id("support-request-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
                         dismiss()
                     }
+                    .id("cancel-support-\(localizationManager.currentLanguage)")
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     sendButton
@@ -55,10 +58,12 @@ struct SupportEmailView: View {
                 )
             }
             #endif
-            .alert("Copied to Clipboard", isPresented: $showCopiedAlert) {
-                Button("OK", role: .cancel) { }
+            .alert(localizationManager.localizedString(for: AppStrings.Common.success), isPresented: $showCopiedAlert) {
+                Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) { }
+                    .id("ok-support-\(localizationManager.currentLanguage)")
             } message: {
-                Text("Email content has been copied. Please paste it into your email app.")
+                Text(localizationManager.localizedString(for: AppStrings.Profile.emailContentCopied))
+                    .id("email-copied-\(localizationManager.currentLanguage)")
             }
         }
     }
@@ -70,7 +75,8 @@ struct SupportEmailView: View {
             Text(supportEmail)
                 .foregroundStyle(.blue)
         } header: {
-            Text("To:")
+            Text(localizationManager.localizedString(for: AppStrings.Profile.to))
+                .id("to-label-\(localizationManager.currentLanguage)")
         }
     }
     
@@ -79,15 +85,18 @@ struct SupportEmailView: View {
             Text(deviceInfo.userName)
                 .foregroundStyle(.secondary)
         } header: {
-            Text("From:")
+            Text(localizationManager.localizedString(for: AppStrings.Profile.from))
+                .id("from-label-\(localizationManager.currentLanguage)")
         }
     }
     
     private var subjectSection: some View {
         Section {
-            Text("Support Request")
+            Text(localizationManager.localizedString(for: AppStrings.Profile.supportRequest))
+                .id("support-request-label-\(localizationManager.currentLanguage)")
         } header: {
-            Text("Subject:")
+            Text(localizationManager.localizedString(for: AppStrings.Profile.subject))
+                .id("subject-label-\(localizationManager.currentLanguage)")
         }
     }
     
@@ -96,7 +105,8 @@ struct SupportEmailView: View {
             TextEditor(text: $issueDescription)
                 .frame(minHeight: 150)
         } header: {
-            Text("Please describe your issue:")
+            Text(localizationManager.localizedString(for: AppStrings.Profile.pleaseDescribeIssue))
+                .id("describe-issue-\(localizationManager.currentLanguage)")
         }
     }
     
@@ -112,9 +122,11 @@ struct SupportEmailView: View {
             .font(.caption)
             .foregroundStyle(.secondary)
         } header: {
-            Text("Debug Information")
+            Text(localizationManager.localizedString(for: AppStrings.Profile.debugInformation))
+                .id("debug-info-\(localizationManager.currentLanguage)")
         } footer: {
-            Text("This information helps us diagnose issues faster.")
+            Text(localizationManager.localizedString(for: AppStrings.Profile.debugInfoHelpsDiagnose))
+                .id("debug-help-\(localizationManager.currentLanguage)")
         }
     }
     

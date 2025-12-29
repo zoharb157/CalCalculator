@@ -11,6 +11,7 @@ struct MealsListSheet: View {
     let selectedDate: Date
     let repository: MealRepository
     let onDismiss: () -> Void
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @State private var meals: [Meal] = []
     @State private var isLoading = true
@@ -64,7 +65,8 @@ struct MealsListSheet: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.2)
-            Text("Loading meals...")
+            Text(localizationManager.localizedString(for: AppStrings.History.loadingMeals))
+                .id("loading-meals-\(localizationManager.currentLanguage)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
@@ -77,11 +79,13 @@ struct MealsListSheet: View {
                 .font(.system(size: 64))
                 .foregroundStyle(.secondary)
             
-            Text("No Meals")
+            Text(localizationManager.localizedString(for: AppStrings.History.noMeals))
+                .id("no-meals-\(localizationManager.currentLanguage)")
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            Text("No meals were recorded for this day")
+            Text(localizationManager.localizedString(for: AppStrings.History.noMealsRecorded))
+                .id("no-meals-recorded-\(localizationManager.currentLanguage)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
@@ -149,7 +153,8 @@ struct MealsListSheet: View {
         VStack(alignment: .leading, spacing: 12) {
             // Section Header
             HStack {
-                Text("Meals")
+                Text(localizationManager.localizedString(for: AppStrings.History.mealsCapitalized))
+                    .id("meals-capitalized-\(localizationManager.currentLanguage)")
                     .font(.headline)
                 
                 Spacer()

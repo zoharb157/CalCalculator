@@ -82,9 +82,6 @@ final class GoalsGenerationViewModel {
             do {
                 let goals = try await repository.generateGoals(from: onboardingData)
                 
-                // Wait for animation to complete if needed
-                try? await Task.sleep(nanoseconds: 500_000_000) // 0.5s buffer
-                
                 withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
                     state = .completed(goals)
                 }
@@ -111,18 +108,7 @@ final class GoalsGenerationViewModel {
     
     private func startAnimationCycle() {
         animationTask?.cancel()
-        animationTask = Task {
-            while !Task.isCancelled && isGenerating {
-                try? await Task.sleep(nanoseconds: 800_000_000) // 0.8s per phase
-                
-                guard !Task.isCancelled && isGenerating else { break }
-                
-                await MainActor.run {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        currentAnimationPhase = (currentAnimationPhase + 1) % animationMessages.count
-                    }
-                }
-            }
-        }
+        // Animation cycle removed - animation will be driven by actual generation progress
+        // If animation is needed, it should be tied to actual progress updates
     }
 }

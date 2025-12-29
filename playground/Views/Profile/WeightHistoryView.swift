@@ -11,6 +11,7 @@ import Charts
 struct WeightHistoryView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     @Query(sort: \WeightEntry.date, order: .reverse) private var weightEntries: [WeightEntry]
     
     @State private var showingAddWeight = false
@@ -64,13 +65,15 @@ struct WeightHistoryView: View {
                     weightListView
                 }
             }
-            .navigationTitle("Weight History")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.weightHistory))
+                .id("weight-history-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Done") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.done)) {
                         dismiss()
                     }
+                    .id("done-weight-history-\(localizationManager.currentLanguage)")
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     HStack(spacing: 16) {
@@ -96,10 +99,12 @@ struct WeightHistoryView: View {
                 addWeightSheet
             }
             .confirmationDialog("Export Weight Data", isPresented: $showingExportOptions) {
-                Button("Export as CSV") {
+                Button(localizationManager.localizedString(for: AppStrings.Common.exportAsCSV)) {
                     exportWeightData()
                 }
-                Button("Cancel", role: .cancel) {}
+                .id("export-csv-\(localizationManager.currentLanguage)")
+                Button(localizationManager.localizedString(for: AppStrings.Common.cancel), role: .cancel) {}
+                    .id("cancel-export-\(localizationManager.currentLanguage)")
             }
         }
     }
@@ -112,11 +117,13 @@ struct WeightHistoryView: View {
                 .font(.system(size: 60))
                 .foregroundColor(.gray)
             
-            Text("No weight entries yet")
+            Text(localizationManager.localizedString(for: AppStrings.Profile.noWeightEntriesYet))
+                .id("no-weight-entries-\(localizationManager.currentLanguage)")
                 .font(.headline)
                 .foregroundColor(.secondary)
             
-            Text("Start tracking your weight to see your progress here")
+            Text(localizationManager.localizedString(for: AppStrings.Profile.startTrackingWeight))
+                .id("start-tracking-weight-\(localizationManager.currentLanguage)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -130,7 +137,8 @@ struct WeightHistoryView: View {
             } label: {
                 HStack {
                     Image(systemName: "plus.circle.fill")
-                    Text("Add First Entry")
+                    Text(localizationManager.localizedString(for: AppStrings.Profile.addFirstEntry))
+                        .id("add-first-entry-\(localizationManager.currentLanguage)")
                 }
                 .font(.headline)
                 .foregroundColor(.white)
@@ -166,7 +174,8 @@ struct WeightHistoryView: View {
                     }
                     .padding(.vertical, 8)
                 } header: {
-                    Text("Progress")
+                    Text(localizationManager.localizedString(for: AppStrings.Profile.progress))
+                        .id("progress-label-\(localizationManager.currentLanguage)")
                 }
             }
             
@@ -177,7 +186,8 @@ struct WeightHistoryView: View {
                 Section {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Total Change")
+                            Text(localizationManager.localizedString(for: AppStrings.Profile.totalChange))
+                                .id("total-change-\(localizationManager.currentLanguage)")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                             
@@ -192,7 +202,8 @@ struct WeightHistoryView: View {
                         Spacer()
                         
                         VStack(alignment: .center, spacing: 4) {
-                            Text("Average")
+                            Text(localizationManager.localizedString(for: AppStrings.Profile.average))
+                                .id("average-label-\(localizationManager.currentLanguage)")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                             
@@ -205,7 +216,8 @@ struct WeightHistoryView: View {
                         Spacer()
                         
                         VStack(alignment: .trailing, spacing: 4) {
-                            Text("Entries")
+                            Text(localizationManager.localizedString(for: AppStrings.Profile.entries))
+                                .id("entries-label-\(localizationManager.currentLanguage)")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                             
@@ -225,7 +237,8 @@ struct WeightHistoryView: View {
                 }
                 .onDelete(perform: deleteEntries)
             } header: {
-                Text("All Entries")
+                Text(localizationManager.localizedString(for: AppStrings.Profile.allEntries))
+                    .id("all-entries-\(localizationManager.currentLanguage)")
             }
         }
     }
@@ -329,7 +342,8 @@ struct WeightHistoryView: View {
                 
                 // Note Field
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Note (optional)")
+                    Text(localizationManager.localizedString(for: AppStrings.Profile.noteOptional))
+                        .id("note-optional-\(localizationManager.currentLanguage)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                     
@@ -341,18 +355,21 @@ struct WeightHistoryView: View {
                 Spacer()
             }
             .padding(.top, 40)
-            .navigationTitle("Log Weight")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.saveWeight))
+                .id("save-weight-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
                         showingAddWeight = false
                     }
+                    .id("cancel-add-weight-\(localizationManager.currentLanguage)")
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.save)) {
                         saveWeightEntry()
                     }
+                    .id("save-weight-\(localizationManager.currentLanguage)")
                     .fontWeight(.semibold)
                 }
             }

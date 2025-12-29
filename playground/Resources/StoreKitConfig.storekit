@@ -89,39 +89,6 @@
           "displayPrice" : "9.99",
           "familyShareable" : false,
           "groupNumber" : 1,
-          "internalID" : "6738996073",
-          "introductoryOffer" : {
-            "internalID" : "14DBB19E",
-            "numberOfPeriods" : 1,
-            "paymentMode" : "free",
-            "subscriptionPeriod" : "P3D"
-          },
-          "localizations" : [
-            {
-              "description" : "weekly subscripting with three days trial",
-              "displayName" : "Weekly Subscription",
-              "locale" : "en_US"
-            }
-          ],
-          "productID" : "translateNow.weekly.3DaysTrail",
-          "recurringSubscriptionPeriod" : "P1W",
-          "referenceName" : "weekly with trial",
-          "subscriptionGroupID" : "21599832",
-          "type" : "RecurringSubscription",
-          "winbackOffers" : [
-
-          ]
-        },
-        {
-          "adHocOffers" : [
-
-          ],
-          "codeOffers" : [
-
-          ],
-          "displayPrice" : "9.99",
-          "familyShareable" : false,
-          "groupNumber" : 1,
           "internalID" : "6738996074",
           "introductoryOffer" : {
             "internalID" : "14DBB19F",

@@ -183,27 +183,15 @@ final class LogExperienceViewModel {
         isAnalyzing = true
         analysisProgress = 0.1
 
-        // Simulate progress
-        let progressTask = Task {
-            var currentProgress: Double = 0.1
-            while currentProgress < 0.9 && !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 100_000_000)
-                currentProgress = min(currentProgress + 0.02, 0.9)
-                await MainActor.run {
-                    analysisProgress = currentProgress
-                }
-            }
-        }
+        // Set initial progress
+        analysisProgress = 0.1
 
         do {
             // If we have an analysis service, use it
             // For now, we'll create a simple estimate based on text
             let foods = estimateFoodsFromText(textInput)
 
-            progressTask.cancel()
             analysisProgress = 1.0
-
-            try? await Task.sleep(nanoseconds: 200_000_000)
 
             analyzedFoods = foods
 
@@ -214,7 +202,6 @@ final class LogExperienceViewModel {
 
             HapticManager.shared.notification(.success)
         } catch {
-            progressTask.cancel()
             self.error = error
             self.errorMessage = error.localizedDescription
             self.showError = true

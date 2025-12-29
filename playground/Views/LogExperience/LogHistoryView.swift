@@ -43,6 +43,7 @@ enum LogEntry: Identifiable {
 struct LogHistoryView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @ObservedObject private var localizationManager = LocalizationManager.shared
 
     let repository: MealRepository
     let selectedDate: Date
@@ -120,7 +121,8 @@ struct LogHistoryView: View {
                 case .meal(let meal):
                     Text("Delete \"\(meal.name)\"? This cannot be undone.")
                 case .exercise(let exercise):
-                    Text("Delete \(exercise.type.displayName) exercise? This cannot be undone.")
+                    Text(localizationManager.localizedString(for: "Delete %@ exercise? This cannot be undone.", arguments: exercise.type.displayName))
+                        .id("delete-exercise-\(localizationManager.currentLanguage)")
                 }
             }
         }
@@ -140,7 +142,8 @@ struct LogHistoryView: View {
                             .font(.title2)
                             .fontWeight(.bold)
                     }
-                    Text("Consumed")
+                    Text(localizationManager.localizedString(for: AppStrings.Home.consumed))
+                        .id("consumed-\(localizationManager.currentLanguage)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -159,7 +162,8 @@ struct LogHistoryView: View {
                             .font(.title2)
                             .fontWeight(.bold)
                     }
-                    Text("Burned")
+                    Text(localizationManager.localizedString(for: AppStrings.Home.burned))
+                        .id("burned-\(localizationManager.currentLanguage)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -178,7 +182,8 @@ struct LogHistoryView: View {
                             .font(.title2)
                             .fontWeight(.bold)
                     }
-                    Text("Net")
+                    Text(localizationManager.localizedString(for: AppStrings.Home.net))
+                        .id("net-label-\(localizationManager.currentLanguage)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -193,7 +198,6 @@ struct LogHistoryView: View {
             .foregroundColor(.secondary)
         }
         .padding()
-        .background(Color(.systemGray6))
     }
 
     // MARK: - Timeline List
@@ -223,7 +227,8 @@ struct LogHistoryView: View {
         VStack(spacing: 16) {
             Spacer()
             ProgressView()
-            Text("Loading logs...")
+            Text(localizationManager.localizedString(for: "Loading logs..."))
+                .id("loading-logs-\(localizationManager.currentLanguage)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
             Spacer()
@@ -240,11 +245,13 @@ struct LogHistoryView: View {
                 .font(.system(size: 60))
                 .foregroundColor(.secondary)
 
-            Text("No Logs Yet")
+            Text(localizationManager.localizedString(for: AppStrings.History.noLogsYet))
+                .id("no-logs-\(localizationManager.currentLanguage)")
                 .font(.title2)
                 .fontWeight(.semibold)
 
-            Text("Start logging your meals and exercises to see them here")
+            Text(localizationManager.localizedString(for: AppStrings.History.startLoggingMeals))
+                .id("start-logging-\(localizationManager.currentLanguage)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)

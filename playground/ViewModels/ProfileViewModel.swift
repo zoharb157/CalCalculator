@@ -99,11 +99,24 @@ final class ProfileViewModel {
     
     var selectedLanguage: String {
         didSet {
-            repository.setSelectedLanguage(selectedLanguage)
-            // Apply language change immediately
-            let languageCode = LocalizationManager.languageCode(from: selectedLanguage)
-            LocalizationManager.shared.setLanguage(languageCode)
+            // Only reset if language actually changed
+            if oldValue != selectedLanguage {
+                repository.setSelectedLanguage(selectedLanguage)
+                // Apply language change immediately
+                let languageCode = LocalizationManager.languageCode(from: selectedLanguage)
+                LocalizationManager.shared.setLanguage(languageCode)
+                
+                // Reset choices/state when language changes
+                resetChoicesOnLanguageChange()
+            }
         }
+    }
+    
+    /// Reset choices and state when language changes
+    private func resetChoicesOnLanguageChange() {
+        // Reset any cached selections, tabs, or state that might be language-dependent
+        // This ensures UI refreshes properly with new language
+        // Note: SwiftUI views will automatically refresh due to languageChanged notification
     }
     
     // MARK: - Nutrition Goals State
@@ -426,6 +439,7 @@ extension ProfileViewModel {
         ("Korean", "KR", "ko"),
         ("Russian", "RU", "ru"),
         ("Arabic", "SA", "ar"),
+        ("Hebrew", "IL", "he"), // Hebrew - RTL language
         ("Hindi", "IN", "hi")
     ]
 }

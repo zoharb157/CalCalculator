@@ -76,7 +76,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             options: [.customDismissAction]
         )
         
-        UNUserNotificationCenter.current().setNotificationCategories([mealReminderCategory])
+        // Weight reminder category
+        let logWeightAction = UNNotificationAction(
+            identifier: "LOG_WEIGHT",
+            title: "Log Weight",
+            options: []
+        )
+        
+        let weightReminderCategory = UNNotificationCategory(
+            identifier: "WEIGHT_REMINDER",
+            actions: [logWeightAction],
+            intentIdentifiers: [],
+            options: [.customDismissAction]
+        )
+        
+        UNUserNotificationCenter.current().setNotificationCategories([mealReminderCategory, weightReminderCategory])
     }
     
     // MARK: - UNUserNotificationCenterDelegate
@@ -102,6 +116,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // Handle meal reminder notifications
         if response.notification.request.content.categoryIdentifier == "MEAL_REMINDER" {
             handleMealReminderResponse(response: response, userInfo: userInfo)
+        }
+        
+        // Handle weight reminder notifications
+        if response.notification.request.content.categoryIdentifier == "WEIGHT_REMINDER" {
+            handleWeightReminderResponse(response: response, userInfo: userInfo)
         }
         
         completionHandler()
@@ -135,6 +154,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             name: .mealReminderAction,
             object: nil,
             userInfo: notificationUserInfo
+        )
+    }
+    
+    private func handleWeightReminderResponse(response: UNNotificationResponse, userInfo: [AnyHashable: Any]) {
+        let actionIdentifier = response.actionIdentifier
+        
+        // Post notification to handle in SwiftUI
+        NotificationCenter.default.post(
+            name: .weightReminderAction,
+            object: nil,
+            userInfo: [
+                "action": actionIdentifier,
+                "type": "weight_reminder"
+            ]
         )
     }
 }

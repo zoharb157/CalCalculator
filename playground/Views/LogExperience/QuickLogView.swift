@@ -40,6 +40,7 @@ struct QuickLogView: View {
 
     @State private var selectedType: QuickLogType = .food
     @State private var viewModel: LogExperienceViewModel
+    @State private var repository: MealRepository
 
     // Food quick log state
     @State private var foodDescription: String = ""
@@ -52,11 +53,15 @@ struct QuickLogView: View {
 
     @State private var isLogging = false
     @State private var showSuccess = false
+    @State private var showError = false
+    @State private var errorMessage = ""
+    @ObservedObject private var localizationManager = LocalizationManager.shared
 
     init() {
         let persistence = PersistenceController.shared
         let repository = MealRepository(context: persistence.mainContext)
         _viewModel = State(initialValue: LogExperienceViewModel(repository: repository))
+        _repository = State(initialValue: repository)
     }
 
     var body: some View {
@@ -76,11 +81,13 @@ struct QuickLogView: View {
                     }
                     .padding()
                 }
+                .scrollDismissesKeyboard(.interactively)
 
-                // Log Button
+                // Save Button
                 logButton
             }
-            .navigationTitle("Quick Log")
+            .navigationTitle(LocalizationManager.shared.localizedString(for: "Quick Save"))
+                .id("quick-save-title-\(LocalizationManager.shared.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -91,8 +98,15 @@ struct QuickLogView: View {
                             .foregroundColor(.secondary)
                     }
                 }
+                
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
+                }
             }
-            .alert("Logged Successfully!", isPresented: $showSuccess) {
+            .alert("Saved Successfully!", isPresented: $showSuccess) {
                 Button("OK") {
                     dismiss()
                 }
@@ -101,6 +115,11 @@ struct QuickLogView: View {
                     selectedType == .food
                         ? "Your food has been logged."
                         : "Your exercise has been logged.")
+            }
+            .alert("Error", isPresented: $showError) {
+                Button("OK") { }
+            } message: {
+                Text(errorMessage)
             }
         }
     }
@@ -143,7 +162,8 @@ struct QuickLogView: View {
         VStack(spacing: 20) {
             // Description input
             VStack(alignment: .leading, spacing: 8) {
-                Text("What did you eat?")
+                Text(LocalizationManager.shared.localizedString(for: "What did you eat?"))
+                    .id("what-did-you-eat-\(LocalizationManager.shared.currentLanguage)")
                     .font(.headline)
 
                 TextField(
@@ -158,7 +178,8 @@ struct QuickLogView: View {
 
             // Quick calories input
             VStack(alignment: .leading, spacing: 8) {
-                Text("Estimated Calories")
+                Text(LocalizationManager.shared.localizedString(for: "Estimated Calories"))
+                    .id("estimated-calories-\(LocalizationManager.shared.currentLanguage)")
                     .font(.headline)
 
                 HStack {
@@ -167,6 +188,7 @@ struct QuickLogView: View {
                         .font(.system(size: 32, weight: .bold, design: .rounded))
                         .multilineTextAlignment(.center)
                         .frame(width: 120)
+                        .keyboardDoneButton()
 
                     Text("kcal")
                         .font(.title3)
@@ -216,7 +238,8 @@ struct QuickLogView: View {
 
             // Category selector
             VStack(alignment: .leading, spacing: 8) {
-                Text("Category")
+                Text(LocalizationManager.shared.localizedString(for: "Category"))
+                    .id("category-\(LocalizationManager.shared.currentLanguage)")
                     .font(.headline)
 
                 Picker("Category", selection: $viewModel.selectedCategory) {
@@ -236,7 +259,8 @@ struct QuickLogView: View {
         VStack(spacing: 20) {
             // Exercise description
             VStack(alignment: .leading, spacing: 8) {
-                Text("What exercise did you do?")
+                Text(LocalizationManager.shared.localizedString(for: "What exercise did you do?"))
+                    .id("what-exercise-\(LocalizationManager.shared.currentLanguage)")
                     .font(.headline)
 
                 TextField(
@@ -252,7 +276,8 @@ struct QuickLogView: View {
 
             // Duration input
             VStack(alignment: .leading, spacing: 8) {
-                Text("Duration")
+                Text(LocalizationManager.shared.localizedString(for: AppStrings.Exercise.duration))
+                    .id("duration-\(LocalizationManager.shared.currentLanguage)")
                     .font(.headline)
 
                 HStack {
@@ -261,8 +286,10 @@ struct QuickLogView: View {
                         .font(.system(size: 32, weight: .bold, design: .rounded))
                         .multilineTextAlignment(.center)
                         .frame(width: 80)
+                        .keyboardDoneButton()
 
-                    Text("minutes")
+                    Text(LocalizationManager.shared.localizedString(for: "minutes"))
+                        .id("minutes-\(LocalizationManager.shared.currentLanguage)")
                         .font(.title3)
                         .foregroundColor(.secondary)
                 }
@@ -274,7 +301,8 @@ struct QuickLogView: View {
 
             // Calories burned input
             VStack(alignment: .leading, spacing: 8) {
-                Text("Calories Burned")
+                Text(LocalizationManager.shared.localizedString(for: "Calories Burned"))
+                    .id("calories-burned-\(LocalizationManager.shared.currentLanguage)")
                     .font(.headline)
 
                 HStack {
@@ -283,6 +311,7 @@ struct QuickLogView: View {
                         .font(.system(size: 32, weight: .bold, design: .rounded))
                         .multilineTextAlignment(.center)
                         .frame(width: 120)
+                        .keyboardDoneButton()
 
                     Text("kcal")
                         .font(.title3)
@@ -336,7 +365,7 @@ struct QuickLogView: View {
         }
     }
 
-    // MARK: - Log Button
+    // MARK: - Save Button
 
     private var logButton: some View {
         Button {
@@ -350,7 +379,7 @@ struct QuickLogView: View {
                         .tint(.white)
                 } else {
                     Image(systemName: "checkmark.circle.fill")
-                    Text("Log \(selectedType.displayName)")
+                    Text("Save \(selectedType.displayName)")
                 }
             }
             .font(.headline)
@@ -400,23 +429,30 @@ struct QuickLogView: View {
                 showSuccess = true
             }
         } else {
-            // Save exercise
-            let exercise = Exercise(
-                type: .manual,
-                calories: Int(exerciseCalories) ?? 0,
-                duration: Int(exerciseDuration) ?? 30,
-                intensity: .medium,
-                notes: exerciseDescription.trimmingCharacters(in: .whitespacesAndNewlines)
-            )
-
-            modelContext.insert(exercise)
-            try? modelContext.save()
-
-            // Notify that an exercise was saved
-            NotificationCenter.default.post(name: .exerciseSaved, object: nil)
-
-            HapticManager.shared.notification(.success)
-            showSuccess = true
+            // Save exercise using repository pattern with proper error handling
+            do {
+                let exercise = Exercise(
+                    type: .manual,
+                    calories: Int(exerciseCalories) ?? 0,
+                    duration: Int(exerciseDuration) ?? 30,
+                    intensity: .medium,
+                    notes: exerciseDescription.trimmingCharacters(in: .whitespacesAndNewlines)
+                )
+                
+                // Use repository for consistent saving
+                try repository.saveExercise(exercise)
+                
+                // Notify that an exercise was saved
+                NotificationCenter.default.post(name: .exerciseSaved, object: nil)
+                
+                HapticManager.shared.notification(.success)
+                showSuccess = true
+            } catch {
+                errorMessage = "Failed to save exercise: \(error.localizedDescription)"
+                showError = true
+                HapticManager.shared.notification(.error)
+                print("❌ Error saving exercise: \(error)")
+            }
         }
     }
 }
