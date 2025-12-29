@@ -8,103 +8,104 @@
 import SwiftUI
 
 struct HistoryView: View {
+
     @Bindable var viewModel: HistoryViewModel
     let repository: MealRepository
+    let isSubscribed: Bool
+    let hasActiveDiet: Bool
+    let onCreateDiet: () -> Void
     @ObservedObject private var localizationManager = LocalizationManager.shared
-    
+
     @State private var selectedDate: SelectedDate?
     @State private var searchText: String = ""
     @State private var selectedTimeFilter: HistoryTimeFilter = .all
     @State private var showingFilterSheet = false
-    
+
     private var filteredSummaries: [DaySummary] {
         var summaries = viewModel.allDaySummaries
-        
-        // Apply time filter
+
         if selectedTimeFilter != .all {
             let cutoffDate = selectedTimeFilter.startDate
             summaries = summaries.filter { $0.date >= cutoffDate }
         }
-        
-        // Apply search filter (search by date or meal count range)
+
         if !searchText.isEmpty {
             let lowercasedSearch = searchText.lowercased()
             summaries = summaries.filter { summary in
-                // Search by formatted date
                 let formatter = DateFormatter()
                 formatter.dateStyle = .medium
                 let dateString = formatter.string(from: summary.date).lowercased()
-                
-                // Also check day name
+
                 formatter.dateFormat = "EEEE"
                 let dayName = formatter.string(from: summary.date).lowercased()
-                
-                // Check month name
+
                 formatter.dateFormat = "MMMM"
                 let monthName = formatter.string(from: summary.date).lowercased()
-                
-                return dateString.contains(lowercasedSearch) ||
-                       dayName.contains(lowercasedSearch) ||
-                       monthName.contains(lowercasedSearch)
+
+                return dateString.contains(lowercasedSearch) || dayName.contains(lowercasedSearch)
+                    || monthName.contains(lowercasedSearch)
             }
         }
-        
+
         return summaries
     }
-    
-    // Stats for the filtered data
-    private var totalCalories: Int {
-        filteredSummaries.reduce(0) { $0 + $1.totalCalories }
-    }
-    
-    private var totalMeals: Int {
-        filteredSummaries.reduce(0) { $0 + $1.mealCount }
-    }
-    
-    private var averageCalories: Int {
-        guard !filteredSummaries.isEmpty else { return 0 }
-        return totalCalories / filteredSummaries.count
-    }
-    
+
     var body: some View {
         NavigationStack {
-            content
-                .navigationTitle(localizationManager.localizedString(for: AppStrings.History.title))
-                    .id("history-title-\(localizationManager.currentLanguage)")
-                .background(Color(.systemGroupedBackground))
-                .searchable(text: $searchText, prompt: "Search by date, day, or month")
-                .refreshable {
-                    await viewModel.loadData()
+            ZStack(alignment: .bottom) {
+                content
+
+                // Diet creation prompt at bottom
+                if !hasActiveDiet {
+                    dietPromptCard
+                        .padding()
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
+            }
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.History.title))
+            .id("history-nav-\(localizationManager.currentLanguage)")
+            .background(Color(.systemGroupedBackground))
+            .searchable(text: $searchText, prompt: "Search by date, day, or month")
+            .refreshable {
+                await viewModel.loadData()
+            }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    if !hasActiveDiet {
+                        Button {
+                            onCreateDiet()
+                        } label: {
+                            Image(systemName: "calendar.badge.plus")
+                        }
+                    } else {
                         filterMenuButton
                     }
                 }
-                .safeAreaInset(edge: .top, spacing: 0) {
-                    if hasActiveFilters {
-                        activeFiltersSection
+            }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                if hasActiveFilters {
+                    activeFiltersSection
+                }
+            }
+            .fullScreenCover(item: $selectedDate) { selected in
+                MealsListSheet(
+                    selectedDate: selected.date,
+                    repository: repository,
+                    onDismiss: {
+                        selectedDate = nil
                     }
-                }
-                .fullScreenCover(item: $selectedDate) { selected in
-                    MealsListSheet(
-                        selectedDate: selected.date,
-                        repository: repository,
-                        onDismiss: {
-                            selectedDate = nil
-                        }
-                    )
-                }
-                .task {
-                    await viewModel.loadData()
-                }
+                )
+            }
+            .task {
+                await viewModel.loadData()
+            }
         }
     }
-    
+
     private var hasActiveFilters: Bool {
         selectedTimeFilter != .all || !searchText.isEmpty
     }
-    
+
     private var activeFiltersSection: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
@@ -118,7 +119,7 @@ struct HistoryView: View {
                         }
                     )
                 }
-                
+
                 if !searchText.isEmpty {
                     FilterTag(
                         text: "\"\(searchText)\"",
@@ -135,7 +136,7 @@ struct HistoryView: View {
         }
         .background(Color(.systemGroupedBackground))
     }
-    
+
     private var filterMenuButton: some View {
         Menu {
             ForEach(HistoryTimeFilter.allCases, id: \.self) { filter in
@@ -163,9 +164,7 @@ struct HistoryView: View {
             .foregroundColor(.blue)
         }
     }
-    
-    // MARK: - Private Views
-    
+
     @ViewBuilder
     private var content: some View {
         if viewModel.isLoading {
@@ -180,11 +179,10 @@ struct HistoryView: View {
             historyList
         }
     }
-    
+
     private var historyList: some View {
         ScrollView {
             LazyVStack(spacing: 16) {
-                // Stats Summary Card
                 if !filteredSummaries.isEmpty {
                     StatsSummaryCard(
                         daysCount: filteredSummaries.count,
@@ -207,25 +205,37 @@ struct HistoryView: View {
             }
             .padding(.horizontal)
             .padding(.vertical, 8)
+            .padding(.bottom, hasActiveDiet ? 8 : 100) // Extra padding for diet prompt
             .animation(.easeInOut(duration: 0.2), value: filteredSummaries.count)
         }
     }
-    
+
+    private var totalCalories: Int {
+        filteredSummaries.reduce(0) { $0 + $1.totalCalories }
+    }
+
+    private var totalMeals: Int {
+        filteredSummaries.reduce(0) { $0 + $1.mealCount }
+    }
+
+    private var averageCalories: Int {
+        guard !filteredSummaries.isEmpty else { return 0 }
+        return totalCalories / filteredSummaries.count
+    }
+
     @ViewBuilder
     private var loadingView: some View {
-        if viewModel.isLoading {
-            VStack(spacing: 20) {
-                ProgressView()
-                    .scaleEffect(1.5)
-                Text(localizationManager.localizedString(for: AppStrings.History.loadingHistory))
-                    .id("loading-history-\(localizationManager.currentLanguage)")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        VStack(spacing: 20) {
+            ProgressView()
+                .scaleEffect(1.5)
+            Text(localizationManager.localizedString(for: "Loading history..."))
+                .id("loading-history-\(localizationManager.currentLanguage)")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-    
+
     @ViewBuilder
     private var errorView: some View {
         if viewModel.showError, let error = viewModel.error {
@@ -248,14 +258,14 @@ struct HistoryView: View {
             Image(systemName: "calendar.badge.clock")
                 .font(.system(size: 64))
                 .foregroundStyle(.secondary)
-            
+
             Text(localizationManager.localizedString(for: AppStrings.History.noHistoryYet))
                 .id("no-history-\(localizationManager.currentLanguage)")
                 .font(.title2)
                 .fontWeight(.semibold)
-            
+
             Text(localizationManager.localizedString(for: AppStrings.History.historyDescription))
-                .id("history-description-\(localizationManager.currentLanguage)")
+                .id("history-desc-\(localizationManager.currentLanguage)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -263,32 +273,35 @@ struct HistoryView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.systemGroupedBackground))
     }
-    
+
     private var noResultsView: some View {
         VStack(spacing: 16) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 48))
                 .foregroundStyle(.secondary)
-            
+
             Text(localizationManager.localizedString(for: AppStrings.History.noResults))
                 .id("no-results-\(localizationManager.currentLanguage)")
                 .font(.title2)
                 .fontWeight(.semibold)
-            
+
             if !searchText.isEmpty {
-                Text(localizationManager.localizedString(for: AppStrings.History.noEntriesFoundForSearch, arguments: searchText))
-                    .id("no-entries-search-\(localizationManager.currentLanguage)")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
+                Text(
+                    localizationManager.localizedString(
+                        for: "No entries found for \"%@\"", arguments: searchText)
+                )
+                .id("no-entries-search-\(localizationManager.currentLanguage)")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
             } else {
                 Text(localizationManager.localizedString(for: AppStrings.History.noEntriesFound))
-                    .id("no-entries-time-\(localizationManager.currentLanguage)")
+                    .id("no-entries-period-\(localizationManager.currentLanguage)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
             }
-            
+
             Button {
                 withAnimation {
                     searchText = ""
@@ -305,7 +318,54 @@ struct HistoryView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.systemGroupedBackground))
     }
+
+    private var dietPromptCard: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Image(systemName: "calendar.badge.clock")
+                    .font(.title2)
+                    .foregroundColor(.blue)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(isSubscribed ? "Create Your Diet Plan" : "Unlock Diet Plans")
+                        .font(.headline)
+
+                    Text(
+                        isSubscribed
+                            ? "Schedule repetitive meals and track adherence"
+                            : "Subscribe to create diet plans with scheduled meals"
+                    )
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                }
+
+                Spacer()
+            }
+
+            Button {
+                onCreateDiet()
+            } label: {
+                HStack {
+                    if !isSubscribed {
+                        Image(systemName: "crown.fill")
+                    }
+                    Text(isSubscribed ? "Create Diet Plan" : "Subscribe & Create")
+                        .fontWeight(.semibold)
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(isSubscribed ? Color.blue : Color.orange)
+                .foregroundColor(.white)
+                .cornerRadius(12)
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(16)
+        .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: -2)
+    }
 }
+
 
 // MARK: - Time Filter Enum
 
@@ -609,10 +669,10 @@ struct FilterTag: View {
     }
 }
 
-#Preview {
-    let persistence = PersistenceController.shared
-    let repository = MealRepository(context: persistence.mainContext)
-    let viewModel = HistoryViewModel(repository: repository)
-    
-    HistoryView(viewModel: viewModel, repository: repository)
-}
+//#Preview {
+//    let persistence = PersistenceController.shared
+//    let repository = MealRepository(context: persistence.mainContext)
+//    let viewModel = HistoryViewModel(repository: repository)
+//    
+//    HistoryView(viewModel: viewModel, repository: repository)
+//}

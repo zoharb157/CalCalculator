@@ -132,8 +132,11 @@ struct ContentView: View {
                         .mealReminderHandler(scanViewModel: mainTabView.scanViewModel)
                 }
             } else {
-                ProgressView()
+                SplashView()
                     .task {
+                        // add delay
+                        try? await Task.sleep(nanoseconds: 2_000_000_000)
+
                         let repoStart = Date()
                         // Pre-warm the model context and database with a simple query
                         // This ensures SwiftData is fully initialized before we start querying
