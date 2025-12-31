@@ -10,10 +10,11 @@ import SwiftUI
 struct QuestionStepBody: View {
     let step: OnboardingStep
     @ObservedObject var store: OnboardingStore
+    @ObservedObject private var localizationManager = LocalizationManager.shared
 
     var body: some View {
         guard let input = step.input else {
-            return AnyView(Text("Missing input definition.").foregroundStyle(.secondary))
+            return AnyView(Text(localizationManager.localizedString(for: AppStrings.Onboarding.missingInputDefinition)).foregroundStyle(.secondary))
         }
 
         switch input.type {

@@ -37,11 +37,16 @@ struct ScheduledMealEditorView: View {
         }
     }
     
+    @ObservedObject private var localizationManager = LocalizationManager.shared
+    
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             Form {
-                Section("Meal Details") {
-                    TextField("Meal Name", text: $name)
+                Section(localizationManager.localizedString(for: AppStrings.DietPlan.mealDetails)) {
+                    TextField(localizationManager.localizedString(for: AppStrings.DietPlan.mealName), text: $name)
                     
                     Picker("Category", selection: $category) {
                         ForEach(MealCategory.allCases, id: \.self) { category in
@@ -51,10 +56,10 @@ struct ScheduledMealEditorView: View {
                     }
                 }
                 
-                Section("Schedule") {
-                    DatePicker("Time", selection: $time, displayedComponents: .hourAndMinute)
+                Section(localizationManager.localizedString(for: AppStrings.DietPlan.schedule)) {
+                    DatePicker(localizationManager.localizedString(for: AppStrings.DietPlan.time), selection: $time, displayedComponents: .hourAndMinute)
                     
-                    Text("Repeat on:")
+                    Text(localizationManager.localizedString(for: AppStrings.DietPlan.repeatOn))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     
@@ -74,22 +79,23 @@ struct ScheduledMealEditorView: View {
                 
                 if selectedDays.isEmpty {
                     Section {
-                        Text("Select at least one day")
+                        Text(localizationManager.localizedString(for: AppStrings.DietPlan.selectAtLeastOneDay))
                             .foregroundColor(.orange)
                             .font(.caption)
                     }
                 }
             }
-            .navigationTitle(meal == nil ? "New Scheduled Meal" : "Edit Scheduled Meal")
+            .navigationTitle(meal == nil ? localizationManager.localizedString(for: AppStrings.DietPlan.newScheduledMeal) : localizationManager.localizedString(for: AppStrings.DietPlan.editScheduledMeal))
+                .id("nav-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.save)) {
                         saveMeal()
                     }
                     .disabled(name.isEmpty || selectedDays.isEmpty)

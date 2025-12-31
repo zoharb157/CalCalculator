@@ -30,7 +30,10 @@ struct EditNutritionGoalsView: View {
     // MARK: - Body
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
                     macroGoalsSection
@@ -47,7 +50,7 @@ struct EditNutritionGoalsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.done)) {
                         dismiss()
                     }
                     .fontWeight(.semibold)
@@ -62,7 +65,7 @@ struct EditNutritionGoalsView: View {
         }
         .sheet(isPresented: $isEditingProtein) {
             editMacroSheet(
-                title: "Protein Goal",
+                title: localizationManager.localizedString(for: AppStrings.Profile.proteinGoal),
                 value: $tempProtein,
                 range: 50...400,
                 unit: "g",
@@ -74,7 +77,7 @@ struct EditNutritionGoalsView: View {
         }
         .sheet(isPresented: $isEditingCarbs) {
             editMacroSheet(
-                title: "Carbs Goal",
+                title: localizationManager.localizedString(for: AppStrings.Profile.carbsGoal),
                 value: $tempCarbs,
                 range: 50...500,
                 unit: "g",
@@ -86,7 +89,7 @@ struct EditNutritionGoalsView: View {
         }
         .sheet(isPresented: $isEditingFat) {
             editMacroSheet(
-                title: "Fat Goal",
+                title: localizationManager.localizedString(for: AppStrings.Profile.fatGoal),
                 value: $tempFat,
                 range: 20...200,
                 unit: "g",
@@ -120,17 +123,17 @@ struct EditNutritionGoalsView: View {
     
     // MARK: - Macro Goals Section
     
-    @ViewBuilder
+        @ViewBuilder
     private var macroGoalsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ProfileSectionHeader(title: "Daily Goals")
+            ProfileSectionHeader(title: localizationManager.localizedString(for: AppStrings.Profile.dailyGoals))
             
             ProfileSectionCard {
                 // Calories
                 NutritionGoalCard(
                     icon: "flame.fill",
                     iconColor: .orange,
-                    title: "Calories",
+                    title: localizationManager.localizedString(for: AppStrings.Home.calories),
                     value: viewModel.calorieGoal,
                     unit: "cal",
                     progress: 0.75
@@ -145,7 +148,7 @@ struct EditNutritionGoalsView: View {
                 NutritionGoalCard(
                     icon: "fish.fill",
                     iconColor: .red,
-                    title: "Protein",
+                    title: localizationManager.localizedString(for: AppStrings.Home.protein),
                     value: Int(viewModel.proteinGoal),
                     unit: "g",
                     progress: 0.5
@@ -160,7 +163,7 @@ struct EditNutritionGoalsView: View {
                 NutritionGoalCard(
                     icon: "leaf.fill",
                     iconColor: .orange,
-                    title: "Carbs",
+                    title: localizationManager.localizedString(for: AppStrings.Home.carbs),
                     value: Int(viewModel.carbsGoal),
                     unit: "g",
                     progress: 0.65
@@ -175,7 +178,7 @@ struct EditNutritionGoalsView: View {
                 NutritionGoalCard(
                     icon: "drop.fill",
                     iconColor: .blue,
-                    title: "Fat",
+                    title: localizationManager.localizedString(for: AppStrings.Home.fat),
                     value: Int(viewModel.fatGoal),
                     unit: "g",
                     progress: 0.4
@@ -223,7 +226,7 @@ struct EditNutritionGoalsView: View {
             .disabled(viewModel.isGeneratingMacros)
             
             if let error = viewModel.macroGenerationError {
-                Text("Error: \(error)")
+                Text(String(format: localizationManager.localizedString(for: AppStrings.Common.errorColon), error))
                     .font(.caption)
                     .foregroundColor(.red)
                     .multilineTextAlignment(.center)
@@ -242,11 +245,11 @@ struct EditNutritionGoalsView: View {
     @ViewBuilder
     private var macroBreakdownSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ProfileSectionHeader(title: "Macro Breakdown")
+            ProfileSectionHeader(title: localizationManager.localizedString(for: AppStrings.Profile.macroBreakdown))
             
             HStack(spacing: 12) {
                 MacroBreakdownCard(
-                    name: "Protein",
+                    name: localizationManager.localizedString(for: AppStrings.Home.protein),
                     grams: Int(viewModel.proteinGoal),
                     calories: Int(viewModel.proteinGoal * 4),
                     color: .red,
@@ -254,7 +257,7 @@ struct EditNutritionGoalsView: View {
                 )
                 
                 MacroBreakdownCard(
-                    name: "Carbs",
+                    name: localizationManager.localizedString(for: AppStrings.Home.carbs),
                     grams: Int(viewModel.carbsGoal),
                     calories: Int(viewModel.carbsGoal * 4),
                     color: .orange,
@@ -262,7 +265,7 @@ struct EditNutritionGoalsView: View {
                 )
                 
                 MacroBreakdownCard(
-                    name: "Fat",
+                    name: localizationManager.localizedString(for: AppStrings.Home.fat),
                     grams: Int(viewModel.fatGoal),
                     calories: Int(viewModel.fatGoal * 9),
                     color: .blue,

@@ -25,7 +25,10 @@ struct LogFoodView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             VStack(spacing: 0) {
                 // Tabs
                 tabsHeader
@@ -49,19 +52,21 @@ struct LogFoodView: View {
                     }
                 }
             }
-            .alert("Error", isPresented: $viewModel.showError) {
+            .alert(localizationManager.localizedString(for: AppStrings.Common.error), isPresented: $viewModel.showError) {
                 Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) {}
                     .id("ok-btn-\(localizationManager.currentLanguage)")
             } message: {
-                Text(viewModel.errorMessage ?? "An error occurred")
+                Text(viewModel.errorMessage ?? localizationManager.localizedString(for: AppStrings.Common.errorOccurred))
+                    .id("error-log-food-\(localizationManager.currentLanguage)")
             }
-            .alert("Success", isPresented: $viewModel.showSuccess) {
+            .alert(localizationManager.localizedString(for: AppStrings.Common.success), isPresented: $viewModel.showSuccess) {
                 Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) {
                     dismiss()
                 }
                 .id("ok-log-food-\(localizationManager.currentLanguage)")
             } message: {
-                Text(viewModel.successMessage ?? "Food saved successfully!")
+                Text(viewModel.successMessage ?? localizationManager.localizedString(for: AppStrings.Food.foodSavedSuccessfully))
+                    .id("success-log-food-\(localizationManager.currentLanguage)")
             }
             .sheet(isPresented: $showingManualEntry) {
                 ManualFoodEntryView(viewModel: viewModel)
@@ -518,6 +523,7 @@ struct RecentFoodRow: View {
     let isSaved: Bool
     let onAdd: () -> Void
     let onSave: () -> Void
+    @ObservedObject private var localizationManager = LocalizationManager.shared
 
     var body: some View {
         HStack(spacing: 12) {
@@ -526,13 +532,17 @@ struct RecentFoodRow: View {
                     .font(.headline)
 
                 HStack(spacing: 8) {
-                    Text("\(food.calories) cal")
+                    Text("\(food.calories) \(localizationManager.localizedString(for: AppStrings.Progress.cal))")
+                        .id("cal-food-\(localizationManager.currentLanguage)")
                     Text("•")
-                    Text("P: \(food.proteinG.formattedMacro)g")
+                    Text("\(localizationManager.localizedString(for: AppStrings.Home.proteinShort)): \(food.proteinG.formattedMacro)g")
+                        .id("protein-food-\(localizationManager.currentLanguage)")
                     Text("•")
-                    Text("C: \(food.carbsG.formattedMacro)g")
+                    Text("\(localizationManager.localizedString(for: AppStrings.Home.carbsShort)): \(food.carbsG.formattedMacro)g")
+                        .id("carbs-food-\(localizationManager.currentLanguage)")
                     Text("•")
-                    Text("F: \(food.fatG.formattedMacro)g")
+                    Text("\(localizationManager.localizedString(for: AppStrings.Home.fatShort)): \(food.fatG.formattedMacro)g")
+                        .id("fat-food-\(localizationManager.currentLanguage)")
                 }
                 .font(.caption)
                 .foregroundColor(.secondary)
@@ -614,7 +624,7 @@ struct ManualFoodEntryView: View {
                             .multilineTextAlignment(.trailing)
                             .frame(width: 80)
                             .focused($focusedField, equals: .calories)
-                        Text("kcal")
+                        Text(localizationManager.localizedString(for: AppStrings.Food.kcal))
                             .foregroundColor(.secondary)
                     }
 
@@ -628,7 +638,8 @@ struct ManualFoodEntryView: View {
                             .multilineTextAlignment(.trailing)
                             .frame(width: 80)
                             .focused($focusedField, equals: .protein)
-                        Text("g")
+                        Text(localizationManager.localizedString(for: AppStrings.Food.gram))
+                            .id("protein-unit-\(localizationManager.currentLanguage)")
                             .foregroundColor(.secondary)
                     }
 
@@ -642,7 +653,8 @@ struct ManualFoodEntryView: View {
                             .multilineTextAlignment(.trailing)
                             .frame(width: 80)
                             .focused($focusedField, equals: .carbs)
-                        Text("g")
+                        Text(localizationManager.localizedString(for: AppStrings.Food.gram))
+                            .id("carbs-unit-\(localizationManager.currentLanguage)")
                             .foregroundColor(.secondary)
                     }
 
@@ -656,7 +668,8 @@ struct ManualFoodEntryView: View {
                             .multilineTextAlignment(.trailing)
                             .frame(width: 80)
                             .focused($focusedField, equals: .fat)
-                        Text("g")
+                        Text(localizationManager.localizedString(for: AppStrings.Food.gram))
+                            .id("fat-unit-\(localizationManager.currentLanguage)")
                             .foregroundColor(.secondary)
                     }
                 }
@@ -865,11 +878,11 @@ struct AnalyzedFoodRow: View {
             }
 
             HStack(spacing: 8) {
-                Text("P: \(food.proteinG.formattedMacro)g")
+                Text("\(localizationManager.localizedString(for: AppStrings.Home.proteinShort)): \(food.proteinG.formattedMacro)g")
                     .foregroundColor(.blue)
-                Text("C: \(food.carbsG.formattedMacro)g")
+                Text("\(localizationManager.localizedString(for: AppStrings.Home.carbsShort)): \(food.carbsG.formattedMacro)g")
                     .foregroundColor(.green)
-                Text("F: \(food.fatG.formattedMacro)g")
+                Text("\(localizationManager.localizedString(for: AppStrings.Home.fatShort)): \(food.fatG.formattedMacro)g")
                     .foregroundColor(.purple)
             }
             .font(.caption)

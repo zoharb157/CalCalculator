@@ -11,14 +11,17 @@ struct RingColorsExplainedView: View {
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
                     // Calendar Preview
                     CalendarPreviewCard()
                     
                     // Explanation
-                    Text("On the homepage calendar, the colored rings around each date show how close you were to your daily calorie goal:")
+                    Text(localizationManager.localizedString(for: AppStrings.Profile.ringColorsDescription))
                         .font(.body)
                         .padding(.horizontal)
                     
@@ -26,26 +29,26 @@ struct RingColorsExplainedView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         ColorLegendItem(
                             color: .green,
-                            title: "Green",
-                            description: "Up to 100 calories over your deficit target"
+                            title: localizationManager.localizedString(for: AppStrings.Profile.green),
+                            description: localizationManager.localizedString(for: AppStrings.Profile.upTo100CaloriesOver)
                         )
                         
                         ColorLegendItem(
                             color: .yellow,
-                            title: "Yellow",
-                            description: "100-200 calories over your goal"
+                            title: localizationManager.localizedString(for: AppStrings.Profile.yellow),
+                            description: localizationManager.localizedString(for: AppStrings.Profile.calories100To200Over)
                         )
                         
                         ColorLegendItem(
                             color: .red,
-                            title: "Red",
-                            description: "More than 200 calories over your goal"
+                            title: localizationManager.localizedString(for: AppStrings.Profile.red),
+                            description: localizationManager.localizedString(for: AppStrings.Profile.moreThan200CaloriesOver)
                         )
                         
                         ColorLegendItem(
                             color: .gray,
-                            title: "Dotted",
-                            description: "No meals logged that day",
+                            title: localizationManager.localizedString(for: AppStrings.Profile.dotted),
+                            description: localizationManager.localizedString(for: AppStrings.Profile.noMealsLoggedThatDay),
                             isDotted: true
                         )
                     }
@@ -69,11 +72,13 @@ struct RingColorsExplainedView: View {
 }
 
 struct CalendarPreviewCard: View {
+    @ObservedObject private var localizationManager = LocalizationManager.shared
+    
     var body: some View {
         VStack(spacing: 12) {
             HStack {
                 Image(systemName: "apple.logo")
-                Text("Cal AI")
+                Text(localizationManager.localizedString(for: AppStrings.Scanning.calAI))
                     .fontWeight(.semibold)
                 
                 Spacer()

@@ -27,7 +27,10 @@ struct HealthKitCard: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return VStack(spacing: 0) {
             if !healthKitManager.isHealthDataAvailable {
                 unavailableView
             } else if isLoading {
@@ -169,7 +172,7 @@ struct HealthKitCard: View {
                 icon: "figure.walk",
                 iconColor: .green,
                 value: formatNumber(healthKitManager.steps),
-                label: "Steps",
+                label: localizationManager.localizedString(for: AppStrings.Progress.steps),
                 goal: "10K"
             )
             
@@ -178,7 +181,7 @@ struct HealthKitCard: View {
                 icon: "flame.fill",
                 iconColor: .orange,
                 value: "\(healthKitManager.activeCalories)",
-                label: "Calories",
+                label: localizationManager.localizedString(for: AppStrings.Progress.activeCalories),
                 goal: "500"
             )
             
@@ -187,7 +190,7 @@ struct HealthKitCard: View {
                 icon: "figure.run",
                 iconColor: .cyan,
                 value: "\(healthKitManager.exerciseMinutes)",
-                label: "Exercise",
+                label: localizationManager.localizedString(for: AppStrings.Progress.exercise),
                 goal: "30min"
             )
             
@@ -196,7 +199,7 @@ struct HealthKitCard: View {
                 icon: "location.fill",
                 iconColor: .pink,
                 value: formatDistance(healthKitManager.distance),
-                label: "Distance",
+                label: localizationManager.localizedString(for: AppStrings.Progress.distance),
                 goal: "5km"
             )
         }
@@ -219,12 +222,12 @@ struct HealthKitCard: View {
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(localizationManager.localizedString(for: AppStrings.Home.healthKitUnavailable))
-                    .id("healthkit-unavailable-\(localizationManager.currentLanguage)")
+                    
                     .font(.headline)
                     .foregroundColor(.primary)
                 
                 Text(localizationManager.localizedString(for: AppStrings.Home.healthDataNotAvailable))
-                    .id("health-data-not-available-\(localizationManager.currentLanguage)")
+                    
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -263,12 +266,12 @@ struct HealthKitCard: View {
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(localizationManager.localizedString(for: AppStrings.Home.connectHealth))
-                        .id("connect-health-\(localizationManager.currentLanguage)")
+                        
                         .font(.headline)
                         .foregroundColor(.primary)
                     
                     Text(localizationManager.localizedString(for: AppStrings.Home.viewDailyActivity))
-                        .id("view-daily-activity-\(localizationManager.currentLanguage)")
+                        
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(2)
@@ -294,7 +297,7 @@ struct HealthKitCard: View {
                     Image(systemName: "heart.fill")
                         .font(.subheadline)
                     Text(localizationManager.localizedString(for: AppStrings.Home.enableHealthAccess))
-                        .id("enable-health-access-\(localizationManager.currentLanguage)")
+                        
                         .font(.subheadline)
                         .fontWeight(.semibold)
                 }
@@ -342,12 +345,13 @@ struct HealthKitCard: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Health Access Required")
+                    Text(localizationManager.localizedString(for: AppStrings.Progress.healthAccessRequired))
+                        
                         .font(.headline)
                         .foregroundColor(.primary)
                     
                     Text(localizationManager.localizedString(for: AppStrings.Progress.goToSettings))
-                        .id("go-to-settings-\(localizationManager.currentLanguage)")
+                        
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(3)
@@ -363,7 +367,7 @@ struct HealthKitCard: View {
                     Image(systemName: "gearshape.fill")
                         .font(.subheadline)
                     Text(localizationManager.localizedString(for: AppStrings.Progress.openSettings))
-                        .id("open-settings-\(localizationManager.currentLanguage)")
+                        
                         .font(.subheadline)
                         .fontWeight(.semibold)
                 }

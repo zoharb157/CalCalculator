@@ -18,7 +18,10 @@ struct DietPlanTemplatesView: View {
     @State private var selectedTemplate: DietPlanTemplate?
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 16) {
                     ForEach(DietPlanTemplate.allTemplates) { template in
@@ -30,14 +33,14 @@ struct DietPlanTemplatesView: View {
                 .padding()
             }
             .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.dietPlanTemplates))
-                .id("diet-plan-templates-title-\(localizationManager.currentLanguage)")
+                
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
                         dismiss()
                     }
-                    .id("cancel-templates-\(localizationManager.currentLanguage)")
+                    
                 }
             }
             .sheet(item: $selectedTemplate) { template in
@@ -84,13 +87,14 @@ struct TemplateCard: View {
                 // Quick stats
                 HStack(spacing: 16) {
                     Label("\(template.meals.count) \(localizationManager.localizedString(for: AppStrings.Food.meals))", systemImage: "fork.knife")
-                        .id("meals-count-\(localizationManager.currentLanguage)")
+                        
                         .font(.caption)
                         .foregroundColor(.secondary)
                     
-                    Label(template.difficulty.rawValue, systemImage: "gauge")
+                    Label(template.difficulty.localizedName, systemImage: "gauge")
                         .font(.caption)
                         .foregroundColor(.secondary)
+                        .id("difficulty-\(localizationManager.currentLanguage)")
                 }
             }
             .padding()
@@ -142,7 +146,7 @@ struct TemplatePreviewView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         Text(localizationManager.localizedString(for: AppStrings.DietPlan.scheduledMeals))
                             .font(.headline)
-                            .id("scheduled-meals-template-\(localizationManager.currentLanguage)")
+                            
                         
                         ForEach(template.meals, id: \.name) { meal in
                             MealPreviewRow(meal: meal)
@@ -157,7 +161,7 @@ struct TemplatePreviewView: View {
                         useTemplate()
                     } label: {
                         Label(localizationManager.localizedString(for: AppStrings.DietPlan.useThisTemplate), systemImage: "checkmark.circle.fill")
-                            .id("use-template-btn-\(localizationManager.currentLanguage)")
+                            
                             .font(.headline)
                             .frame(maxWidth: .infinity)
                             .padding()
@@ -169,14 +173,14 @@ struct TemplatePreviewView: View {
                 .padding()
             }
             .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.templatePreview))
-                .id("template-preview-title-\(localizationManager.currentLanguage)")
+                
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
                         dismiss()
                     }
-                    .id("cancel-templates-\(localizationManager.currentLanguage)")
+                    
                 }
             }
         }
@@ -244,6 +248,15 @@ struct DietPlanTemplate: Identifiable {
         case easy = "Easy"
         case medium = "Medium"
         case hard = "Advanced"
+        
+        var localizedName: String {
+            let localizationManager = LocalizationManager.shared
+            switch self {
+            case .easy: return localizationManager.localizedString(for: AppStrings.DietPlan.difficultyEasy)
+            case .medium: return localizationManager.localizedString(for: AppStrings.DietPlan.difficultyMedium)
+            case .hard: return localizationManager.localizedString(for: AppStrings.DietPlan.difficultyAdvanced)
+            }
+        }
     }
     
     func createDietPlan() -> DietPlan {

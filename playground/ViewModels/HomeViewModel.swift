@@ -109,6 +109,7 @@ final class HomeViewModel {
         
         let dayFormatter = DateFormatter()
         dayFormatter.dateFormat = "EEE"
+        dayFormatter.locale = Locale(identifier: LocalizationManager.shared.currentLanguage)
         
         return (0..<7).map { dayOffset -> WeekDay in
             guard let date = calendar.date(byAdding: .day, value: dayOffset, to: startOfWeek) else {
@@ -443,7 +444,7 @@ final class HomeViewModel {
     
     /// Build WeekDay array for multiple weeks (scrollable)
     /// Builds 3 weeks: 1 week before today, current week, 1 week after
-    private func buildWeekDays(from summaries: [Date: DaySummary], selectedDate: Date) -> [WeekDay] {
+    func buildWeekDays(from summaries: [Date: DaySummary], selectedDate: Date) -> [WeekDay] {
         let calendar = Calendar.current
         let today = Date()
         let calorieGoalValue = effectiveCalorieGoal
@@ -462,6 +463,7 @@ final class HomeViewModel {
         
         let dayFormatter = DateFormatter()
         dayFormatter.dateFormat = "EEE"
+        dayFormatter.locale = Locale(identifier: LocalizationManager.shared.currentLanguage)
         
         var days: [WeekDay] = []
         

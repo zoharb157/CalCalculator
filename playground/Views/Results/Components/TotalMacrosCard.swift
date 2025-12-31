@@ -12,7 +12,10 @@ struct TotalMacrosCard: View {
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
-        VStack(spacing: 16) {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return VStack(spacing: 16) {
             headerView
             macroChipsRow
         }
@@ -43,7 +46,7 @@ struct TotalMacrosCard: View {
     private var caloriesChip: some View {
         MacroChip(
             value: "\(macros.calories)",
-            label: "Calories",
+            label: localizationManager.localizedString(for: AppStrings.Home.calories),
             color: .caloriesColor
         )
     }
@@ -51,7 +54,7 @@ struct TotalMacrosCard: View {
     private var proteinChip: some View {
         MacroChip(
             value: macros.proteinG.formattedMacro,
-            label: "Protein",
+            label: localizationManager.localizedString(for: AppStrings.Home.protein),
             unit: "g",
             color: .proteinColor
         )
@@ -60,7 +63,7 @@ struct TotalMacrosCard: View {
     private var carbsChip: some View {
         MacroChip(
             value: macros.carbsG.formattedMacro,
-            label: "Carbs",
+            label: localizationManager.localizedString(for: AppStrings.Home.carbs),
             unit: "g",
             color: .carbsColor
         )
@@ -69,7 +72,7 @@ struct TotalMacrosCard: View {
     private var fatChip: some View {
         MacroChip(
             value: macros.fatG.formattedMacro,
-            label: "Fat",
+            label: localizationManager.localizedString(for: AppStrings.Home.fat),
             unit: "g",
             color: .fatColor
         )

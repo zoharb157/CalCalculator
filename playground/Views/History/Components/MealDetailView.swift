@@ -18,7 +18,10 @@ struct MealDetailView: View {
     @State private var error: Error?
     
     var body: some View {
-        content
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return content
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
@@ -61,7 +64,7 @@ struct MealDetailView: View {
     private var errorView: some View {
         let errorText = localizationManager.localizedString(for: AppStrings.History.unableToLoadMealDetails)
         ContentUnavailableView(
-            "Meal Not Found",
+            localizationManager.localizedString(for: AppStrings.History.mealNotFound),
             systemImage: "exclamationmark.triangle",
             description: Text(errorText)
         )
@@ -171,7 +174,7 @@ struct MealDetailView: View {
                     Text("\(meal.totalCalories)")
                         .font(.system(size: 36, weight: .bold, design: .rounded))
                         .foregroundColor(.caloriesColor)
-                    Text("calories")
+                    Text(localizationManager.localizedString(for: AppStrings.Food.kcal))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -180,9 +183,9 @@ struct MealDetailView: View {
                 
                 // Quick macro summary pills
                 HStack(spacing: 8) {
-                    quickMacroPill(value: meal.totalMacros.proteinG, label: "P", color: .proteinColor)
-                    quickMacroPill(value: meal.totalMacros.carbsG, label: "C", color: .carbsColor)
-                    quickMacroPill(value: meal.totalMacros.fatG, label: "F", color: .fatColor)
+                    quickMacroPill(value: meal.totalMacros.proteinG, label: localizationManager.localizedString(for: AppStrings.Home.proteinShort), color: .proteinColor)
+                    quickMacroPill(value: meal.totalMacros.carbsG, label: localizationManager.localizedString(for: AppStrings.Home.carbsShort), color: .carbsColor)
+                    quickMacroPill(value: meal.totalMacros.fatG, label: localizationManager.localizedString(for: AppStrings.Home.fatShort), color: .fatColor)
                 }
             }
         }
@@ -236,21 +239,21 @@ struct MealDetailView: View {
             HStack(spacing: 20) {
                 macroRing(
                     value: meal.totalMacros.proteinG,
-                    label: "Protein",
+                    label: localizationManager.localizedString(for: AppStrings.Home.protein),
                     color: .proteinColor,
                     icon: "figure.strengthtraining.traditional"
                 )
                 
                 macroRing(
                     value: meal.totalMacros.carbsG,
-                    label: "Carbs",
+                    label: localizationManager.localizedString(for: AppStrings.Home.carbs),
                     color: .carbsColor,
                     icon: "leaf.fill"
                 )
                 
                 macroRing(
                     value: meal.totalMacros.fatG,
-                    label: "Fat",
+                    label: localizationManager.localizedString(for: AppStrings.Home.fat),
                     color: .fatColor,
                     icon: "drop.fill"
                 )
@@ -301,9 +304,10 @@ struct MealDetailView: View {
                     .font(.headline)
                     .id("ingredients-label-\(localizationManager.currentLanguage)")
                 Spacer()
-                Text("\(meal.items.count) items")
+                Text("\(meal.items.count) \(localizationManager.localizedString(for: AppStrings.History.items))")
                     .font(.caption)
                     .foregroundColor(.secondary)
+                    .id("items-count-\(localizationManager.currentLanguage)")
             }
             
             VStack(spacing: 12) {
@@ -341,9 +345,10 @@ struct MealDetailView: View {
             
             // Calories and macros
             VStack(alignment: .trailing, spacing: 4) {
-                Text("\(item.calories) cal")
+                Text("\(item.calories) \(localizationManager.localizedString(for: AppStrings.Progress.cal))")
                     .font(.subheadline)
                     .fontWeight(.semibold)
+                    .id("cal-item-\(localizationManager.currentLanguage)")
                 
                 HStack(spacing: 6) {
                     ingredientMacroLabel(value: item.proteinG, color: .proteinColor)

@@ -48,6 +48,6 @@ struct CameraView: UIViewControllerRepresentable {
 // Note: Camera preview requires a physical device
 
 #Preview {
-    Text("Camera requires physical device")
+    Text(LocalizationManager.shared.localizedString(for: AppStrings.Scanning.cameraRequiresPhysicalDevice))
         .foregroundStyle(.secondary)
 }

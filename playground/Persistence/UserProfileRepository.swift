@@ -30,10 +30,11 @@ enum AppearanceMode: String, CaseIterable, Codable {
     case dark = "dark"
     
     var displayName: String {
+        let localizationManager = LocalizationManager.shared
         switch self {
-        case .system: return "System"
-        case .light: return "Light"
-        case .dark: return "Dark"
+        case .system: return localizationManager.localizedString(for: AppStrings.Profile.system)
+        case .light: return localizationManager.localizedString(for: AppStrings.Profile.light)
+        case .dark: return localizationManager.localizedString(for: AppStrings.Profile.dark)
         }
     }
     
@@ -392,7 +393,7 @@ extension UserProfileRepository {
         let first = getFirstName()
         let last = getLastName()
         if first.isEmpty && last.isEmpty {
-            return "Tap to set name"
+            return LocalizationManager.shared.localizedString(for: AppStrings.Profile.tapToSetName)
         }
         return "\(first) \(last)".trimmingCharacters(in: .whitespaces)
     }

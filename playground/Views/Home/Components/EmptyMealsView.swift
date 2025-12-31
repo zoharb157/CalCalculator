@@ -9,8 +9,13 @@ import SwiftUI
 
 struct EmptyMealsView: View {
     var onScanTapped: (() -> Void)? = nil
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return
         VStack(spacing: 12) {
             emptyIcon
             titleText
@@ -32,13 +37,13 @@ struct EmptyMealsView: View {
     }
     
     private var titleText: some View {
-        LocalizedText(AppStrings.Home.noMealsYet)
+        Text(localizationManager.localizedString(for: AppStrings.Home.noMealsYet))
             .font(.system(size: 15, weight: .semibold))
             .foregroundColor(.primary)
     }
     
     private var descriptionText: some View {
-        LocalizedText(AppStrings.Home.tapToAddFirstMeal)
+        Text(localizationManager.localizedString(for: AppStrings.Home.tapToAddFirstMeal))
             .font(.system(size: 13))
             .foregroundColor(.secondary)
             .multilineTextAlignment(.center)
@@ -54,7 +59,7 @@ struct EmptyMealsView: View {
             }) {
                 HStack {
                     Image(systemName: "camera.fill")
-                    LocalizedText(AppStrings.Food.scan)
+                    Text(localizationManager.localizedString(for: AppStrings.Food.scan))
                 }
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(.white)

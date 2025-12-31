@@ -27,7 +27,10 @@ struct SupportEmailView: View {
     }
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             Form {
                 recipientSection
                 senderSection
@@ -36,14 +39,14 @@ struct SupportEmailView: View {
                 deviceInfoSection
             }
             .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.supportRequest))
-                .id("support-request-title-\(localizationManager.currentLanguage)")
+                
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
                         dismiss()
                     }
-                    .id("cancel-support-\(localizationManager.currentLanguage)")
+                    
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     sendButton
@@ -53,17 +56,17 @@ struct SupportEmailView: View {
             .sheet(isPresented: $showingMailComposer) {
                 MailComposeView(
                     recipients: [supportEmail],
-                    subject: "Support Request",
+                    subject: localizationManager.localizedString(for: AppStrings.Profile.supportRequest),
                     body: generateEmailBody()
                 )
             }
             #endif
             .alert(localizationManager.localizedString(for: AppStrings.Common.success), isPresented: $showCopiedAlert) {
                 Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) { }
-                    .id("ok-support-\(localizationManager.currentLanguage)")
+                    
             } message: {
                 Text(localizationManager.localizedString(for: AppStrings.Profile.emailContentCopied))
-                    .id("email-copied-\(localizationManager.currentLanguage)")
+                    
             }
         }
     }
@@ -76,7 +79,7 @@ struct SupportEmailView: View {
                 .foregroundStyle(.blue)
         } header: {
             Text(localizationManager.localizedString(for: AppStrings.Profile.to))
-                .id("to-label-\(localizationManager.currentLanguage)")
+                
         }
     }
     
@@ -86,17 +89,17 @@ struct SupportEmailView: View {
                 .foregroundStyle(.secondary)
         } header: {
             Text(localizationManager.localizedString(for: AppStrings.Profile.from))
-                .id("from-label-\(localizationManager.currentLanguage)")
+                
         }
     }
     
     private var subjectSection: some View {
         Section {
             Text(localizationManager.localizedString(for: AppStrings.Profile.supportRequest))
-                .id("support-request-label-\(localizationManager.currentLanguage)")
+                
         } header: {
             Text(localizationManager.localizedString(for: AppStrings.Profile.subject))
-                .id("subject-label-\(localizationManager.currentLanguage)")
+                
         }
     }
     
@@ -106,27 +109,27 @@ struct SupportEmailView: View {
                 .frame(minHeight: 150)
         } header: {
             Text(localizationManager.localizedString(for: AppStrings.Profile.pleaseDescribeIssue))
-                .id("describe-issue-\(localizationManager.currentLanguage)")
+                
         }
     }
     
     private var deviceInfoSection: some View {
         Section {
             VStack(alignment: .leading, spacing: 6) {
-                InfoRow(label: "User ID", value: deviceInfo.userId)
-                InfoRow(label: "App Version", value: deviceInfo.appVersion)
-                InfoRow(label: "Platform", value: "iOS")
-                InfoRow(label: "iOS Version", value: deviceInfo.osVersion)
-                InfoRow(label: "Device", value: deviceInfo.deviceModel)
+                InfoRow(label: localizationManager.localizedString(for: AppStrings.Profile.userId), value: deviceInfo.userId)
+                InfoRow(label: localizationManager.localizedString(for: AppStrings.Profile.appVersion), value: deviceInfo.appVersion)
+                InfoRow(label: localizationManager.localizedString(for: AppStrings.Profile.platform), value: localizationManager.localizedString(for: AppStrings.Profile.ios))
+                InfoRow(label: localizationManager.localizedString(for: AppStrings.Profile.iosVersion), value: deviceInfo.osVersion)
+                InfoRow(label: localizationManager.localizedString(for: AppStrings.Profile.device), value: deviceInfo.deviceModel)
             }
             .font(.caption)
             .foregroundStyle(.secondary)
         } header: {
             Text(localizationManager.localizedString(for: AppStrings.Profile.debugInformation))
-                .id("debug-info-\(localizationManager.currentLanguage)")
+                
         } footer: {
             Text(localizationManager.localizedString(for: AppStrings.Profile.debugInfoHelpsDiagnose))
-                .id("debug-help-\(localizationManager.currentLanguage)")
+                
         }
     }
     
@@ -156,19 +159,19 @@ struct SupportEmailView: View {
         \(issueDescription)
         
         ---
-        User ID: \(deviceInfo.userId)
-        App Version: \(deviceInfo.appVersion)
-        Platform: iOS
-        iOS Version: \(deviceInfo.osVersion)
-        Device: \(deviceInfo.deviceModel)
+        \(localizationManager.localizedString(for: AppStrings.Profile.userId)): \(deviceInfo.userId)
+        \(localizationManager.localizedString(for: AppStrings.Profile.appVersion)): \(deviceInfo.appVersion)
+        \(localizationManager.localizedString(for: AppStrings.Profile.platform)): \(localizationManager.localizedString(for: AppStrings.Profile.ios))
+        \(localizationManager.localizedString(for: AppStrings.Profile.iosVersion)): \(deviceInfo.osVersion)
+        \(localizationManager.localizedString(for: AppStrings.Profile.device)): \(deviceInfo.deviceModel)
         """
     }
     
     private func copyEmailToClipboard() {
         #if canImport(UIKit)
         UIPasteboard.general.string = """
-        To: \(supportEmail)
-        Subject: Support Request
+        \(localizationManager.localizedString(for: AppStrings.Profile.to)) \(supportEmail)
+        \(localizationManager.localizedString(for: AppStrings.Profile.subject)) \(localizationManager.localizedString(for: AppStrings.Profile.supportRequest))
         
         \(generateEmailBody())
         """

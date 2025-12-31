@@ -21,7 +21,10 @@ struct PaywallDeclineConfirmationView: View {
     }
     
     var body: some View {
-        ZStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return ZStack {
             // Dark overlay - no padding
             Color.black.opacity(0.5)
                 .ignoresSafeArea()
@@ -74,7 +77,7 @@ struct PaywallDeclineConfirmationView: View {
                             .cornerRadius(12)
                             .id("start-free-trial-\(localizationManager.currentLanguage)")
                     }
-                    .accessibilityLabel("Start free trial")
+                    .accessibilityLabel(localizationManager.localizedString(for: AppStrings.Premium.startFreeTrial))
                     .accessibilityHint("Opens the premium subscription screen to start your free trial")
                     
                     // Not now button - also blue as shown in image
@@ -90,7 +93,7 @@ struct PaywallDeclineConfirmationView: View {
                             .background(Color.blue)
                             .cornerRadius(12)
                     }
-                    .accessibilityLabel("Skip free trial")
+                    .accessibilityLabel(localizationManager.localizedString(for: AppStrings.Premium.skipFreeTrial))
                     .accessibilityHint("Dismisses this confirmation without starting free trial")
                 }
             }

@@ -21,51 +21,58 @@ struct LockedFeatureOverlay: View {
     }
     
     var body: some View {
-        if !isSubscribed {
-            ZStack {
-                Color.black.opacity(0.3)
-                    .ignoresSafeArea()
-                
-                VStack(spacing: 16) {
-                    Image(systemName: "lock.fill")
-                        .font(.system(size: 40))
-                        .foregroundColor(.white)
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return Group {
+            if !isSubscribed {
+                ZStack {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
                     
-                    if let message = message {
-                        Text(message)
-                            .font(.headline)
+                    VStack(spacing: 16) {
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 40))
                             .foregroundColor(.white)
-                            .multilineTextAlignment(.center)
-                    } else {
-                        Text(localizationManager.localizedString(for: AppStrings.Premium.premiumFeature))
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .id("premium-feature-\(localizationManager.currentLanguage)")
+                        
+                        if let message = message {
+                            Text(message)
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .multilineTextAlignment(.center)
+                        } else {
+                            Text(localizationManager.localizedString(for: AppStrings.Premium.premiumFeature))
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .id("premium-feature-\(localizationManager.currentLanguage)")
+                        }
+                        
+                        Button(localizationManager.localizedString(for: AppStrings.Common.unlock)) {
+                            showPaywall = true
+                        }
+                        .id("unlock-btn-\(localizationManager.currentLanguage)")
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.large)
                     }
-                    
-                    Button(localizationManager.localizedString(for: AppStrings.Common.unlock)) {
-                        showPaywall = true
-                    }
-                    .id("unlock-btn-\(localizationManager.currentLanguage)")
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
+                    .padding(24)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(.ultraThinMaterial)
+                    )
+                    .padding(40)
                 }
-                .padding(24)
-                .background(
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(.ultraThinMaterial)
-                )
-                .padding(40)
+            } else {
+                EmptyView()
             }
-            .fullScreenCover(isPresented: $showPaywall) {
-                SDKView(
-                    model: sdk,
-                    page: .splash,
-                    show: $showPaywall,
-                    backgroundColor: .white,
-                    ignoreSafeArea: true
-                )
-            }
+        }
+        .fullScreenCover(isPresented: $showPaywall) {
+            SDKView(
+                model: sdk,
+                page: .splash,
+                show: $showPaywall,
+                backgroundColor: .white,
+                ignoreSafeArea: true
+            )
         }
     }
 }

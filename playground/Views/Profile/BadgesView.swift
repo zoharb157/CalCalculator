@@ -24,7 +24,10 @@ struct BadgesView: View {
     // MARK: - Body
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
                     progressHeader
@@ -83,24 +86,24 @@ struct BadgesView: View {
                                 endPoint: .bottomTrailing
                             )
                         )
-                    Text("of \(badgeManager.totalBadgeCount)")
+                    Text("\(localizationManager.localizedString(for: AppStrings.Profile.of)) \(badgeManager.totalBadgeCount)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
             }
             .frame(width: 100, height: 100)
             
-            Text("Badges Earned")
+            Text(localizationManager.localizedString(for: AppStrings.Profile.badgesEarned))
                 .font(.headline)
                 .foregroundColor(.primary)
             
             if badgeManager.unlockedBadgeCount == badgeManager.totalBadgeCount {
-                Text("Congratulations! You've earned all badges!")
+                Text(localizationManager.localizedString(for: AppStrings.Profile.congratulationsAllBadges))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
             } else {
-                Text("Keep logging to unlock more badges!")
+                Text(localizationManager.localizedString(for: AppStrings.Profile.keepLoggingToUnlock))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -119,7 +122,7 @@ struct BadgesView: View {
     @ViewBuilder
     private var badgesGrid: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("All Badges")
+            Text(localizationManager.localizedString(for: AppStrings.Profile.allBadges))
                 .font(.headline)
                 .foregroundColor(.primary)
                 .padding(.leading, 4)
@@ -148,6 +151,8 @@ struct BadgesView: View {
 struct BadgeCard: View {
     let badgeType: BadgeType
     let earnedBadge: EarnedBadge?
+    
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var isEarned: Bool {
         earnedBadge != nil
@@ -199,7 +204,7 @@ struct BadgeCard: View {
             
             // Description or Earned Date
             if let earned = earnedBadge {
-                Text("Earned \(formattedDate(earned.earnedDate))")
+                Text(String(format: localizationManager.localizedString(for: AppStrings.Profile.earnedFormat), formattedDate(earned.earnedDate)))
                     .font(.caption2)
                     .foregroundColor(.green)
                     .lineLimit(1)

@@ -13,15 +13,20 @@ struct AnalyzingView: View {
     @State private var animating = false
     @State private var currentTip = 0
     
-    private let tips = [
-        "Identifying ingredients...",
-        "Calculating portion sizes...",
-        "Estimating nutritional values...",
-        "Analyzing macros..."
-    ]
+    private var tips: [String] {
+        [
+            localizationManager.localizedString(for: AppStrings.Scanning.identifyingIngredients),
+            localizationManager.localizedString(for: AppStrings.Scanning.calculatingPortionSizes),
+            localizationManager.localizedString(for: AppStrings.Scanning.estimatingNutritionalValues),
+            localizationManager.localizedString(for: AppStrings.Scanning.analyzingMacros)
+        ]
+    }
     
     var body: some View {
-        VStack(spacing: 32) {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return VStack(spacing: 32) {
             Spacer()
             progressIndicator
             textContent

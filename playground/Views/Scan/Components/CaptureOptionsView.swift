@@ -10,8 +10,13 @@ import SwiftUI
 struct CaptureOptionsView: View {
     let onCamera: () -> Void
     let onPhotoLibrary: () -> Void
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return
         VStack(spacing: 32) {
             Spacer()
             iconView
@@ -45,13 +50,13 @@ struct CaptureOptionsView: View {
     }
     
     private var titleText: some View {
-        Text("Capture Your Meal")
+        Text(localizationManager.localizedString(for: AppStrings.Scanning.captureYourMeal))
             .font(.title2)
             .fontWeight(.bold)
     }
     
     private var subtitleText: some View {
-        Text("Take a photo or choose from your library")
+        Text(localizationManager.localizedString(for: AppStrings.Scanning.takePhotoOrChoose))
             .font(.subheadline)
             .foregroundColor(.secondary)
     }
@@ -67,7 +72,7 @@ struct CaptureOptionsView: View {
     
     private var cameraButton: some View {
         Button(action: onCamera) {
-            Label("Take Photo", systemImage: "camera.fill")
+            Label(localizationManager.localizedString(for: AppStrings.Scanning.takePhoto), systemImage: "camera.fill")
                 .font(.headline)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
@@ -79,7 +84,7 @@ struct CaptureOptionsView: View {
     
     private var libraryButton: some View {
         Button(action: onPhotoLibrary) {
-            Label("Choose from Library", systemImage: "photo.fill")
+            Label(localizationManager.localizedString(for: AppStrings.Scanning.chooseFromLibrary), systemImage: "photo.fill")
                 .font(.headline)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)

@@ -26,7 +26,10 @@ struct BadgesCard: View {
     }
     
     var body: some View {
-        Button(action: onTap) {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return Button(action: onTap) {
             VStack(spacing: 16) {
                 // Header
                 headerView
@@ -79,10 +82,9 @@ struct BadgesCard: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(localizationManager.localizedString(for: AppStrings.Home.myBadges))
                     .font(.headline)
-                    .id("my-badges-\(localizationManager.currentLanguage)")
                     .foregroundColor(.primary)
                 
-                Text("\(badgeManager.unlockedBadgeCount) of \(badgeManager.totalBadgeCount) earned")
+                Text(localizationManager.localizedString(for: AppStrings.Profile.badgesEarnedCount, arguments: badgeManager.unlockedBadgeCount, badgeManager.totalBadgeCount))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -126,7 +128,7 @@ struct BadgesCard: View {
                     Text("+\(badgeManager.unlockedBadgeCount - 3)")
                         .font(.system(size: 14, weight: .bold, design: .rounded))
                         .foregroundColor(.secondary)
-                    Text("more")
+                    Text(localizationManager.localizedString(for: AppStrings.Home.more))
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
@@ -186,7 +188,8 @@ struct BadgesCard: View {
                 }
             }
             
-            Text(badgeType?.displayName ?? "Locked")
+            Text(badgeType?.displayName ?? localizationManager.localizedString(for: AppStrings.Badge.locked))
+                .id("badge-name-\(localizationManager.currentLanguage)")
                 .font(.system(size: 9, weight: .medium))
                 .foregroundColor(.secondary)
                 .lineLimit(1)
@@ -223,7 +226,7 @@ struct BadgesCard: View {
             .frame(height: 8)
             
             HStack {
-                Text("\(Int(progressValue * 100))% Complete")
+                Text(localizationManager.localizedString(for: AppStrings.Profile.progressComplete, arguments: Int(progressValue * 100)))
                     .font(.caption2)
                     .fontWeight(.medium)
                     .foregroundColor(.secondary)
@@ -231,8 +234,7 @@ struct BadgesCard: View {
                 Spacer()
                 
                 if let nextBadge = nextBadgeToEarn {
-                    Text("\(localizationManager.localizedString(for: AppStrings.Home.next_)) \(nextBadge.displayName)")
-                        .id("next-badge-\(localizationManager.currentLanguage)")
+                    Text(localizationManager.localizedString(for: AppStrings.Home.nextBadge, arguments: nextBadge.displayName))
                         .font(.caption2)
                         .foregroundColor(.orange)
                 }
@@ -250,8 +252,7 @@ struct BadgesCard: View {
                 .foregroundColor(.yellow)
             
                 Text(localizationManager.localizedString(for: AppStrings.Home.tapToViewBadges))
-                    .id("tap-view-badges-\(localizationManager.currentLanguage)")
-                .font(.caption)
+                    .font(.caption)
                 .foregroundColor(.secondary)
             
             Spacer()

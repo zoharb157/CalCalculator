@@ -12,6 +12,7 @@ struct DietPlanEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Query(filter: #Predicate<DietPlan> { $0.isActive == true }) private var existingActivePlans: [DietPlan]
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     let plan: DietPlan?
     let repository: DietPlanRepository
@@ -52,7 +53,7 @@ struct DietPlanEditorView: View {
                         HStack(spacing: 8) {
                             Image(systemName: "info.circle.fill")
                                 .foregroundColor(.orange)
-                            Text("Creating a new plan will replace your current active diet plan. You can only have one active diet plan at a time.")
+                            Text(localizationManager.localizedString(for: AppStrings.DietPlan.creatingNewPlanWillReplace))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -60,15 +61,15 @@ struct DietPlanEditorView: View {
                     }
                 }
                 
-                Section("Plan Details") {
-                    TextField("Plan Name", text: $name)
-                    TextField("Description (optional)", text: $planDescription, axis: .vertical)
+                Section(localizationManager.localizedString(for: AppStrings.DietPlan.planDetails)) {
+                    TextField(localizationManager.localizedString(for: AppStrings.DietPlan.planName), text: $name)
+                    TextField(localizationManager.localizedString(for: AppStrings.DietPlan.descriptionOptional), text: $planDescription, axis: .vertical)
                         .lineLimit(3...6)
                     
                     HStack {
-                        Text("Daily Calorie Goal")
+                        Text(localizationManager.localizedString(for: AppStrings.DietPlan.dailyCalorieGoal))
                         Spacer()
-                        TextField("Optional", text: $dailyCalorieGoal)
+                        TextField(localizationManager.localizedString(for: AppStrings.Common.optional), text: $dailyCalorieGoal)
                             .keyboardType(.numberPad)
                             .multilineTextAlignment(.trailing)
                             .frame(width: 100)
@@ -92,16 +93,16 @@ struct DietPlanEditorView: View {
                                     dailyCalorieGoal = oldValue
                                 }
                             }
-                        Text("kcal")
+                        Text(localizationManager.localizedString(for: AppStrings.Food.kcal))
                             .foregroundColor(.secondary)
                     }
                     
-                    Toggle("Active", isOn: $isActive)
+                    Toggle(localizationManager.localizedString(for: AppStrings.DietPlan.active), isOn: $isActive)
                 }
                 
-                Section("Scheduled Meals") {
+                Section(localizationManager.localizedString(for: AppStrings.DietPlan.scheduledMeals)) {
                     if scheduledMeals.isEmpty {
-                        Text("No meals scheduled")
+                        Text(localizationManager.localizedString(for: AppStrings.DietPlan.noMealsScheduled))
                             .foregroundColor(.secondary)
                             .font(.subheadline)
                     } else {
@@ -116,20 +117,21 @@ struct DietPlanEditorView: View {
                     Button {
                         showingAddMeal = true
                     } label: {
-                        Label("Add Scheduled Meal", systemImage: "plus.circle")
+                        Label(localizationManager.localizedString(for: AppStrings.DietPlan.addScheduledMeal), systemImage: "plus.circle")
                     }
                 }
             }
-            .navigationTitle(isCreatingNewPlan ? "Create Diet Plan" : "Edit Diet Plan")
+            .navigationTitle(isCreatingNewPlan ? localizationManager.localizedString(for: AppStrings.DietPlan.createDietPlan) : localizationManager.localizedString(for: AppStrings.DietPlan.editDietPlan))
+                .id("nav-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.save)) {
                         savePlan()
                     }
                     .disabled(name.isEmpty || scheduledMeals.isEmpty)
@@ -165,9 +167,9 @@ struct DietPlanEditorView: View {
                 )
             }
             .alert("Meals Required", isPresented: $showNoMealsAlert) {
-                Button("OK", role: .cancel) {}
+                Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) {}
             } message: {
-                Text("Please add at least one scheduled meal before saving the diet plan.")
+                Text(localizationManager.localizedString(for: AppStrings.DietPlan.addAtLeastOneMeal))
             }
         }
     }
@@ -302,10 +304,10 @@ struct ScheduledMealRow: View {
 
 #Preview {
     if let container = try? ModelContainer(for: DietPlan.self, ScheduledMeal.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true)) {
-        return DietPlanEditorView(plan: nil, repository: DietPlanRepository(context: container.mainContext))
+        DietPlanEditorView(plan: nil, repository: DietPlanRepository(context: container.mainContext))
             .modelContainer(container)
     } else {
-        return Text("Preview unavailable")
+        Text(LocalizationManager.shared.localizedString(for: AppStrings.DietPlan.previewUnavailable))
     }
 }
 

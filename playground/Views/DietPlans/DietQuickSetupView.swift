@@ -27,7 +27,10 @@ struct DietQuickSetupView: View {
     private let steps = ["Name", "Template", "Meals", "Review"]
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             VStack(spacing: 0) {
                 // Progress indicator
                 progressIndicator
@@ -53,14 +56,14 @@ struct DietQuickSetupView: View {
                 navigationButtons
             }
             .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.createDietPlan))
-                .id("create-diet-plan-title-\(localizationManager.currentLanguage)")
+                
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
                         dismiss()
                     }
-                    .id("cancel-quick-setup-\(localizationManager.currentLanguage)")
+                    
                 }
             }
             .sheet(isPresented: $showingMealEditor) {
@@ -101,7 +104,7 @@ struct DietQuickSetupView: View {
             .padding(.horizontal)
             
             Text(localizationManager.localizedString(for: AppStrings.DietPlan.stepXOfY, arguments: currentStep + 1, steps.count, steps[currentStep]))
-                .id("step-indicator-\(localizationManager.currentLanguage)")
+                
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
@@ -120,15 +123,16 @@ struct DietQuickSetupView: View {
             Text(localizationManager.localizedString(for: AppStrings.DietPlan.nameYourDietPlan))
                 .font(.title2)
                 .fontWeight(.bold)
-                .id("name-diet-plan-\(localizationManager.currentLanguage)")
+                
             
             Text(localizationManager.localizedString(for: AppStrings.DietPlan.giveDietPlanName))
-                .id("give-diet-plan-name-\(localizationManager.currentLanguage)")
+                
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
             
-            TextField("e.g., Weight Loss Plan", text: $planName)
+            TextField(localizationManager.localizedString(for: AppStrings.DietPlan.planNamePlaceholder), text: $planName)
+                .id("plan-name-placeholder-\(localizationManager.currentLanguage)")
                 .textFieldStyle(.roundedBorder)
                 .padding(.horizontal)
         }
@@ -142,10 +146,10 @@ struct DietQuickSetupView: View {
                 .font(.title2)
                 .fontWeight(.bold)
                 .padding(.horizontal)
-                .id("choose-template-\(localizationManager.currentLanguage)")
+                
             
             Text(localizationManager.localizedString(for: AppStrings.DietPlan.startWithTemplate))
-                .id("start-with-template-\(localizationManager.currentLanguage)")
+                
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .padding(.horizontal)
@@ -161,7 +165,7 @@ struct DietQuickSetupView: View {
                                 .foregroundColor(selectedTemplate == nil ? .accentColor : .secondary)
                             
                             Text(localizationManager.localizedString(for: AppStrings.DietPlan.startFromScratch))
-                                .id("start-from-scratch-\(localizationManager.currentLanguage)")
+                                
                                 .foregroundColor(.primary)
                             
                             Spacer()
@@ -209,7 +213,7 @@ struct DietQuickSetupView: View {
                 Text(localizationManager.localizedString(for: AppStrings.DietPlan.scheduleYourMeals))
                     .font(.title2)
                     .fontWeight(.bold)
-                    .id("schedule-meals-\(localizationManager.currentLanguage)")
+                    
                 
                 Spacer()
                 
@@ -231,7 +235,7 @@ struct DietQuickSetupView: View {
                     systemImage: "fork.knife.circle",
                     description: Text(descriptionText)
                 )
-                .id("no-meals-scheduled-\(localizationManager.currentLanguage)")
+                
             } else {
                 List {
                     ForEach(meals) { meal in
@@ -255,14 +259,14 @@ struct DietQuickSetupView: View {
                     .font(.title2)
                     .fontWeight(.bold)
                     .padding(.horizontal)
-                    .id("review-plan-\(localizationManager.currentLanguage)")
+                    
                 
                 // Plan summary
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         Text(localizationManager.localizedString(for: AppStrings.DietPlan.planName))
                             .font(.headline)
-                            .id("plan-name-label-\(localizationManager.currentLanguage)")
+                            
                         Spacer()
                         Text(planName.isEmpty ? localizationManager.localizedString(for: AppStrings.Common.untitled) : planName)
                             .foregroundColor(.secondary)
@@ -271,7 +275,7 @@ struct DietQuickSetupView: View {
                     HStack {
                         Text(localizationManager.localizedString(for: AppStrings.DietPlan.totalMeals))
                             .font(.headline)
-                            .id("total-meals-label-\(localizationManager.currentLanguage)")
+                            
                         Spacer()
                         Text("\(meals.count)")
                             .foregroundColor(.secondary)
@@ -279,7 +283,7 @@ struct DietQuickSetupView: View {
                     
                     HStack {
                         Text(localizationManager.localizedString(for: AppStrings.DietPlan.daysActive))
-                            .id("days-active-label-\(localizationManager.currentLanguage)")
+                            
                             .font(.headline)
                         Spacer()
                         Text(uniqueDaysString)
@@ -297,7 +301,7 @@ struct DietQuickSetupView: View {
                         Text(localizationManager.localizedString(for: AppStrings.DietPlan.scheduledMeals))
                             .font(.headline)
                             .padding(.horizontal)
-                            .id("scheduled-meals-review-\(localizationManager.currentLanguage)")
+                            
                         
                         ForEach(meals.sorted(by: { $0.time < $1.time }), id: \.id) { meal in
                             ScheduledMealRow(meal: meal) {
@@ -315,7 +319,9 @@ struct DietQuickSetupView: View {
     
     private var uniqueDaysString: String {
         let allDays = Set(meals.flatMap { $0.daysOfWeek })
-        let dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: localizationManager.currentLanguage)
+        guard let dayNames = formatter.shortWeekdaySymbols else { return "" }
         let sortedDays = allDays.sorted().map { dayNames[$0 - 1] }
         return sortedDays.joined(separator: ", ")
     }
@@ -330,7 +336,7 @@ struct DietQuickSetupView: View {
                         currentStep -= 1
                     }
                 }
-                .id("back-quick-setup-\(localizationManager.currentLanguage)")
+                
             }
             
             Spacer()
@@ -341,14 +347,14 @@ struct DietQuickSetupView: View {
                         currentStep += 1
                     }
                 }
-                .id("next-quick-setup-\(localizationManager.currentLanguage)")
+                
                 .buttonStyle(.borderedProminent)
                 .disabled(currentStep == 0 && planName.isEmpty)
             } else {
                 Button(localizationManager.localizedString(for: AppStrings.DietPlan.createDietPlan)) {
                     createPlan()
                 }
-                .id("create-plan-btn-\(localizationManager.currentLanguage)")
+                
                 .buttonStyle(.borderedProminent)
                 .disabled(planName.isEmpty || meals.isEmpty)
             }

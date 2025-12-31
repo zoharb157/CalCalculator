@@ -57,7 +57,10 @@ struct MealVerificationView: View {
     }
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             ZStack {
                 if showingResults, let meal = analysisResult, let status = verificationStatus {
                     verificationResultsView(meal: meal, status: status)
@@ -68,7 +71,7 @@ struct MealVerificationView: View {
                 }
             }
             .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.verifyMeal))
-                .id("verify-meal-title-\(localizationManager.currentLanguage)")
+                
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -116,14 +119,14 @@ struct MealVerificationView: View {
                 .foregroundStyle(.blue.gradient)
             
             // Title
-            Text("Time for \(mealName)")
+            Text(String(format: localizationManager.localizedString(for: AppStrings.DietPlan.timeFor), mealName))
                 .font(.title)
                 .fontWeight(.bold)
             
             // Expected calories info
             if let expected = expectedCalories {
                 VStack(spacing: 8) {
-                    Text("Expected Calories")
+                    Text(localizationManager.localizedString(for: AppStrings.DietPlan.expectedCalories))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     
@@ -138,7 +141,7 @@ struct MealVerificationView: View {
             }
             
             // Instructions
-            Text("Take a photo of your meal to verify it matches your planned calories")
+            Text(localizationManager.localizedString(for: AppStrings.DietPlan.takePhotoToVerify))
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -149,7 +152,7 @@ struct MealVerificationView: View {
                 Button {
                     showingCamera = true
                 } label: {
-                    Label("Take Photo", systemImage: "camera.fill")
+                    Label(localizationManager.localizedString(for: AppStrings.Scanning.takePhoto), systemImage: "camera.fill")
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color.blue)
@@ -160,7 +163,7 @@ struct MealVerificationView: View {
                 Button {
                     showingImagePicker = true
                 } label: {
-                    Label("Choose from Library", systemImage: "photo.on.rectangle")
+                    Label(localizationManager.localizedString(for: AppStrings.Scanning.chooseFromLibrary), systemImage: "photo.on.rectangle")
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color(.systemGray5))
@@ -171,7 +174,7 @@ struct MealVerificationView: View {
                 Button {
                     skipVerification()
                 } label: {
-                    Text("Skip Verification")
+                    Text(localizationManager.localizedString(for: AppStrings.DietPlan.skipVerification))
                         .frame(maxWidth: .infinity)
                         .padding()
                         .foregroundColor(.secondary)
@@ -189,10 +192,10 @@ struct MealVerificationView: View {
             ProgressView()
                 .scaleEffect(1.5)
             
-            Text("Analyzing your meal...")
+            Text(localizationManager.localizedString(for: AppStrings.DietPlan.analyzingYourMeal))
                 .font(.headline)
             
-            Text("Comparing calories with your planned meal")
+            Text(localizationManager.localizedString(for: AppStrings.DietPlan.comparingCalories))
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
@@ -222,17 +225,17 @@ struct MealVerificationView: View {
             Group {
                 switch status {
                 case .match:
-                    Text("Great! Calories Match")
+                    Text(localizationManager.localizedString(for: AppStrings.DietPlan.greatCaloriesMatch))
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(.green)
                 case .close:
-                    Text("Close Match")
+                    Text(localizationManager.localizedString(for: AppStrings.DietPlan.closeMatch))
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(.orange)
                 case .mismatch:
-                    Text("Calories Don't Match")
+                    Text(localizationManager.localizedString(for: AppStrings.DietPlan.caloriesDontMatch))
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(.red)
@@ -243,18 +246,18 @@ struct MealVerificationView: View {
             if let expected = expectedCalories {
                 VStack(spacing: 12) {
                     HStack {
-                        Text("Expected:")
+                        Text(localizationManager.localizedString(for: AppStrings.DietPlan.expected))
                             .foregroundColor(.secondary)
                         Spacer()
-                        Text("\(expected) cal")
+                        Text("\(expected) \(localizationManager.localizedString(for: AppStrings.Progress.cal))")
                             .fontWeight(.semibold)
                     }
                     
                     HStack {
-                        Text("Detected:")
+                        Text(localizationManager.localizedString(for: AppStrings.DietPlan.detected))
                             .foregroundColor(.secondary)
                         Spacer()
-                        Text("\(meal.totalCalories) cal")
+                        Text("\(meal.totalCalories) \(localizationManager.localizedString(for: AppStrings.Progress.cal))")
                             .fontWeight(.semibold)
                     }
                     
@@ -262,10 +265,10 @@ struct MealVerificationView: View {
                     
                     let difference = abs(meal.totalCalories - expected)
                     HStack {
-                        Text("Difference:")
+                        Text(localizationManager.localizedString(for: AppStrings.DietPlan.difference))
                             .foregroundColor(.secondary)
                         Spacer()
-                        Text("\(difference) cal")
+                        Text("\(difference) \(localizationManager.localizedString(for: AppStrings.Progress.cal))")
                             .fontWeight(.semibold)
                             .foregroundColor(difference > 100 ? .red : .green)
                     }
@@ -277,7 +280,7 @@ struct MealVerificationView: View {
             
             // Meal details
             VStack(alignment: .leading, spacing: 8) {
-                Text("Meal Details")
+                Text(localizationManager.localizedString(for: AppStrings.DietPlan.mealDetails))
                     .font(.headline)
                 
                 Text(meal.name)
@@ -306,7 +309,8 @@ struct MealVerificationView: View {
                 Button {
                     saveAndComplete()
                 } label: {
-                    Label("Save Meal", systemImage: "checkmark.circle.fill")
+                    Label(localizationManager.localizedString(for: AppStrings.Food.saveMeal), systemImage: "checkmark.circle.fill")
+                        .id("save-meal-label-\(localizationManager.currentLanguage)")
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color.blue)
@@ -319,7 +323,7 @@ struct MealVerificationView: View {
                     selectedImage = nil
                     analysisResult = nil
                 } label: {
-                    Text("Take Another Photo")
+                    Text(localizationManager.localizedString(for: AppStrings.DietPlan.takeAnotherPhoto))
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color(.systemGray5))
@@ -330,7 +334,7 @@ struct MealVerificationView: View {
                 Button {
                     skipVerification()
                 } label: {
-                    Text("Skip")
+                    Text(localizationManager.localizedString(for: AppStrings.DietPlan.skip))
                         .frame(maxWidth: .infinity)
                         .padding()
                         .foregroundColor(.secondary)

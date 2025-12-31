@@ -40,11 +40,12 @@ extension DateFormatter {
     }()
     
     /// Shared formatter for short day name (e.g., "Thu")
-    static let shortDayName: DateFormatter = {
+    static var shortDayName: DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "EEE"
+        formatter.locale = Locale(identifier: LocalizationManager.shared.currentLanguage)
         return formatter
-    }()
+    }
     
     /// Shared formatter for month and day (e.g., "January 25")
     static let monthDay: DateFormatter = {

@@ -11,8 +11,13 @@ struct SelectedImageView: View {
     let image: UIImage
     let onAnalyze: () -> Void
     let onRetake: () -> Void
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return
         VStack(spacing: 24) {
             imagePreview
             Spacer()
@@ -42,7 +47,7 @@ struct SelectedImageView: View {
     
     private var analyzeButton: some View {
         Button(action: onAnalyze) {
-            Label("Analyze Meal", systemImage: "sparkles")
+            Label(localizationManager.localizedString(for: AppStrings.Scanning.analyzeMeal), systemImage: "sparkles")
                 .font(.headline)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
@@ -62,7 +67,7 @@ struct SelectedImageView: View {
     
     private var retakeButton: some View {
         Button(action: onRetake) {
-            Text("Retake")
+            Text(localizationManager.localizedString(for: AppStrings.Scanning.retake))
                 .font(.headline)
                 .foregroundColor(.secondary)
         }

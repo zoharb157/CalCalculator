@@ -13,8 +13,10 @@ struct ProfileView: View {
     // MARK: - State
     
     @State private var viewModel = ProfileViewModel()
+    // Note: ProfileViewModel is @Observable, so changes to its properties will automatically trigger view updates
     @Environment(TheSDK.self) private var sdk
     @Environment(\.localization) private var localization
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     private var settings = UserSettings.shared
     
     // Sheet presentation states
@@ -32,7 +34,10 @@ struct ProfileView: View {
     // MARK: - Body
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
                     profileInfoSection
@@ -49,7 +54,7 @@ struct ProfileView: View {
                 .padding(.bottom, 100)
             }
             .background(Color(UIColor.systemGroupedBackground))
-            .navigationTitle(localization.localizedString(for: "Profile"))
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.title))
             .navigationBarTitleDisplayMode(.large)
         }
         .sheet(isPresented: $showingPersonalDetails) {
@@ -100,13 +105,13 @@ struct ProfileView: View {
     @ViewBuilder
     private var accountSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ProfileSectionHeader(title: "Account")
+            ProfileSectionHeader(title: localizationManager.localizedString(for: AppStrings.Profile.account))
             
             ProfileSectionCard {
                 SettingsRow(
                     icon: "gearshape",
-                    title: "Preferences",
-                    subtitle: "Appearance, notifications & behavior",
+                    title: localizationManager.localizedString(for: AppStrings.Profile.preferences),
+                    subtitle: localizationManager.localizedString(for: AppStrings.Profile.appearanceNotificationsBehavior),
                     action: { showingPreferences = true }
                 )
                 
@@ -114,8 +119,8 @@ struct ProfileView: View {
                 
                 SettingsRow(
                     icon: "globe",
-                    title: "Language",
-                    subtitle: viewModel.selectedLanguage,
+                    title: localizationManager.localizedString(for: AppStrings.Profile.language),
+                    subtitle: getLocalizedLanguageName(from: viewModel.selectedLanguage),
                     action: { showingLanguageSelection = true }
                 )
             }
@@ -127,14 +132,14 @@ struct ProfileView: View {
     @ViewBuilder
     private var goalsTrackingSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ProfileSectionHeader(title: "Goals & Tracking")
+            ProfileSectionHeader(title: localizationManager.localizedString(for: AppStrings.Profile.goalsTracking))
             
             ProfileSectionCard {
                 SettingsRow(
                     icon: "target",
                     iconColor: .orange,
-                    title: "Nutrition Goals",
-                    subtitle: "\(viewModel.calorieGoal) cal | \(Int(viewModel.proteinGoal))g protein",
+                    title: localizationManager.localizedString(for: AppStrings.Profile.nutritionGoals),
+                    subtitle: localizationManager.localizedString(for: AppStrings.Profile.nutritionGoalsSummary, arguments: viewModel.calorieGoal, Int(viewModel.proteinGoal)),
                     action: { showingEditNutritionGoals = true }
                 )
 
@@ -143,7 +148,7 @@ struct ProfileView: View {
                 SettingsRow(
                     icon: "clock.arrow.circlepath",
                     iconColor: .purple,
-                    title: "Weight History",
+                    title: localizationManager.localizedString(for: AppStrings.Profile.weightHistory),
                     action: { showingWeightHistory = true }
                 )
                 
@@ -152,7 +157,7 @@ struct ProfileView: View {
                 SettingsRow(
                     icon: "circle.inset.filled",
                     iconColor: .blue,
-                    title: "Ring Colors Explained",
+                    title: localizationManager.localizedString(for: AppStrings.Profile.ringColorsExplained),
                     action: { showingRingColorsExplained = true }
                 )
                 
@@ -161,7 +166,7 @@ struct ProfileView: View {
                 SettingsRow(
                     icon: "medal.fill",
                     iconColor: .yellow,
-                    title: "My Badges",
+                    title: localizationManager.localizedString(for: AppStrings.Profile.myBadges),
                     subtitle: BadgeManager.shared.progressText,
                     action: { showingBadges = true }
                 )
@@ -171,8 +176,8 @@ struct ProfileView: View {
                 SettingsRow(
                     icon: "square.and.arrow.up",
                     iconColor: .green,
-                    title: "Export Data",
-                    subtitle: "Download your data as PDF",
+                    title: localizationManager.localizedString(for: AppStrings.Profile.exportData),
+                    subtitle: localizationManager.localizedString(for: AppStrings.Profile.downloadDataAsPDF),
                     action: { showingDataExport = true }
                 )
                 
@@ -181,8 +186,8 @@ struct ProfileView: View {
                 SettingsRow(
                     icon: "gift.fill",
                     iconColor: .pink,
-                    title: "Referral Code",
-                    subtitle: "Share & earn rewards",
+                    title: localizationManager.localizedString(for: AppStrings.Profile.referralCode),
+                    subtitle: localizationManager.localizedString(for: AppStrings.Profile.shareEarnRewards),
                     action: { showingReferralCode = true }
                 )
             }
@@ -194,14 +199,14 @@ struct ProfileView: View {
     @ViewBuilder
     private var preferencesSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ProfileSectionHeader(title: "Settings")
+            ProfileSectionHeader(title: localizationManager.localizedString(for: AppStrings.Profile.settings))
             
             ProfileSectionCard {
                 SettingsRow(
                     icon: "gearshape.fill",
                     iconColor: .blue,
-                    title: "Preferences",
-                    subtitle: "Appearance, calorie tracking, and notifications",
+                    title: localizationManager.localizedString(for: AppStrings.Profile.preferences),
+                    subtitle: localizationManager.localizedString(for: AppStrings.Profile.appearanceCalorieTrackingNotifications),
                     action: { showingPreferences = true }
                 )
             }
@@ -213,13 +218,13 @@ struct ProfileView: View {
     @ViewBuilder
     private var supportSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ProfileSectionHeader(title: "Support")
+            ProfileSectionHeader(title: localizationManager.localizedString(for: AppStrings.Profile.support))
             
             ProfileSectionCard {
                 SettingsRow(
                     icon: "envelope",
                     iconColor: .blue,
-                    title: "Contact Support",
+                    title: localizationManager.localizedString(for: AppStrings.Profile.contactSupport),
                     action: { showingSupportEmail = true }
                 )
                 
@@ -228,7 +233,7 @@ struct ProfileView: View {
                 SettingsRow(
                     icon: "doc.text",
                     iconColor: .gray,
-                    title: "Terms of Service",
+                    title: localizationManager.localizedString(for: AppStrings.Profile.termsOfService),
                     action: { openURL("https://www.apple.com/legal/internet-services/itunes/dev/stdeula/") }
                 )
                 
@@ -237,7 +242,7 @@ struct ProfileView: View {
                 SettingsRow(
                     icon: "hand.raised",
                     iconColor: .gray,
-                    title: "Privacy Policy",
+                    title: localizationManager.localizedString(for: AppStrings.Profile.privacyPolicy),
                     action: { openURL("https://www.apple.com/legal/privacy/") }
                 )
             }
@@ -245,7 +250,7 @@ struct ProfileView: View {
             // App Version
             HStack {
                 Spacer()
-                Text("Version 1.0.0")
+                Text(localizationManager.localizedString(for: AppStrings.Profile.version))
                     .font(.caption)
                     .foregroundColor(.secondary)
                 Spacer()
@@ -273,14 +278,14 @@ struct ProfileView: View {
     @ViewBuilder
     private var debugSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ProfileSectionHeader(title: "Debug")
+            ProfileSectionHeader(title: localizationManager.localizedString(for: AppStrings.Profile.debug))
             
             ProfileSectionCard {
                 ToggleSettingRow(
                     icon: "hammer.fill",
                     iconColor: .orange,
-                    title: "Override Subscription",
-                    description: "Manually control subscription status for testing",
+                    title: localizationManager.localizedString(for: AppStrings.Profile.overrideSubscription),
+                    description: localizationManager.localizedString(for: AppStrings.Profile.manuallyControlSubscription),
                     isOn: Binding(
                         get: { settings.debugOverrideSubscription },
                         set: { settings.debugOverrideSubscription = $0 }
@@ -293,8 +298,8 @@ struct ProfileView: View {
                     ToggleSettingRow(
                         icon: "checkmark.circle.fill",
                         iconColor: .green,
-                        title: "Debug: Is Subscribed",
-                        description: "Override subscription status",
+                        title: localizationManager.localizedString(for: AppStrings.Profile.debugIsSubscribed),
+                        description: localizationManager.localizedString(for: AppStrings.Profile.overrideSubscriptionStatus),
                         isOn: Binding(
                             get: { settings.debugIsSubscribed },
                             set: { settings.debugIsSubscribed = $0 }
@@ -304,11 +309,11 @@ struct ProfileView: View {
                     SettingsDivider()
                     
                     HStack {
-                        Text("Debug Status")
+                        Text(localizationManager.localizedString(for: AppStrings.Profile.debugStatus))
                             .font(.body)
                             .foregroundColor(.primary)
                         Spacer()
-                        Text(settings.debugIsSubscribed ? "Premium" : "Free")
+                        Text(settings.debugIsSubscribed ? localizationManager.localizedString(for: AppStrings.Profile.premium) : localizationManager.localizedString(for: AppStrings.Profile.free))
                             .font(.body)
                             .foregroundColor(settings.debugIsSubscribed ? .green : .gray)
                     }
@@ -318,11 +323,11 @@ struct ProfileView: View {
                     SettingsDivider()
                     
                     HStack {
-                        Text("SDK Status")
+                        Text(localizationManager.localizedString(for: AppStrings.Profile.sdkStatus))
                             .font(.body)
                             .foregroundColor(.primary)
                         Spacer()
-                        Text(sdk.isSubscribed ? "Premium" : "Free")
+                        Text(sdk.isSubscribed ? localizationManager.localizedString(for: AppStrings.Profile.premium) : localizationManager.localizedString(for: AppStrings.Profile.free))
                             .font(.body)
                             .foregroundColor(sdk.isSubscribed ? .green : .gray)
                     }
@@ -334,6 +339,193 @@ struct ProfileView: View {
     }
     
     // MARK: - Helpers
+    
+    private func getLocalizedLanguageName(from languageName: String) -> String {
+        // Get the language code from the language name
+        let languageCode = LocalizationManager.languageCode(from: languageName)
+        
+        // Map language codes to localized names based on current app language
+        let currentLanguage = localizationManager.currentLanguage
+        let localizedNames: [String: [String: String]] = [
+            "en": [
+                "en": "English",
+                "es": "Spanish",
+                "fr": "French",
+                "de": "German",
+                "it": "Italian",
+                "pt": "Portuguese",
+                "zh": "Chinese",
+                "ja": "Japanese",
+                "ko": "Korean",
+                "ru": "Russian",
+                "ar": "Arabic",
+                "hi": "Hindi"
+            ],
+            "zh": [
+                "en": "英语",
+                "es": "西班牙语",
+                "fr": "法语",
+                "de": "德语",
+                "it": "意大利语",
+                "pt": "葡萄牙语",
+                "zh": "中文",
+                "ja": "日语",
+                "ko": "韩语",
+                "ru": "俄语",
+                "ar": "阿拉伯语",
+                "hi": "印地语"
+            ],
+            "es": [
+                "en": "Inglés",
+                "es": "Español",
+                "fr": "Francés",
+                "de": "Alemán",
+                "it": "Italiano",
+                "pt": "Portugués",
+                "zh": "Chino",
+                "ja": "Japonés",
+                "ko": "Coreano",
+                "ru": "Ruso",
+                "ar": "Árabe",
+                "hi": "Hindi"
+            ],
+            "fr": [
+                "en": "Anglais",
+                "es": "Espagnol",
+                "fr": "Français",
+                "de": "Allemand",
+                "it": "Italien",
+                "pt": "Portugais",
+                "zh": "Chinois",
+                "ja": "Japonais",
+                "ko": "Coréen",
+                "ru": "Russe",
+                "ar": "Arabe",
+                "hi": "Hindi"
+            ],
+            "de": [
+                "en": "Englisch",
+                "es": "Spanisch",
+                "fr": "Französisch",
+                "de": "Deutsch",
+                "it": "Italienisch",
+                "pt": "Portugiesisch",
+                "zh": "Chinesisch",
+                "ja": "Japanisch",
+                "ko": "Koreanisch",
+                "ru": "Russisch",
+                "ar": "Arabisch",
+                "hi": "Hindi"
+            ],
+            "it": [
+                "en": "Inglese",
+                "es": "Spagnolo",
+                "fr": "Francese",
+                "de": "Tedesco",
+                "it": "Italiano",
+                "pt": "Portoghese",
+                "zh": "Cinese",
+                "ja": "Giapponese",
+                "ko": "Coreano",
+                "ru": "Russo",
+                "ar": "Arabo",
+                "hi": "Hindi"
+            ],
+            "pt": [
+                "en": "Inglês",
+                "es": "Espanhol",
+                "fr": "Francês",
+                "de": "Alemão",
+                "it": "Italiano",
+                "pt": "Português",
+                "zh": "Chinês",
+                "ja": "Japonês",
+                "ko": "Coreano",
+                "ru": "Russo",
+                "ar": "Árabe",
+                "hi": "Hindi"
+            ],
+            "ja": [
+                "en": "英語",
+                "es": "スペイン語",
+                "fr": "フランス語",
+                "de": "ドイツ語",
+                "it": "イタリア語",
+                "pt": "ポルトガル語",
+                "zh": "中国語",
+                "ja": "日本語",
+                "ko": "韓国語",
+                "ru": "ロシア語",
+                "ar": "アラビア語",
+                "hi": "ヒンディー語"
+            ],
+            "ko": [
+                "en": "영어",
+                "es": "스페인어",
+                "fr": "프랑스어",
+                "de": "독일어",
+                "it": "이탈리아어",
+                "pt": "포르투갈어",
+                "zh": "중국어",
+                "ja": "일본어",
+                "ko": "한국어",
+                "ru": "러시아어",
+                "ar": "아랍어",
+                "hi": "힌디어"
+            ],
+            "ru": [
+                "en": "Английский",
+                "es": "Испанский",
+                "fr": "Французский",
+                "de": "Немецкий",
+                "it": "Итальянский",
+                "pt": "Португальский",
+                "zh": "Китайский",
+                "ja": "Японский",
+                "ko": "Корейский",
+                "ru": "Русский",
+                "ar": "Арабский",
+                "hi": "Хинди"
+            ],
+            "ar": [
+                "en": "الإنجليزية",
+                "es": "الإسبانية",
+                "fr": "الفرنسية",
+                "de": "الألمانية",
+                "it": "الإيطالية",
+                "pt": "البرتغالية",
+                "zh": "الصينية",
+                "ja": "اليابانية",
+                "ko": "الكورية",
+                "ru": "الروسية",
+                "ar": "العربية",
+                "hi": "الهندية"
+            ],
+            "hi": [
+                "en": "अंग्रेजी",
+                "es": "स्पेनिश",
+                "fr": "फ्रेंच",
+                "de": "जर्मन",
+                "it": "इतालवी",
+                "pt": "पुर्तगाली",
+                "zh": "चीनी",
+                "ja": "जापानी",
+                "ko": "कोरियाई",
+                "ru": "रूसी",
+                "ar": "अरबी",
+                "hi": "हिंदी"
+            ]
+        ]
+        
+        // Return localized name if available, otherwise fall back to English name
+        if let namesForLanguage = localizedNames[currentLanguage],
+           let localizedName = namesForLanguage[languageCode] {
+            return localizedName
+        }
+        
+        // Fallback to English names
+        return localizedNames["en"]?[languageCode] ?? languageName
+    }
     
     private func openURL(_ urlString: String) {
         guard let url = URL(string: urlString) else { return }

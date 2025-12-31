@@ -14,7 +14,10 @@ struct IngredientsSection: View {
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return VStack(alignment: .leading, spacing: 12) {
             headerText
             ingredientsList
         }
@@ -158,11 +161,11 @@ struct IngredientRow: View {
     
     private var macrosRow: some View {
         HStack(spacing: 6) {
-            Text("P: \(item.proteinG.formattedMacro)")
+            Text("\(localizationManager.localizedString(for: AppStrings.Home.proteinShort)): \(item.proteinG.formattedMacro)")
                 .foregroundColor(.proteinColor)
-            Text("C: \(item.carbsG.formattedMacro)")
+            Text("\(localizationManager.localizedString(for: AppStrings.Home.carbsShort)): \(item.carbsG.formattedMacro)")
                 .foregroundColor(.carbsColor)
-            Text("F: \(item.fatG.formattedMacro)")
+            Text("\(localizationManager.localizedString(for: AppStrings.Home.fatShort)): \(item.fatG.formattedMacro)")
                 .foregroundColor(.fatColor)
         }
         .font(.caption2)

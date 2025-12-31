@@ -12,7 +12,10 @@ struct RecentlyUploadedEmptyCard: View {
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return VStack(alignment: .leading, spacing: 8) {
             Button(action: onAddMeal) {
                 HStack(spacing: 12) {
                     // Placeholder image (matching reference - salad bowl)
@@ -48,7 +51,7 @@ struct RecentlyUploadedEmptyCard: View {
             
             // Text below card (matching reference)
             Text(localizationManager.localizedString(for: AppStrings.Home.tapToAddFirstMeal))
-                .id("tap-add-first-meal-\(localizationManager.currentLanguage)")
+                
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .padding(.leading, 4)

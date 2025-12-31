@@ -14,7 +14,10 @@ struct RecentMealsSection: View {
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
-        sectionContent
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return sectionContent
     }
     
     // MARK: - Private Views
@@ -34,7 +37,7 @@ struct RecentMealsSection: View {
             }
         } header: {
             Text(localizationManager.localizedString(for: AppStrings.Home.recentlyUploaded))
-                .id("recently-uploaded-\(localizationManager.currentLanguage)")
+                
                 .font(.headline)
                 .foregroundColor(.primary)
         }
@@ -45,7 +48,7 @@ struct RecentMealsSection: View {
             onDelete(meal)
         } label: {
             Label(localizationManager.localizedString(for: AppStrings.Home.delete), systemImage: "trash")
-                .id("delete-recent-\(localizationManager.currentLanguage)")
+                
         }
     }
 }

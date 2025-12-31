@@ -18,7 +18,10 @@ struct VoiceLogView: View {
     @State private var animationAmount: CGFloat = 1.0
 
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             VStack(spacing: 32) {
                 Spacer()
 
@@ -55,15 +58,13 @@ struct VoiceLogView: View {
                     }
                 }
             }
-            .alert("Microphone Access", isPresented: $showingPermissionAlert) {
-                Button("Settings", role: .none) {
+            .alert(localizationManager.localizedString(for: AppStrings.Food.microphoneAccess), isPresented: $showingPermissionAlert) {
+                Button(localizationManager.localizedString(for: AppStrings.Common.settings), role: .none) {
                     openSettings()
                 }
-                Button("Cancel", role: .cancel) {}
+                Button(localizationManager.localizedString(for: AppStrings.Common.cancel), role: .cancel) {}
             } message: {
-                Text(
-                    "Voice logging requires microphone access. Please enable it in Settings to use this feature."
-                )
+                Text(localizationManager.localizedString(for: AppStrings.Food.voiceLoggingRequiresMicrophone))
             }
         }
     }
@@ -120,13 +121,15 @@ struct VoiceLogView: View {
 
     private var statusText: some View {
         VStack(spacing: 8) {
-            Text(isListening ? "Listening..." : "Tap to start")
+            Text(isListening ? localizationManager.localizedString(for: AppStrings.Food.listening) : localizationManager.localizedString(for: AppStrings.Food.tapToStart))
                 .font(.title2)
                 .fontWeight(.semibold)
+                .id("status-text-\(localizationManager.currentLanguage)")
 
-            Text(isListening ? "Describe what you ate" : "Voice logging will be available soon")
+            Text(isListening ? localizationManager.localizedString(for: AppStrings.Food.describeWhatYouAte) : localizationManager.localizedString(for: AppStrings.Food.voiceLoggingWillBeAvailableSoon))
                 .font(.subheadline)
                 .foregroundColor(.secondary)
+                .id("status-subtitle-\(localizationManager.currentLanguage)")
         }
     }
 
@@ -157,7 +160,8 @@ struct VoiceLogView: View {
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: isListening ? "stop.fill" : "mic.fill")
-                Text(isListening ? "Stop" : "Start Listening")
+                Text(isListening ? localizationManager.localizedString(for: AppStrings.Food.stop) : localizationManager.localizedString(for: AppStrings.Food.startListening))
+                    .id("mic-button-\(localizationManager.currentLanguage)")
             }
             .font(.headline)
             .foregroundColor(.white)
@@ -184,13 +188,12 @@ struct VoiceLogView: View {
                 .font(.headline)
                 .foregroundColor(.secondary)
 
-            Text(
-                "Voice logging is currently in development. Soon you'll be able to describe your meals naturally and have them automatically logged."
-            )
-            .font(.caption)
-            .foregroundColor(Color(.tertiaryLabel))
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, 32)
+            Text(localizationManager.localizedString(for: AppStrings.Food.voiceLoggingInDevelopment))
+                .id("voice-dev-text-\(localizationManager.currentLanguage)")
+                .font(.caption)
+                .foregroundColor(Color(.tertiaryLabel))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
         }
         .padding(.bottom, 20)
     }

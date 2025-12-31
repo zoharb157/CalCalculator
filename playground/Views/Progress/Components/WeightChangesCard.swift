@@ -52,47 +52,55 @@ struct WeightChangesCard: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return VStack(alignment: .leading, spacing: 16) {
             Text(localizationManager.localizedString(for: AppStrings.Progress.weightChanges))
                 .font(.headline)
                 .foregroundColor(.primary)
-                .id("weight-changes-\(localizationManager.currentLanguage)")
             
             VStack(spacing: 12) {
                 WeightChangeRow(
-                    timeframe: "3 day",
+                    timeframe: localizationManager.localizedString(for: AppStrings.Progress.threeDay),
                     change: weightChange(for: 3),
-                    unit: weightUnit
+                    unit: weightUnit,
+                    localizationManager: localizationManager
                 )
                 
                 WeightChangeRow(
-                    timeframe: "7 day",
+                    timeframe: localizationManager.localizedString(for: AppStrings.Progress.sevenDay),
                     change: weightChange(for: 7),
-                    unit: weightUnit
+                    unit: weightUnit,
+                    localizationManager: localizationManager
                 )
                 
                 WeightChangeRow(
-                    timeframe: "14 day",
+                    timeframe: localizationManager.localizedString(for: AppStrings.Progress.fourteenDay),
                     change: weightChange(for: 14),
-                    unit: weightUnit
+                    unit: weightUnit,
+                    localizationManager: localizationManager
                 )
                 
                 WeightChangeRow(
-                    timeframe: "30 day",
+                    timeframe: localizationManager.localizedString(for: AppStrings.Progress.thirtyDay),
                     change: weightChange(for: 30),
-                    unit: weightUnit
+                    unit: weightUnit,
+                    localizationManager: localizationManager
                 )
                 
                 WeightChangeRow(
-                    timeframe: "90 day",
+                    timeframe: localizationManager.localizedString(for: AppStrings.Progress.ninetyDay),
                     change: weightChange(for: 90),
-                    unit: weightUnit
+                    unit: weightUnit,
+                    localizationManager: localizationManager
                 )
                 
                 WeightChangeRow(
-                    timeframe: "All Time",
+                    timeframe: localizationManager.localizedString(for: AppStrings.Progress.allTime),
                     change: weightChange(for: nil),
-                    unit: weightUnit
+                    unit: weightUnit,
+                    localizationManager: localizationManager
                 )
             }
         }
@@ -107,46 +115,37 @@ struct WeightChangeRow: View {
     let timeframe: String
     let change: (change: Double, hasChange: Bool)
     let unit: String
+    @ObservedObject var localizationManager: LocalizationManager
     
     var body: some View {
-        Button {
-            // Could navigate to detailed view
-        } label: {
-            HStack {
-                Text(timeframe)
-                    .font(.subheadline)
-                    .foregroundColor(.primary)
+        HStack {
+            Text(timeframe)
+                .font(.subheadline)
+                .foregroundColor(.primary)
+            
+            Spacer()
+            
+            HStack(spacing: 8) {
+                // Small progress bar indicator
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(Color.blue.opacity(0.3))
+                    .frame(width: 40, height: 4)
                 
-                Spacer()
-                
-                HStack(spacing: 8) {
-                    // Small progress bar indicator
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(Color.blue.opacity(0.3))
-                        .frame(width: 40, height: 4)
-                    
-                    if change.hasChange {
-                        Text(String(format: "%.1f %@", abs(change.change), unit))
-                            .font(.subheadline)
-                            .foregroundColor(.primary)
-                    } else {
-                        Text("0.0 \(unit)")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    Text(change.hasChange ? (change.change >= 0 ? "Gained" : "Lost") : "No change")
+                if change.hasChange {
+                    Text(String(format: "%.1f %@", abs(change.change), unit))
+                        .font(.subheadline)
+                        .foregroundColor(.primary)
+                } else {
+                    Text(String(format: "0.0 %@", unit))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
-                    
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
                 }
+                
+                Text(change.hasChange ? (change.change >= 0 ? localizationManager.localizedString(for: AppStrings.Progress.gained_) : localizationManager.localizedString(for: AppStrings.Progress.lost_)) : localizationManager.localizedString(for: AppStrings.Progress.noChange))
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
             }
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
     }
 }
 

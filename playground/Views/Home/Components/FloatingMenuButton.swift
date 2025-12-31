@@ -12,9 +12,13 @@ struct FloatingMenuButton: View {
     let color: Color
     var isPremium: Bool = false
     let action: () -> Void
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
-        Button(action: action) {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return Button(action: action) {
             HStack(spacing: 12) {
                 ZStack {
                     Circle()
@@ -49,8 +53,8 @@ struct FloatingMenuButton: View {
 
 #Preview {
     VStack {
-        FloatingMenuButton(icon: "camera.fill", title: "Scan food", color: .purple, isPremium: true) {}
-        FloatingMenuButton(icon: "dumbbell.fill", title: "Save exercise", color: .blue) {}
+        FloatingMenuButton(icon: "camera.fill", title: LocalizationManager.shared.localizedString(for: AppStrings.Home.scanFood), color: .purple, isPremium: true) {}
+        FloatingMenuButton(icon: "dumbbell.fill", title: LocalizationManager.shared.localizedString(for: AppStrings.Home.saveExercise), color: .blue) {}
     }
 }
 

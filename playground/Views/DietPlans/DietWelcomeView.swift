@@ -10,8 +10,13 @@ import SwiftUI
 struct DietWelcomeView: View {
     @Binding var isPresented: Bool
     @State private var currentPage = 0
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return
         ZStack {
             Color.black.opacity(0.4)
                 .ignoresSafeArea()
@@ -50,7 +55,7 @@ struct DietWelcomeView: View {
                 // Navigation buttons
                 HStack {
                     if currentPage > 0 {
-                        Button("Previous") {
+                        Button(localizationManager.localizedString(for: AppStrings.Common.previous)) {
                             withAnimation {
                                 currentPage -= 1
                             }
@@ -61,14 +66,14 @@ struct DietWelcomeView: View {
                     Spacer()
                     
                     if currentPage < 2 {
-                        Button("Next") {
+                        Button(localizationManager.localizedString(for: AppStrings.Common.next)) {
                             withAnimation {
                                 currentPage += 1
                             }
                         }
                         .buttonStyle(.borderedProminent)
                     } else {
-                        Button("Get Started") {
+                        Button(localizationManager.localizedString(for: AppStrings.Onboarding.getStarted)) {
                             dismiss()
                         }
                         .buttonStyle(.borderedProminent)
@@ -90,11 +95,11 @@ struct DietWelcomeView: View {
                 .font(.system(size: 80))
                 .foregroundStyle(.blue.gradient)
             
-            Text("Welcome to Diet Plans!")
+            Text(localizationManager.localizedString(for: AppStrings.DietPlan.welcomeToDietPlans))
                 .font(.title)
                 .fontWeight(.bold)
             
-            Text("Create personalized meal schedules and track your adherence to reach your nutrition goals.")
+            Text(localizationManager.localizedString(for: AppStrings.DietPlan.createPersonalizedMealSchedules))
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -109,7 +114,7 @@ struct DietWelcomeView: View {
                 .font(.system(size: 80))
                 .foregroundStyle(.orange.gradient)
             
-            Text("Smart Reminders")
+            Text(localizationManager.localizedString(for: AppStrings.DietPlan.smartReminders))
                 .font(.title)
                 .fontWeight(.bold)
             
@@ -140,11 +145,11 @@ struct DietWelcomeView: View {
                 .font(.system(size: 80))
                 .foregroundStyle(.green.gradient)
             
-            Text("Track Your Progress")
+            Text(localizationManager.localizedString(for: AppStrings.DietPlan.trackYourProgress))
                 .font(.title)
                 .fontWeight(.bold)
             
-            Text("Monitor your diet adherence, see insights about your eating patterns, and stay on track with your nutrition goals.")
+            Text(localizationManager.localizedString(for: AppStrings.DietPlan.monitorDietAdherence))
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -154,7 +159,7 @@ struct DietWelcomeView: View {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
-                    Text("Daily adherence tracking")
+                    Text(localizationManager.localizedString(for: AppStrings.DietPlan.dailyAdherenceTracking))
                         .font(.subheadline)
                     Spacer()
                 }
@@ -162,7 +167,7 @@ struct DietWelcomeView: View {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
-                    Text("Weekly progress charts")
+                    Text(localizationManager.localizedString(for: AppStrings.DietPlan.weeklyProgressCharts))
                         .font(.subheadline)
                     Spacer()
                 }
@@ -170,7 +175,7 @@ struct DietWelcomeView: View {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
-                    Text("Personalized insights")
+                    Text(localizationManager.localizedString(for: AppStrings.DietPlan.personalizedInsights))
                         .font(.subheadline)
                     Spacer()
                 }

@@ -57,11 +57,11 @@ struct LoginView: View {
                     .animation(.spring(response: 0.6, dampingFraction: 0.7), value: isAnimating)
                     
                     VStack(spacing: 8) {
-                        Text("CalCalculator")
+                        Text(LocalizationManager.shared.localizedString(for: AppStrings.Authentication.calCalculator))
                             .font(.system(size: 32, weight: .bold, design: .rounded))
                             .foregroundColor(colorScheme == .dark ? .white : .primary)
                         
-                        Text("Track your nutrition with ease")
+                        Text(LocalizationManager.shared.localizedString(for: AppStrings.Authentication.trackNutritionWithEase))
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -79,7 +79,7 @@ struct LoginView: View {
                     // Primary button - Get Started
                     Button(action: onGetStarted) {
                         HStack(spacing: 12) {
-                            Text("Get Started")
+                            Text(LocalizationManager.shared.localizedString(for: AppStrings.Authentication.getStarted))
                                 .font(.system(size: 18, weight: .semibold))
                             
                             Image(systemName: "arrow.right.circle.fill")
@@ -108,12 +108,12 @@ struct LoginView: View {
                     
                     // Secondary button - Sign In
                     HStack(spacing: 8) {
-                        Text("Already have an account?")
+                        Text(LocalizationManager.shared.localizedString(for: AppStrings.Authentication.alreadyHaveAccount))
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(.secondary)
                         
                         Button(action: onSignIn) {
-                            Text("Sign In")
+                            Text(LocalizationManager.shared.localizedString(for: AppStrings.Authentication.signIn))
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundColor(.accentColor)
                         }

@@ -26,6 +26,14 @@ struct DietInsightsView: View {
         case month = "Last Month"
         case threeMonths = "Last 3 Months"
         
+        var localizedKey: String {
+            switch self {
+            case .week: return AppStrings.Progress.last7Days
+            case .month: return AppStrings.Progress.lastMonth
+            case .threeMonths: return AppStrings.Progress.last3Months
+            }
+        }
+        
         var days: Int {
             switch self {
             case .week: return 7
@@ -36,20 +44,25 @@ struct DietInsightsView: View {
     }
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             Group {
                 if isLoading {
-                    ProgressView("Analyzing your diet...")
+                    ProgressView(localizationManager.localizedString(for: AppStrings.DietPlan.analyzingYourDiet))
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .id("analyzing-diet-\(localizationManager.currentLanguage)")
                 } else if let insights = insights {
                     ScrollView {
                         VStack(spacing: 24) {
                             // Period selector
-                            Picker("Period", selection: $selectedPeriod) {
+                            Picker(localizationManager.localizedString(for: AppStrings.DietPlan.period), selection: $selectedPeriod) {
                                 ForEach(InsightPeriod.allCases, id: \.self) { period in
-                                    Text(period.rawValue).tag(period)
+                                    Text(localizationManager.localizedString(for: period.localizedKey)).tag(period)
                                 }
                             }
+                            .id("period-picker-\(localizationManager.currentLanguage)")
                             .pickerStyle(.segmented)
                             .padding(.horizontal)
                             
@@ -72,14 +85,15 @@ struct DietInsightsView: View {
                     }
                 } else {
                     ContentUnavailableView(
-                        "No Insights Available",
+                        localizationManager.localizedString(for: AppStrings.DietPlan.noInsightsAvailable),
                         systemImage: "chart.bar",
                         description: Text(localizationManager.localizedString(for: AppStrings.DietPlan.startFollowingDietPlan))
                     )
+                    .id("no-insights-\(localizationManager.currentLanguage)")
                 }
             }
             .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.dietInsights))
-                .id("diet-insights-title-\(localizationManager.currentLanguage)")
+                
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -103,7 +117,7 @@ struct DietInsightsView: View {
     
     private func overallScoreCard(insights: DietInsights) -> some View {
         VStack(spacing: 16) {
-            Text("Overall Diet Score")
+            Text(localizationManager.localizedString(for: AppStrings.DietPlan.overallDietScore))
                 .font(.headline)
                 .foregroundColor(.secondary)
             
@@ -119,19 +133,19 @@ struct DietInsightsView: View {
             // Breakdown
             HStack(spacing: 20) {
                 ScoreBreakdown(
-                    label: "Adherence",
+                    label: localizationManager.localizedString(for: AppStrings.DietPlan.adherence),
                     value: Int(insights.avgAdherence * 100),
                     color: .green
                 )
                 
                 ScoreBreakdown(
-                    label: "Consistency",
+                    label: localizationManager.localizedString(for: AppStrings.DietPlan.consistency),
                     value: Int(insights.consistencyScore * 100),
                     color: .blue
                 )
                 
                 ScoreBreakdown(
-                    label: "Planning",
+                    label: localizationManager.localizedString(for: AppStrings.DietPlan.planning),
                     value: Int(insights.planningScore * 100),
                     color: .orange
                 )
@@ -152,10 +166,10 @@ struct DietInsightsView: View {
     
     private func scoreDescription(_ score: Int) -> String {
         switch score {
-        case 80...100: return "Excellent! You're doing great"
-        case 60..<80: return "Good progress, keep it up"
-        case 40..<60: return "Room for improvement"
-        default: return "Let's get back on track"
+        case 80...100: return localizationManager.localizedString(for: AppStrings.DietPlan.excellentDoingGreat)
+        case 60..<80: return localizationManager.localizedString(for: AppStrings.DietPlan.goodProgressKeepItUp)
+        case 40..<60: return localizationManager.localizedString(for: AppStrings.DietPlan.roomForImprovement)
+        default: return localizationManager.localizedString(for: AppStrings.DietPlan.letsGetBackOnTrack)
         }
     }
     
@@ -163,7 +177,7 @@ struct DietInsightsView: View {
     
     private func adherenceTrendSection(insights: DietInsights) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Adherence Trend")
+            Text(localizationManager.localizedString(for: AppStrings.DietPlan.adherenceTrend))
                 .font(.headline)
             
             Chart(insights.dailyAdherence) { day in
@@ -192,7 +206,7 @@ struct DietInsightsView: View {
     
     private func categoryCompletionSection(insights: DietInsights) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Completion by Meal Type")
+            Text(localizationManager.localizedString(for: AppStrings.DietPlan.completionByMealType))
                 .font(.headline)
             
             ForEach(insights.categoryStats.sorted(by: { $0.completionRate > $1.completionRate }), id: \.category) { stat in
@@ -208,27 +222,27 @@ struct DietInsightsView: View {
     
     private func timePatternsSection(insights: DietInsights) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Time Patterns")
+            Text(localizationManager.localizedString(for: AppStrings.DietPlan.timePatterns))
                 .font(.headline)
             
             VStack(spacing: 12) {
                 PatternCard(
                     icon: "clock.fill",
-                    title: "Best Time",
+                    title: localizationManager.localizedString(for: AppStrings.DietPlan.bestTime),
                     value: insights.bestTimeSlot ?? "N/A",
                     color: .green
                 )
                 
                 PatternCard(
                     icon: "calendar.badge.exclamationmark",
-                    title: "Most Challenging Day",
+                    title: localizationManager.localizedString(for: AppStrings.DietPlan.mostChallengingDay),
                     value: insights.mostChallengingDay ?? "N/A",
                     color: .orange
                 )
                 
                 PatternCard(
                     icon: "arrow.trending.up",
-                    title: "Improvement Trend",
+                    title: localizationManager.localizedString(for: AppStrings.DietPlan.improvementTrend),
                     value: insights.improvementTrend,
                     color: .blue
                 )
@@ -240,7 +254,7 @@ struct DietInsightsView: View {
     
     private func recommendationsSection(insights: DietInsights) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Personalized Recommendations")
+            Text(localizationManager.localizedString(for: AppStrings.DietPlan.personalizedRecommendations))
                 .font(.headline)
             
             ForEach(insights.recommendations, id: \.id) { recommendation in
@@ -301,13 +315,15 @@ struct DietInsightsView: View {
                 // Track by time slot
                 for meal in data.scheduledMeals {
                     let hour = calendar.component(.hour, from: meal.time)
-                    let timeSlot = hour < 12 ? "Morning" : (hour < 17 ? "Afternoon" : "Evening")
+                    let timeSlot = hour < 12 ? localizationManager.localizedString(for: AppStrings.DietPlan.morning) : (hour < 17 ? localizationManager.localizedString(for: AppStrings.DietPlan.afternoon) : localizationManager.localizedString(for: AppStrings.DietPlan.evening))
                     timeSlotCompletions[timeSlot, default: 0] += data.completedMeals.contains(meal.id) ? 1 : 0
                 }
                 
                 // Track by day of week
                 let dayName = calendar.component(.weekday, from: currentDate)
-                let dayNames = ["", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+                let formatter = DateFormatter()
+                formatter.locale = Locale(identifier: localizationManager.currentLanguage)
+                let dayNames = ["", formatter.shortWeekdaySymbols[0], formatter.shortWeekdaySymbols[1], formatter.shortWeekdaySymbols[2], formatter.shortWeekdaySymbols[3], formatter.shortWeekdaySymbols[4], formatter.shortWeekdaySymbols[5], formatter.shortWeekdaySymbols[6]]
                 let dayKey = dayNames[dayName]
                 dayCompletions[dayKey, default: 0] += data.completedMeals.count
                 
@@ -342,6 +358,11 @@ struct DietInsightsView: View {
         let mostChallengingDay = dayCompletions.min(by: { $0.value < $1.value })?.key
         
         // Improvement trend
+        let improving = LocalizationManager.shared.localizedString(for: AppStrings.DietPlan.improving)
+        let declining = LocalizationManager.shared.localizedString(for: AppStrings.DietPlan.declining)
+        let stable = LocalizationManager.shared.localizedString(for: AppStrings.DietPlan.stable)
+        let insufficientData = LocalizationManager.shared.localizedString(for: AppStrings.DietPlan.insufficientData)
+        
         let improvement: String
         if dailyAdherence.count >= 14 {
             // Compare last 7 days with previous 7 days
@@ -349,16 +370,16 @@ struct DietInsightsView: View {
             let olderAdherence = dailyAdherence.suffix(14).prefix(7).map { $0.completionRate }
             let recentAvg = recentAdherence.isEmpty ? 0 : recentAdherence.reduce(0, +) / Double(recentAdherence.count)
             let olderAvg = olderAdherence.isEmpty ? 0 : olderAdherence.reduce(0, +) / Double(olderAdherence.count)
-            improvement = recentAvg > olderAvg ? "Improving" : (recentAvg < olderAvg ? "Declining" : "Stable")
+            improvement = recentAvg > olderAvg ? improving : (recentAvg < olderAvg ? declining : stable)
         } else if dailyAdherence.count >= 7 {
             // Only 7 days of data - compare last 3 with first 3
             let recentAdherence = dailyAdherence.suffix(3).map { $0.completionRate }
             let olderAdherence = dailyAdherence.prefix(3).map { $0.completionRate }
             let recentAvg = recentAdherence.isEmpty ? 0 : recentAdherence.reduce(0, +) / Double(recentAdherence.count)
             let olderAvg = olderAdherence.isEmpty ? 0 : olderAdherence.reduce(0, +) / Double(olderAdherence.count)
-            improvement = recentAvg > olderAvg ? "Improving" : (recentAvg < olderAvg ? "Declining" : "Stable")
+            improvement = recentAvg > olderAvg ? improving : (recentAvg < olderAvg ? declining : stable)
         } else {
-            improvement = "Insufficient data"
+            improvement = insufficientData
         }
         
         // Generate recommendations
@@ -367,8 +388,8 @@ struct DietInsightsView: View {
         if avgAdherence < 0.7 {
             recommendations.append(Recommendation(
                 id: UUID(),
-                title: "Improve Adherence",
-                description: "Your adherence is below 70%. Try setting reminders 15 minutes before meal times.",
+                title: LocalizationManager.shared.localizedString(for: AppStrings.DietPlan.improveAdherence),
+                description: LocalizationManager.shared.localizedString(for: AppStrings.DietPlan.adherenceBelow70),
                 priority: .high,
                 icon: "bell.fill"
             ))
@@ -378,8 +399,8 @@ struct DietInsightsView: View {
            worstCategory.completionRate < 0.6 {
             recommendations.append(Recommendation(
                 id: UUID(),
-                title: "Focus on \(worstCategory.category.displayName)",
-                description: "You're missing \(worstCategory.category.displayName.lowercased()) meals. Consider adjusting your schedule.",
+                title: String(format: LocalizationManager.shared.localizedString(for: AppStrings.DietPlan.focusOnCategory), worstCategory.category.displayName),
+                description: String(format: LocalizationManager.shared.localizedString(for: AppStrings.DietPlan.youAreMissing), worstCategory.category.displayName.lowercased()),
                 priority: .medium,
                 icon: worstCategory.category.icon
             ))
@@ -388,8 +409,8 @@ struct DietInsightsView: View {
         if consistencyScore < 0.7 {
             recommendations.append(Recommendation(
                 id: UUID(),
-                title: "Build Consistency",
-                description: "Your adherence varies day-to-day. Try to maintain a regular meal schedule.",
+                title: LocalizationManager.shared.localizedString(for: AppStrings.DietPlan.buildConsistency),
+                description: LocalizationManager.shared.localizedString(for: AppStrings.DietPlan.adherenceVaries),
                 priority: .medium,
                 icon: "calendar.badge.clock"
             ))
@@ -398,8 +419,8 @@ struct DietInsightsView: View {
         if recommendations.isEmpty {
             recommendations.append(Recommendation(
                 id: UUID(),
-                title: "Keep It Up!",
-                description: "You're doing great! Continue following your diet plan for best results.",
+                title: LocalizationManager.shared.localizedString(for: AppStrings.DietPlan.keepItUp),
+                description: LocalizationManager.shared.localizedString(for: AppStrings.DietPlan.doingGreatContinue),
                 priority: .low,
                 icon: "star.fill"
             ))
@@ -492,6 +513,7 @@ struct ScoreBreakdown: View {
 
 struct CategoryStatRow: View {
     let stat: CategoryStat
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
         HStack {
@@ -504,9 +526,10 @@ struct CategoryStatRow: View {
                     .font(.subheadline)
                     .fontWeight(.medium)
                 
-                Text("\(stat.completed)/\(stat.scheduled) completed")
+                Text(String(format: localizationManager.localizedString(for: AppStrings.DietPlan.completedOfScheduled), stat.completed, stat.scheduled))
                     .font(.caption)
                     .foregroundColor(.secondary)
+                    .id("completed-stats-\(localizationManager.currentLanguage)")
             }
             
             Spacer()
@@ -603,7 +626,7 @@ struct RecommendationCard: View {
             repository: DietPlanRepository(context: container.mainContext)
         )
     } else {
-        Text("Preview unavailable")
+        Text(LocalizationManager.shared.localizedString(for: AppStrings.DietPlan.previewUnavailable))
     }
 }
 

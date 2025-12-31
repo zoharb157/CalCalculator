@@ -32,13 +32,29 @@ struct ResultsView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             contentScrollView
                 .navigationTitle(localizationManager.localizedString(for: AppStrings.Results.analysisResults))
                     .id("analysis-results-title-\(localizationManager.currentLanguage)")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    toolbarContent
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
+                            // Clear state before dismissing to prevent showing underlying view
+                            viewModel.clearSelection()
+                            viewModel.showingResults = false
+                        }
+                    }
+
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(localizationManager.localizedString(for: AppStrings.Common.save)) {
+                            saveMeal()
+                        }
+                        .fontWeight(.semibold)
+                    }
                 }
                 .sheet(isPresented: $showingFixResult) {
                     fixResultSheet
@@ -150,14 +166,14 @@ struct ResultsView: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     TextField(
-                        "e.g., Homemade chicken caesar salad", text: $foodHintText, axis: .vertical
+                        localizationManager.localizedString(for: AppStrings.Results.foodExamplePlaceholder), text: $foodHintText, axis: .vertical
                     )
                     .textFieldStyle(.roundedBorder)
                     .lineLimit(3...6)
                     .padding(.horizontal)
 
                     Text(
-                        "Be specific about ingredients, portion sizes, or cooking methods if possible."
+                        localizationManager.localizedString(for: AppStrings.Results.beSpecificAboutIngredients)
                     )
                     .font(.caption)
                     .foregroundStyle(.tertiary)
@@ -234,23 +250,7 @@ struct ResultsView: View {
         }
     }
 
-    @ToolbarContentBuilder
-    private var toolbarContent: some ToolbarContent {
-        ToolbarItem(placement: .cancellationAction) {
-            Button("Cancel") {
-                // Clear state before dismissing to prevent showing underlying view
-                viewModel.clearSelection()
-                viewModel.showingResults = false
-            }
-        }
-
-        ToolbarItem(placement: .confirmationAction) {
-            Button(localizationManager.localizedString(for: AppStrings.Common.save)) {
-                saveMeal()
-            }
-            .fontWeight(.semibold)
-        }
-    }
+    // MARK: - Private Functions
 
     private func saveMeal() {
         guard isSubscribed else {

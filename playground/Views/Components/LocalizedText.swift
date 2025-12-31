@@ -22,8 +22,12 @@ struct LocalizedText: View {
     }
     
     var body: some View {
-        Text(localizationManager.localizedString(for: key, comment: comment))
-            .id("\(key)-\(localizationManager.currentLanguage)") // Force update on language change
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        // SwiftUI automatically re-evaluates this when localizationManager.currentLanguage changes
+        // because localizationManager is @ObservedObject and currentLanguage is @Published
+        return Text(localizationManager.localizedString(for: key, comment: comment))
     }
 }
 
@@ -40,8 +44,9 @@ struct LocalizedStringKeyText: View {
     }
     
     var body: some View {
+        // SwiftUI automatically re-evaluates this when localizationManager.currentLanguage changes
+        // because localizationManager is @ObservedObject and currentLanguage is @Published
         Text(key)
-            .id("\(key)-\(localizationManager.currentLanguage)") // Force update on language change
     }
 }
 

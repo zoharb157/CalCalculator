@@ -14,6 +14,14 @@ enum DietTimeRange: String, CaseIterable {
     case week = "This Week"
     case month = "This Month"
     
+    var localizedKey: String {
+        switch self {
+        case .today: return AppStrings.DietPlan.today
+        case .week: return AppStrings.DietPlan.thisWeek
+        case .month: return AppStrings.DietPlan.thisMonth
+        }
+    }
+    
     var startDate: Date {
         let calendar = Calendar.current
         switch self {

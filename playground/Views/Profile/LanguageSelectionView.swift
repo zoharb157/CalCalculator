@@ -12,7 +12,10 @@ struct LanguageSelectionView: View {
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             List {
                 ForEach(ProfileViewModel.supportedLanguages, id: \.code) { language in
                     LanguageRow(
@@ -31,8 +34,7 @@ struct LanguageSelectionView: View {
                 }
             }
             .listStyle(.insetGrouped)
-            .navigationTitle(localizationManager.localizedString(for: "Select Language"))
-                .id("lang-select-\(localizationManager.currentLanguage)")
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.selectLanguage))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {

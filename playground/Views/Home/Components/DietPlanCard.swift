@@ -21,10 +21,14 @@ struct DietPlanCard: View {
     }
     
     var body: some View {
-        if !activePlans.isEmpty, !todaysMeals.isEmpty {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Label(localizationManager.localizedString(for: AppStrings.Home.todaysDietPlan), systemImage: "calendar.badge.clock")
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return Group {
+            if !activePlans.isEmpty, !todaysMeals.isEmpty {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Label(localizationManager.localizedString(for: AppStrings.Home.todaysDietPlan), systemImage: "calendar.badge.clock")
                         .id("todays-diet-plan-\(localizationManager.currentLanguage)")
                         .font(.headline)
                     
@@ -64,7 +68,8 @@ struct DietPlanCard: View {
                     
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
-                            Text("\(completedMeals.count)/\(todaysMeals.count) meals completed")
+                            Text(String(format: localizationManager.localizedString(for: AppStrings.DietPlan.mealsCompletedFormat), completedMeals.count, todaysMeals.count))
+                                .id("meals-completed-\(localizationManager.currentLanguage)")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                             
@@ -101,6 +106,9 @@ struct DietPlanCard: View {
             }
             .onReceive(NotificationCenter.default.publisher(for: .mealReminderAction)) { _ in
                 loadTodaysMeals()
+            }
+            } else {
+                EmptyView()
             }
         }
     }

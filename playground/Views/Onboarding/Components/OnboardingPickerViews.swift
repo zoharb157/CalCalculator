@@ -133,10 +133,15 @@ struct SliderQuestionView: View {
 // MARK: - Toggle Question View
 struct ToggleQuestionView: View {
     @Binding var isOn: Bool
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
-        HStack {
-            Text("Enabled")
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return HStack {
+            Text(localizationManager.localizedString(for: AppStrings.Common.enabled))
+                .id("enabled-toggle-\(localizationManager.currentLanguage)")
                 .font(.headline)
             
             Spacer()

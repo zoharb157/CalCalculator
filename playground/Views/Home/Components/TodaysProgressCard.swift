@@ -38,7 +38,10 @@ struct TodaysProgressCard: View {
     }
     
     var body: some View {
-        VStack(spacing: isSmallScreen ? 12 : 16) {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return VStack(spacing: isSmallScreen ? 12 : 16) {
             // Top section - Calories gained vs lost
             HStack(spacing: isSmallScreen ? 12 : 20) {
                 // Calories Gained (Consumed)
@@ -49,7 +52,7 @@ struct TodaysProgressCard: View {
                             .foregroundColor(.green)
                         Text(localizationManager.localizedString(for: AppStrings.Home.gained))
                             .font(isSmallScreen ? .caption2 : .caption)
-                            .id("gained-\(localizationManager.currentLanguage)")
+                            
                             .foregroundColor(.secondary)
                     }
                     Text("\(consumed)")
@@ -66,7 +69,7 @@ struct TodaysProgressCard: View {
                     Text(localizationManager.localizedString(for: AppStrings.Home.net))
                         .font(isSmallScreen ? .caption2 : .caption)
                         .foregroundColor(.secondary)
-                        .id("net-\(localizationManager.currentLanguage)")
+                        
                     Text("\(netCalories)")
                         .font(.system(size: isSmallScreen ? 28 : 36, weight: .bold, design: .rounded))
                         .foregroundColor(netCalories >= 0 ? .orange : .green)
@@ -81,7 +84,7 @@ struct TodaysProgressCard: View {
                     HStack(spacing: 4) {
                         Text(localizationManager.localizedString(for: AppStrings.Home.lost))
                             .font(isSmallScreen ? .caption2 : .caption)
-                            .id("lost-\(localizationManager.currentLanguage)")
+                            
                             .foregroundColor(.secondary)
                         Image(systemName: "arrow.down.circle.fill")
                             .font(.caption)
@@ -112,7 +115,7 @@ struct TodaysProgressCard: View {
                         .foregroundColor(.secondary)
                         .minimumScaleFactor(0.9)
                         .lineLimit(1)
-                        .id("calories-left-\(localizationManager.currentLanguage)")
+                        
                 }
                 
                 Spacer(minLength: isSmallScreen ? 4 : 8)

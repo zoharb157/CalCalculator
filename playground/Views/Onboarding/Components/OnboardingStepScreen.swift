@@ -23,8 +23,9 @@ struct OnboardingStepScreen: View {
     }
 
     var primaryTitle: String {
-        if isLast { return step.primaryButton?.title ?? "Finish" }
-        return step.primaryButton?.title ?? "Continue"
+        let localizationManager = LocalizationManager.shared
+        if isLast { return step.primaryButton?.title ?? localizationManager.localizedString(for: AppStrings.Common.finish) }
+        return step.primaryButton?.title ?? localizationManager.localizedString(for: AppStrings.Common.continue_)
     }
 
     var canContinue: Bool {
@@ -99,7 +100,7 @@ struct OnboardingStepScreen: View {
                                 HStack(spacing: 8) {
                                     Image(systemName: "chevron.left")
                                         .font(.system(size: 14, weight: .semibold))
-                                    Text("Back")
+                                    Text(LocalizationManager.shared.localizedString(for: AppStrings.Common.back))
                                         .font(.system(size: 17, weight: .semibold))
                                 }
                                 .foregroundStyle(.primary)
@@ -136,7 +137,7 @@ struct OnboardingStepScreen: View {
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button("Done") {
+                Button(LocalizationManager.shared.localizedString(for: AppStrings.Common.done)) {
                     UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                 }
             }

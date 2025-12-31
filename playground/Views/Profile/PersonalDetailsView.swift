@@ -50,7 +50,10 @@ struct PersonalDetailsView: View {
     // MARK: - Body
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
                     profileHeaderSection
@@ -247,7 +250,7 @@ struct PersonalDetailsView: View {
                     isEditingUsername = true
                 } label: {
                     HStack(spacing: 4) {
-                        Text(viewModel.username.isEmpty ? "Set username" : "@\(viewModel.username)")
+                        Text(viewModel.username.isEmpty ? localizationManager.localizedString(for: AppStrings.Profile.setUsername) : "@\(viewModel.username)")
                             .font(.subheadline)
                             .foregroundColor(viewModel.username.isEmpty ? .secondary : .primary)
                         Image(systemName: "pencil")
@@ -281,14 +284,14 @@ struct PersonalDetailsView: View {
     @ViewBuilder
     private var metricsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ProfileSectionHeader(title: "Body Metrics")
+            ProfileSectionHeader(title: localizationManager.localizedString(for: AppStrings.Profile.bodyMetrics))
             
             ProfileSectionCard {
                 // Current Weight
                 EditableDetailRow(
                     icon: "scalemass.fill",
                     iconColor: .blue,
-                    label: "Current Weight",
+                    label: localizationManager.localizedString(for: AppStrings.Profile.currentWeight),
                     value: viewModel.currentWeightDisplay
                 ) {
                     tempWeight = viewModel.currentWeight
@@ -301,7 +304,7 @@ struct PersonalDetailsView: View {
                 EditableDetailRow(
                     icon: "ruler.fill",
                     iconColor: .green,
-                    label: "Height",
+                    label: localizationManager.localizedString(for: AppStrings.Profile.height),
                     value: viewModel.heightDisplay
                 ) {
                     tempHeightFeet = viewModel.heightFeet
@@ -315,7 +318,7 @@ struct PersonalDetailsView: View {
                 EditableDetailRow(
                     icon: "calendar",
                     iconColor: .orange,
-                    label: "Date of Birth",
+                    label: localizationManager.localizedString(for: AppStrings.Profile.dateOfBirth),
                     value: formattedDateOfBirth
                 ) {
                     tempDateOfBirth = viewModel.dateOfBirth
@@ -328,7 +331,7 @@ struct PersonalDetailsView: View {
                 EditableDetailRow(
                     icon: "person.fill",
                     iconColor: .purple,
-                    label: "Gender",
+                    label: localizationManager.localizedString(for: AppStrings.Profile.gender),
                     value: viewModel.gender.displayName
                 ) {
                     tempGender = viewModel.gender
@@ -346,13 +349,13 @@ struct PersonalDetailsView: View {
     @ViewBuilder
     private var goalsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ProfileSectionHeader(title: "Weight Goal")
+            ProfileSectionHeader(title: localizationManager.localizedString(for: AppStrings.Profile.weightGoal))
             
             ProfileSectionCard {
                 EditableDetailRow(
                     icon: "flag.fill",
                     iconColor: .red,
-                    label: "Goal Weight",
+                    label: localizationManager.localizedString(for: AppStrings.Profile.goalWeight),
                     value: viewModel.goalWeightDisplay
                 ) {
                     tempGoalWeight = viewModel.goalWeight
@@ -370,13 +373,13 @@ struct PersonalDetailsView: View {
     @ViewBuilder
     private var activitySection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ProfileSectionHeader(title: "Activity")
+            ProfileSectionHeader(title: localizationManager.localizedString(for: AppStrings.Profile.activity))
             
             ProfileSectionCard {
                 EditableDetailRow(
                     icon: "figure.walk",
                     iconColor: .cyan,
-                    label: "Daily Step Goal",
+                    label: localizationManager.localizedString(for: AppStrings.Profile.dailyStepGoal),
                     value: "\(viewModel.dailyStepGoal.formatted()) steps"
                 ) {
                     tempStepGoal = viewModel.dailyStepGoal

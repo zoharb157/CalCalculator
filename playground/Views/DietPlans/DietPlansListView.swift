@@ -28,7 +28,10 @@ struct DietPlansListView: View {
     }
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             Group {
                 if !hasActivePlan {
                     emptyStateView
@@ -37,7 +40,7 @@ struct DietPlansListView: View {
                 }
             }
             .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.title))
-                .id("diet-plan-title-\(localizationManager.currentLanguage)")
+                
             .toolbar {
                 if hasActivePlan {
                     ToolbarItem(placement: .primaryAction) {
@@ -47,7 +50,7 @@ struct DietPlansListView: View {
                             }
                         } label: {
                             Label(localizationManager.localizedString(for: AppStrings.Common.edit), systemImage: "pencil")
-                            .id("edit-label-\(localizationManager.currentLanguage)")
+                            
                         }
                     }
                 }
@@ -91,11 +94,11 @@ struct DietPlansListView: View {
                 .font(.system(size: 60))
                 .foregroundColor(.secondary)
             
-            Text("No Diet Plan")
+            Text(localizationManager.localizedString(for: AppStrings.DietPlan.noDietPlan))
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            Text("Create a diet plan to schedule repetitive meals and track your adherence")
+            Text(localizationManager.localizedString(for: AppStrings.DietPlan.createDietDescription))
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -105,7 +108,7 @@ struct DietPlansListView: View {
                 showingCreatePlan = true
             } label: {
                 Label(localizationManager.localizedString(for: AppStrings.DietPlan.createDietPlan), systemImage: "plus.circle.fill")
-                    .id("create-diet-plan-label-\(localizationManager.currentLanguage)")
+                    
                     .font(.headline)
             }
             .buttonStyle(.borderedProminent)
@@ -127,7 +130,7 @@ struct DietPlansListView: View {
                     } label: {
                         Label(localizationManager.localizedString(for: AppStrings.DietPlan.editDietPlan), systemImage: "pencil")
                             .foregroundColor(.blue)
-                            .id("edit-diet-plan-btn-\(localizationManager.currentLanguage)")
+                            
                     }
                     
                     Button(role: .destructive) {
@@ -135,12 +138,12 @@ struct DietPlansListView: View {
                     } label: {
                         Label(localizationManager.localizedString(for: AppStrings.DietPlan.deleteDietPlan), systemImage: "trash")
                             .foregroundColor(.red)
-                            .id("delete-diet-plan-btn-\(localizationManager.currentLanguage)")
+                            
                     }
                 } footer: {
                     Text(localizationManager.localizedString(for: AppStrings.DietPlan.onlyOneActivePlan))
                         .font(.caption)
-                        .id("one-active-plan-footer-\(localizationManager.currentLanguage)")
+                        
                 }
             }
         }
@@ -188,16 +191,16 @@ struct DietPlanRow: View {
                         Label("\(plan.scheduledMeals.count) \(localizationManager.localizedString(for: AppStrings.History.meals))", systemImage: "fork.knife")
                             .font(.caption)
                             .foregroundColor(.secondary)
-                            .id("meals-count-row-\(localizationManager.currentLanguage)")
+                            
                         
                         if plan.isActive {
                             Label(localizationManager.localizedString(for: AppStrings.DietPlan.active), systemImage: "checkmark.circle.fill")
-                                .id("active-row-\(localizationManager.currentLanguage)")
+                                
                                 .font(.caption)
                                 .foregroundColor(.green)
                         } else {
                             Label(localizationManager.localizedString(for: AppStrings.DietPlan.inactive), systemImage: "xmark.circle.fill")
-                                .id("inactive-row-\(localizationManager.currentLanguage)")
+                                
                                 .font(.caption)
                                 .foregroundColor(.gray)
                         }

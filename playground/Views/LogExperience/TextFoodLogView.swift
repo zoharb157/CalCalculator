@@ -35,7 +35,10 @@ struct TextFoodLogView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             VStack(spacing: 0) {
                 if viewModel.isAnalyzing {
                     analyzingView
@@ -93,13 +96,13 @@ struct TextFoodLogView: View {
                         )
                     )
 
-                Text(localization.localizedString(for: "Tell us what you ate"))
+                Text(localizationManager.localizedString(for: AppStrings.Food.tellUsWhatYouAte))
                     .font(.title2)
                     .fontWeight(.bold)
+                    .id("tell-us-what-ate-\(localizationManager.currentLanguage)")
 
-                Text(
-                    localization.localizedString(for: "Describe your meal in natural language and we'll calculate the nutrition for you")
-                )
+                Text(localizationManager.localizedString(for: AppStrings.Food.describeMealNaturalLanguage))
+                    .id("describe-meal-natural-\(localizationManager.currentLanguage)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -109,7 +112,8 @@ struct TextFoodLogView: View {
 
             // Text input
             VStack(alignment: .leading, spacing: 8) {
-                TextField(localization.localizedString(for: "I had..."), text: $inputText, axis: .vertical)
+                TextField(localizationManager.localizedString(for: AppStrings.Food.iHad), text: $inputText, axis: .vertical)
+                    .id("i-had-placeholder-\(localizationManager.currentLanguage)")
                     .textFieldStyle(.plain)
                     .font(.body)
                     .lineLimit(3...6)
@@ -155,12 +159,13 @@ struct TextFoodLogView: View {
 
             // Category selector
             VStack(alignment: .leading, spacing: 8) {
-                Text(localization.localizedString(for: "Meal Category"))
+                Text(localizationManager.localizedString(for: AppStrings.Food.mealCategory))
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundColor(.secondary)
+                    .id("meal-category-\(localizationManager.currentLanguage)")
 
-                Picker("Category", selection: $viewModel.selectedCategory) {
+                Picker(localizationManager.localizedString(for: AppStrings.Food.category), selection: $viewModel.selectedCategory) {
                     ForEach(MealCategory.allCases, id: \.self) { category in
                         Label(category.displayName, systemImage: category.icon)
                             .tag(category)
@@ -279,25 +284,25 @@ struct TextFoodLogView: View {
                 HStack(spacing: 20) {
                     NutritionBadge(
                         value: "\(viewModel.totalAnalyzedCalories)",
-                        label: "Calories",
+                        label: localizationManager.localizedString(for: AppStrings.Food.kcal),
                         color: .orange
                     )
 
                     NutritionBadge(
                         value: "\(viewModel.totalAnalyzedMacros.proteinG.formattedMacro)g",
-                        label: "Protein",
+                        label: localizationManager.localizedString(for: AppStrings.Home.protein),
                         color: .blue
                     )
 
                     NutritionBadge(
                         value: "\(viewModel.totalAnalyzedMacros.carbsG.formattedMacro)g",
-                        label: "Carbs",
+                        label: localizationManager.localizedString(for: AppStrings.Home.carbs),
                         color: .green
                     )
 
                     NutritionBadge(
                         value: "\(viewModel.totalAnalyzedMacros.fatG.formattedMacro)g",
-                        label: "Fat",
+                        label: localizationManager.localizedString(for: AppStrings.Home.fat),
                         color: .purple
                     )
                 }
@@ -422,16 +427,16 @@ struct FoodResultRow: View {
 
                 Spacer()
 
-                Text("\(food.calories) cal")
+                Text("\(food.calories) \(LocalizationManager.shared.localizedString(for: AppStrings.Progress.cal))")
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundColor(.orange)
             }
 
             HStack(spacing: 16) {
-                MacroLabel(value: food.proteinG, label: "Protein", color: .blue)
-                MacroLabel(value: food.carbsG, label: "Carbs", color: .green)
-                MacroLabel(value: food.fatG, label: "Fat", color: .purple)
+                MacroLabel(value: food.proteinG, label: LocalizationManager.shared.localizedString(for: AppStrings.Home.protein), color: .blue)
+                MacroLabel(value: food.carbsG, label: LocalizationManager.shared.localizedString(for: AppStrings.Home.carbs), color: .green)
+                MacroLabel(value: food.fatG, label: LocalizationManager.shared.localizedString(for: AppStrings.Home.fat), color: .purple)
             }
             .font(.caption)
         }

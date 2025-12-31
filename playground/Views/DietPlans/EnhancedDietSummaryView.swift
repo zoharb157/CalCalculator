@@ -27,7 +27,10 @@ struct EnhancedDietSummaryView: View {
     }
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
                     // Time range selector
@@ -62,7 +65,7 @@ struct EnhancedDietSummaryView: View {
                 .padding()
             }
             .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.myDiet))
-                .id("my-diet-title-\(localizationManager.currentLanguage)")
+                
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     HStack(spacing: 16) {
@@ -106,12 +109,17 @@ struct EnhancedDietSummaryView: View {
     // MARK: - Time Range Selector
     
     private var timeRangeSelector: some View {
-        Picker("Time Range", selection: $selectedTimeRange) {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return Picker(localizationManager.localizedString(for: AppStrings.DietPlan.timeRange), selection: $selectedTimeRange) {
             ForEach(DietTimeRange.allCases, id: \.self) { range in
-                Text(range.rawValue).tag(range)
+                Text(localizationManager.localizedString(for: range.localizedKey))
+                    .tag(range)
             }
         }
         .pickerStyle(.segmented)
+        .id("time-range-picker-\(localizationManager.currentLanguage)")
     }
     
     // MARK: - Adherence Overview Card
@@ -121,7 +129,7 @@ struct EnhancedDietSummaryView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(localizationManager.localizedString(for: AppStrings.DietPlan.adherence))
-                        .id("adherence-\(localizationManager.currentLanguage)")
+                        
                         .font(.headline)
                         .foregroundColor(.secondary)
                     
@@ -154,21 +162,21 @@ struct EnhancedDietSummaryView: View {
                 StatPill(
                     icon: "checkmark.circle.fill",
                     value: "\(data.completedMeals.count)",
-                    label: "Completed",
+                    label: localizationManager.localizedString(for: AppStrings.History.completed),
                     color: .green
                 )
                 
                 StatPill(
                     icon: "xmark.circle.fill",
                     value: "\(data.missedMeals.count)",
-                    label: "Missed",
+                    label: localizationManager.localizedString(for: AppStrings.History.missed),
                     color: .red
                 )
                 
                 StatPill(
                     icon: "fork.knife",
                     value: "\(data.scheduledMeals.count)",
-                    label: "Scheduled",
+                    label: localizationManager.localizedString(for: AppStrings.History.scheduled),
                     color: .blue
                 )
             }
@@ -191,7 +199,7 @@ struct EnhancedDietSummaryView: View {
     private var adherenceTrendChart: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(localizationManager.localizedString(for: AppStrings.DietPlan.adherenceTrend))
-                .id("adherence-trend-\(localizationManager.currentLanguage)")
+                
                 .font(.headline)
                 .padding(.horizontal)
             
@@ -215,18 +223,18 @@ struct EnhancedDietSummaryView: View {
     private func todaysScheduleSection(data: DietAdherenceData) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(localizationManager.localizedString(for: AppStrings.DietPlan.todaySchedule))
-                .id("today-schedule-\(localizationManager.currentLanguage)")
+                
                 .font(.headline)
                 .padding(.horizontal)
             
             if data.scheduledMeals.isEmpty {
                 ContentUnavailableView(
-                    "No Meals Scheduled",
+                    localizationManager.localizedString(for: AppStrings.DietPlan.noMealsAlert),
                     systemImage: "calendar.badge.exclamationmark",
-                    description: Text(localizationManager.localizedString(for: "Add meals to your diet plan to see them here"))
+                    description: Text(localizationManager.localizedString(for: AppStrings.DietPlan.addMealsToDietPlan))
                 )
                 .frame(height: 150)
-                .id("add-meals-desc-\(localizationManager.currentLanguage)")
+                
             } else {
                 mealCardsView(data: data)
             }
@@ -334,28 +342,28 @@ struct EnhancedDietSummaryView: View {
     private var insightsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(localizationManager.localizedString(for: AppStrings.DietPlan.insights))
-                .id("insights-\(localizationManager.currentLanguage)")
+                
                 .font(.headline)
                 .padding(.horizontal)
             
             VStack(spacing: 12) {
                 InsightCard(
                     icon: "flame.fill",
-                    title: "Streak",
+                    title: localizationManager.localizedString(for: AppStrings.DietPlan.streak),
                     value: calculateStreak(),
                     color: .orange
                 )
                 
                 InsightCard(
                     icon: "chart.line.uptrend.xyaxis",
-                    title: "Best Day",
+                    title: localizationManager.localizedString(for: AppStrings.DietPlan.bestDay),
                     value: bestDayString(),
                     color: .green
                 )
                 
                 InsightCard(
                     icon: "lightbulb.fill",
-                    title: "Tip",
+                    title: localizationManager.localizedString(for: AppStrings.DietPlan.tip),
                     value: generateTip(),
                     color: .blue
                 )
@@ -368,13 +376,13 @@ struct EnhancedDietSummaryView: View {
     private var weeklyStatsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(localizationManager.localizedString(for: AppStrings.DietPlan.weeklyStatistics))
-                .id("weekly-stats-\(localizationManager.currentLanguage)")
+                
                 .font(.headline)
                 .padding(.horizontal)
             
             if weeklyAdherence.isEmpty {
                 Text(localizationManager.localizedString(for: AppStrings.DietPlan.noDataAvailable))
-                    .id("no-data-\(localizationManager.currentLanguage)")
+                    
                     .foregroundColor(.secondary)
                     .padding()
             } else {
@@ -384,14 +392,14 @@ struct EnhancedDietSummaryView: View {
                 
                 HStack(spacing: 16) {
                     DietStatCard(
-                        title: "Avg Adherence",
+                        title: localizationManager.localizedString(for: AppStrings.DietPlan.avgAdherence),
                         value: "\(Int(avgAdherence * 100))%",
                         icon: "percent",
                         color: .blue
                     )
                     
                     DietStatCard(
-                        title: "Meals Completed",
+                        title: localizationManager.localizedString(for: AppStrings.DietPlan.mealsCompletedCapitalized),
                         value: "\(completedMeals)/\(totalMeals)",
                         icon: "checkmark.circle.fill",
                         color: .green
@@ -409,17 +417,17 @@ struct EnhancedDietSummaryView: View {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundColor(.orange)
                 Text(localizationManager.localizedString(for: AppStrings.DietPlan.offDietMeals))
-                    .id("off-diet-meals-\(localizationManager.currentLanguage)")
+                    
                     .font(.headline)
             }
             .padding(.horizontal)
             
             VStack(alignment: .leading, spacing: 8) {
                 Text("\(data.offDietCalories) \(localizationManager.localizedString(for: AppStrings.DietPlan.caloriesFromOffDiet))")
-                    .id("off-diet-calories-\(localizationManager.currentLanguage)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .padding(.horizontal)
+                    .id("off-diet-calories-\(localizationManager.currentLanguage)")
                 
                 ForEach(data.offDietMeals.prefix(3), id: \.id) { meal in
                     OffDietMealRow(meal: meal)
@@ -531,17 +539,17 @@ struct EnhancedDietSummaryView: View {
     
     private func generateTip() -> String {
         guard let data = adherenceData else {
-            return "Start tracking to get personalized tips"
+            return localizationManager.localizedString(for: AppStrings.DietPlan.startTrackingForTips)
         }
         
         if data.completionRate < 0.5 {
-            return "Try setting reminders 15 minutes before meal time"
+            return localizationManager.localizedString(for: AppStrings.DietPlan.trySettingReminders)
         } else if data.offDietCalories > 500 {
-            return "Plan ahead to avoid off-diet meals"
+            return localizationManager.localizedString(for: AppStrings.DietPlan.planAheadOffDiet)
         } else if data.completionRate >= 0.9 {
-            return "Great job! Keep up the consistency"
+            return localizationManager.localizedString(for: AppStrings.DietPlan.greatJobKeepConsistency)
         } else {
-            return "You're doing well! Small improvements add up"
+            return localizationManager.localizedString(for: AppStrings.DietPlan.doingWellSmallImprovements)
         }
     }
 }
@@ -553,9 +561,13 @@ struct StatPill: View {
     let value: String
     let label: String
     let color: Color
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
-        VStack(spacing: 4) {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return VStack(spacing: 4) {
             Image(systemName: icon)
                 .foregroundColor(color)
                 .font(.title3)
@@ -581,7 +593,10 @@ struct ScheduledMealCard: View {
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
-        Button(action: {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return Button(action: {
             onTap?()
         }) {
             HStack(spacing: 12) {
@@ -601,14 +616,14 @@ struct ScheduledMealCard: View {
                             .foregroundColor(.secondary)
                         
                         if isCompleted && goalMissed {
-                            Text(localizationManager.localizedString(for: "Goal not met"))
-                                .id("goal-not-met-\(localizationManager.currentLanguage)")
+                            Text(localizationManager.localizedString(for: AppStrings.DietPlan.goalNotMet))
                                 .font(.caption2)
                                 .foregroundColor(.orange)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
                                 .background(Color.orange.opacity(0.2))
                                 .cornerRadius(4)
+                                .id("goal-not-met-\(localizationManager.currentLanguage)")
                         }
                     }
                 }
@@ -707,16 +722,19 @@ struct OffDietMealRow: View {
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
-        HStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return HStack {
             VStack(alignment: .leading, spacing: 4) {
                 Text(meal.name)
                     .font(.subheadline)
                     .fontWeight(.medium)
                 
-                Text("\(meal.totalCalories) \(localizationManager.localizedString(for: "calories"))")
-                    .id("meal-calories-\(localizationManager.currentLanguage)")
+                Text("\(meal.totalCalories) \(localizationManager.localizedString(for: AppStrings.DietPlan.calories))")
                     .font(.caption)
                     .foregroundColor(.secondary)
+                    .id("meal-calories-\(localizationManager.currentLanguage)")
             }
             
             Spacer()

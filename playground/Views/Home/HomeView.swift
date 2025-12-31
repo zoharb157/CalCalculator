@@ -50,6 +50,9 @@ struct HomeView: View {
     }
 
     var body: some View {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
         let baseView =
             mainContent
 
@@ -120,10 +123,20 @@ struct HomeView: View {
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: .languageChanged)) { _ in
-                // Force view refresh when language changes
-                // This ensures all localized strings update immediately
+                // Rebuild weekDays with new locale when language changes
+                Task { @MainActor in
+                    // Force rebuild weekDays with new locale
+                    if let weekSummaries = try? repository.fetchWeekSummaries() {
+                        let newWeekDays = viewModel.buildWeekDays(from: weekSummaries, selectedDate: viewModel.selectedDate)
+                        viewModel.weekDays = newWeekDays
+                    }
+                    // Also reload all data to ensure everything updates
+                    await viewModel.loadData()
+                }
             }
-            .id("home-view-\(localizationManager.currentLanguage)")
+            // No need for onChange - SwiftUI automatically re-evaluates views when
+            // @ObservedObject properties change. Since localizationManager.currentLanguage
+            // is @Published, all views using localizationManager will update automatically.
             .sheet(isPresented: $showScanSheet) {
                 ScanView(
                     viewModel: scanViewModel,
@@ -378,7 +391,9 @@ struct HomeView: View {
     }
 
     private var weekDaysSection: some View {
-        WeekDaysHeader(weekDays: viewModel.weekDays) { selectedDate in
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        return WeekDaysHeader(weekDays: viewModel.weekDays) { selectedDate in
             HapticManager.shared.impact(.medium)
             viewModel.selectDay(selectedDate)
         }
@@ -432,11 +447,10 @@ struct HomeView: View {
 
     private var macroSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            LocalizedText(AppStrings.Home.macronutrients, comment: "Section title for macronutrients")
+            Text(localizationManager.localizedString(for: AppStrings.Home.macronutrients))
                 .font(.headline)
                 .foregroundColor(.primary)
                 .padding(.horizontal, 4)
-                .id("macronutrients-\(localizationManager.currentLanguage)")
             
             PremiumLockedContent {
                 MacroCardsSection(
@@ -468,10 +482,9 @@ struct HomeView: View {
             .listRowSeparator(.hidden)
             .listRowBackground(Color.clear)
         } header: {
-            LocalizedText(AppStrings.Home.recentlyUploaded, comment: "Section header for recently uploaded meals")
+            Text(localizationManager.localizedString(for: AppStrings.Home.recentlyUploaded))
                 .font(.headline)
                 .foregroundColor(.primary)
-                .id("recently-uploaded-\(localizationManager.currentLanguage)")
         }
     }
     

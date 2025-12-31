@@ -9,6 +9,7 @@
 import SwiftUI
 
 struct OnboardingFlowView: View {
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     let jsonFileName: String
     let onComplete: ([String: Any]) -> Void
 
@@ -24,7 +25,8 @@ struct OnboardingFlowView: View {
         Group {
             if let loadError {
                 VStack(spacing: 12) {
-                    Text("Onboarding Error").font(.headline)
+                    Text(localizationManager.localizedString(for: AppStrings.Onboarding.onboardingError)).font(.headline)
+                        .id("onboarding-error-\(localizationManager.currentLanguage)")
                     Text(loadError).foregroundStyle(.secondary)
                 }
                 .padding()

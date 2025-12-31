@@ -18,7 +18,10 @@ struct GoalsGenerationView: View {
     }
     
     var body: some View {
-        ZStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return ZStack {
             // Background gradient
             backgroundGradient
             
@@ -268,12 +271,13 @@ struct SuccessCheckmarkView: View {
 struct GoalsCardsView: View {
     let goals: GeneratedGoals
     @State private var appearedCards: Set<Int> = []
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
         VStack(spacing: 16) {
             // Calories card (main)
             GoalCard(
-                title: "Daily Calories",
+                title: localizationManager.localizedString(for: AppStrings.Goals.dailyCalories),
                 value: "\(goals.calories)",
                 unit: "kcal",
                 icon: "flame.fill",

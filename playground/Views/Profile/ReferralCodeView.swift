@@ -27,7 +27,10 @@ struct ReferralCodeView: View {
     // MARK: - Body
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
                     headerSection
@@ -58,18 +61,18 @@ struct ReferralCodeView: View {
                 }
             }
         }
-        .alert("Copied!", isPresented: $showCopiedAlert) {
-            Button("OK", role: .cancel) {}
+        .alert(localizationManager.localizedString(for: AppStrings.Profile.copiedToClipboard), isPresented: $showCopiedAlert) {
+            Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) {}
         } message: {
-            Text("Your referral code has been copied to clipboard.")
+            Text(localizationManager.localizedString(for: AppStrings.Profile.yourReferralCodeCopied))
         }
-        .alert("Success!", isPresented: $showAppliedAlert) {
-            Button("OK", role: .cancel) {}
+        .alert(localizationManager.localizedString(for: AppStrings.Common.success), isPresented: $showAppliedAlert) {
+            Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) {}
         } message: {
-            Text("Friend's referral code has been applied successfully.")
+            Text(localizationManager.localizedString(for: AppStrings.Profile.friendCodeApplied))
         }
-        .alert("Error", isPresented: $showErrorAlert) {
-            Button("OK", role: .cancel) {}
+        .alert(localizationManager.localizedString(for: AppStrings.Common.error), isPresented: $showErrorAlert) {
+            Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) {}
         } message: {
             Text(errorMessage)
         }
@@ -90,12 +93,12 @@ struct ReferralCodeView: View {
                     )
                 )
             
-            Text("Invite Friends & Earn Rewards")
+            Text(localizationManager.localizedString(for: AppStrings.Profile.inviteFriendsEarnRewards))
                 .font(.title2)
                 .fontWeight(.bold)
                 .multilineTextAlignment(.center)
             
-            Text("Share your unique code with friends and both of you will receive special benefits!")
+            Text(localizationManager.localizedString(for: AppStrings.Profile.shareUniqueCode))
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -108,7 +111,7 @@ struct ReferralCodeView: View {
     @ViewBuilder
     private var yourCodeSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Your Referral Code")
+            Text(localizationManager.localizedString(for: AppStrings.Profile.yourReferralCode))
                 .font(.headline)
                 .foregroundColor(.primary)
             
@@ -131,7 +134,7 @@ struct ReferralCodeView: View {
                     } label: {
                         HStack {
                             Image(systemName: "doc.on.doc")
-                            Text("Copy")
+                            Text(localizationManager.localizedString(for: AppStrings.Profile.copy))
                         }
                         .font(.subheadline.weight(.semibold))
                         .foregroundColor(.white)
@@ -152,7 +155,7 @@ struct ReferralCodeView: View {
                     } label: {
                         HStack {
                             Image(systemName: "square.and.arrow.up")
-                            Text("Share")
+                            Text(localizationManager.localizedString(for: AppStrings.Profile.share))
                         }
                         .font(.subheadline.weight(.semibold))
                         .foregroundColor(.blue)
@@ -174,7 +177,7 @@ struct ReferralCodeView: View {
     @ViewBuilder
     private var applyCodeSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Have a Friend's Code?")
+            Text(localizationManager.localizedString(for: AppStrings.Profile.haveFriendsCode))
                 .font(.headline)
                 .foregroundColor(.primary)
             
@@ -190,7 +193,7 @@ struct ReferralCodeView: View {
                 Button {
                     applyFriendCode()
                 } label: {
-                    Text("Apply Code")
+                    Text(localizationManager.localizedString(for: AppStrings.Profile.applyCode))
                         .font(.subheadline.weight(.semibold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
@@ -223,7 +226,7 @@ struct ReferralCodeView: View {
     @ViewBuilder
     private var appliedCodeSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Applied Code")
+            Text(localizationManager.localizedString(for: AppStrings.Profile.appliedCode))
                 .font(.headline)
                 .foregroundColor(.primary)
             
@@ -237,7 +240,7 @@ struct ReferralCodeView: View {
                         .font(.system(.body, design: .monospaced))
                         .fontWeight(.semibold)
                     
-                    Text("Code applied successfully")
+                    Text(localizationManager.localizedString(for: AppStrings.Profile.codeAppliedSuccessfully))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -255,7 +258,7 @@ struct ReferralCodeView: View {
     @ViewBuilder
     private var howItWorksSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("How It Works")
+            Text(localizationManager.localizedString(for: AppStrings.Profile.howItWorks))
                 .font(.headline)
                 .foregroundColor(.primary)
             

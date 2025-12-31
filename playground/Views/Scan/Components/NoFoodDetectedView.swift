@@ -17,7 +17,10 @@ struct NoFoodDetectedView: View {
     @State private var showingTips = false
     
     var body: some View {
-        VStack(spacing: 24) {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return VStack(spacing: 24) {
             if let image = image {
                 thumbnailImage(image)
             }
@@ -118,7 +121,7 @@ struct NoFoodDetectedView: View {
                 HStack {
                     Image(systemName: "lightbulb.fill")
                         .foregroundColor(.yellow)
-                    Text("Tips for better results")
+                    Text(localizationManager.localizedString(for: AppStrings.Scanning.tipsForBetterResults))
                         .font(.subheadline)
                         .fontWeight(.medium)
                     Spacer()

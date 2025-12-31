@@ -18,7 +18,10 @@ struct WeightInputSheet: View {
     @FocusState private var isFocused: Bool
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             VStack(spacing: 20) {
                 Spacer()
                 
@@ -103,7 +106,7 @@ struct WeightInputSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
                         dismiss()
                     }
                 }

@@ -113,7 +113,7 @@ struct BurnedCaloriesView: View {
                 .padding(.horizontal)
                 .padding(.bottom, 40)
                 .alert("Error", isPresented: $showError) {
-                    Button("OK") { }
+                    Button(localizationManager.localizedString(for: AppStrings.Common.ok)) { }
                 } message: {
                     Text(errorMessage)
                 }

@@ -37,7 +37,10 @@ struct MealReminderActionView: View {
     }
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             VStack(spacing: 24) {
                 // Header
                 VStack(spacing: 8) {
@@ -45,7 +48,7 @@ struct MealReminderActionView: View {
                         .font(.system(size: 50))
                         .foregroundColor(.accentColor)
                     
-                    Text("Time for \(mealName)")
+                    Text(String(format: localizationManager.localizedString(for: AppStrings.DietPlan.timeFor), mealName))
                         .font(.title2)
                         .fontWeight(.semibold)
                     
@@ -61,7 +64,7 @@ struct MealReminderActionView: View {
                         action = .save
                         saveFromTemplate()
                     } label: {
-                        Label("Save Meal as Planned", systemImage: "checkmark.circle.fill")
+                        Label(localizationManager.localizedString(for: AppStrings.DietPlan.saveMealAsPlanned), systemImage: "checkmark.circle.fill")
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background(Color.accentColor)
@@ -73,7 +76,7 @@ struct MealReminderActionView: View {
                         action = .edit
                         showingScan = true
                     } label: {
-                        Label("Edit & Add Items", systemImage: "pencil.circle.fill")
+                        Label(localizationManager.localizedString(for: AppStrings.DietPlan.editAndAddItems), systemImage: "pencil.circle.fill")
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background(Color.blue)
@@ -85,7 +88,7 @@ struct MealReminderActionView: View {
                         action = .addNew
                         showingScan = true
                     } label: {
-                        Label("Add New Food", systemImage: "plus.circle.fill")
+                        Label(localizationManager.localizedString(for: AppStrings.DietPlan.addNewFood), systemImage: "plus.circle.fill")
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background(Color.green)
@@ -96,7 +99,7 @@ struct MealReminderActionView: View {
                     Button {
                         dismiss()
                     } label: {
-                        Text("Skip")
+                        Text(localizationManager.localizedString(for: AppStrings.DietPlan.skip))
                             .frame(maxWidth: .infinity)
                             .padding()
                             .foregroundColor(.secondary)
@@ -107,7 +110,7 @@ struct MealReminderActionView: View {
                 Spacer()
             }
             .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.mealReminder))
-                .id("meal-reminder-title-\(localizationManager.currentLanguage)")
+                
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -130,10 +133,10 @@ struct MealReminderActionView: View {
                         Text(localizationManager.localizedString(for: AppStrings.DietPlan.scanYourFood))
                             .font(.title2)
                             .fontWeight(.semibold)
-                            .id("scan-food-title-\(localizationManager.currentLanguage)")
+                            
                         
                         Text(localizationManager.localizedString(for: AppStrings.DietPlan.openCameraToScan))
-                            .id("open-camera-scan-\(localizationManager.currentLanguage)")
+                            
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -142,14 +145,14 @@ struct MealReminderActionView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color(.systemGroupedBackground))
                     .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.addFood))
-                        .id("add-food-title-\(localizationManager.currentLanguage)")
+                        
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbar {
                         ToolbarItem(placement: .navigationBarLeading) {
                             Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
                                 showingScan = false
                             }
-                            .id("cancel-add-food-\(localizationManager.currentLanguage)")
+                            
                         }
                     }
                 }

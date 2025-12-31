@@ -13,10 +13,10 @@ extension View {
         self.toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button("Done") {
+                Button(LocalizationManager.shared.localizedString(for: AppStrings.Common.done)) {
                     UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                 }
-                .accessibilityLabel("Dismiss keyboard")
+                .accessibilityLabel(LocalizationManager.shared.localizedString(for: AppStrings.Common.dismissKeyboard))
             }
         }
     }

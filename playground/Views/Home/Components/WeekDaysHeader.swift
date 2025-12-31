@@ -11,6 +11,7 @@ struct WeekDaysHeader: View {
     let weekDays: [WeekDay]
     var onDaySelected: ((Date) -> Void)? = nil
     @State private var hasAppeared = false
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
         ScrollViewReader { proxy in
@@ -60,6 +61,7 @@ struct WeekDaysHeader: View {
 struct WeekDayItem: View {
     let day: WeekDay
     var onTap: (() -> Void)? = nil
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
         VStack(spacing: 6) {
@@ -119,15 +121,15 @@ struct WeekDayItem: View {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         let dateString = formatter.string(from: day.date)
-        let caloriesText = day.hasMeals ? "\(day.caloriesConsumed) calories" : "No meals"
+        let caloriesText = day.hasMeals ? "\(day.caloriesConsumed) \(localizationManager.localizedString(for: AppStrings.History.caloriesLabel))" : localizationManager.localizedString(for: AppStrings.History.noMeals)
         return "\(dateString), \(caloriesText)"
     }
     
     private var accessibilityHint: String {
         if day.isToday {
-            return "Today's progress"
+            return localizationManager.localizedString(for: AppStrings.Home.today) + " " + localizationManager.localizedString(for: AppStrings.Progress.title.lowercased())
         } else {
-            return "Tap to view details for this day"
+            return localizationManager.localizedString(for: AppStrings.Common.tapToViewDetails)
         }
     }
 }
@@ -140,6 +142,7 @@ struct WeekDayItem: View {
         let date = calendar.date(byAdding: .day, value: offset - 3, to: today)!
         let dayFormatter = DateFormatter()
         dayFormatter.dateFormat = "EEE"
+        dayFormatter.locale = Locale(identifier: LocalizationManager.shared.currentLanguage)
         
         let isToday = calendar.isDateInToday(date)
         let progress = Double(offset) / 7.0

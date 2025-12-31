@@ -23,17 +23,18 @@ enum BadgeType: String, CaseIterable, Codable {
     case proteinChampion = "protein_champion"
     
     var displayName: String {
+        let localizationManager = LocalizationManager.shared
         switch self {
-        case .firstMeal: return "First Bite"
-        case .weekStreak: return "Week Warrior"
-        case .hitCalorieGoal: return "Goal Getter"
-        case .tenMeals: return "Getting Started"
-        case .twentyFiveMeals: return "Consistent Logger"
-        case .fiftyMeals: return "Dedicated Tracker"
-        case .hundredMeals: return "Centurion"
-        case .firstExercise: return "Active Start"
-        case .perfectWeek: return "Perfect Week"
-        case .proteinChampion: return "Protein Champion"
+        case .firstMeal: return localizationManager.localizedString(for: AppStrings.Badge.firstBite)
+        case .weekStreak: return localizationManager.localizedString(for: AppStrings.Badge.weekWarrior)
+        case .hitCalorieGoal: return localizationManager.localizedString(for: AppStrings.Badge.goalGetter)
+        case .tenMeals: return localizationManager.localizedString(for: AppStrings.Badge.gettingStarted)
+        case .twentyFiveMeals: return localizationManager.localizedString(for: AppStrings.Badge.consistentLogger)
+        case .fiftyMeals: return localizationManager.localizedString(for: AppStrings.Badge.dedicatedTracker)
+        case .hundredMeals: return localizationManager.localizedString(for: AppStrings.Badge.centurion)
+        case .firstExercise: return localizationManager.localizedString(for: AppStrings.Badge.activeStart)
+        case .perfectWeek: return localizationManager.localizedString(for: AppStrings.Badge.perfectWeek)
+        case .proteinChampion: return localizationManager.localizedString(for: AppStrings.Badge.proteinChampion)
         }
     }
     
@@ -273,6 +274,7 @@ struct BadgeAlertView: View {
     let badge: BadgeType
     let onDismiss: () -> Void
     
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     @State private var scale: CGFloat = 0.5
     @State private var opacity: Double = 0
     
@@ -300,7 +302,7 @@ struct BadgeAlertView: View {
                     .shadow(color: badge.color.opacity(0.5), radius: 10)
                 
                 // Title
-                Text("Badge Earned!")
+                Text(localizationManager.localizedString(for: AppStrings.Badge.badgeEarned))
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundColor(.primary)

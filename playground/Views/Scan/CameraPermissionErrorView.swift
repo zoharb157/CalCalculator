@@ -9,20 +9,24 @@ import SwiftUI
 struct CameraPermissionErrorView: View {
     @Environment(\.dismiss) private var dismiss
     let onOpenSettings: () -> Void
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
-        VStack(spacing: 24) {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return VStack(spacing: 24) {
             Spacer()
             
-            Text("Oh no!")
+            Text(localizationManager.localizedString(for: AppStrings.Scanning.ohNo))
                 .font(.system(size: 48, weight: .bold))
                 .foregroundColor(.white)
             
-            Text("We can't see your camera")
+            Text(localizationManager.localizedString(for: AppStrings.Scanning.weCantSeeYourCamera))
                 .font(.title2)
                 .foregroundColor(.white)
             
-            Text("In order to scan your food, you must enable camera permissions")
+            Text(localizationManager.localizedString(for: AppStrings.Scanning.enableCameraPermissions))
                 .font(.body)
                 .foregroundColor(.white.opacity(0.8))
                 .multilineTextAlignment(.center)
@@ -31,7 +35,7 @@ struct CameraPermissionErrorView: View {
             Button {
                 onOpenSettings()
             } label: {
-                Text("Open settings")
+                Text(localizationManager.localizedString(for: AppStrings.Scanning.openSettings))
                     .font(.headline)
                     .foregroundColor(.white)
                     .padding(.horizontal, 32)
@@ -45,7 +49,7 @@ struct CameraPermissionErrorView: View {
             
             // Bottom bar
             HStack {
-                Text("3 free scans left")
+                Text(localizationManager.localizedString(for: AppStrings.Scanning.freeScansLeft))
                     .foregroundColor(.white)
                 
                 Spacer()
@@ -56,7 +60,7 @@ struct CameraPermissionErrorView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "crown.fill")
                             .foregroundColor(.yellow)
-                        Text("Premium")
+                        Text(localizationManager.localizedString(for: AppStrings.Premium.premium))
                             .foregroundColor(.white)
                     }
                     .padding(.horizontal, 16)

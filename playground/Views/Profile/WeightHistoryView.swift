@@ -57,7 +57,10 @@ struct WeightHistoryView: View {
     }
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             Group {
                 if weightEntries.isEmpty {
                     emptyStateView

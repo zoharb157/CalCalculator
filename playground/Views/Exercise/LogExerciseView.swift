@@ -12,7 +12,10 @@ struct LogExerciseView: View {
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             VStack(spacing: 24) {
                 Text(localizationManager.localizedString(for: AppStrings.Exercise.saveExercise))
                     .font(.largeTitle)
@@ -23,7 +26,7 @@ struct LogExerciseView: View {
                 VStack(spacing: 16) {
                     ExerciseOptionCard(
                         type: .run,
-                        title: "Run",
+                        title: localizationManager.localizedString(for: AppStrings.Exercise.run),
                         subtitle: "Running, jogging, sprinting, etc.",
                         isSelected: selectedType == .run
                     ) {
@@ -32,7 +35,7 @@ struct LogExerciseView: View {
                     
                     ExerciseOptionCard(
                         type: .weightLifting,
-                        title: "Weight lifting",
+                        title: localizationManager.localizedString(for: AppStrings.Exercise.weightLifting),
                         subtitle: "Machines, free weights, etc.",
                         isSelected: selectedType == .weightLifting
                     ) {
@@ -41,7 +44,7 @@ struct LogExerciseView: View {
                     
                     ExerciseOptionCard(
                         type: .describe,
-                        title: "Describe",
+                        title: localizationManager.localizedString(for: AppStrings.Food.describe),
                         subtitle: "Write your workout in text",
                         isSelected: selectedType == .describe
                     ) {
@@ -50,7 +53,7 @@ struct LogExerciseView: View {
                     
                     ExerciseOptionCard(
                         type: .manual,
-                        title: "Manual",
+                        title: localizationManager.localizedString(for: AppStrings.Exercise.manualEntry),
                         subtitle: "Enter exactly how many calories you burned",
                         isSelected: selectedType == .manual
                     ) {

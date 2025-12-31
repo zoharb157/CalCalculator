@@ -68,11 +68,12 @@ enum CaloriesTimeFilter: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     
     var displayName: String {
+        let localizationManager = LocalizationManager.shared
         switch self {
-        case .oneWeek: return "Last 7 Days"
-        case .twoWeeks: return "Last 2 Weeks"
-        case .threeWeeks: return "Last 3 Weeks"
-        case .oneMonth: return "Last Month"
+        case .oneWeek: return localizationManager.localizedString(for: AppStrings.Progress.last7Days)
+        case .twoWeeks: return localizationManager.localizedString(for: AppStrings.Progress.last2Weeks)
+        case .threeWeeks: return localizationManager.localizedString(for: AppStrings.Progress.last3Weeks)
+        case .oneMonth: return localizationManager.localizedString(for: AppStrings.Progress.lastMonth)
         }
     }
     

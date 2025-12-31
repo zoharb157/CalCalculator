@@ -72,7 +72,10 @@ struct CustomCameraView: View {
     let onCapture: (CaptureResult, String?) -> Void
     
     var body: some View {
-        ZStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return ZStack {
             // Camera preview
             CameraPreviewView(camera: camera)
                 .ignoresSafeArea()
@@ -179,7 +182,7 @@ struct CustomCameraView: View {
                 HStack(spacing: 8) {
                     ProgressView()
                         .tint(.white)
-                    Text("Scanning...")
+                    Text(localizationManager.localizedString(for: AppStrings.Scanning.scanning))
                         .foregroundStyle(.white)
                 }
                 .padding(.vertical, 20)
@@ -258,10 +261,10 @@ struct CustomCameraView: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Add a note (optional)")
+                    Text(localizationManager.localizedString(for: AppStrings.Scanning.addNoteOptional))
                         .font(.headline)
                     
-                    Text("Describe the food to help improve analysis accuracy.")
+                    Text(localizationManager.localizedString(for: AppStrings.Scanning.describeFoodForAccuracy))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -276,7 +279,7 @@ struct CustomCameraView: View {
                 Spacer()
                 
                 HStack(spacing: 16) {
-                    Button("Skip") {
+                    Button(localizationManager.localizedString(for: AppStrings.Scanning.skip)) {
                         submitCapture(withHint: nil)
                     }
                     .foregroundStyle(.secondary)
@@ -284,7 +287,7 @@ struct CustomCameraView: View {
                     Button {
                         submitCapture(withHint: foodHint.isEmpty ? nil : foodHint)
                     } label: {
-                        Text("Analyze")
+                        Text(localizationManager.localizedString(for: AppStrings.Scanning.analyze))
                             .fontWeight(.semibold)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
@@ -304,7 +307,7 @@ struct CustomCameraView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Retake") {
+                    Button(localizationManager.localizedString(for: AppStrings.Scanning.retake)) {
                         showingHintInput = false
                         capturedImage = nil
                         scannedBarcode = nil
@@ -762,8 +765,13 @@ struct PhotoOverlay: View {
 struct DocumentOverlay: View {
     let corners: [CGPoint]
     
+    @ObservedObject private var localizationManager = LocalizationManager.shared
+    
     var body: some View {
-        GeometryReader { geometry in
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return GeometryReader { geometry in
             ZStack {
                 // Dimmed background
                 Color.black.opacity(0.3)
@@ -790,7 +798,7 @@ struct DocumentOverlay: View {
                             .font(.system(size: 60))
                             .foregroundStyle(.white.opacity(0.7))
                         
-                        Text("Align document within frame")
+                        Text(localizationManager.localizedString(for: AppStrings.Scanning.alignDocument))
                             .font(.headline)
                             .foregroundStyle(.white.opacity(0.8))
                     }

@@ -78,7 +78,10 @@ struct LogHistoryView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             VStack(spacing: 0) {
                 // Summary header
                 summaryHeader
@@ -108,20 +111,20 @@ struct LogHistoryView: View {
                 await loadData()
             }
             .confirmationDialog(
-                "Delete Entry",
+                localizationManager.localizedString(for: AppStrings.History.deleteEntry),
                 isPresented: $showingDeleteConfirmation,
                 presenting: itemToDelete
             ) { entry in
-                Button("Delete", role: .destructive) {
+                Button(localizationManager.localizedString(for: AppStrings.Common.delete), role: .destructive) {
                     deleteEntry(entry)
                 }
-                Button("Cancel", role: .cancel) {}
+                Button(localizationManager.localizedString(for: AppStrings.Common.cancel), role: .cancel) {}
             } message: { entry in
                 switch entry {
                 case .meal(let meal):
-                    Text("Delete \"\(meal.name)\"? This cannot be undone.")
+                    Text(String(format: localizationManager.localizedString(for: AppStrings.History.deleteMealQuestion), meal.name))
                 case .exercise(let exercise):
-                    Text(localizationManager.localizedString(for: "Delete %@ exercise? This cannot be undone.", arguments: exercise.type.displayName))
+                    Text(String(format: localizationManager.localizedString(for: AppStrings.History.deleteExerciseQuestion), exercise.type.displayName))
                         .id("delete-exercise-\(localizationManager.currentLanguage)")
                 }
             }
@@ -213,7 +216,8 @@ struct LogHistoryView: View {
                             itemToDelete = entry
                             showingDeleteConfirmation = true
                         } label: {
-                            Label("Delete", systemImage: "trash")
+                            Label(localizationManager.localizedString(for: AppStrings.Common.delete), systemImage: "trash")
+                                .id("delete-label-\(localizationManager.currentLanguage)")
                         }
                     }
             }
@@ -265,9 +269,9 @@ struct LogHistoryView: View {
 
     private var dateTitle: String {
         if Calendar.current.isDateInToday(selectedDate) {
-            return "Today's Log"
+            return localizationManager.localizedString(for: AppStrings.Home.today)
         } else if Calendar.current.isDateInYesterday(selectedDate) {
-            return "Yesterday's Log"
+            return localizationManager.localizedString(for: AppStrings.Home.yesterday)
         } else {
             let formatter = DateFormatter()
             formatter.dateStyle = .medium

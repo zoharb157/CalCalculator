@@ -19,7 +19,10 @@ struct PreferencesView: View {
     // MARK: - Body
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
                     appearanceSection
@@ -36,9 +39,10 @@ struct PreferencesView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.done)) {
                         dismiss()
                     }
+                    .id("done-button-\(localizationManager.currentLanguage)")
                     .fontWeight(.semibold)
                 }
             }
@@ -51,7 +55,8 @@ struct PreferencesView: View {
     @ViewBuilder
     private var appearanceSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            ProfileSectionHeader(title: "Appearance")
+            ProfileSectionHeader(title: localizationManager.localizedString(for: AppStrings.Profile.appearance))
+                .id("appearance-header-\(localizationManager.currentLanguage)")
             
             VStack(spacing: 16) {
                 Text(localizationManager.localizedString(for: AppStrings.Profile.choosePreferredAppearance))
@@ -72,36 +77,40 @@ struct PreferencesView: View {
     @ViewBuilder
     private var behaviorSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ProfileSectionHeader(title: "Calorie Tracking")
+            ProfileSectionHeader(title: localizationManager.localizedString(for: AppStrings.Profile.calorieTracking))
+                .id("calorie-tracking-header-\(localizationManager.currentLanguage)")
             
             ProfileSectionCard {
                 ToggleSettingRow(
                     icon: "flame.fill",
                     iconColor: .orange,
-                    title: "Add Burned Calories",
-                    description: "Add calories burned from exercise back to your daily goal. Great for maintaining energy during active days.",
+                    title: localizationManager.localizedString(for: AppStrings.Profile.addBurnedCalories),
+                    description: localizationManager.localizedString(for: AppStrings.Profile.addBurnedCaloriesDescription),
                     isOn: $viewModel.addBurnedCalories
                 )
+                .id("add-burned-calories-\(localizationManager.currentLanguage)")
                 
                 SettingsDivider()
                 
                 ToggleSettingRow(
                     icon: "arrow.clockwise",
                     iconColor: .green,
-                    title: "Rollover Calories",
-                    description: "Carry up to 200 unused calories from yesterday into today's goal.",
+                    title: localizationManager.localizedString(for: AppStrings.Profile.rolloverCalories),
+                    description: localizationManager.localizedString(for: AppStrings.Profile.rolloverCaloriesDescription),
                     isOn: $viewModel.rolloverCalories
                 )
+                .id("rollover-calories-\(localizationManager.currentLanguage)")
                 
                 SettingsDivider()
                 
                 ToggleSettingRow(
                     icon: "slider.horizontal.3",
                     iconColor: .blue,
-                    title: "Auto-Adjust Macros",
-                    description: "Automatically adjust protein, carbs, and fat when you change your calorie goal.",
+                    title: localizationManager.localizedString(for: AppStrings.Profile.autoAdjustMacros),
+                    description: localizationManager.localizedString(for: AppStrings.Profile.autoAdjustMacrosDescription),
                     isOn: $viewModel.autoAdjustMacros
                 )
+                .id("auto-adjust-macros-\(localizationManager.currentLanguage)")
             }
         }
     }
@@ -111,26 +120,29 @@ struct PreferencesView: View {
     @ViewBuilder
     private var notificationSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ProfileSectionHeader(title: "Notifications & Display")
+            ProfileSectionHeader(title: localizationManager.localizedString(for: AppStrings.Profile.notificationsDisplay))
+                .id("notifications-display-header-\(localizationManager.currentLanguage)")
             
             ProfileSectionCard {
                 ToggleSettingRow(
                     icon: "sparkles",
                     iconColor: .purple,
-                    title: "Badge Celebrations",
-                    description: "Show a full-screen animation when you unlock a new achievement badge.",
+                    title: localizationManager.localizedString(for: AppStrings.Profile.badgeCelebrations),
+                    description: localizationManager.localizedString(for: AppStrings.Profile.badgeCelebrationsDescription),
                     isOn: $viewModel.badgeCelebrations
                 )
+                .id("badge-celebrations-\(localizationManager.currentLanguage)")
                 
                 SettingsDivider()
                 
                 ToggleSettingRow(
                     icon: "iphone.badge.play",
                     iconColor: .cyan,
-                    title: "Live Activity",
-                    description: "Show your daily calories and macros on your Lock Screen and Dynamic Island.",
+                    title: localizationManager.localizedString(for: AppStrings.Profile.liveActivity),
+                    description: localizationManager.localizedString(for: AppStrings.Profile.liveActivityDescription),
                     isOn: $viewModel.liveActivity
                 )
+                .id("live-activity-\(localizationManager.currentLanguage)")
             }
         }
     }

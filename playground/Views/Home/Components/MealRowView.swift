@@ -9,8 +9,11 @@ import SwiftUI
 
 struct MealRowView: View {
     let meal: Meal
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
         HStack(spacing: 12) {
             // Thumbnail
             if let photoURL = meal.photoURL,
@@ -36,9 +39,10 @@ struct MealRowView: View {
                     .font(.headline)
                     .lineLimit(1)
                 
-                Text("\(meal.totalCalories) cal")
+                Text("\(meal.totalCalories) \(localizationManager.localizedString(for: AppStrings.Progress.cal))")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
+                    .id("cal-meal-row-\(localizationManager.currentLanguage)")
             }
             
             Spacer()
@@ -51,7 +55,7 @@ struct MealRowView: View {
         .padding()
         .cardStyle(background: Color(.secondarySystemGroupedBackground))
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(meal.name), \(meal.totalCalories) calories, at \(meal.formattedTime)")
+        .accessibilityLabel("\(meal.name), \(meal.totalCalories) \(localizationManager.localizedString(for: AppStrings.History.caloriesLabel)), at \(meal.formattedTime)")
     }
 }
 #Preview {

@@ -16,6 +16,11 @@ final class LocalizationManager: ObservableObject {
     static let shared = LocalizationManager()
     
     @Published var currentLanguage: String {
+        willSet {
+            // Trigger objectWillChange before the value changes
+            // This ensures all @ObservedObject views are notified
+            objectWillChange.send()
+        }
         didSet {
             // Save to UserDefaults (no need for synchronize - auto-syncs)
             UserDefaults.standard.set(currentLanguage, forKey: "app_language")
@@ -25,6 +30,9 @@ final class LocalizationManager: ObservableObject {
             
             // Update the locale bundle
             updateLocaleBundle()
+            
+            // Send another notification after the change to ensure all views update
+            objectWillChange.send()
         }
     }
     
@@ -88,7 +96,7 @@ final class LocalizationManager: ObservableObject {
     
     /// Check if current language is RTL (Right-to-Left)
     var isRTL: Bool {
-        let rtlLanguages = ["ar", "he", "fa", "ur"] // Arabic, Hebrew, Persian, Urdu
+        let rtlLanguages = ["ar", "fa", "ur"] // Arabic, Persian, Urdu
         return rtlLanguages.contains(currentLanguage)
     }
     
@@ -108,19 +116,27 @@ final class LocalizationManager: ObservableObject {
         UserDefaults.standard.set([languageCode], forKey: "AppleLanguages")
         UserDefaults.standard.synchronize() // Force immediate sync
         
-        // Update current language (this triggers didSet which calls updateLocaleBundle)
-        currentLanguage = languageCode
-        
-        print("🌐 [LocalizationManager] Language set to: \(languageCode)")
-        
-        // Trigger objectWillChange to notify all observers
+        // CRITICAL: Send objectWillChange BEFORE changing the value
+        // This ensures all @ObservedObject views are notified
         objectWillChange.send()
         
-        // Post notification to reload the app UI
-        NotificationCenter.default.post(name: .languageChanged, object: languageCode)
+        // Update current language - this will trigger willSet and didSet
+        // which will send objectWillChange automatically via @Published
+        currentLanguage = languageCode
+        
+        // CRITICAL: Send objectWillChange AGAIN after the change
+        // This ensures all views get notified and re-evaluate
+        DispatchQueue.main.async { [weak self] in
+            self?.objectWillChange.send()
+        }
         
         // Force bundle update (already called in didSet, but ensure it's done)
         updateLocaleBundle()
+        
+        print("🌐 [LocalizationManager] Language set to: \(languageCode)")
+        
+        // Post notification for any views that need to do additional work
+        NotificationCenter.default.post(name: .languageChanged, object: languageCode)
         
         // Verify AppleLanguages is set correctly
         if let savedLanguages = UserDefaults.standard.array(forKey: "AppleLanguages") as? [String],
@@ -138,7 +154,16 @@ final class LocalizationManager: ObservableObject {
     /// IMPORTANT: Bundle.main.localizedString does NOT respect AppleLanguages at runtime.
     /// It only reads AppleLanguages when the app launches. For runtime language switching,
     /// we must use language-specific bundles (.lproj folders).
+    /// 
+    /// NOTE: This function reads `currentLanguage` which is @Published, so SwiftUI will
+    /// automatically re-evaluate any view that calls this when currentLanguage changes.
+    /// CRITICAL: To ensure SwiftUI tracks the dependency, we must access currentLanguage
+    /// in a way that creates a visible dependency in the view's body.
     func localizedString(for key: String, comment: String = "") -> String {
+        // CRITICAL: Access currentLanguage directly to create a dependency SwiftUI can track
+        // This ensures views re-evaluate when language changes
+        // We access it explicitly to ensure the dependency is tracked
+        let _ = currentLanguage // Force dependency tracking by reading the @Published property
         let languageCode = String(currentLanguage.prefix(2))
         
         // CRITICAL: Set AppleLanguages for next app launch (doesn't affect runtime)
@@ -149,22 +174,30 @@ final class LocalizationManager: ObservableObject {
         // Try to find the language-specific bundle (.lproj folders)
         if let path = Bundle.main.path(forResource: languageCode, ofType: "lproj"),
            let languageBundle = Bundle(path: path) {
-            // Try with "Localizable" table first
+            // Try with "Localizable" table first (this is the standard table name)
             let localized = languageBundle.localizedString(forKey: key, value: key, table: "Localizable")
-            if localized != key && localized != "" {
+            // Check if we got a translation (not the key itself and not empty)
+            if localized != key && !localized.isEmpty {
                 return localized
             }
-            // Try without table name
+            // Try without table name (fallback)
             let localizedNoTable = languageBundle.localizedString(forKey: key, value: key, table: nil)
-            if localizedNoTable != key && localizedNoTable != "" {
+            if localizedNoTable != key && !localizedNoTable.isEmpty {
                 return localizedNoTable
             }
         }
         
         // Try the locale bundle (cached from updateLocaleBundle)
-        let localeBundleLocalized = localeBundle.localizedString(forKey: key, value: key, table: nil)
-        if localeBundleLocalized != key && localeBundleLocalized != "" {
+        // This should already be set to the correct language bundle
+        let localeBundleLocalized = localeBundle.localizedString(forKey: key, value: key, table: "Localizable")
+        if localeBundleLocalized != key && !localeBundleLocalized.isEmpty {
             return localeBundleLocalized
+        }
+        
+        // Try locale bundle without table name
+        let localeBundleNoTable = localeBundle.localizedString(forKey: key, value: key, table: nil)
+        if localeBundleNoTable != key && !localeBundleNoTable.isEmpty {
+            return localeBundleNoTable
         }
         
         // Try Bundle.main as fallback (only works if app was launched with that language)
@@ -203,8 +236,7 @@ extension LocalizationManager {
             "Korean": "ko",
             "Russian": "ru",
             "Arabic": "ar",
-            "Hindi": "hi",
-            "Hebrew": "he" // Add Hebrew support
+            "Hindi": "hi"
         ]
         return mapping[name] ?? "en"
     }
@@ -223,15 +255,14 @@ extension LocalizationManager {
             "ko": "Korean",
             "ru": "Russian",
             "ar": "Arabic",
-            "hi": "Hindi",
-            "he": "Hebrew" // Add Hebrew support
+            "hi": "Hindi"
         ]
         return mapping[code] ?? "English"
     }
     
     /// Check if a language code is RTL
     static func isRTL(languageCode: String) -> Bool {
-        let rtlLanguages = ["ar", "he", "fa", "ur"] // Arabic, Hebrew, Persian, Urdu
+        let rtlLanguages = ["ar", "fa", "ur"] // Arabic, Persian, Urdu
         return rtlLanguages.contains(languageCode)
     }
 }

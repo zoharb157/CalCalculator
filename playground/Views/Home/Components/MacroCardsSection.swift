@@ -10,15 +10,19 @@ import SwiftUI
 struct MacroCardsSection: View {
     let summary: DaySummary?
     let goals: MacroData
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     private var consumed: MacroData {
         summary?.macros ?? .zero
     }
     
     var body: some View {
-        HStack(spacing: 12) {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return HStack(spacing: 12) {
             MacroCard(
-                title: "Protein",
+                title: localizationManager.localizedString(for: AppStrings.Home.protein),
                 value: consumed.proteinG,
                 goal: goals.proteinG,
                 unit: "g",
@@ -26,8 +30,9 @@ struct MacroCardsSection: View {
                 icon: "p.circle.fill"
             )
             
+            
             MacroCard(
-                title: "Carbs",
+                title: localizationManager.localizedString(for: AppStrings.Home.carbs),
                 value: consumed.carbsG,
                 goal: goals.carbsG,
                 unit: "g",
@@ -35,14 +40,16 @@ struct MacroCardsSection: View {
                 icon: "c.circle.fill"
             )
             
+            
             MacroCard(
-                title: "Fat",
+                title: localizationManager.localizedString(for: AppStrings.Home.fat),
                 value: consumed.fatG,
                 goal: goals.fatG,
                 unit: "g",
                 color: .fatColor,
                 icon: "f.circle.fill"
             )
+            
         }
     }
 }

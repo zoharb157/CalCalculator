@@ -51,7 +51,10 @@ struct HistoryView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             ZStack(alignment: .bottom) {
                 content
 
@@ -65,9 +68,15 @@ struct HistoryView: View {
             .navigationTitle(localizationManager.localizedString(for: AppStrings.History.title))
             .id("history-nav-\(localizationManager.currentLanguage)")
             .background(Color(.systemGroupedBackground))
-            .searchable(text: $searchText, prompt: "Search by date, day, or month")
+            .searchable(text: $searchText, prompt: Text(localizationManager.localizedString(for: AppStrings.History.searchByDateDayMonth)))
             .refreshable {
                 await viewModel.loadData()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .languageChanged)) { _ in
+                // Reload data when language changes to ensure all localized strings update
+                Task {
+                    await viewModel.loadData()
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -228,7 +237,7 @@ struct HistoryView: View {
         VStack(spacing: 20) {
             ProgressView()
                 .scaleEffect(1.5)
-            Text(localizationManager.localizedString(for: "Loading history..."))
+            Text(localizationManager.localizedString(for: AppStrings.History.loadingHistory))
                 .id("loading-history-\(localizationManager.currentLanguage)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
@@ -327,13 +336,13 @@ struct HistoryView: View {
                     .foregroundColor(.blue)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(isSubscribed ? "Create Your Diet Plan" : "Unlock Diet Plans")
+                            Text(isSubscribed ? localizationManager.localizedString(for: AppStrings.History.createYourDietPlan) : localizationManager.localizedString(for: AppStrings.History.unlockDietPlans))
                         .font(.headline)
 
                     Text(
                         isSubscribed
-                            ? "Schedule repetitive meals and track adherence"
-                            : "Subscribe to create diet plans with scheduled meals"
+                            ? localizationManager.localizedString(for: AppStrings.History.scheduleRepetitiveMeals)
+                            : localizationManager.localizedString(for: AppStrings.History.subscribeToCreateDietPlans)
                     )
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -349,7 +358,7 @@ struct HistoryView: View {
                     if !isSubscribed {
                         Image(systemName: "crown.fill")
                     }
-                    Text(isSubscribed ? "Create Diet Plan" : "Subscribe & Create")
+                    Text(isSubscribed ? localizationManager.localizedString(for: AppStrings.History.createDietPlan) : localizationManager.localizedString(for: AppStrings.History.subscribeCreate))
                         .fontWeight(.semibold)
                 }
                 .frame(maxWidth: .infinity)
@@ -379,14 +388,15 @@ enum HistoryTimeFilter: String, CaseIterable {
     case all = "All"
     
     var displayName: String {
+        let localizationManager = LocalizationManager.shared
         switch self {
-        case .week: return "Last 7 Days"
-        case .twoWeeks: return "Last 2 Weeks"
-        case .month: return "Last Month"
-        case .threeMonths: return "Last 3 Months"
-        case .sixMonths: return "Last 6 Months"
-        case .year: return "Last Year"
-        case .all: return "All Time"
+        case .week: return localizationManager.localizedString(for: AppStrings.Progress.last7Days)
+        case .twoWeeks: return localizationManager.localizedString(for: AppStrings.Progress.last2Weeks)
+        case .month: return localizationManager.localizedString(for: AppStrings.Progress.lastMonth)
+        case .threeMonths: return localizationManager.localizedString(for: AppStrings.Progress.last3Months)
+        case .sixMonths: return localizationManager.localizedString(for: AppStrings.Progress.last6Months)
+        case .year: return localizationManager.localizedString(for: AppStrings.Progress.lastYear)
+        case .all: return localizationManager.localizedString(for: AppStrings.Progress.allTime)
         }
     }
     
@@ -428,7 +438,10 @@ struct StatsSummaryCard: View {
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
-        VStack(spacing: 12) {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return VStack(spacing: 12) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(localizationManager.localizedString(for: AppStrings.Home.summary))
@@ -451,22 +464,22 @@ struct StatsSummaryCard: View {
             Divider()
             
             HStack(spacing: 0) {
-                StatItem(value: "\(daysCount)", label: "Days", color: .blue)
+                StatItem(value: "\(daysCount)", label: localizationManager.localizedString(for: AppStrings.Progress.daysCapitalized), color: .blue)
                 
                 Divider()
                     .frame(height: 40)
                 
-                StatItem(value: "\(totalMeals)", label: "Meals", color: .green)
+                StatItem(value: "\(totalMeals)", label: localizationManager.localizedString(for: AppStrings.History.mealsCapitalized), color: .green)
                 
                 Divider()
                     .frame(height: 40)
                 
-                StatItem(value: formatNumber(totalCalories), label: "Total Cal", color: .orange)
+                StatItem(value: formatNumber(totalCalories), label: localizationManager.localizedString(for: AppStrings.Progress.totalCal), color: .orange)
                 
                 Divider()
                     .frame(height: 40)
                 
-                StatItem(value: formatNumber(averageCalories), label: "Avg/Day", color: .purple)
+                StatItem(value: formatNumber(averageCalories), label: localizationManager.localizedString(for: AppStrings.Progress.avgPerDay), color: .purple)
             }
         }
         .padding()
@@ -506,8 +519,13 @@ struct StatItem: View {
 
 struct DaySummaryCard: View {
     let summary: DaySummary
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return
         VStack(spacing: 0) {
             // Header with date
             headerSection
@@ -577,7 +595,7 @@ struct DaySummaryCard: View {
                 .font(.system(size: 28, weight: .bold, design: .rounded))
                 .foregroundColor(.primary)
             
-            Text("calories")
+            Text(localizationManager.localizedString(for: AppStrings.Home.calories))
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
@@ -586,9 +604,9 @@ struct DaySummaryCard: View {
     
     private var macrosSection: some View {
         HStack(spacing: 16) {
-            MacroPill(value: summary.totalProteinG, label: "Protein", color: .proteinColor)
-            MacroPill(value: summary.totalCarbsG, label: "Carbs", color: .carbsColor)
-            MacroPill(value: summary.totalFatG, label: "Fat", color: .fatColor)
+            MacroPill(value: summary.totalProteinG, label: localizationManager.localizedString(for: AppStrings.Home.protein), color: .proteinColor)
+            MacroPill(value: summary.totalCarbsG, label: localizationManager.localizedString(for: AppStrings.Home.carbs), color: .carbsColor)
+            MacroPill(value: summary.totalFatG, label: localizationManager.localizedString(for: AppStrings.Home.fat), color: .fatColor)
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 8)
@@ -598,11 +616,12 @@ struct DaySummaryCard: View {
     
     private var dayName: String {
         if Calendar.current.isDateInToday(summary.date) {
-            return "Today"
+            return LocalizationManager.shared.localizedString(for: AppStrings.Home.today)
         } else if Calendar.current.isDateInYesterday(summary.date) {
-            return "Yesterday"
+            return LocalizationManager.shared.localizedString(for: AppStrings.Home.yesterday)
         } else {
             let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: LocalizationManager.shared.currentLanguage)
             formatter.dateFormat = "EEEE"
             return formatter.string(from: summary.date)
         }

@@ -12,7 +12,10 @@ struct NotesSection: View {
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return VStack(alignment: .leading, spacing: 8) {
             headerLabel
             notesText
         }

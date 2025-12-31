@@ -33,7 +33,10 @@ struct ScanView: View {
     var onDismiss: (() -> Void)?
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             mainContent
                 .navigationTitle(localizationManager.localizedString(for: AppStrings.Scanning.scanMeal))
                     .id("scan-meal-title-\(localizationManager.currentLanguage)")
@@ -229,7 +232,8 @@ struct ScanView: View {
     }
     
     private var errorAlertMessage: some View {
-        Text(viewModel.errorMessage ?? viewModel.error?.errorDescription ?? "An error occurred")
+        Text(viewModel.errorMessage ?? viewModel.error?.errorDescription ?? localizationManager.localizedString(for: AppStrings.Common.errorOccurred))
+            .id("error-alert-\(localizationManager.currentLanguage)")
             .font(.subheadline)
     }
     

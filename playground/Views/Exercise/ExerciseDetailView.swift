@@ -22,7 +22,10 @@ struct ExerciseDetailView: View {
     @State private var manualCalories: String = ""
     
     var body: some View {
-        ScrollView {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 // Different UI based on exercise type
                 if exerciseType == .describe {
@@ -206,24 +209,24 @@ struct ExerciseDetailView: View {
                 
                 VStack(spacing: 12) {
                     IntensityOption(
-                        title: "High",
-                        subtitle: "Sprinting - 14 mph (4 minute miles)",
+                        title: localizationManager.localizedString(for: AppStrings.Exercise.high),
+                        subtitle: localizationManager.localizedString(for: AppStrings.Exercise.sprinting),
                         isSelected: selectedIntensity == .high
                     ) {
                         selectedIntensity = .high
                     }
                     
                     IntensityOption(
-                        title: "Medium",
-                        subtitle: "Jogging - 6 mph (10 minute miles)",
+                        title: localizationManager.localizedString(for: AppStrings.Exercise.medium),
+                        subtitle: localizationManager.localizedString(for: AppStrings.Exercise.jogging),
                         isSelected: selectedIntensity == .medium
                     ) {
                         selectedIntensity = .medium
                     }
                     
                     IntensityOption(
-                        title: "Low",
-                        subtitle: "Chill walk - 3 mph (20 minute miles)",
+                        title: localizationManager.localizedString(for: AppStrings.Exercise.low),
+                        subtitle: localizationManager.localizedString(for: AppStrings.Exercise.chillWalk),
                         isSelected: selectedIntensity == .low
                     ) {
                         selectedIntensity = .low

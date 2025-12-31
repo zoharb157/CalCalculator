@@ -32,11 +32,13 @@ struct LogExperienceCard: View {
     }
 
     var body: some View {
-        VStack(spacing: 16) {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return VStack(spacing: 16) {
             // Header
             HStack {
                 Label(localizationManager.localizedString(for: AppStrings.Food.todayActivity), systemImage: "list.bullet.clipboard.fill")
-                    .id("today-activity-label-\(localizationManager.currentLanguage)")
                     .font(.headline)
                     .foregroundColor(.primary)
 
@@ -46,7 +48,6 @@ struct LogExperienceCard: View {
                     Button(action: onViewHistory) {
                         HStack(spacing: 4) {
                             Text(localizationManager.localizedString(for: AppStrings.Food.viewAll))
-                                .id("view-all-\(localizationManager.currentLanguage)")
                                 .font(.caption)
                             Image(systemName: "chevron.right")
                                 .font(.caption2)
@@ -65,28 +66,28 @@ struct LogExperienceCard: View {
                 LogStatItem(
                     icon: "fork.knife",
                     value: "\(mealsCount)",
-                    label: "Meals",
+                    label: localizationManager.localizedString(for: AppStrings.Food.meals),
                     color: .orange
                 )
 
                 LogStatItem(
                     icon: "flame.fill",
                     value: "\(totalCaloriesConsumed)",
-                    label: "Consumed",
+                    label: localizationManager.localizedString(for: AppStrings.History.consumed),
                     color: .red
                 )
 
                 LogStatItem(
                     icon: "figure.run",
                     value: "\(exercisesCount)",
-                    label: "Workouts",
+                    label: localizationManager.localizedString(for: AppStrings.Food.workouts),
                     color: .green
                 )
 
                 LogStatItem(
                     icon: "bolt.fill",
                     value: "\(totalCaloriesBurned)",
-                    label: "Burned",
+                    label: localizationManager.localizedString(for: AppStrings.History.burned),
                     color: .blue
                 )
             }
@@ -127,7 +128,6 @@ struct LogExperienceCard: View {
                     color: .orange,
                     action: onLogExercise
                 )
-                .id("quick-actions-\(localizationManager.currentLanguage)")
             }
         }
         .padding()
@@ -266,14 +266,11 @@ struct CompactLogExperienceCard: View {
                     Text(localizationManager.localizedString(for: AppStrings.Food.todayActivity))
                         .font(.headline)
                         .foregroundColor(.primary)
-                        .id("today-activity-info-\(localizationManager.currentLanguage)")
 
                     HStack(spacing: 8) {
                         Label("\(mealsCount) \(localizationManager.localizedString(for: AppStrings.Food.meals))", systemImage: "fork.knife")
-                            .id("meals-count-\(localizationManager.currentLanguage)")
                         Text("•")
                         Text("\(totalCalories) \(localizationManager.localizedString(for: AppStrings.Progress.cal))")
-                            .id("calories-count-\(localizationManager.currentLanguage)")
                     }
                     .font(.subheadline)
                     .foregroundColor(.secondary)
@@ -333,7 +330,6 @@ struct LogSummaryBanner: View {
                 Text(caloriesRemaining > 0 ? localizationManager.localizedString(for: AppStrings.Home.caloriesLeft) : localizationManager.localizedString(for: AppStrings.Home.over))
                     .font(.caption)
                     .foregroundColor(.secondary)
-                    .id("calories-remaining-\(localizationManager.currentLanguage)-\(caloriesRemaining > 0)")
             }
         }
         .font(.subheadline)

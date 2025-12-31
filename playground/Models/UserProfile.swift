@@ -115,7 +115,7 @@ final class UserProfile {
     // MARK: - Computed Properties
     var fullName: String {
         if firstName.isEmpty && lastName.isEmpty {
-            return "Tap to set name"
+            return LocalizationManager.shared.localizedString(for: AppStrings.Profile.tapToSetName)
         }
         return "\(firstName) \(lastName)".trimmingCharacters(in: .whitespaces)
     }

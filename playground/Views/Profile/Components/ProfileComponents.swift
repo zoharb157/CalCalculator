@@ -237,7 +237,7 @@ struct ProfileInfoCard: View {
                         .fontWeight(.semibold)
                         .foregroundColor(.primary)
                     
-                    Text(username.isEmpty ? "Set username" : "@\(username)")
+                    Text(username.isEmpty ? LocalizationManager.shared.localizedString(for: AppStrings.Profile.setUsername) : "@\(username)")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -294,8 +294,13 @@ struct AppearanceModeButton: View {
     let mode: AppearanceMode
     let isSelected: Bool
     let action: () -> Void
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return
         Button(action: action) {
             VStack(spacing: 8) {
                 // Preview
@@ -327,6 +332,7 @@ struct AppearanceModeButton: View {
                     Text(mode.displayName)
                         .font(.caption)
                         .fontWeight(isSelected ? .semibold : .regular)
+                        .id("appearance-mode-\(mode.rawValue)-\(localizationManager.currentLanguage)")
                 }
                 .foregroundColor(isSelected ? .accentColor : .secondary)
             }
@@ -432,7 +438,8 @@ struct ShareSheet: UIViewControllerRepresentable {
 // MARK: - Preview
 
 #Preview {
-    ScrollView {
+    @Previewable let localizationManager = LocalizationManager.shared
+    return ScrollView {
         VStack(spacing: 16) {
             ProfileInfoCard(
                 fullName: "John Doe",
@@ -441,16 +448,16 @@ struct ShareSheet: UIViewControllerRepresentable {
             )
             
             ProfileSectionCard {
-                SettingsRow(icon: "person.text.rectangle", title: "Personal Details", action: {})
+                SettingsRow(icon: "person.text.rectangle", title: localizationManager.localizedString(for: AppStrings.Profile.personalDetails), action: {})
                 SettingsDivider()
-                SettingsRow(icon: "gearshape", title: "Preferences", action: {})
+                SettingsRow(icon: "gearshape", title: localizationManager.localizedString(for: AppStrings.Profile.preferences), action: {})
             }
             
             ProfileSectionCard {
                 EditableDetailRow(
                     icon: "scalemass",
                     iconColor: .blue,
-                    label: "Current Weight",
+                    label: localizationManager.localizedString(for: AppStrings.Profile.currentWeight),
                     value: "150 lbs",
                     onTap: {}
                 )

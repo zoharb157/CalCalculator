@@ -34,7 +34,10 @@ struct MealsListSheet: View {
     }
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             content
                 .background(Color(.systemGroupedBackground))
                 .navigationTitle(formattedSelectedDate)
@@ -116,7 +119,7 @@ struct MealsListSheet: View {
                     .font(.system(size: 48, weight: .bold, design: .rounded))
                     .foregroundColor(.primary)
                 
-                Text("total calories")
+                Text(localizationManager.localizedString(for: AppStrings.History.totalCalories))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -125,19 +128,19 @@ struct MealsListSheet: View {
             HStack(spacing: 24) {
                 MacroSummaryBadge(
                     value: totalProtein,
-                    label: "Protein",
+                    label: localizationManager.localizedString(for: AppStrings.Home.protein),
                     color: .proteinColor
                 )
                 
                 MacroSummaryBadge(
                     value: totalCarbs,
-                    label: "Carbs",
+                    label: localizationManager.localizedString(for: AppStrings.Home.carbs),
                     color: .carbsColor
                 )
                 
                 MacroSummaryBadge(
                     value: totalFat,
-                    label: "Fat",
+                    label: localizationManager.localizedString(for: AppStrings.Home.fat),
                     color: .fatColor
                 )
             }
@@ -159,9 +162,10 @@ struct MealsListSheet: View {
                 
                 Spacer()
                 
-                Text("\(meals.count) meal\(meals.count == 1 ? "" : "s")")
+                Text(String(format: localizationManager.localizedString(for: meals.count == 1 ? AppStrings.History.meal : AppStrings.History.mealsPlural), meals.count))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
+                    .id("meal-count-\(localizationManager.currentLanguage)")
             }
             .padding(.horizontal)
             
@@ -195,11 +199,12 @@ struct MealsListSheet: View {
     
     private var formattedSelectedDate: String {
         if Calendar.current.isDateInToday(selectedDate) {
-            return "Today"
+            return localizationManager.localizedString(for: AppStrings.Home.today)
         } else if Calendar.current.isDateInYesterday(selectedDate) {
-            return "Yesterday"
+            return localizationManager.localizedString(for: AppStrings.Home.yesterday)
         } else {
             let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: localizationManager.currentLanguage)
             formatter.dateFormat = "EEEE, MMM d"
             return formatter.string(from: selectedDate)
         }
@@ -246,6 +251,7 @@ struct MacroSummaryBadge: View {
 
 struct MealCard: View {
     let meal: Meal
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
         HStack(spacing: 14) {
@@ -269,15 +275,16 @@ struct MealCard: View {
                 }
                 
                 // Calories
-                Text("\(meal.totalCalories) calories")
+                Text("\(meal.totalCalories) \(localizationManager.localizedString(for: AppStrings.History.caloriesLabel))")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
+                    .id("calories-label-\(localizationManager.currentLanguage)")
                 
                 // Macro Pills
                 HStack(spacing: 8) {
-                    MiniMacroPill(value: meal.totalMacros.proteinG, label: "P", color: .proteinColor)
-                    MiniMacroPill(value: meal.totalMacros.carbsG, label: "C", color: .carbsColor)
-                    MiniMacroPill(value: meal.totalMacros.fatG, label: "F", color: .fatColor)
+                    MiniMacroPill(value: meal.totalMacros.proteinG, label: localizationManager.localizedString(for: AppStrings.Home.proteinShort), color: .proteinColor)
+                    MiniMacroPill(value: meal.totalMacros.carbsG, label: localizationManager.localizedString(for: AppStrings.Home.carbsShort), color: .carbsColor)
+                    MiniMacroPill(value: meal.totalMacros.fatG, label: localizationManager.localizedString(for: AppStrings.Home.fatShort), color: .fatColor)
                 }
             }
             

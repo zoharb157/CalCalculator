@@ -33,7 +33,10 @@ struct CaloriesDetailSheet: View {
     }
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
                     // Filter Pills
@@ -123,7 +126,7 @@ struct CaloriesDetailSheet: View {
                             .font(.system(size: 36, weight: .bold, design: .rounded))
                             .contentTransition(.numericText())
                         
-                        Text("cal")
+                        Text(localizationManager.localizedString(for: AppStrings.Progress.cal))
                             .font(.headline)
                             .foregroundColor(.secondary)
                     }
@@ -138,7 +141,7 @@ struct CaloriesDetailSheet: View {
                         .foregroundColor(.orange)
                         .contentTransition(.numericText())
                     
-                    Text("days tracked")
+                    Text(localizationManager.localizedString(for: AppStrings.Progress.daysTracked))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -153,19 +156,19 @@ struct CaloriesDetailSheet: View {
                 HStack(spacing: 16) {
                     MacroAverageView(
                         value: avgProtein,
-                        label: "Protein",
+                        label: localizationManager.localizedString(for: AppStrings.Home.protein),
                         color: .proteinColor
                     )
                     
                     MacroAverageView(
                         value: avgCarbs,
-                        label: "Carbs",
+                        label: localizationManager.localizedString(for: AppStrings.Home.carbs),
                         color: .carbsColor
                     )
                     
                     MacroAverageView(
                         value: avgFat,
-                        label: "Fat",
+                        label: localizationManager.localizedString(for: AppStrings.Home.fat),
                         color: .fatColor
                     )
                 }
@@ -181,16 +184,16 @@ struct CaloriesDetailSheet: View {
     private var statsGridSection: some View {
         HStack(spacing: 12) {
             CalorieStatCard(
-                title: "Total",
+                title: localizationManager.localizedString(for: AppStrings.Progress.total),
                 value: formatNumber(totalCalories),
-                unit: "cal",
+                unit: localizationManager.localizedString(for: AppStrings.Progress.cal),
                 icon: "flame.fill",
                 color: .orange
             )
             
             if let highest = highestDay {
                 CalorieStatCard(
-                    title: "Highest",
+                    title: localizationManager.localizedString(for: AppStrings.Progress.highest),
                     value: "\(highest.totalCalories)",
                     unit: highest.shortDateString,
                     icon: "arrow.up.circle.fill",
@@ -200,7 +203,7 @@ struct CaloriesDetailSheet: View {
             
             if let lowest = lowestDay {
                 CalorieStatCard(
-                    title: "Lowest",
+                    title: localizationManager.localizedString(for: AppStrings.Progress.lowest),
                     value: "\(lowest.totalCalories)",
                     unit: lowest.shortDateString,
                     icon: "arrow.down.circle.fill",
@@ -237,21 +240,24 @@ struct CaloriesDetailSheet: View {
                         .foregroundColor(.secondary)
                 }
                 
-                Chart(dailyData) { day in
-                    BarMark(
-                        x: .value("Date", day.date, unit: .day),
-                        y: .value("Calories", animateChart ? day.totalCalories : 0)
-                    )
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.orange, .red],
-                            startPoint: .bottom,
-                            endPoint: .top
+                Chart {
+                    // Bar marks for each day
+                    ForEach(dailyData) { day in
+                        BarMark(
+                            x: .value("Date", day.date, unit: .day),
+                            y: .value("Calories", animateChart ? day.totalCalories : 0)
                         )
-                    )
-                    .cornerRadius(4)
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.orange, .red],
+                                startPoint: .bottom,
+                                endPoint: .top
+                            )
+                        )
+                        .cornerRadius(4)
+                    }
                     
-                    // Goal line
+                    // Goal line (outside ForEach to avoid duplicate IDs)
                     let goal = UserSettings.shared.calorieGoal
                     if goal > 0 {
                         RuleMark(y: .value("Goal", goal))
@@ -436,15 +442,19 @@ struct MacroAverageView: View {
     let value: Double
     let label: String
     let color: Color
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
-        VStack(spacing: 4) {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return VStack(spacing: 4) {
             Text("\(Int(value))g")
                 .font(.headline)
                 .fontWeight(.semibold)
                 .foregroundColor(color)
             
-            Text("avg \(label.lowercased())")
+            Text(localizationManager.localizedString(for: AppStrings.Progress.avgMacro, arguments: label.lowercased()))
                 .font(.caption2)
                 .foregroundColor(.secondary)
         }
@@ -534,9 +544,9 @@ struct DayCalorieRow: View {
             
             // Legend
             HStack(spacing: 16) {
-                MacroLegendItem(color: .proteinColor, label: "Protein", value: "\(Int(data.protein))g")
-                MacroLegendItem(color: .carbsColor, label: "Carbs", value: "\(Int(data.carbs))g")
-                MacroLegendItem(color: .fatColor, label: "Fat", value: "\(Int(data.fat))g")
+                MacroLegendItem(color: .proteinColor, label: localizationManager.localizedString(for: AppStrings.Home.protein), value: "\(Int(data.protein))g")
+                MacroLegendItem(color: .carbsColor, label: localizationManager.localizedString(for: AppStrings.Home.carbs), value: "\(Int(data.carbs))g")
+                MacroLegendItem(color: .fatColor, label: localizationManager.localizedString(for: AppStrings.Home.fat), value: "\(Int(data.fat))g")
             }
         }
         .padding()
@@ -548,9 +558,9 @@ struct DayCalorieRow: View {
         let calendar = Calendar.current
         
         if calendar.isDateInToday(data.date) {
-            return "Today"
+            return localizationManager.localizedString(for: AppStrings.Home.today)
         } else if calendar.isDateInYesterday(data.date) {
-            return "Yesterday"
+            return localizationManager.localizedString(for: AppStrings.Home.yesterday)
         } else {
             return data.dateString
         }

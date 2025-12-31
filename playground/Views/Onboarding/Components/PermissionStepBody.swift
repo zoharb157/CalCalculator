@@ -12,6 +12,7 @@ struct PermissionStepBody: View {
     let step: OnboardingStep
     @ObservedObject var store: OnboardingStore
     let onNext: () -> Void
+    @ObservedObject private var localizationManager = LocalizationManager.shared
 
     @State private var isRequesting = false
 
@@ -22,7 +23,8 @@ struct PermissionStepBody: View {
                 .foregroundStyle(.orange)
                 .padding(.top, 40)
             
-            Text("You can change this anytime in Settings.")
+            Text(localizationManager.localizedString(for: AppStrings.Profile.youCanChangeThisAnytime))
+                .id("change-anytime-\(localizationManager.currentLanguage)")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -36,7 +38,8 @@ struct PermissionStepBody: View {
                             ProgressView()
                                 .tint(.white)
                         } else {
-                            Text("Allow Notifications")
+                            Text(localizationManager.localizedString(for: AppStrings.Onboarding.allowNotifications))
+                                .id("allow-notifications-\(localizationManager.currentLanguage)")
                                 .font(.system(size: 17, weight: .semibold))
                         }
                     }
@@ -52,7 +55,8 @@ struct PermissionStepBody: View {
                     store.setStepAnswer(stepID: step.id, value: .bool(false))
                     onNext()
                 } label: {
-                    Text("Not Now")
+                    Text(localizationManager.localizedString(for: AppStrings.Onboarding.notNow))
+                        .id("not-now-\(localizationManager.currentLanguage)")
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(.primary)
                         .frame(maxWidth: .infinity)

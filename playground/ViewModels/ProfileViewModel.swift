@@ -159,13 +159,13 @@ final class ProfileViewModel {
     
     var fullName: String {
         if firstName.isEmpty && lastName.isEmpty {
-            return "Tap to set name"
+            return LocalizationManager.shared.localizedString(for: AppStrings.Profile.tapToSetName)
         }
         return "\(firstName) \(lastName)".trimmingCharacters(in: .whitespaces)
     }
     
     var usernameDisplay: String {
-        username.isEmpty ? "Set username" : "@\(username)"
+        username.isEmpty ? LocalizationManager.shared.localizedString(for: AppStrings.Profile.setUsername) : "@\(username)"
     }
     
     var heightDisplay: String {
@@ -439,7 +439,6 @@ extension ProfileViewModel {
         ("Korean", "KR", "ko"),
         ("Russian", "RU", "ru"),
         ("Arabic", "SA", "ar"),
-        ("Hebrew", "IL", "he"), // Hebrew - RTL language
         ("Hindi", "IN", "hi")
     ]
 }

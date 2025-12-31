@@ -38,7 +38,10 @@ struct QuickMealActionView: View {
     }
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             VStack(spacing: 0) {
                 // Header with meal info
                 headerSection
@@ -89,7 +92,7 @@ struct QuickMealActionView: View {
                 Text(localizationManager.localizedString(for: AppStrings.DietPlan.timeFor, arguments: mealName))
                     .font(.title2)
                     .fontWeight(.bold)
-                    .id("time-for-meal-\(localizationManager.currentLanguage)")
+                    
                 
                 Text(category.displayName)
                     .font(.subheadline)
@@ -118,7 +121,7 @@ struct QuickMealActionView: View {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
                     Text(localizationManager.localizedString(for: AppStrings.DietPlan.saveAsPlanned))
-                        .id("save-as-planned-\(localizationManager.currentLanguage)")
+                        
                     Spacer()
                     Image(systemName: "chevron.right")
                 }
@@ -155,7 +158,7 @@ struct QuickMealActionView: View {
                 markAsSkipped()
             } label: {
                 Text(localizationManager.localizedString(for: AppStrings.DietPlan.skipThisMeal))
-                    .id("skip-this-meal-\(localizationManager.currentLanguage)")
+                    
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -171,7 +174,7 @@ struct QuickMealActionView: View {
             Text(localizationManager.localizedString(for: AppStrings.DietPlan.plannedMeal))
                 .font(.headline)
                 .padding(.horizontal)
-                .id("planned-meal-\(localizationManager.currentLanguage)")
+                
             
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(template.templateItems, id: \.name) { item in
@@ -181,9 +184,10 @@ struct QuickMealActionView: View {
                         
                         Spacer()
                         
-                        Text("\(item.calories) cal")
+                        Text("\(item.calories) \(localizationManager.localizedString(for: AppStrings.Progress.cal))")
                             .font(.caption)
                             .foregroundColor(.secondary)
+                            .id("item-cal-\(localizationManager.currentLanguage)")
                     }
                 }
                 
@@ -192,12 +196,13 @@ struct QuickMealActionView: View {
                 HStack {
                     Text(localizationManager.localizedString(for: AppStrings.DietPlan.total))
                         .font(.headline)
-                        .id("total-meal-\(localizationManager.currentLanguage)")
+                        
                     
                     Spacer()
                     
-                    Text("\(template.templateItems.reduce(0) { $0 + $1.calories }) cal")
+                    Text("\(template.templateItems.reduce(0) { $0 + $1.calories }) \(localizationManager.localizedString(for: AppStrings.Progress.cal))")
                         .font(.headline)
+                        .id("total-cal-\(localizationManager.currentLanguage)")
                 }
             }
             .padding()
@@ -324,10 +329,10 @@ struct ScanViewPlaceholder: View {
                 Text(action == .addNew ? localizationManager.localizedString(for: AppStrings.DietPlan.addFood) : localizationManager.localizedString(for: AppStrings.DietPlan.editMeal))
                     .font(.title2)
                     .fontWeight(.semibold)
-                    .id("action-title-\(localizationManager.currentLanguage)")
+                    
                 
                 Text(localizationManager.localizedString(for: AppStrings.DietPlan.scanOrSelectPhoto))
-                    .id("scan-select-photo-\(localizationManager.currentLanguage)")
+                    
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -335,14 +340,14 @@ struct ScanViewPlaceholder: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.addFood))
-                .id("add-food-title-\(localizationManager.currentLanguage)")
+                
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
                         dismiss()
                     }
-                    .id("cancel-scan-placeholder-\(localizationManager.currentLanguage)")
+                    
                 }
             }
         }
@@ -365,10 +370,10 @@ struct EditMealView: View {
                 Text(localizationManager.localizedString(for: AppStrings.DietPlan.editMeal))
                     .font(.title2)
                     .fontWeight(.semibold)
-                    .id("edit-meal-title-\(localizationManager.currentLanguage)")
+                    
                 
                 Text(localizationManager.localizedString(for: AppStrings.DietPlan.updateMeal))
-                    .id("update-meal-\(localizationManager.currentLanguage)")
+                    
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -378,7 +383,7 @@ struct EditMealView: View {
                     showingScan = true
                 } label: {
                     Label(localizationManager.localizedString(for: AppStrings.Scanning.scanMeal), systemImage: "camera.fill")
-                        .id("scan-food-\(localizationManager.currentLanguage)")
+                        
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color.accentColor)
@@ -389,14 +394,14 @@ struct EditMealView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.editMeal))
-                .id("edit-meal-nav-\(localizationManager.currentLanguage)")
+                
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
                         dismiss()
                     }
-                    .id("cancel-edit-meal-\(localizationManager.currentLanguage)")
+                    
                 }
             }
             .sheet(isPresented: $showingScan) {

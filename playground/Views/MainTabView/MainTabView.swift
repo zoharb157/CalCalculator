@@ -68,7 +68,10 @@ struct MainTabView: View {
     }
     
     var body: some View {
-        ZStack(alignment: .top) {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return ZStack(alignment: .top) {
             TabView(selection: $selectedTab) {
             HomeView(
                 viewModel: homeViewModel,
@@ -86,14 +89,12 @@ struct MainTabView: View {
             )
             .tabItem {
                 Label(localizationManager.localizedString(for: AppStrings.Home.title), systemImage: "house.fill")
-                    .id("tab-home-\(localizationManager.currentLanguage)")
             }
             .tag(0)
             
             ProgressDashboardView(viewModel: progressViewModel)
                 .tabItem {
                     Label(localizationManager.localizedString(for: AppStrings.Progress.title), systemImage: "chart.line.uptrend.xyaxis")
-                        .id("tab-progress-\(localizationManager.currentLanguage)")
                 }
                 .tag(1)
             
@@ -104,18 +105,15 @@ struct MainTabView: View {
             )
                 .tabItem {
                     Label(hasActiveDiet ? localizationManager.localizedString(for: AppStrings.DietPlan.myDiet) : localizationManager.localizedString(for: AppStrings.History.title), systemImage: "calendar")
-                        .id("tab-history-\(localizationManager.currentLanguage)")
                 }
                 .tag(2)
 
             ProfileView()
                 .tabItem {
                     Label(localizationManager.localizedString(for: AppStrings.Profile.title), systemImage: "person.fill")
-                        .id("tab-profile-\(localizationManager.currentLanguage)")
                 }
                 .tag(3)
             }
-            .id("main-tabview-\(localizationManager.currentLanguage)")
             
             // Offline banner
             if !networkMonitor.isConnected {
@@ -124,7 +122,6 @@ struct MainTabView: View {
                         Image(systemName: "wifi.slash")
                             .foregroundColor(.white)
                         Text(localizationManager.localizedString(for: AppStrings.Main.noInternetConnection))
-                            .id("no-internet-\(localizationManager.currentLanguage)")
                             .font(.subheadline)
                             .fontWeight(.medium)
                             .foregroundColor(.white)
@@ -139,10 +136,9 @@ struct MainTabView: View {
             }
         }
         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: networkMonitor.isConnected)
-        .onReceive(NotificationCenter.default.publisher(for: .languageChanged)) { _ in
-            // Force TabView to refresh when language changes
-            // This ensures all tab labels update immediately
-        }
+        // No need for onChange - SwiftUI automatically re-evaluates views when
+        // @ObservedObject properties change. Since localizationManager.currentLanguage
+        // is @Published, all views using localizationManager will update automatically.
     }
 }
 

@@ -23,7 +23,10 @@ struct DataExportView: View {
     @State private var showShareSheet = false
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             List {
                 // Weight Data Section
                 Section {
@@ -37,9 +40,9 @@ struct DataExportView: View {
                         exportWeightDataPDF()
                     }
                 } header: {
-                    LocalizedText(AppStrings.Profile.weightData)
+                    Text(localizationManager.localizedString(for: AppStrings.Profile.weightData))
                 } footer: {
-                    LocalizedText(AppStrings.Profile.exportWeightDescription)
+                    Text(localizationManager.localizedString(for: AppStrings.Profile.exportWeightDescription))
                 }
                 
                 // Meal Data Section
@@ -64,9 +67,9 @@ struct DataExportView: View {
                         exportDailyNutritionSummaryPDF()
                     }
                 } header: {
-                    LocalizedText(AppStrings.Profile.nutritionData)
+                    Text(localizationManager.localizedString(for: AppStrings.Profile.nutritionData))
                 } footer: {
-                    LocalizedText(AppStrings.Profile.exportNutritionDescription)
+                    Text(localizationManager.localizedString(for: AppStrings.Profile.exportNutritionDescription))
                 }
                 
                 // Export All Section
@@ -81,7 +84,7 @@ struct DataExportView: View {
                         exportAllDataPDF()
                     }
                 } footer: {
-                    LocalizedText(AppStrings.Profile.exportAllDescription)
+                    Text(localizationManager.localizedString(for: AppStrings.Profile.exportAllDescription))
                 }
             }
             .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.exportData))
@@ -89,7 +92,7 @@ struct DataExportView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.done)) {
                         dismiss()
                     }
                 }
@@ -102,7 +105,7 @@ struct DataExportView: View {
                     VStack(spacing: 16) {
                         ProgressView()
                             .scaleEffect(1.5)
-                        LocalizedText(AppStrings.Profile.generatingPDF)
+                        Text(localizationManager.localizedString(for: AppStrings.Profile.generatingPDF))
                             .font(.headline)
                             .foregroundColor(.white)
                     }
@@ -125,9 +128,9 @@ struct DataExportView: View {
                 get: { exportError != nil },
                 set: { if !$0 { exportError = nil } }
             )) {
-                Button("OK", role: .cancel) {}
+                Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) {}
             } message: {
-                Text(exportError ?? "An unknown error occurred.")
+                Text(exportError ?? localizationManager.localizedString(for: AppStrings.Profile.unknownError))
             }
             .sheet(isPresented: $showShareSheet) {
                 if let url = shareSheetURL {

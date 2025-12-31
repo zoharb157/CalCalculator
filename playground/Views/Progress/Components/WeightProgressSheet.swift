@@ -60,7 +60,10 @@ struct WeightProgressSheet: View {
     }
     
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
                     // Filter Pills
@@ -377,7 +380,7 @@ struct WeightProgressSheet: View {
                 
                 Spacer()
                 
-                Text("\(displayWeights.count) entries")
+                Text(localizationManager.localizedString(for: AppStrings.Progress.entriesWithCount, arguments: displayWeights.count))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -441,6 +444,7 @@ private struct StatCard: View {
 private struct WeightHistoryRow: View {
     let point: WeightDataPoint
     let unit: String
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
         HStack {
@@ -459,7 +463,7 @@ private struct WeightHistoryRow: View {
             
             Spacer()
             
-            Text("\(String(format: "%.1f", point.weight)) \(unit)")
+            Text(String(format: localizationManager.localizedString(for: AppStrings.Progress.weightWithUnit), point.weight, unit))
                 .font(.headline)
                 .foregroundColor(.blue)
         }
@@ -471,11 +475,12 @@ private struct WeightHistoryRow: View {
     private var formattedDate: String {
         let calendar = Calendar.current
         let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: localizationManager.currentLanguage)
         
         if calendar.isDateInToday(point.date) {
-            return "Today"
+            return localizationManager.localizedString(for: AppStrings.Home.today)
         } else if calendar.isDateInYesterday(point.date) {
-            return "Yesterday"
+            return localizationManager.localizedString(for: AppStrings.Home.yesterday)
         } else {
             formatter.dateFormat = "E, MMM d"
             return formatter.string(from: point.date)

@@ -37,6 +37,7 @@ enum QuickLogType: String, CaseIterable {
 struct QuickLogView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @ObservedObject private var localizationManager = LocalizationManager.shared
 
     @State private var selectedType: QuickLogType = .food
     @State private var viewModel: LogExperienceViewModel
@@ -55,7 +56,6 @@ struct QuickLogView: View {
     @State private var showSuccess = false
     @State private var showError = false
     @State private var errorMessage = ""
-    @ObservedObject private var localizationManager = LocalizationManager.shared
 
     init() {
         let persistence = PersistenceController.shared
@@ -65,7 +65,10 @@ struct QuickLogView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        let _ = localizationManager.currentLanguage
+        
+        return NavigationStack {
             VStack(spacing: 0) {
                 // Type Selector
                 typeSelector
@@ -101,13 +104,13 @@ struct QuickLogView: View {
                 
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
-                    Button("Done") {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.done)) {
                         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                     }
                 }
             }
             .alert("Saved Successfully!", isPresented: $showSuccess) {
-                Button("OK") {
+                Button(localizationManager.localizedString(for: AppStrings.Common.ok)) {
                     dismiss()
                 }
             } message: {
@@ -117,7 +120,7 @@ struct QuickLogView: View {
                         : "Your exercise has been logged.")
             }
             .alert("Error", isPresented: $showError) {
-                Button("OK") { }
+                Button(localizationManager.localizedString(for: AppStrings.Common.ok)) { }
             } message: {
                 Text(errorMessage)
             }
@@ -190,7 +193,8 @@ struct QuickLogView: View {
                         .frame(width: 120)
                         .keyboardDoneButton()
 
-                    Text("kcal")
+                    Text(localizationManager.localizedString(for: AppStrings.Food.kcal))
+                        .id("kcal-food-\(localizationManager.currentLanguage)")
                         .font(.title3)
                         .foregroundColor(.secondary)
                 }
@@ -202,35 +206,35 @@ struct QuickLogView: View {
 
             // Quick presets
             VStack(alignment: .leading, spacing: 12) {
-                Text("Quick Presets")
+                Text(localizationManager.localizedString(for: AppStrings.Food.quickPresets))
                     .font(.headline)
 
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 12) {
-                    QuickPresetButton(title: "Light Snack", calories: 150) {
+                    QuickPresetButton(title: localizationManager.localizedString(for: AppStrings.Food.lightSnack), calories: 150) {
                         quickCalories = "150"
                         if foodDescription.isEmpty {
-                            foodDescription = "Light Snack"
+                            foodDescription = localizationManager.localizedString(for: AppStrings.Food.lightSnack)
                         }
                     }
 
-                    QuickPresetButton(title: "Small Meal", calories: 350) {
+                    QuickPresetButton(title: localizationManager.localizedString(for: AppStrings.Food.smallMeal), calories: 350) {
                         quickCalories = "350"
                         if foodDescription.isEmpty {
-                            foodDescription = "Small Meal"
+                            foodDescription = localizationManager.localizedString(for: AppStrings.Food.smallMeal)
                         }
                     }
 
-                    QuickPresetButton(title: "Regular Meal", calories: 550) {
+                    QuickPresetButton(title: localizationManager.localizedString(for: AppStrings.Food.regularMeal), calories: 550) {
                         quickCalories = "550"
                         if foodDescription.isEmpty {
-                            foodDescription = "Regular Meal"
+                            foodDescription = localizationManager.localizedString(for: AppStrings.Food.regularMeal)
                         }
                     }
 
-                    QuickPresetButton(title: "Large Meal", calories: 800) {
+                    QuickPresetButton(title: localizationManager.localizedString(for: AppStrings.Food.largeMeal), calories: 800) {
                         quickCalories = "800"
                         if foodDescription.isEmpty {
-                            foodDescription = "Large Meal"
+                            foodDescription = localizationManager.localizedString(for: AppStrings.Food.largeMeal)
                         }
                     }
                 }
@@ -313,7 +317,8 @@ struct QuickLogView: View {
                         .frame(width: 120)
                         .keyboardDoneButton()
 
-                    Text("kcal")
+                    Text(localizationManager.localizedString(for: AppStrings.Food.kcal))
+                        .id("kcal-food-\(localizationManager.currentLanguage)")
                         .font(.title3)
                         .foregroundColor(.secondary)
                 }
@@ -325,38 +330,38 @@ struct QuickLogView: View {
 
             // Quick exercise presets
             VStack(alignment: .leading, spacing: 12) {
-                Text("Quick Presets")
+                Text(localizationManager.localizedString(for: AppStrings.Food.quickPresets))
                     .font(.headline)
 
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 12) {
                     ExercisePresetButton(
-                        title: "Walk", icon: "figure.walk", duration: 30, calories: 120
+                        title: localizationManager.localizedString(for: AppStrings.Exercise.walk), icon: "figure.walk", duration: 30, calories: 120
                     ) {
-                        exerciseDescription = "Walking"
+                        exerciseDescription = localizationManager.localizedString(for: AppStrings.Exercise.walk)
                         exerciseDuration = "30"
                         exerciseCalories = "120"
                     }
 
                     ExercisePresetButton(
-                        title: "Run", icon: "figure.run", duration: 30, calories: 300
+                        title: localizationManager.localizedString(for: AppStrings.Exercise.run), icon: "figure.run", duration: 30, calories: 300
                     ) {
-                        exerciseDescription = "Running"
+                        exerciseDescription = localizationManager.localizedString(for: AppStrings.Exercise.run)
                         exerciseDuration = "30"
                         exerciseCalories = "300"
                     }
 
                     ExercisePresetButton(
-                        title: "Weights", icon: "dumbbell.fill", duration: 45, calories: 200
+                        title: localizationManager.localizedString(for: AppStrings.Exercise.weights), icon: "dumbbell.fill", duration: 45, calories: 200
                     ) {
-                        exerciseDescription = "Weight Training"
+                        exerciseDescription = localizationManager.localizedString(for: AppStrings.Exercise.weights)
                         exerciseDuration = "45"
                         exerciseCalories = "200"
                     }
 
                     ExercisePresetButton(
-                        title: "Cycling", icon: "bicycle", duration: 30, calories: 250
+                        title: localizationManager.localizedString(for: AppStrings.Exercise.cycling), icon: "bicycle", duration: 30, calories: 250
                     ) {
-                        exerciseDescription = "Cycling"
+                        exerciseDescription = localizationManager.localizedString(for: AppStrings.Exercise.cycling)
                         exerciseDuration = "30"
                         exerciseCalories = "250"
                     }
@@ -379,7 +384,8 @@ struct QuickLogView: View {
                         .tint(.white)
                 } else {
                     Image(systemName: "checkmark.circle.fill")
-                    Text("Save \(selectedType.displayName)")
+                    Text(selectedType == .food ? localizationManager.localizedString(for: AppStrings.Food.saveFood) : localizationManager.localizedString(for: AppStrings.Exercise.saveExercise))
+                        .id("save-button-\(localizationManager.currentLanguage)")
                 }
             }
             .font(.headline)
