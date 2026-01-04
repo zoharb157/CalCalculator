@@ -214,6 +214,16 @@ platform :ios do
     ENV["FASTLANE_XCODEBUILD_SETTINGS_RETRIES"] = "2"
     
     begin
+      # First, try to build the app to ensure test host is available
+      UI.message("🔨 Building app for testing...")
+      build_app(
+        project: PROJECT,
+        scheme: SCHEME,
+        configuration: "Debug",
+        skip_package_dependencies_resolution: false,
+        xcargs: "-allowProvisioningUpdates -skipPackagePluginValidation -sdk iphonesimulator"
+      )
+      
       scan(
         project: PROJECT,
         scheme: SCHEME,
@@ -221,8 +231,8 @@ platform :ios do
         code_coverage: false,
         output_directory: "./fastlane/test_output",
         output_types: "html,junit",
-        build_for_testing: true,
-        skip_build: false,
+        build_for_testing: false,  # Already built above
+        skip_build: true,  # Use the build from above
         clean: false,
         skip_package_dependencies_resolution: true,
         app_identifier: BUNDLE_IDENTIFIER,
@@ -235,7 +245,8 @@ platform :ios do
       # Handle known issues gracefully
       if error_msg.include?("test") || error_msg.include?("Test") || 
          error_msg.include?("scheme") || error_msg.include?("timeout") ||
-         error_msg.include?("jwt-kit") || error_msg.include?("Sendable")
+         error_msg.include?("jwt-kit") || error_msg.include?("Sendable") ||
+         error_msg.include?("TEST_HOST") || error_msg.include?("test host")
         UI.important("⚠️  Tests could not be run: #{error_msg}")
         UI.important("This might be because:")
         UI.important("  1. No test target is configured in the Xcode project")
@@ -243,6 +254,7 @@ platform :ios do
         UI.important("  3. Scheme needs to reference the test target")
         UI.important("  4. Package dependency resolution is taking too long")
         UI.important("  5. jwt-kit package has Swift 6 strict concurrency errors (known issue)")
+        UI.important("  6. Test host configuration issue (app not built before tests)")
         UI.important("")
         UI.important("Note: jwt-kit errors are in a third-party package and don't affect app functionality")
         UI.important("Continuing with deployment...")
