@@ -58,13 +58,10 @@ struct WeightChartCard: View {
         guard let minValue = weights.min(), let maxValue = weights.max() else { return 0 }
         let range = maxValue - minValue
         
-        // RULE 3: Force biased Y-scale - more aggressive upward bias
         if range == 0 || range < 0.1 {
-            // For flat data: value - 2.0 (much more space below, pushes line up)
             return Swift.max(0, minValue - 2.0)
         } else {
-            // For varied data, use proportional padding but keep it tight
-            let padding = min(range * 0.1, 2.0)
+            let padding = min(range * 0.15, 3.0)
             return Swift.max(0, minValue - padding)
         }
     }
@@ -74,18 +71,14 @@ struct WeightChartCard: View {
         guard let minValue = weights.min(), let maxValue = weights.max() else { return 100 }
         let range = maxValue - minValue
         
-        // RULE 3: Force biased Y-scale - more aggressive upward bias
         if range == 0 || range < 0.1 {
-            // For flat data: value + 0.3 (less space above)
-            return maxValue + 0.3
+            return maxValue + 0.5
         } else {
-            // For varied data, use proportional padding but keep it tight
-            let padding = min(range * 0.1, 2.0)
+            let padding = min(range * 0.15, 3.0)
             return maxValue + padding
         }
     }
     
-    // Detect if data is stable (all values are the same)
     private var isStable: Bool {
         let weights = displayWeights.map(\.weight)
         guard !weights.isEmpty, let firstWeight = weights.first else { return false }
@@ -94,6 +87,17 @@ struct WeightChartCard: View {
     
     private var stableWeight: Double {
         displayWeights.first?.weight ?? 0
+    }
+    
+    private var weightTrend: (change: Double, isPositive: Bool) {
+        guard let first = displayWeights.first?.weight,
+              let last = displayWeights.last?.weight else { return (0, true) }
+        let change = last - first
+        return (change, change <= 0) // Negative change (weight loss) is typically positive
+    }
+    
+    private var weightUnit: String {
+        useMetricUnits ? "kg" : "lbs"
     }
     
     private var titleText: String {
@@ -112,32 +116,69 @@ struct WeightChartCard: View {
         let weights = displayWeights
         let isEmpty = weights.isEmpty || weights.allSatisfy({ $0.weight == 0 })
         
-        return VStack(alignment: .leading, spacing: 12) {
-            Text(titleText)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .frame(maxWidth: .infinity, alignment: .center)
+        VStack(alignment: .leading, spacing: 16) {
+            // Header
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(titleText)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                    
+                    if !isEmpty && !isStable {
+                        HStack(spacing: 4) {
+                            Image(systemName: weightTrend.change >= 0 ? "arrow.up.right" : "arrow.down.right")
+                                .font(.caption)
+                            Text(String(format: "%@%.1f %@", weightTrend.change >= 0 ? "+" : "", weightTrend.change, weightUnit))
+                                .font(.caption)
+                                .fontWeight(.medium)
+                        }
+                        .foregroundColor(weightTrend.isPositive ? .green : .orange)
+                    }
+                }
+                
+                Spacer()
+                
+                // Current weight badge
+                if let currentWeight = weights.last?.weight {
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text(String(format: "%.1f", currentWeight))
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.blue)
+                        Text(weightUnit)
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
             
             if isEmpty {
-                VStack(spacing: 8) {
+                // Empty state
+                VStack(spacing: 12) {
+                    Image(systemName: "chart.line.uptrend.xyaxis")
+                        .font(.system(size: 40))
+                        .foregroundColor(.secondary.opacity(0.5))
+                    
                     Text(noWeightDataText)
                         .font(.subheadline)
+                        .fontWeight(.medium)
                         .foregroundColor(.secondary)
                     
                     Text(saveWeightToSeeProgressText)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.secondary.opacity(0.7))
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 40)
+                .padding(.vertical, 30)
             } else if isStable {
-                // STABLE STATE: Render a status indicator, NOT a chart
+                // Stable state
                 StableWeightView(
                     value: stableWeight,
-                    unit: useMetricUnits ? "kg" : "lbs"
+                    unit: weightUnit
                 )
             } else {
-                // TREND STATE: Render the actual chart
+                // Trend chart
                 TrendChartView(
                     weights: weights,
                     useMetricUnits: useMetricUnits,
@@ -146,14 +187,14 @@ struct WeightChartCard: View {
                 )
             }
         }
-        .padding(12)
+        .padding(20)
         .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 3)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
     }
 }
 
-// MARK: - Stable State Mini-Chart (chart language, not progress bar)
+// MARK: - Stable State View
 struct StableWeightView: View {
     let value: Double
     let unit: String
@@ -172,63 +213,78 @@ struct StableWeightView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(stableText)
-                .font(.callout)
-                .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 12) {
+            // Status indicator
+            HStack(spacing: 8) {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(.green)
+                Text(stableText)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
             
-            // MINI PLOT AREA (this is what makes it a chart, not a bar)
+            // Mini chart line (visual representation)
             ZStack(alignment: .center) {
-                // Faint baseline (optional, adds chart context)
-                Capsule()
-                    .fill(Color.black.opacity(0.04))
-                    .frame(height: 2)
+                // Background
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color(.systemGray5))
+                    .frame(height: 4)
                 
-                // Glow behind the line (halo effect)
-                Capsule()
-                    .fill(Color.blue.opacity(0.18))
-                    .frame(height: 10)
-                    .blur(radius: 6)
-                    .padding(.horizontal, 10)
+                // Glow effect
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(
+                        LinearGradient(
+                            colors: [.blue.opacity(0.3), .cyan.opacity(0.3)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(height: 8)
+                    .blur(radius: 4)
                 
-                // Main line (thin, chart-like)
-                Capsule()
-                    .fill(Color.blue)
-                    .frame(height: 3)
-                    .padding(.horizontal, 10)
+                // Main line
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(
+                        LinearGradient(
+                            colors: [.blue, .cyan],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(height: 4)
                 
-                // Endpoints (dots at start and end)
+                // Endpoints
                 HStack {
                     Circle()
                         .fill(Color.blue)
-                        .frame(width: 8, height: 8)
+                        .frame(width: 10, height: 10)
+                        .shadow(color: .blue.opacity(0.3), radius: 4, x: 0, y: 0)
                     Spacer()
                     Circle()
-                        .fill(Color.blue)
-                        .frame(width: 8, height: 8)
+                        .fill(Color.cyan)
+                        .frame(width: 10, height: 10)
+                        .shadow(color: .cyan.opacity(0.3), radius: 4, x: 0, y: 0)
                 }
-                .padding(.horizontal, 10)
             }
-            .frame(height: 22)
+            .frame(height: 24)
+            .padding(.horizontal, 8)
             
-            // Tiny time anchors (makes it read as chart with time context)
+            // Time labels
             HStack {
                 Text(startText)
                     .font(.caption2)
-                    .foregroundStyle(.secondary.opacity(0.7))
+                    .foregroundStyle(.secondary)
                 Spacer()
                 Text(nowText)
                     .font(.caption2)
-                    .foregroundStyle(.secondary.opacity(0.7))
+                    .foregroundStyle(.secondary)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 18)
-        .padding(.vertical, 16)
+        .padding(.vertical, 8)
     }
 }
 
-// MARK: - Trend Chart (only used when data actually changes)
+// MARK: - Trend Chart View
 struct TrendChartView: View {
     let weights: [WeightDataPoint]
     let useMetricUnits: Bool
@@ -241,23 +297,43 @@ struct TrendChartView: View {
         let lastPoint = sortedWeights.last
         
         Chart(sortedWeights) { point in
+            // Area fill
+            AreaMark(
+                x: .value("Date", point.date),
+                y: .value("Weight", point.weight)
+            )
+            .interpolationMethod(.catmullRom)
+            .foregroundStyle(
+                LinearGradient(
+                    colors: [Color.blue.opacity(0.2), Color.cyan.opacity(0.05)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+            
             // Glow line (behind)
             LineMark(
                 x: .value("Date", point.date),
                 y: .value("Weight", point.weight)
             )
-            .interpolationMethod(.linear)
-            .lineStyle(StrokeStyle(lineWidth: 10, lineCap: .round, lineJoin: .round))
-            .foregroundStyle(Color.blue.opacity(0.18))
+            .interpolationMethod(.catmullRom)
+            .lineStyle(StrokeStyle(lineWidth: 8, lineCap: .round, lineJoin: .round))
+            .foregroundStyle(Color.blue.opacity(0.15))
             
-            // Main line (front)
+            // Main line
             LineMark(
                 x: .value("Date", point.date),
                 y: .value("Weight", point.weight)
             )
-            .interpolationMethod(.linear)
+            .interpolationMethod(.catmullRom)
             .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
-            .foregroundStyle(Color.blue)
+            .foregroundStyle(
+                LinearGradient(
+                    colors: [.blue, .cyan],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
             
             // Dots at first and last points
             if point.date == firstPoint?.date || point.date == lastPoint?.date {
@@ -265,27 +341,50 @@ struct TrendChartView: View {
                     x: .value("Date", point.date),
                     y: .value("Weight", point.weight)
                 )
-                .foregroundStyle(Color.blue.opacity(0.9))
-                .symbolSize(30)
+                .foregroundStyle(point.date == lastPoint?.date ? Color.cyan : Color.blue)
+                .symbolSize(50)
+                .annotation(position: .top, spacing: 6) {
+                    if point.date == lastPoint?.date {
+                        Text(String(format: "%.1f", point.weight))
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.primary)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color(.secondarySystemGroupedBackground))
+                            .clipShape(Capsule())
+                            .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+                    }
+                }
             }
         }
         .chartYScale(domain: minWeight...maxWeight)
         .chartPlotStyle { plotContent in
             plotContent
-                .padding(.top, 28)
-                .padding(.bottom, 36)
-                .padding(.horizontal, 12)
+                .padding(.top, 30)
+                .padding(.bottom, 8)
         }
-        .chartXAxis(.hidden)
-        .chartYAxis {
-            AxisMarks { _ in
-                AxisGridLine()
-                    .foregroundStyle(Color.clear)
-                AxisValueLabel()
-                    .foregroundStyle(Color.clear)
+        .chartXAxis {
+            AxisMarks(values: .automatic(desiredCount: 4)) { value in
+                AxisValueLabel(format: .dateTime.month(.abbreviated).day())
+                    .font(.caption2)
+                    .foregroundStyle(Color.secondary)
             }
         }
-        .frame(height: 160)
+        .chartYAxis {
+            AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) { value in
+                AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4, 4]))
+                    .foregroundStyle(Color.gray.opacity(0.2))
+                AxisValueLabel {
+                    if let weight = value.as(Double.self) {
+                        Text(String(format: "%.0f", weight))
+                            .font(.caption2)
+                            .foregroundStyle(Color.secondary)
+                    }
+                }
+            }
+        }
+        .frame(height: 180)
     }
 }
 
@@ -298,9 +397,12 @@ struct TrendChartView: View {
         WeightDataPoint(date: Date(), weight: 54.7)
     ]
     
-    WeightChartCard(
-        weightHistory: sampleData,
-        useMetricUnits: true
-    )
+    VStack {
+        WeightChartCard(
+            weightHistory: sampleData,
+            useMetricUnits: true
+        )
+    }
     .padding()
+    .background(Color(.systemGroupedBackground))
 }

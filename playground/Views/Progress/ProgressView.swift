@@ -13,6 +13,7 @@ struct ProgressDashboardView: View {
     @Bindable var viewModel: ProgressViewModel
     
     @Environment(\.isSubscribed) private var isSubscribed
+    @Environment(\.modelContext) private var modelContext
     @Environment(TheSDK.self) private var sdk
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
@@ -32,93 +33,96 @@ struct ProgressDashboardView: View {
                     FullScreenLoadingView(message: localizationManager.localizedString(for: AppStrings.Progress.loadingProgressData))
                 } else {
                     ScrollView {
-                        VStack(spacing: 12) {
-                            // Current Weight Card
-                            // Use .id() to force re-render when weight or history changes
-                            CurrentWeightCard(
-                                weight: settings.displayWeight,
-                                unit: viewModel.weightUnit,
-                                startWeight: viewModel.weightHistory.first?.weight ?? settings.displayWeight,
-                                goalWeight: viewModel.displayTargetWeight,
-                                daysUntilCheck: viewModel.daysUntilNextWeightCheck,
-                                isSubscribed: isSubscribed,
-                                onWeightSave: { newWeight in
-                                    Task {
-                                        await viewModel.updateWeight(newWeight)
-                                    }
-                                },
-                                onShowPaywall: {
-                                    showPaywall = true
-                                },
-                                onViewProgress: {
-                                    if isSubscribed {
-                                        viewModel.showWeightProgressSheet = true
-                                    } else {
-                                        showPaywall = true
-                                    }
-                                }
-                            )
-                            .id("current-weight-\(settings.displayWeight)-\(viewModel.weightHistory.count)")
-                            
-                            // Weight Chart Card
-                            // Use .id() to force re-render when history changes
-                            WeightChartCard(
-                                weightHistory: viewModel.weightHistory,
-                                useMetricUnits: viewModel.useMetricUnits
-                            )
-                            .id("weight-chart-\(viewModel.weightHistory.count)-\(viewModel.weightHistory.last?.weight ?? 0)")
-                            
-                            // Weight Changes Card
-                            // Use the most recent weight from history (last item when sorted ascending),
-                            // or current weight from settings if no history
-                            // Already has .id() modifier in the component
-                            WeightChangesCard(
-                                weightHistory: viewModel.weightHistory,
-                                currentWeight: viewModel.mostRecentWeight,
-                                useMetricUnits: viewModel.useMetricUnits
-                            )
-                            
-                            // Daily Average Calories Card - Locked with blur + Premium button (Progress page = reduced blur)
-                            PremiumLockedContent(isProgressPage: true) {
-                                DailyCaloriesCard(
-                                    averageCalories: viewModel.averageCalories,
-                                    calorieGoal: UserSettings.shared.calorieGoal,
+                        VStack(spacing: 20) {
+                            // MARK: - Weight Section
+                            VStack(spacing: 16) {
+                                // Current Weight Card
+                                CurrentWeightCard(
+                                    weight: settings.displayWeight,
+                                    unit: viewModel.weightUnit,
+                                    startWeight: viewModel.weightHistory.first?.weight ?? settings.displayWeight,
+                                    goalWeight: viewModel.displayTargetWeight,
+                                    daysUntilCheck: viewModel.daysUntilNextWeightCheck,
                                     isSubscribed: isSubscribed,
-                                    onViewDetails: {
+                                    onWeightSave: { newWeight in
+                                        Task {
+                                            await viewModel.updateWeight(newWeight)
+                                        }
+                                    },
+                                    onShowPaywall: {
+                                        showPaywall = true
+                                    },
+                                    onViewProgress: {
                                         if isSubscribed {
-                                            viewModel.showCaloriesSheet = true
+                                            viewModel.showWeightProgressSheet = true
                                         } else {
                                             showPaywall = true
                                         }
                                     }
                                 )
+                                .id("current-weight-\(settings.displayWeight)-\(viewModel.weightHistory.count)")
+                                
+                                // Weight Chart Card
+                                WeightChartCard(
+                                    weightHistory: viewModel.weightHistory,
+                                    useMetricUnits: viewModel.useMetricUnits
+                                )
+                                .id("weight-chart-\(viewModel.weightHistory.count)-\(viewModel.weightHistory.last?.weight ?? 0)-\(viewModel.weightHistory.last?.date.timeIntervalSince1970 ?? 0)")
+                                
+                                // Weight Changes Chart Card
+                                WeightChangesChartCard(
+                                    weightHistory: viewModel.weightHistory,
+                                    currentWeight: viewModel.mostRecentWeight,
+                                    useMetricUnits: viewModel.useMetricUnits
+                                )
+                                .id("weight-changes-\(viewModel.weightHistory.count)-\(viewModel.mostRecentWeight)-\(viewModel.weightHistory.last?.date.timeIntervalSince1970 ?? 0)")
                             }
                             
-                            // BMI Card - Locked with blur + Premium button (Progress page = reduced blur)
-                            if let bmi = viewModel.bmi, let category = viewModel.bmiCategory {
+                            // MARK: - Nutrition Section
+                            VStack(spacing: 16) {
+                                // Daily Average Calories Card - Locked with blur + Premium button
                                 PremiumLockedContent(isProgressPage: true) {
-                                    BMICard(bmi: bmi, category: category, isSubscribed: true)
+                                    DailyCaloriesCard(
+                                        averageCalories: viewModel.averageCalories,
+                                        calorieGoal: UserSettings.shared.calorieGoal,
+                                        isSubscribed: isSubscribed,
+                                        onViewDetails: {
+                                            if isSubscribed {
+                                                viewModel.showCaloriesSheet = true
+                                            } else {
+                                                showPaywall = true
+                                            }
+                                        }
+                                    )
+                                }
+                                
+                                // BMI Card
+                                if let bmi = viewModel.bmi, let category = viewModel.bmiCategory {
+                                    PremiumLockedContent(isProgressPage: true) {
+                                        BMICard(bmi: bmi, category: category, isSubscribed: true)
+                                    }
                                 }
                             }
                             
-                            // HealthKit Data Section - FREE (no premium lock)
-                            // Show enable settings prompt if authorization denied
-                            if viewModel.healthKitAuthorizationDenied {
-                                HealthKitSettingsPromptCard()
-                            } else {
-                                // HealthKit is now free - show without premium lock
-                                HealthDataSection(
-                                    steps: viewModel.steps,
-                                    activeCalories: viewModel.activeCalories,
-                                    exerciseMinutes: viewModel.exerciseMinutes,
-                                    heartRate: viewModel.heartRate,
-                                    distance: viewModel.distance,
-                                    sleepHours: viewModel.sleepHours,
-                                    isSubscribed: isSubscribed
-                                )
+                            // MARK: - Health Section
+                            VStack(spacing: 16) {
+                                if viewModel.healthKitAuthorizationDenied {
+                                    HealthKitSettingsPromptCard()
+                                } else {
+                                    HealthDataSection(
+                                        steps: viewModel.steps,
+                                        activeCalories: viewModel.activeCalories,
+                                        exerciseMinutes: viewModel.exerciseMinutes,
+                                        heartRate: viewModel.heartRate,
+                                        distance: viewModel.distance,
+                                        sleepHours: viewModel.sleepHours,
+                                        isSubscribed: isSubscribed
+                                    )
+                                }
                             }
                         }
-                        .padding(12)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 20)
                     }
                 }
             }
@@ -134,6 +138,8 @@ struct ProgressDashboardView: View {
                 }
             }
             .task {
+                // Set modelContext first to ensure SwiftData operations work
+                viewModel.setModelContext(modelContext)
                 await viewModel.loadData()
                 
                 // Check if widget updated weight
@@ -315,25 +321,45 @@ struct CurrentWeightCard: View {
     
     @State private var currentWeight: Double
     @State private var hasChanges: Bool = false
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     private let minWeight: Double = 20.0
     private let maxWeight: Double = 300.0
     private let step: Double = 0.1
     
     private var titleText: String {
-        LocalizationManager.shared.localizedString(for: AppStrings.Progress.currentWeight)
+        localizationManager.localizedString(for: AppStrings.Progress.currentWeight)
     }
     
     private var saveButtonText: String {
-        LocalizationManager.shared.localizedString(for: AppStrings.Common.save)
+        localizationManager.localizedString(for: AppStrings.Common.save)
     }
     
     private var startWeightText: String {
-        String(format: LocalizationManager.shared.localizedString(for: AppStrings.Progress.startWeightWithUnit), startWeight, unit)
+        String(format: localizationManager.localizedString(for: AppStrings.Progress.startWeightWithUnit), startWeight, unit)
     }
     
     private var goalWeightText: String {
-        String(format: LocalizationManager.shared.localizedString(for: AppStrings.Progress.goalWeightWithUnit), goalWeight, unit)
+        String(format: localizationManager.localizedString(for: AppStrings.Progress.goalWeightWithUnit), goalWeight, unit)
+    }
+    
+    // Calculate progress towards goal
+    private var progressToGoal: Double {
+        guard abs(startWeight - goalWeight) > 0.01 else { return 1.0 }
+        let totalChange = abs(startWeight - goalWeight)
+        let currentChange = abs(startWeight - currentWeight)
+        return min(1.0, max(0, currentChange / totalChange))
+    }
+    
+    // Is the user making progress in the right direction?
+    private var isProgressPositive: Bool {
+        if goalWeight < startWeight {
+            // Trying to lose weight
+            return currentWeight <= startWeight
+        } else {
+            // Trying to gain weight
+            return currentWeight >= startWeight
+        }
     }
     
     init(weight: Double, unit: String, startWeight: Double, goalWeight: Double, daysUntilCheck: Int, isSubscribed: Bool, onWeightSave: @escaping (Double) -> Void, onShowPaywall: @escaping () -> Void, onViewProgress: @escaping () -> Void) {
@@ -350,85 +376,159 @@ struct CurrentWeightCard: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(titleText)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .frame(maxWidth: .infinity, alignment: .center)
-            
-            HStack(spacing: 12) {
-                Button {
-                    adjustWeight(-step)
-                } label: {
-                    Image(systemName: "minus.circle.fill")
-                        .font(.system(size: 28))
-                        .foregroundColor(isSubscribed ? .blue : .gray)
-                }
-                .disabled(!isSubscribed)
-                .onTapGesture {
-                    if !isSubscribed {
-                        onShowPaywall()
+        VStack(spacing: 0) {
+            // Header with gradient accent
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(titleText)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.secondary)
+                    
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text(String(format: "%.1f", currentWeight))
+                            .font(.system(size: 42, weight: .bold, design: .rounded))
+                            .foregroundColor(.primary)
+                            .contentTransition(.numericText())
+                        
+                        Text(unit)
+                            .font(.title3)
+                            .fontWeight(.medium)
+                            .foregroundColor(.secondary)
                     }
                 }
                 
-                Text(String(format: "%.1f %@", currentWeight, unit))
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(Color(.tertiarySystemGroupedBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                .onChange(of: currentWeight) { oldValue, newValue in
-                    hasChanges = abs(newValue - weight) > 0.01
-                }
+                Spacer()
                 
-                Button {
-                    adjustWeight(step)
-                } label: {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 28))
-                        .foregroundColor(isSubscribed ? .blue : .gray)
+                // Weight adjustment controls
+                VStack(spacing: 8) {
+                    Button {
+                        adjustWeight(step)
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(width: 40, height: 40)
+                            .background(
+                                Circle()
+                                    .fill(isSubscribed ? Color.blue : Color.gray.opacity(0.5))
+                            )
+                    }
+                    .disabled(!isSubscribed)
+                    .simultaneousGesture(TapGesture().onEnded {
+                        if !isSubscribed { onShowPaywall() }
+                    })
+                    
+                    Button {
+                        adjustWeight(-step)
+                    } label: {
+                        Image(systemName: "minus")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(isSubscribed ? .blue : .gray)
+                            .frame(width: 40, height: 40)
+                            .background(
+                                Circle()
+                                    .stroke(isSubscribed ? Color.blue : Color.gray.opacity(0.5), lineWidth: 2)
+                            )
+                    }
+                    .disabled(!isSubscribed)
+                    .simultaneousGesture(TapGesture().onEnded {
+                        if !isSubscribed { onShowPaywall() }
+                    })
                 }
-                .disabled(!isSubscribed)
-                .onTapGesture {
-                    if !isSubscribed {
-                        onShowPaywall()
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
+            .padding(.bottom, 16)
+            
+            // Progress bar section
+            VStack(spacing: 10) {
+                // Progress bar
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        // Background track
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color(.systemGray5))
+                        
+                        // Progress fill
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(
+                                LinearGradient(
+                                    colors: isProgressPositive ? [.blue, .cyan] : [.orange, .red],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .frame(width: CGFloat(progressToGoal) * geometry.size.width)
+                            .animation(.spring(response: 0.4, dampingFraction: 0.7), value: progressToGoal)
+                    }
+                }
+                .frame(height: 8)
+                
+                // Start and goal labels
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(localizationManager.localizedString(for: AppStrings.Progress.start))
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Text(String(format: "%.1f %@", startWeight, unit))
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text(localizationManager.localizedString(for: AppStrings.Progress.goalLabel))
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Text(String(format: "%.1f %@", goalWeight, unit))
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.blue)
                     }
                 }
             }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 16)
             
+            // Save button (appears when changes made)
             if hasChanges {
                 Button {
                     saveWeight()
                 } label: {
-                    Text(saveButtonText)
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(Color.blue)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.subheadline)
+                        Text(saveButtonText)
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(
+                        LinearGradient(
+                            colors: [.blue, .cyan],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
-                .transition(.opacity.combined(with: .move(edge: .top)))
-            }
-            
-            HStack {
-                Text(startWeightText)
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                
-                Spacer()
-                
-                Text(goalWeightText)
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 16)
+                .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
         }
-        .padding(12)
         .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: hasChanges)
+        .onChange(of: currentWeight) { oldValue, newValue in
+            hasChanges = abs(newValue - weight) > 0.01
+        }
         .onChange(of: weight) { oldValue, newValue in
             currentWeight = newValue
             hasChanges = false
@@ -443,7 +543,9 @@ struct CurrentWeightCard: View {
         
         let newWeight = max(minWeight, min(maxWeight, currentWeight + delta))
         let roundedWeight = round(newWeight / step) * step
-        currentWeight = roundedWeight
+        withAnimation(.spring(response: 0.2, dampingFraction: 0.7)) {
+            currentWeight = roundedWeight
+        }
         hasChanges = abs(roundedWeight - weight) > 0.01
         
         HapticManager.shared.impact(.light)
@@ -475,29 +577,34 @@ struct BMICard: View {
     }
     
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 16) {
+            // Header section
             HStack {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text(localizationManager.localizedString(for: AppStrings.Progress.bodyMassIndex))
                         .font(.subheadline)
+                        .fontWeight(.medium)
                         .foregroundColor(.secondary)
                     
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                         Text(String(format: "%.1f", bmi))
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .font(.system(size: 36, weight: .bold, design: .rounded))
                             .foregroundColor(.primary)
+                            .contentTransition(.numericText())
                         
-                        HStack(spacing: 4) {
+                        HStack(spacing: 6) {
                             Image(systemName: category.icon)
+                                .font(.subheadline)
                                 .foregroundColor(category.color)
                             
                             Text(category.rawValue)
-                                .font(.headline)
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
                                 .foregroundColor(category.color)
                         }
                         .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(category.color.opacity(0.1))
+                        .padding(.vertical, 8)
+                        .background(category.color.opacity(0.12))
                         .clipShape(Capsule())
                     }
                 }
@@ -506,54 +613,63 @@ struct BMICard: View {
             }
             
             // BMI Scale
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    // Background gradient
-                    LinearGradient(
-                        colors: [.blue, .green, .yellow, .orange, .red],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
-                    
-                    // Indicator
-                    let position = bmiPosition(in: geometry.size.width)
-                    Circle()
-                        .fill(.white)
-                        .frame(width: 14, height: 14)
-                        .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
-                        .offset(x: position - 7)
+            VStack(spacing: 8) {
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        // Background gradient
+                        LinearGradient(
+                            colors: [.blue, .green, .yellow, .orange, .red],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        
+                        // Indicator
+                        let position = bmiPosition(in: geometry.size.width)
+                        Circle()
+                            .fill(.white)
+                            .frame(width: 16, height: 16)
+                            .shadow(color: .black.opacity(0.25), radius: 3, x: 0, y: 2)
+                            .offset(x: position - 8)
+                            .animation(.spring(response: 0.4, dampingFraction: 0.7), value: bmi)
+                    }
+                }
+                .frame(height: 10)
+                
+                // Scale labels
+                HStack {
+                    Text("18.5")
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("25")
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("30")
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("35+")
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                        .foregroundColor(.secondary)
                 }
             }
-            .frame(height: 12)
             
-            // Scale labels
-            HStack {
-                Text("18.5")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                Spacer()
-                Text("25")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                Spacer()
-                Text("30")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                Spacer()
-                Text("35+")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-            }
-            
+            // Description
             Text(category.description)
                 .font(.caption)
                 .foregroundColor(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(12)
+        .padding(20)
         .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
     }
     
     private func bmiPosition(in width: CGFloat) -> CGFloat {
@@ -587,73 +703,115 @@ struct DailyCaloriesCard: View {
         return Double(averageCalories) / Double(calorieGoal)
     }
     
+    private var progressColor: Color {
+        if progress < 0.8 {
+            return .green
+        } else if progress < 1.0 {
+            return .orange
+        } else {
+            return .red
+        }
+    }
+    
     var body: some View {
-        VStack(spacing: 12) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
+        VStack(spacing: 16) {
+            // Header section
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text(localizationManager.localizedString(for: AppStrings.Progress.dailyAverageCalories))
                         .font(.subheadline)
+                        .fontWeight(.medium)
                         .foregroundColor(.secondary)
                     
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
                         Text("\(averageCalories)")
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .font(.system(size: 36, weight: .bold, design: .rounded))
                             .foregroundColor(.primary)
+                            .contentTransition(.numericText())
                         
                         Text(localizationManager.localizedString(for: AppStrings.Progress.cal))
-                            .font(.headline)
+                            .font(.title3)
+                            .fontWeight(.medium)
                             .foregroundColor(.secondary)
                     }
                 }
                 
                 Spacer()
                 
-                // Goal comparison
+                // Goal badge
                 VStack(alignment: .trailing, spacing: 4) {
                     Text(localizationManager.localizedString(for: AppStrings.Progress.goalLabel))
                         .font(.caption)
+                        .fontWeight(.medium)
                         .foregroundColor(.secondary)
                     
                     Text("\(calorieGoal)")
                         .font(.title2)
-                        .fontWeight(.semibold)
+                        .fontWeight(.bold)
                         .foregroundColor(.orange)
                 }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(Color.orange.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             }
             
             // Progress bar
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(Color(.systemGray5))
-                    
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(
-                            LinearGradient(
-                                colors: [.orange, .red],
-                                startPoint: .leading,
-                                endPoint: .trailing
+            VStack(spacing: 8) {
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color(.systemGray5))
+                        
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(
+                                LinearGradient(
+                                    colors: [.orange, progressColor],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
                             )
-                        )
-                        .frame(width: min(CGFloat(progress) * geometry.size.width, geometry.size.width))
+                            .frame(width: min(CGFloat(progress) * geometry.size.width, geometry.size.width))
+                            .animation(.spring(response: 0.4, dampingFraction: 0.7), value: progress)
+                    }
+                }
+                .frame(height: 10)
+                
+                // Progress percentage
+                HStack {
+                    Text("\(Int(progress * 100))% of daily goal")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
                 }
             }
-            .frame(height: 10)
             
+            // View details button
             Button(action: onViewDetails) {
-                HStack {
+                HStack(spacing: 8) {
                     Image(systemName: "chart.bar.fill")
+                        .font(.subheadline)
                     Text(localizationManager.localizedString(for: AppStrings.Progress.viewDailyBreakdown))
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
                 }
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundColor(.orange)
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(
+                    LinearGradient(
+                        colors: [.orange, .orange.opacity(0.8)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             }
         }
-        .padding(12)
+        .padding(20)
         .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
     }
 }
 
@@ -686,14 +844,27 @@ struct HealthDataSection: View {
     ]
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Image(systemName: "heart.fill")
-                    .foregroundColor(.red)
+        VStack(alignment: .leading, spacing: 16) {
+            // Header
+            HStack(spacing: 10) {
+                ZStack {
+                    Circle()
+                        .fill(Color.red.opacity(0.12))
+                        .frame(width: 36, height: 36)
+                    
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(.red)
+                }
+                
                 Text(localizationManager.localizedString(for: AppStrings.Progress.healthData))
                     .font(.headline)
+                    .fontWeight(.semibold)
+                
+                Spacer()
             }
             
+            // Metrics grid
             LazyVGrid(columns: columns, spacing: 12) {
                 HealthMetricCard(
                     icon: "figure.walk",
@@ -749,10 +920,10 @@ struct HealthDataSection: View {
                 )
             }
         }
-        .padding(12)
+        .padding(20)
         .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
     }
     
     private func formatNumber(_ number: Int) -> String {
@@ -773,41 +944,47 @@ struct HealthMetricCard: View {
     let isSubscribed: Bool
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: icon)
-                    .font(.title3)
-                    .foregroundColor(color)
+        VStack(alignment: .leading, spacing: 0) {
+            // Icon with colored background
+            ZStack {
+                Circle()
+                    .fill(color.opacity(0.12))
+                    .frame(width: 32, height: 32)
                 
-                Spacer()
+                Image(systemName: icon)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(color)
             }
             
             Spacer()
             
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(alignment: .firstTextBaseline, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .firstTextBaseline, spacing: 3) {
                     Text(value)
-                        .font(.title2)
-                        .fontWeight(.bold)
+                        .font(.system(size: 22, weight: .bold, design: .rounded))
                         .foregroundColor(.primary)
+                        .contentTransition(.numericText())
                     
                     if let unit = unit {
                         Text(unit)
                             .font(.caption)
+                            .fontWeight(.medium)
                             .foregroundColor(.secondary)
                     }
                 }
                 
                 Text(title)
                     .font(.caption)
+                    .fontWeight(.medium)
                     .foregroundColor(.secondary)
+                    .lineLimit(1)
             }
         }
-        .padding(10)
-        .frame(height: 90)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .shadow(color: .black.opacity(0.03), radius: 4, x: 0, y: 1)
+        .padding(14)
+        .frame(height: 100)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.tertiarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }
 
@@ -820,39 +997,33 @@ struct HealthKitSettingsPromptCard: View {
         // Direct approach: Open Settings app to the app's settings page
         // User can then navigate to: Privacy & Security > Health > CalCalculator
         guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else {
-            print("❌ [HealthKitSettingsPromptCard] Failed to create settings URL")
+            print("Failed to create settings URL")
             return
         }
-        
-        print("🔵 [HealthKitSettingsPromptCard] Opening settings: \(settingsURL.absoluteString)")
         
         // Use the synchronous open method with completion handler for better reliability
         if UIApplication.shared.canOpenURL(settingsURL) {
             UIApplication.shared.open(settingsURL) { success in
-                if success {
-                    print("✅ [HealthKitSettingsPromptCard] Successfully opened settings")
-                } else {
-                    print("❌ [HealthKitSettingsPromptCard] Failed to open settings")
+                if !success {
+                    print("Failed to open settings")
                 }
             }
-        } else {
-            print("❌ [HealthKitSettingsPromptCard] Cannot open settings URL")
         }
     }
     
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 16) {
             HStack(spacing: 16) {
                 ZStack {
                     Circle()
                         .fill(
                             LinearGradient(
-                                colors: [.orange.opacity(0.2), .yellow.opacity(0.2)],
+                                colors: [.red.opacity(0.15), .pink.opacity(0.15)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )
-                        .frame(width: 60, height: 60)
+                        .frame(width: 56, height: 56)
                     
                     Image(systemName: "heart.fill")
                         .font(.title2)
@@ -865,13 +1036,14 @@ struct HealthKitSettingsPromptCard: View {
                         )
                 }
                 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text(localizationManager.localizedString(for: AppStrings.Progress.healthAccessRequired))
                         .font(.headline)
+                        .fontWeight(.semibold)
                         .foregroundColor(.primary)
                     
                     Text(localizationManager.localizedString(for: AppStrings.Progress.goToSettings))
-                        .font(.caption)
+                        .font(.subheadline)
                         .foregroundColor(.secondary)
                         .lineLimit(3)
                 }
@@ -882,7 +1054,7 @@ struct HealthKitSettingsPromptCard: View {
             Button {
                 openHealthKitSettings()
             } label: {
-                HStack {
+                HStack(spacing: 8) {
                     Image(systemName: "gearshape.fill")
                         .font(.subheadline)
                     Text(localizationManager.localizedString(for: AppStrings.Progress.openSettings))
@@ -891,21 +1063,21 @@ struct HealthKitSettingsPromptCard: View {
                 }
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
+                .padding(.vertical, 14)
                 .background(
                     LinearGradient(
-                        colors: [.orange, .yellow.opacity(0.8)],
+                        colors: [.red, .pink],
                         startPoint: .leading,
                         endPoint: .trailing
                     )
                 )
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: 14))
             }
         }
-        .padding(12)
+        .padding(20)
         .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
     }
 }
 

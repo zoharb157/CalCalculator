@@ -105,6 +105,7 @@ struct AppStrings {
         static let loadingProgressData = "Loading progress data..."
         static let currentWeight = "Current Weight"
         static let weightChanges = "Weight Changes"
+        static let overDifferentPeriods = "Over different periods"
         static let progressPhotos = "Progress Photos"
         static let dailyAverageCalories = "Daily Average Calories"
         static let bmi = "BMI"

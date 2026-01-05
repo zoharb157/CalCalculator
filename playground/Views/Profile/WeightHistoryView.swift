@@ -15,13 +15,32 @@ struct WeightHistoryView: View {
     @Query(sort: \WeightEntry.date, order: .reverse) private var weightEntries: [WeightEntry]
     
     @State private var showingAddWeight = false
-    @State private var newWeight: Double = 150
+    @State private var newWeight: Double = 70 // Default in kg, will be converted for display
     @State private var newWeightNote: String = ""
     @State private var selectedDate: Date = Date()
     @State private var selectedTimeRange: TimeRange = .month
     @State private var showingExportOptions = false
     
     private let repository = UserProfileRepository.shared
+    
+    // Use metric or imperial units based on user preference
+    private var useMetricUnits: Bool {
+        UserSettings.shared.useMetricUnits
+    }
+    
+    private var weightUnit: String {
+        useMetricUnits ? "kg" : "lbs"
+    }
+    
+    /// Convert weight from kg (storage) to display units
+    private func displayWeight(_ weightInKg: Double) -> Double {
+        useMetricUnits ? weightInKg : weightInKg * 2.20462
+    }
+    
+    /// Convert weight from display units to kg (storage)
+    private func storageWeight(_ displayWeight: Double) -> Double {
+        useMetricUnits ? displayWeight : displayWeight / 2.20462
+    }
     
     enum TimeRange: String, CaseIterable {
         case week = "1W"
@@ -88,7 +107,8 @@ struct WeightHistoryView: View {
                             }
                         }
                         Button {
-                            newWeight = repository.getCurrentWeight()
+                            // Convert from kg (storage) to display units
+                            newWeight = displayWeight(repository.getCurrentWeight())
                             newWeightNote = ""
                             selectedDate = Date()
                             showingAddWeight = true
@@ -133,7 +153,8 @@ struct WeightHistoryView: View {
                 .padding(.horizontal)
             
             Button {
-                newWeight = repository.getCurrentWeight()
+                // Convert from kg (storage) to display units
+                newWeight = displayWeight(repository.getCurrentWeight())
                 newWeightNote = ""
                 selectedDate = Date()
                 showingAddWeight = true
@@ -194,12 +215,13 @@ struct WeightHistoryView: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                             
-                            let change = latestEntry.weight - oldestEntry.weight
-                            let changeText = change >= 0 ? "+\(Int(change)) lbs" : "\(Int(change)) lbs"
+                            let changeInKg = latestEntry.weight - oldestEntry.weight
+                            let changeDisplay = displayWeight(changeInKg)
+                            let changeText = changeDisplay >= 0 ? String(format: "+%.1f %@", changeDisplay, weightUnit) : String(format: "%.1f %@", changeDisplay, weightUnit)
                             Text(changeText)
                                 .font(.title2)
                                 .fontWeight(.bold)
-                                .foregroundColor(change <= 0 ? .green : .red)
+                                .foregroundColor(changeInKg <= 0 ? .green : .red)
                         }
                         
                         Spacer()
@@ -210,8 +232,8 @@ struct WeightHistoryView: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                             
-                            let average = weightEntries.reduce(0) { $0 + $1.weight } / Double(weightEntries.count)
-                            Text("\(Int(average)) lbs")
+                            let averageInKg = weightEntries.reduce(0) { $0 + $1.weight } / Double(weightEntries.count)
+                            Text(String(format: "%.1f %@", displayWeight(averageInKg), weightUnit))
                                 .font(.title2)
                                 .fontWeight(.bold)
                         }
@@ -250,13 +272,15 @@ struct WeightHistoryView: View {
     
     @ViewBuilder
     private var weightChart: some View {
-        let minWeight = (chartEntries.map { $0.weight }.min() ?? 100) - 5
-        let maxWeight = (chartEntries.map { $0.weight }.max() ?? 200) + 5
+        // Convert weights to display units for chart
+        let displayWeights = chartEntries.map { displayWeight($0.weight) }
+        let minWeight = (displayWeights.min() ?? 100) - 5
+        let maxWeight = (displayWeights.max() ?? 200) + 5
         
         Chart(chartEntries) { entry in
             LineMark(
                 x: .value("Date", entry.date),
-                y: .value("Weight", entry.weight)
+                y: .value("Weight", displayWeight(entry.weight))
             )
             .foregroundStyle(
                 LinearGradient(
@@ -270,7 +294,7 @@ struct WeightHistoryView: View {
             
             AreaMark(
                 x: .value("Date", entry.date),
-                y: .value("Weight", entry.weight)
+                y: .value("Weight", displayWeight(entry.weight))
             )
             .foregroundStyle(
                 LinearGradient(
@@ -283,7 +307,7 @@ struct WeightHistoryView: View {
             
             PointMark(
                 x: .value("Date", entry.date),
-                y: .value("Weight", entry.weight)
+                y: .value("Weight", displayWeight(entry.weight))
             )
             .foregroundStyle(.blue)
             .symbolSize(40)
@@ -300,7 +324,7 @@ struct WeightHistoryView: View {
                 AxisGridLine()
                 AxisValueLabel {
                     if let weight = value.as(Double.self) {
-                        Text("\(Int(weight))")
+                        Text("\(Int(weight)) \(weightUnit)")
                     }
                 }
             }
@@ -309,24 +333,33 @@ struct WeightHistoryView: View {
     
     // MARK: - Add Weight Sheet
     
+    // Slider range based on unit preference
+    private var sliderMin: Double {
+        useMetricUnits ? 30.0 : 80.0
+    }
+    
+    private var sliderMax: Double {
+        useMetricUnits ? 200.0 : 440.0
+    }
+    
     private var addWeightSheet: some View {
         NavigationStack {
             VStack(spacing: 24) {
-                // Weight Display
-                Text("\(Int(newWeight)) lbs")
+                // Weight Display - newWeight is in display units
+                Text("\(Int(newWeight)) \(weightUnit)")
                     .font(.system(size: 56, weight: .bold))
                 
                 // Weight Slider
                 VStack(spacing: 8) {
-                    Slider(value: $newWeight, in: 80...400, step: 1)
+                    Slider(value: $newWeight, in: sliderMin...sliderMax, step: 1)
                         .padding(.horizontal, 32)
                     
                     HStack {
-                        Text("80 lbs")
+                        Text("\(Int(sliderMin)) \(weightUnit)")
                             .font(.caption)
                             .foregroundColor(.secondary)
                         Spacer()
-                        Text("400 lbs")
+                        Text("\(Int(sliderMax)) \(weightUnit)")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -383,16 +416,20 @@ struct WeightHistoryView: View {
     // MARK: - Helper Functions
     
     private func saveWeightEntry() {
+        // Convert from display units to kg for storage
+        let weightInKg = storageWeight(newWeight)
+        
         let entry = WeightEntry(
-            weight: newWeight,
+            weight: weightInKg,
             date: selectedDate,
             note: newWeightNote.isEmpty ? nil : newWeightNote
         )
         modelContext.insert(entry)
         
         // Update current weight in repository if this is today's entry
+        // Repository expects weight in kg
         if Calendar.current.isDateInToday(selectedDate) {
-            repository.setCurrentWeight(newWeight)
+            repository.setCurrentWeight(weightInKg)
         }
         
         HapticManager.shared.notification(.success)
@@ -415,14 +452,15 @@ struct WeightHistoryView: View {
     }
     
     private func exportWeightData() {
-        var csvString = "Date,Weight (lbs),Note\n"
+        // Export in user's preferred units
+        var csvString = "Date,Weight (\(weightUnit)),Note\n"
         
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
         
         for entry in weightEntries.reversed() {
             let date = dateFormatter.string(from: entry.date)
-            let weight = String(format: "%.1f", entry.weight)
+            let weight = String(format: "%.1f", displayWeight(entry.weight))
             let note = entry.note?.replacingOccurrences(of: ",", with: ";") ?? ""
             csvString += "\(date),\(weight),\(note)\n"
         }
@@ -453,8 +491,23 @@ struct WeightEntryRow: View {
     let entry: WeightEntry
     let previousEntry: WeightEntry?
     
+    // Use metric or imperial units based on user preference
+    private var useMetricUnits: Bool {
+        UserSettings.shared.useMetricUnits
+    }
+    
+    private var weightUnit: String {
+        useMetricUnits ? "kg" : "lbs"
+    }
+    
+    /// Convert weight from kg (storage) to display units
+    private func displayWeight(_ weightInKg: Double) -> Double {
+        useMetricUnits ? weightInKg : weightInKg * 2.20462
+    }
+    
     private var weightChange: Double? {
         guard let previous = previousEntry else { return nil }
+        // Return change in kg (will be converted for display)
         return entry.weight - previous.weight
     }
     
@@ -462,16 +515,17 @@ struct WeightEntryRow: View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
-                    Text("\(Int(entry.weight)) lbs")
+                    Text(String(format: "%.1f %@", displayWeight(entry.weight), weightUnit))
                         .font(.title3)
                         .fontWeight(.semibold)
                     
                     // Show change from previous entry
                     if let change = weightChange {
+                        let displayChange = displayWeight(abs(change))
                         HStack(spacing: 2) {
                             Image(systemName: change > 0 ? "arrow.up" : change < 0 ? "arrow.down" : "minus")
                                 .font(.caption2)
-                            Text("\(abs(Int(change))) lbs")
+                            Text(String(format: "%.1f %@", displayChange, weightUnit))
                                 .font(.caption)
                         }
                         .foregroundColor(change < 0 ? .green : change > 0 ? .red : .secondary)

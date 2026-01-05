@@ -440,39 +440,19 @@ final class ProgressViewModel {
         // Since UserSettings is @Observable, this will automatically trigger view updates
         settings.updateWeight(weightInKg)
         
-        // Save to SwiftData - check for existing entry for today first
+        // Save to SwiftData - always create a new entry
         if let context = modelContext {
-            let calendar = Calendar.current
-            let today = calendar.startOfDay(for: Date())
-            let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) ?? today
-            
-            // Check if an entry for today already exists
-            let descriptor = FetchDescriptor<WeightEntry>(
-                predicate: #Predicate<WeightEntry> { entry in
-                    entry.date >= today && entry.date < tomorrow
-                },
-                sortBy: [SortDescriptor(\.date, order: .reverse)]
-            )
-            
             do {
-                let existingEntries = try context.fetch(descriptor)
-                if let existingEntry = existingEntries.first {
-                    // Update existing entry - keep the date normalized to start of day
-                    existingEntry.weight = weightInKg
-                } else {
-                    // Create new entry
-                    let entry = WeightEntry(weight: weightInKg, date: Date())
-                    context.insert(entry)
-                }
+                // Always create a new entry with current timestamp
+                let entry = WeightEntry(weight: weightInKg, date: Date())
+                context.insert(entry)
                 
                 try context.save()
                 HapticManager.shared.notification(.success)
                 
                 // Force SwiftData to process the save before fetching
-                // This ensures the updated entry is available when we reload
-                if let context = modelContext {
-                    try? context.processPendingChanges()
-                }
+                // This ensures the new entry is available when we reload
+                try? context.processPendingChanges()
             } catch {
                 print("Failed to save weight entry to SwiftData: \(error)")
             }
