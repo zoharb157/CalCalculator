@@ -44,7 +44,6 @@ struct ProfileView: View {
                     profileInfoSection
                     accountSection
                     goalsTrackingSection
-                    preferencesSection
                     supportSection
                     if isDebugOrTestFlight {
                         debugSection
@@ -194,26 +193,7 @@ struct ProfileView: View {
             }
         }
     }
-    
-    // MARK: - Preferences Section
-    
-    @ViewBuilder
-    private var preferencesSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ProfileSectionHeader(title: localizationManager.localizedString(for: AppStrings.Profile.settings))
-            
-            ProfileSectionCard {
-                SettingsRow(
-                    icon: "gearshape.fill",
-                    iconColor: .blue,
-                    title: localizationManager.localizedString(for: AppStrings.Profile.preferences),
-                    subtitle: localizationManager.localizedString(for: AppStrings.Profile.appearanceCalorieTrackingNotifications),
-                    action: { showingPreferences = true }
-                )
-            }
-        }
-    }
-    
+
     // MARK: - Support Section
     
     @ViewBuilder

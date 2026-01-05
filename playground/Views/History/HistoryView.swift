@@ -8,7 +8,31 @@
 import SwiftUI
 import Charts
 
+// MARK: - HistoryView (with NavigationStack - for standalone use)
+
 struct HistoryView: View {
+    @Bindable var viewModel: HistoryViewModel
+    let repository: MealRepository
+    let isSubscribed: Bool
+    let hasActiveDiet: Bool
+    let onCreateDiet: () -> Void
+    
+    var body: some View {
+        NavigationStack {
+            HistoryViewContent(
+                viewModel: viewModel,
+                repository: repository,
+                isSubscribed: isSubscribed,
+                hasActiveDiet: hasActiveDiet,
+                onCreateDiet: onCreateDiet
+            )
+        }
+    }
+}
+
+// MARK: - HistoryViewContent (without NavigationStack - for embedding)
+
+struct HistoryViewContent: View {
 
     @Bindable var viewModel: HistoryViewModel
     let repository: MealRepository
@@ -55,60 +79,58 @@ struct HistoryView: View {
         // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
         let _ = localizationManager.currentLanguage
         
-        return NavigationStack {
-            ZStack(alignment: .bottom) {
-                content
+        ZStack(alignment: .bottom) {
+            content
 
-                // Diet creation prompt at bottom
+            // Diet creation prompt at bottom
+            if !hasActiveDiet {
+                dietPromptCard
+                    .padding()
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .navigationTitle(localizationManager.localizedString(for: AppStrings.History.title))
+        .id("history-nav-\(localizationManager.currentLanguage)")
+        .background(Color(.systemGroupedBackground))
+        .searchable(text: $searchText, prompt: Text(localizationManager.localizedString(for: AppStrings.History.searchByDateDayMonth)))
+        .refreshable {
+            await viewModel.loadData()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .languageChanged)) { _ in
+            // Reload data when language changes to ensure all localized strings update
+            Task {
+                await viewModel.loadData()
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
                 if !hasActiveDiet {
-                    dietPromptCard
-                        .padding()
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                }
-            }
-            .navigationTitle(localizationManager.localizedString(for: AppStrings.History.title))
-            .id("history-nav-\(localizationManager.currentLanguage)")
-            .background(Color(.systemGroupedBackground))
-            .searchable(text: $searchText, prompt: Text(localizationManager.localizedString(for: AppStrings.History.searchByDateDayMonth)))
-            .refreshable {
-                await viewModel.loadData()
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .languageChanged)) { _ in
-                // Reload data when language changes to ensure all localized strings update
-                Task {
-                    await viewModel.loadData()
-                }
-            }
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    if !hasActiveDiet {
-                        Button {
-                            onCreateDiet()
-                        } label: {
-                            Image(systemName: "calendar.badge.plus")
-                        }
-                    } else {
-                        filterMenuButton
+                    Button {
+                        onCreateDiet()
+                    } label: {
+                        Image(systemName: "calendar.badge.plus")
                     }
+                } else {
+                    filterMenuButton
                 }
             }
-            .safeAreaInset(edge: .top, spacing: 0) {
-                if hasActiveFilters {
-                    activeFiltersSection
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if hasActiveFilters {
+                activeFiltersSection
+            }
+        }
+        .fullScreenCover(item: $selectedDate) { selected in
+            MealsListSheet(
+                selectedDate: selected.date,
+                repository: repository,
+                onDismiss: {
+                    selectedDate = nil
                 }
-            }
-            .fullScreenCover(item: $selectedDate) { selected in
-                MealsListSheet(
-                    selectedDate: selected.date,
-                    repository: repository,
-                    onDismiss: {
-                        selectedDate = nil
-                    }
-                )
-            }
-            .task {
-                await viewModel.loadData()
-            }
+            )
+        }
+        .task {
+            await viewModel.loadData()
         }
     }
 

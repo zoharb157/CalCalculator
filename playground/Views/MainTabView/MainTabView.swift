@@ -11,30 +11,62 @@ import SDK
 import UIKit
 import ObjectiveC
 
+// MARK: - Tab Enum
+/// Stable tab identifiers that don't change based on which tabs are visible
+enum MainTab: String, CaseIterable {
+    case home
+    case progress
+    case myDiet
+    case history
+    case profile
+}
+
 struct MainTabView: View {
     var repository: MealRepository
     @ObservedObject private var localizationManager = LocalizationManager.shared
 
-    @State private var selectedTab = 0
+    /// Persistent storage for the selected tab
+    @AppStorage("selectedMainTab") private var storedTab = MainTab.home.rawValue
+    /// Local state for immediate UI updates - synced with AppStorage
+    @State private var selectedTabRaw: String = MainTab.home.rawValue
     @State private var scrollHomeToTopTrigger = UUID()
     @StateObject private var networkMonitor = NetworkMonitor.shared
+    
+    // Diet creation state (for History tab's create diet prompt)
+    @State private var showingCreateDiet = false
+    @State private var showingPaywall = false
+    @State private var showDeclineConfirmation = false
+    @Environment(TheSDK.self) private var sdk
 
     @State var homeViewModel: HomeViewModel
     @State var scanViewModel: ScanViewModel
     @State var historyViewModel: HistoryViewModel
     @State var progressViewModel: ProgressViewModel
     @State var settingsViewModel: SettingsViewModel
+    @State var myDietViewModel: MyDietViewModel
     
     @Environment(\.isSubscribed) private var isSubscribed
     @Query(filter: #Predicate<DietPlan> { $0.isActive == true }) private var activeDietPlans: [DietPlan]
     
+    /// User has premium subscription AND has at least one active diet plan
     private var hasActiveDiet: Bool {
         !activeDietPlans.isEmpty && isSubscribed
+    }
+    
+    /// Convert the raw string back to a MainTab enum
+    private var selectedTab: MainTab {
+        get { MainTab(rawValue: selectedTabRaw) ?? .home }
+        nonmutating set { selectedTabRaw = newValue.rawValue }
     }
     
     init(repository: MealRepository) {
         let initStart = Date()
         self.repository = repository
+        
+        // Initialize selectedTabRaw from stored value
+        let stored = UserDefaults.standard.string(forKey: "selectedMainTab") ?? MainTab.home.rawValue
+        _selectedTabRaw = State(initialValue: stored)
+        
         _homeViewModel = State(
             initialValue: HomeViewModel(
                 repository: repository,
@@ -64,6 +96,9 @@ struct MainTabView: View {
                 imageStorage: .shared
             )
         )
+        _myDietViewModel = State(
+            initialValue: MyDietViewModel()
+        )
         let initTime = Date().timeIntervalSince(initStart)
         if initTime > 0.1 {
             print("⚠️ [MainTabView] Initialization took \(String(format: "%.3f", initTime))s")
@@ -75,49 +110,62 @@ struct MainTabView: View {
         let _ = localizationManager.currentLanguage
         
         return ZStack(alignment: .top) {
-            TabView(selection: $selectedTab) {
-            HomeView(
-                viewModel: homeViewModel,
-                repository: repository,
-                scanViewModel: scanViewModel,
-                scrollToTopTrigger: scrollHomeToTopTrigger,
-                onMealSaved: {
-                    Task {
-                        await homeViewModel.refreshTodayData()
-                        // Update Live Activity after data refresh
-                        homeViewModel.updateLiveActivityIfNeeded()
-                        await historyViewModel.loadData()
-                        await progressViewModel.loadData()
+            TabView(selection: $selectedTabRaw) {
+                HomeView(
+                    viewModel: homeViewModel,
+                    repository: repository,
+                    scanViewModel: scanViewModel,
+                    scrollToTopTrigger: scrollHomeToTopTrigger,
+                    onMealSaved: {
+                        Task {
+                            await homeViewModel.refreshTodayData()
+                            // Update Live Activity after data refresh
+                            homeViewModel.updateLiveActivityIfNeeded()
+                            await historyViewModel.loadData()
+                            await progressViewModel.loadData()
+                        }
                     }
-                }
-            )
-            .tabItem {
-                Label(localizationManager.localizedString(for: AppStrings.Home.title), systemImage: "house.fill")
-            }
-            .tag(0)
-            
-            ProgressDashboardView(viewModel: progressViewModel)
+                )
                 .tabItem {
-                    Label(localizationManager.localizedString(for: AppStrings.Progress.title), systemImage: "chart.line.uptrend.xyaxis")
+                    Label(localizationManager.localizedString(for: AppStrings.Home.title), systemImage: "house.fill")
                 }
-                .tag(1)
-            
-            HistoryOrDietView(
-                viewModel: historyViewModel,
-                repository: repository,
-                tabName: hasActiveDiet ? localizationManager.localizedString(for: AppStrings.DietPlan.myDiet) : localizationManager.localizedString(for: AppStrings.History.title)
-            )
+                .tag(MainTab.home.rawValue)
+                
+                ProgressDashboardView(viewModel: progressViewModel)
+                    .tabItem {
+                        Label(localizationManager.localizedString(for: AppStrings.Progress.title), systemImage: "chart.line.uptrend.xyaxis")
+                    }
+                    .tag(MainTab.progress.rawValue)
+                
+                // My Diet tab - only shown when user has premium AND active diet
+                if hasActiveDiet {
+                    MyDietView(viewModel: myDietViewModel)
+                        .tabItem {
+                            Label(localizationManager.localizedString(for: AppStrings.DietPlan.myDiet), systemImage: "calendar")
+                        }
+                        .tag(MainTab.myDiet.rawValue)
+                }
+                
+                // History tab - always visible, standalone
+                HistoryView(
+                    viewModel: historyViewModel,
+                    repository: repository,
+                    isSubscribed: isSubscribed,
+                    hasActiveDiet: hasActiveDiet,
+                    onCreateDiet: handleCreateDiet
+                )
                 .tabItem {
-                    Label(hasActiveDiet ? localizationManager.localizedString(for: AppStrings.DietPlan.myDiet) : localizationManager.localizedString(for: AppStrings.History.title), systemImage: "calendar")
+                    Label(localizationManager.localizedString(for: AppStrings.History.title), systemImage: "clock.arrow.circlepath")
                 }
-                .tag(2)
+                .tag(MainTab.history.rawValue)
 
-            ProfileView()
-                .tabItem {
-                    Label(localizationManager.localizedString(for: AppStrings.Profile.title), systemImage: "person.fill")
-                }
-                .tag(3)
+                ProfileView()
+                    .tabItem {
+                        Label(localizationManager.localizedString(for: AppStrings.Profile.title), systemImage: "person.fill")
+                    }
+                    .tag(MainTab.profile.rawValue)
             }
+            // Removed .id("main-tab-view") - this was causing issues with tab selection state
             
             // Offline banner
             if !networkMonitor.isConnected {
@@ -140,9 +188,12 @@ struct MainTabView: View {
             }
         }
         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: networkMonitor.isConnected)
-        .onChange(of: selectedTab) { oldValue, newValue in
-            // When home tab (0) is selected, trigger scroll to top
-            if newValue == 0 {
+        .onChange(of: selectedTabRaw) { oldValue, newValue in
+            // Persist tab selection to AppStorage
+            storedTab = newValue
+            
+            // When home tab is selected, trigger scroll to top
+            if newValue == MainTab.home.rawValue {
                 // Small delay to ensure view is ready, then scroll
                 Task { @MainActor in
                     try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
@@ -150,13 +201,57 @@ struct MainTabView: View {
                 }
             }
         }
+        .onChange(of: hasActiveDiet) { oldValue, newValue in
+            // When diet tab is removed, redirect user if they were on it
+            if oldValue && !newValue && selectedTabRaw == MainTab.myDiet.rawValue {
+                // User was on diet tab which is now hidden, move to history
+                selectedTabRaw = MainTab.history.rawValue
+            }
+            // Note: When diet tab appears, no adjustment needed since tabs use stable identifiers
+        }
         .background(TabBarTapDetector(onHomeTabTapped: {
             // Home tab was tapped (even if already selected)
             scrollHomeToTopTrigger = UUID()
         }))
+        .sheet(isPresented: $showingCreateDiet) {
+            DietPlansListView()
+        }
+        .fullScreenCover(isPresented: $showingPaywall) {
+            paywallView
+        }
+        .paywallDismissalOverlay(
+            showPaywall: $showingPaywall,
+            showDeclineConfirmation: $showDeclineConfirmation
+        )
         // No need for onChange - SwiftUI automatically re-evaluates views when
         // @ObservedObject properties change. Since localizationManager.currentLanguage
         // is @Published, all views using localizationManager will update automatically.
+    }
+    
+    // MARK: - Actions
+    
+    private func handleCreateDiet() {
+        if isSubscribed {
+            showingCreateDiet = true
+        } else {
+            showingPaywall = true
+        }
+    }
+    
+    // MARK: - Paywall View
+    
+    private var paywallView: some View {
+        SDKView(
+            model: sdk,
+            page: .splash,
+            show: paywallBinding(
+                showPaywall: $showingPaywall,
+                sdk: sdk,
+                showDeclineConfirmation: $showDeclineConfirmation
+            ),
+            backgroundColor: .white,
+            ignoreSafeArea: true
+        )
     }
 }
 

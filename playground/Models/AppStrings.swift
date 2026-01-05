@@ -51,6 +51,7 @@ struct AppStrings {
         static let enabled = "Enabled"
         static let readMore = "Read More"
         static let showLess = "Show Less"
+        static let actions = "Actions"
     }
     
     // MARK: - Home
@@ -465,6 +466,19 @@ struct AppStrings {
         static let difficultyEasy = "Easy"
         static let difficultyMedium = "Medium"
         static let difficultyAdvanced = "Advanced"
+        static let replacingExisting = "Replacing Existing Plan"
+        static let mealsRequired = "Meals Required"
+        static let descriptionPlaceholder = "Brief description of your diet plan"
+        static let perWeek = "Per Week"
+        static let quickSetup = "Quick Setup"
+        static let quickSetupDescription = "Create a plan in minutes"
+        static let useTemplate = "Use Template"
+        static let createFromScratch = "Create from Scratch"
+        static let planSummary = "Plan Summary"
+        static let todaysMeals = "Today's Meals"
+        static let noMealsToday = "No meals scheduled for today"
+        static let replaceWithTemplate = "Replace with Template"
+        static let deleteConfirmation = "This will delete your diet plan and all scheduled meals. This action cannot be undone."
     }
     
     // MARK: - Profile

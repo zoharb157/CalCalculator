@@ -544,7 +544,7 @@
 			};
 			name = Debug;
 		};
-			A31433222EF0897D00EFE039 /* Release */ = {
+		A31433222EF0897D00EFE039 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;

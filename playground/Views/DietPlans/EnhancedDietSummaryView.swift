@@ -9,7 +9,19 @@ import SwiftUI
 import SwiftData
 import Charts
 
+// MARK: - EnhancedDietSummaryView (with NavigationStack - for standalone use)
+
 struct EnhancedDietSummaryView: View {
+    var body: some View {
+        NavigationStack {
+            EnhancedDietSummaryContent()
+        }
+    }
+}
+
+// MARK: - EnhancedDietSummaryContent (without NavigationStack - for embedding)
+
+struct EnhancedDietSummaryContent: View {
     @Query(filter: #Predicate<DietPlan> { $0.isActive == true }) private var activePlans: [DietPlan]
     @Environment(\.modelContext) private var modelContext
     @ObservedObject private var localizationManager = LocalizationManager.shared
@@ -30,78 +42,76 @@ struct EnhancedDietSummaryView: View {
         // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
         let _ = localizationManager.currentLanguage
         
-        return NavigationStack {
-            ScrollView {
-                VStack(spacing: 24) {
-                    // Time range selector
-                    timeRangeSelector
-                    
-                    // Main adherence card
-                    if let data = adherenceData {
-                        adherenceOverviewCard(data: data)
-                    }
-                    
-                    // Trend chart
-                    if !weeklyAdherence.isEmpty {
-                        adherenceTrendChart
-                    }
-                    
-                    // Today's schedule
-                    if let data = adherenceData {
-                        todaysScheduleSection(data: data)
-                    }
-                    
-                    // Insights section
-                    insightsSection
-                    
-                    // Weekly stats
-                    weeklyStatsSection
-                    
-                    // Off-diet analysis
-                    if let data = adherenceData, data.offDietCalories > 0 {
-                        offDietAnalysisSection(data: data)
-                    }
-                }
-                .padding()
-            }
-            .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.myDiet))
+        ScrollView {
+            VStack(spacing: 24) {
+                // Time range selector
+                timeRangeSelector
                 
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    HStack(spacing: 16) {
-                        Button {
-                            if activePlans.first != nil {
-                                showingEditPlan = true
-                            }
-                        } label: {
-                            Image(systemName: "pencil")
+                // Main adherence card
+                if let data = adherenceData {
+                    adherenceOverviewCard(data: data)
+                }
+                
+                // Trend chart
+                if !weeklyAdherence.isEmpty {
+                    adherenceTrendChart
+                }
+                
+                // Today's schedule
+                if let data = adherenceData {
+                    todaysScheduleSection(data: data)
+                }
+                
+                // Insights section
+                insightsSection
+                
+                // Weekly stats
+                weeklyStatsSection
+                
+                // Off-diet analysis
+                if let data = adherenceData, data.offDietCalories > 0 {
+                    offDietAnalysisSection(data: data)
+                }
+            }
+            .padding()
+        }
+        .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.myDiet))
+            
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                HStack(spacing: 16) {
+                    Button {
+                        if activePlans.first != nil {
+                            showingEditPlan = true
                         }
-                        
-                        Button {
-                            showingInsights = true
-                        } label: {
-                            Image(systemName: "chart.bar.fill")
-                        }
+                    } label: {
+                        Image(systemName: "pencil")
+                    }
+                    
+                    Button {
+                        showingInsights = true
+                    } label: {
+                        Image(systemName: "chart.bar.fill")
                     }
                 }
             }
-            .onChange(of: selectedDate) { _, _ in
-                loadAdherenceData()
-            }
-            .onChange(of: selectedTimeRange) { _, _ in
-                loadWeeklyAdherence()
-            }
-            .task {
-                loadAdherenceData()
-                loadWeeklyAdherence()
-            }
-            .sheet(isPresented: $showingInsights) {
-                DietInsightsView(activePlans: activePlans, repository: dietPlanRepository)
-            }
-            .sheet(isPresented: $showingEditPlan) {
-                if let plan = activePlans.first {
-                    DietPlanEditorView(plan: plan, repository: dietPlanRepository)
-                }
+        }
+        .onChange(of: selectedDate) { _, _ in
+            loadAdherenceData()
+        }
+        .onChange(of: selectedTimeRange) { _, _ in
+            loadWeeklyAdherence()
+        }
+        .task {
+            loadAdherenceData()
+            loadWeeklyAdherence()
+        }
+        .sheet(isPresented: $showingInsights) {
+            DietInsightsView(activePlans: activePlans, repository: dietPlanRepository)
+        }
+        .sheet(isPresented: $showingEditPlan) {
+            if let plan = activePlans.first {
+                DietPlanEditorView(plan: plan, repository: dietPlanRepository)
             }
         }
     }

@@ -18,6 +18,8 @@ struct DietPlansListView: View {
     @State private var showingTemplates = false
     @State private var showingQuickSetup = false
     @State private var selectedPlan: DietPlan?
+    @State private var showingDeleteConfirmation = false
+    @State private var planToDelete: DietPlan?
     
     private var dietPlanRepository: DietPlanRepository {
         DietPlanRepository(context: modelContext)
@@ -32,15 +34,18 @@ struct DietPlansListView: View {
         let _ = localizationManager.currentLanguage
         
         return NavigationStack {
-            Group {
-                if !hasActivePlan {
-                    emptyStateView
-                } else {
-                    dietPlanView
+            ScrollView {
+                VStack(spacing: 24) {
+                    if !hasActivePlan {
+                        emptyStateView
+                    } else {
+                        activePlanView
+                    }
                 }
+                .padding()
             }
+            .background(Color(.systemGroupedBackground))
             .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.title))
-                
             .toolbar {
                 if hasActivePlan {
                     ToolbarItem(placement: .primaryAction) {
@@ -50,7 +55,6 @@ struct DietPlansListView: View {
                             }
                         } label: {
                             Label(localizationManager.localizedString(for: AppStrings.Common.edit), systemImage: "pencil")
-                            
                         }
                     }
                 }
@@ -85,68 +89,310 @@ struct DietPlansListView: View {
             .sheet(item: $selectedPlan) { plan in
                 DietPlanEditorView(plan: plan, repository: dietPlanRepository)
             }
+            .confirmationDialog(
+                localizationManager.localizedString(for: AppStrings.DietPlan.deleteDietPlan),
+                isPresented: $showingDeleteConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button(localizationManager.localizedString(for: AppStrings.Common.delete), role: .destructive) {
+                    if let plan = planToDelete {
+                        deletePlan(plan)
+                    }
+                }
+                Button(localizationManager.localizedString(for: AppStrings.Common.cancel), role: .cancel) {
+                    planToDelete = nil
+                }
+            } message: {
+                Text(localizationManager.localizedString(for: AppStrings.DietPlan.deleteConfirmation))
+            }
         }
     }
+    
+    // MARK: - Empty State
     
     private var emptyStateView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "calendar.badge.clock")
-                .font(.system(size: 60))
-                .foregroundColor(.secondary)
+        VStack(spacing: 32) {
+            // Illustration
+            illustrationView
             
-            Text(localizationManager.localizedString(for: AppStrings.DietPlan.noDietPlan))
-                .font(.title2)
-                .fontWeight(.semibold)
-            
-            Text(localizationManager.localizedString(for: AppStrings.DietPlan.createDietDescription))
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-            
-            Button {
-                showingCreatePlan = true
-            } label: {
-                Label(localizationManager.localizedString(for: AppStrings.DietPlan.createDietPlan), systemImage: "plus.circle.fill")
-                    
-                    .font(.headline)
+            // Text content
+            VStack(spacing: 12) {
+                Text(localizationManager.localizedString(for: AppStrings.DietPlan.noDietPlan))
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
+                Text(localizationManager.localizedString(for: AppStrings.DietPlan.createDietDescription))
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
             }
-            .buttonStyle(.borderedProminent)
+            
+            // Creation options
+            creationOptionsView
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground))
+        .padding(.top, 40)
     }
     
-    private var dietPlanView: some View {
-        List {
+    private var illustrationView: some View {
+        ZStack {
+            // Background circles
+            Circle()
+                .fill(Color.blue.opacity(0.1))
+                .frame(width: 160, height: 160)
+            
+            Circle()
+                .fill(Color.blue.opacity(0.15))
+                .frame(width: 120, height: 120)
+            
+            // Icons arranged in a pattern
+            VStack(spacing: 8) {
+                HStack(spacing: 16) {
+                    mealIcon("sun.horizon.fill", color: .orange)
+                    mealIcon("sun.max.fill", color: .green)
+                }
+                HStack(spacing: 16) {
+                    mealIcon("moon.stars.fill", color: .blue)
+                    mealIcon("leaf.fill", color: .purple)
+                }
+            }
+        }
+    }
+    
+    private func mealIcon(_ systemName: String, color: Color) -> some View {
+        ZStack {
+            Circle()
+                .fill(color.opacity(0.2))
+                .frame(width: 44, height: 44)
+            
+            Image(systemName: systemName)
+                .font(.system(size: 20))
+                .foregroundColor(color)
+        }
+    }
+    
+    private var creationOptionsView: some View {
+        VStack(spacing: 12) {
+            // Quick Setup - Primary action
+            Button {
+                HapticManager.shared.impact(.light)
+                showingQuickSetup = true
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "bolt.fill")
+                        .font(.system(size: 18))
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(localizationManager.localizedString(for: AppStrings.DietPlan.quickSetup))
+                            .font(.headline)
+                        
+                        Text(localizationManager.localizedString(for: AppStrings.DietPlan.quickSetupDescription))
+                            .font(.caption)
+                            .opacity(0.8)
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                }
+                .foregroundColor(.white)
+                .padding()
+                .background(
+                    LinearGradient(
+                        colors: [Color.blue, Color.blue.opacity(0.8)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .cornerRadius(16)
+            }
+            
+            HStack(spacing: 12) {
+                // Use Template
+                CreationOptionCard(
+                    icon: "doc.on.doc.fill",
+                    title: localizationManager.localizedString(for: AppStrings.DietPlan.useTemplate),
+                    color: .purple
+                ) {
+                    HapticManager.shared.impact(.light)
+                    showingTemplates = true
+                }
+                
+                // Create from Scratch
+                CreationOptionCard(
+                    icon: "pencil.and.list.clipboard",
+                    title: localizationManager.localizedString(for: AppStrings.DietPlan.createFromScratch),
+                    color: .green
+                ) {
+                    HapticManager.shared.impact(.light)
+                    showingCreatePlan = true
+                }
+            }
+        }
+        .padding(.horizontal)
+    }
+    
+    // MARK: - Active Plan View
+    
+    private var activePlanView: some View {
+        VStack(spacing: 20) {
             if let plan = activePlans.first {
-                DietPlanRow(plan: plan) {
+                // Active plan card
+                ActivePlanCard(plan: plan) {
                     selectedPlan = plan
                 }
                 
-                Section {
-                    Button {
-                        selectedPlan = plan
-                    } label: {
-                        Label(localizationManager.localizedString(for: AppStrings.DietPlan.editDietPlan), systemImage: "pencil")
-                            .foregroundColor(.blue)
-                            
-                    }
+                // Plan stats
+                planStatsSection(plan: plan)
+                
+                // Today's meals section
+                todaysMealsSection(plan: plan)
+                
+                // Actions section
+                actionsSection(plan: plan)
+            }
+        }
+    }
+    
+    private func planStatsSection(plan: DietPlan) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader(icon: "chart.bar.fill", title: localizationManager.localizedString(for: AppStrings.DietPlan.planSummary))
+            
+            HStack(spacing: 12) {
+                DietPlanStatCard(
+                    value: "\(plan.scheduledMeals.count)",
+                    label: localizationManager.localizedString(for: AppStrings.History.meals),
+                    icon: "fork.knife",
+                    color: .blue
+                )
+                
+                DietPlanStatCard(
+                    value: "\(totalMealsPerWeek(plan: plan))",
+                    label: localizationManager.localizedString(for: AppStrings.DietPlan.perWeek),
+                    icon: "calendar",
+                    color: .green
+                )
+                
+                DietPlanStatCard(
+                    value: "\(activeDaysCount(plan: plan))",
+                    label: localizationManager.localizedString(for: AppStrings.DietPlan.days),
+                    icon: "checkmark.circle.fill",
+                    color: .orange
+                )
+            }
+        }
+    }
+    
+    private func todaysMealsSection(plan: DietPlan) -> some View {
+        let todayMeals = mealsForToday(plan: plan)
+        
+        return VStack(alignment: .leading, spacing: 12) {
+            sectionHeader(icon: "sun.max.fill", title: localizationManager.localizedString(for: AppStrings.DietPlan.todaysMeals))
+            
+            if todayMeals.isEmpty {
+                HStack {
+                    Image(systemName: "moon.zzz.fill")
+                        .foregroundColor(.secondary)
                     
-                    Button(role: .destructive) {
-                        deletePlan(plan)
-                    } label: {
-                        Label(localizationManager.localizedString(for: AppStrings.DietPlan.deleteDietPlan), systemImage: "trash")
-                            .foregroundColor(.red)
-                            
+                    Text(localizationManager.localizedString(for: AppStrings.DietPlan.noMealsToday))
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color(.secondarySystemGroupedBackground))
+                .cornerRadius(12)
+            } else {
+                VStack(spacing: 8) {
+                    ForEach(todayMeals) { meal in
+                        TodayMealRow(meal: meal)
                     }
-                } footer: {
-                    Text(localizationManager.localizedString(for: AppStrings.DietPlan.onlyOneActivePlan))
-                        .font(.caption)
-                        
                 }
             }
         }
+    }
+    
+    private func actionsSection(plan: DietPlan) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader(icon: "gearshape.fill", title: localizationManager.localizedString(for: AppStrings.Common.actions))
+            
+            VStack(spacing: 0) {
+                // Edit plan
+                ActionRow(
+                    icon: "pencil",
+                    title: localizationManager.localizedString(for: AppStrings.DietPlan.editDietPlan),
+                    color: .blue
+                ) {
+                    selectedPlan = plan
+                }
+                
+                Divider()
+                    .padding(.leading, 44)
+                
+                // Replace with template
+                ActionRow(
+                    icon: "doc.on.doc",
+                    title: localizationManager.localizedString(for: AppStrings.DietPlan.replaceWithTemplate),
+                    color: .purple
+                ) {
+                    showingTemplates = true
+                }
+                
+                Divider()
+                    .padding(.leading, 44)
+                
+                // Delete plan
+                ActionRow(
+                    icon: "trash",
+                    title: localizationManager.localizedString(for: AppStrings.DietPlan.deleteDietPlan),
+                    color: .red
+                ) {
+                    planToDelete = plan
+                    showingDeleteConfirmation = true
+                }
+            }
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(12)
+        }
+    }
+    
+    private func sectionHeader(icon: String, title: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 14))
+                .foregroundColor(.secondary)
+            
+            Text(title)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundColor(.secondary)
+        }
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func totalMealsPerWeek(plan: DietPlan) -> Int {
+        plan.scheduledMeals.reduce(0) { $0 + $1.daysOfWeek.count }
+    }
+    
+    private func activeDaysCount(plan: DietPlan) -> Int {
+        var days = Set<Int>()
+        for meal in plan.scheduledMeals {
+            for day in meal.daysOfWeek {
+                days.insert(day)
+            }
+        }
+        return days.count
+    }
+    
+    private func mealsForToday(plan: DietPlan) -> [ScheduledMeal] {
+        let calendar = Calendar.current
+        let weekday = calendar.component(.weekday, from: Date())
+        // daysOfWeek uses 1=Sunday, 2=Monday, ..., 7=Saturday
+        return plan.scheduledMeals
+            .filter { $0.daysOfWeek.contains(weekday) }
+            .sorted { $0.time < $1.time }
     }
     
     private func deletePlan(_ plan: DietPlan) {
@@ -161,59 +407,234 @@ struct DietPlansListView: View {
             
             // Post notification that diet plan changed
             NotificationCenter.default.post(name: .dietPlanChanged, object: nil)
+            
+            HapticManager.shared.notification(.success)
         } catch {
             print("Failed to delete diet plan: \(error)")
         }
     }
 }
 
-struct DietPlanRow: View {
+// MARK: - Supporting Views
+
+struct CreationOptionCard: View {
+    let icon: String
+    let title: String
+    let color: Color
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(color.opacity(0.15))
+                        .frame(width: 48, height: 48)
+                    
+                    Image(systemName: icon)
+                        .font(.system(size: 20))
+                        .foregroundColor(color)
+                }
+                
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(16)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct ActivePlanCard: View {
     let plan: DietPlan
     let onTap: () -> Void
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
         Button(action: onTap) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(plan.name)
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                    
-                    if let description = plan.planDescription {
-                        Text(description)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .lineLimit(2)
-                    }
-                    
-                    HStack(spacing: 12) {
-                        Label("\(plan.scheduledMeals.count) \(localizationManager.localizedString(for: AppStrings.History.meals))", systemImage: "fork.knife")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    // Active badge
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(Color.green)
+                            .frame(width: 8, height: 8)
                         
-                        if plan.isActive {
-                            Label(localizationManager.localizedString(for: AppStrings.DietPlan.active), systemImage: "checkmark.circle.fill")
-                                
-                                .font(.caption)
-                                .foregroundColor(.green)
-                        } else {
-                            Label(localizationManager.localizedString(for: AppStrings.DietPlan.inactive), systemImage: "xmark.circle.fill")
-                                
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                        }
+                        Text(localizationManager.localizedString(for: AppStrings.DietPlan.active).uppercased())
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.green)
                     }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.green.opacity(0.15))
+                    .cornerRadius(8)
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.secondary)
                 }
+                
+                Text(plan.name)
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
+                
+                if let description = plan.planDescription, !description.isEmpty {
+                    Text(description)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                }
+                
+                HStack(spacing: 16) {
+                    Label("\(plan.scheduledMeals.count) \(localizationManager.localizedString(for: AppStrings.History.meals))", systemImage: "fork.knife")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    Label(plan.createdAt.formatted(date: .abbreviated, time: .omitted), systemImage: "calendar")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                LinearGradient(
+                    colors: [Color(.secondarySystemGroupedBackground), Color(.secondarySystemGroupedBackground).opacity(0.8)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .cornerRadius(16)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.green.opacity(0.3), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct DietPlanStatCard: View {
+    let value: String
+    let label: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 16))
+                .foregroundColor(color)
+            
+            Text(value)
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(.primary)
+            
+            Text(label)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 16)
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(12)
+    }
+}
+
+struct TodayMealRow: View {
+    let meal: ScheduledMeal
+    
+    private var categoryColor: Color {
+        switch meal.category {
+        case .breakfast: return .orange
+        case .lunch: return .green
+        case .dinner: return .blue
+        case .snack: return .purple
+        }
+    }
+    
+    private var categoryIcon: String {
+        switch meal.category {
+        case .breakfast: return "sun.horizon.fill"
+        case .lunch: return "sun.max.fill"
+        case .dinner: return "moon.stars.fill"
+        case .snack: return "leaf.fill"
+        }
+    }
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(categoryColor.opacity(0.15))
+                    .frame(width: 40, height: 40)
+                
+                Image(systemName: categoryIcon)
+                    .font(.system(size: 16))
+                    .foregroundColor(categoryColor)
+            }
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(meal.name)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                
+                Text(meal.category.rawValue.capitalized)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+            
+            Text(meal.time.formatted(date: .omitted, time: .shortened))
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(categoryColor)
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(12)
+    }
+}
+
+struct ActionRow: View {
+    let icon: String
+    let title: String
+    let color: Color
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(size: 16))
+                    .foregroundColor(color)
+                    .frame(width: 24)
+                
+                Text(title)
+                    .font(.body)
+                    .foregroundColor(color == .red ? .red : .primary)
                 
                 Spacer()
                 
                 Image(systemName: "chevron.right")
-                    .font(.caption)
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(.secondary)
             }
-            .padding(.vertical, 4)
+            .padding()
         }
         .buttonStyle(.plain)
     }
@@ -223,4 +644,3 @@ struct DietPlanRow: View {
     DietPlansListView()
         .modelContainer(for: [DietPlan.self, ScheduledMeal.self])
 }
-
