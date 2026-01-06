@@ -61,13 +61,8 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable {
             webView.isInspectable = true
         }
 
-        // Load the HTML file
-        if let htmlURL = Bundle.main.url(forResource: "onboarding", withExtension: "html") {
-            webView.loadFileURL(htmlURL, allowingReadAccessTo: htmlURL.deletingLastPathComponent())
-        } else {
-            // Fallback: load from string if file not found
-            print("⚠️ [OnboardingWebView] Could not find onboarding.html in bundle")
-        }
+        // Load the HTML with injected JS
+        loadOnboardingContent(into: webView)
 
         context.coordinator.webView = webView
 
@@ -76,6 +71,34 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable {
 
     func updateUIView(_ uiView: WKWebView, context: Context) {
         // No updates needed
+    }
+
+    /// Loads the onboarding HTML template and injects the JS content
+    private func loadOnboardingContent(into webView: WKWebView) {
+        // Load HTML template
+        guard let htmlURL = Bundle.main.url(forResource: "onboarding", withExtension: "html"),
+            var htmlContent = try? String(contentsOf: htmlURL, encoding: .utf8)
+        else {
+            print("⚠️ [OnboardingWebView] Could not find or read onboarding.html in bundle")
+            return
+        }
+
+        // Load JS content
+        guard let jsURL = Bundle.main.url(forResource: "onboarding", withExtension: "js"),
+            let jsContent = try? String(contentsOf: jsURL, encoding: .utf8)
+        else {
+            print("⚠️ [OnboardingWebView] Could not find or read onboarding.js in bundle")
+            return
+        }
+
+        // Replace the placeholder with actual JS content
+        htmlContent = htmlContent.replacingOccurrences(of: "#SPLASH_JS#", with: jsContent)
+
+        // Get the base URL for relative resource loading
+        let baseURL = htmlURL.deletingLastPathComponent()
+
+        // Load the combined HTML string
+        webView.loadHTMLString(htmlContent, baseURL: baseURL)
     }
 
     /// Coordinator to handle JS message callbacks
