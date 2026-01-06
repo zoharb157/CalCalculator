@@ -5,9 +5,9 @@
 //  Created by Tareq Khalili on 15/12/2025.
 //
 
-import SwiftUI
-import SwiftData
 import SDK
+import SwiftData
+import SwiftUI
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
@@ -24,16 +24,16 @@ struct ContentView: View {
     struct PaywallItem: Equatable, Identifiable {
         let page: Page
         var callback: (() -> Void)?
-
+        
         init(page: Page, callback: (() -> Void)? = nil) {
             self.page = page
             self.callback = callback
         }
-
+        
         static func == (lhs: Self, rhs: Self) -> Bool {
             lhs.page == rhs.page
         }
-
+        
         var id: String {
             page.id
         }
@@ -42,7 +42,6 @@ struct ContentView: View {
     enum AuthState {
         case login
         case onboarding
-        case goalsGeneration
         case signIn
         case authenticated
     }
@@ -62,41 +61,25 @@ struct ContentView: View {
                     )
                     
                 case .onboarding:
-                    OnboardingFlowView(jsonFileName: "onboarding") { dict in
-                        // This is the final dictionary: [stepId: answer]
-                        onboardingResult = dict
+                    OnboardingWebView { result in
                         // Save onboarding data to UserSettings
-                        saveOnboardingData(dict)
+                        saveOnboardingResult(result)
+                        
+                        // Save generated goals
+                        saveGeneratedGoals(result.goals)
                         
                         // Mark onboarding as completed
                         settings.completeOnboarding()
                         
                         // Save user as authenticated
-                        AuthenticationManager.shared.setUserId(AuthenticationManager.shared.userId ?? "")
+                        AuthenticationManager.shared.setUserId(
+                            AuthenticationManager.shared.userId ?? "")
                         
-                        // Example: convert to JSON for debugging/network
-                        if JSONSerialization.isValidJSONObject(dict),
-                           let data = try? JSONSerialization.data(withJSONObject: dict, options: [.prettyPrinted]),
-                           let json = String(data: data, encoding: .utf8) {
-                            print(json)
-                        }
-                        
-                        // Check subscription status before showing paywall (non-blocking)
-                        Task {
-                            // Don't block - proceed immediately and check subscription in background
-                            await MainActor.run {
-                                authState = .goalsGeneration
-                            }
-                            
-                            // NOTE: Subscription status is ONLY checked when HTML paywall closes
-                            // No automatic checks here
-                        }
-                    }
-                    
-                case .goalsGeneration:
-                    GoalsGenerationView(onboardingData: onboardingResult) {
-                        // Save user as authenticated
-                        AuthenticationManager.shared.setUserId(AuthenticationManager.shared.userId ?? "")
+                        // Log for debugging
+                        print("📱 [ContentView] Onboarding completed at: \(result.completedAt)")
+                        print(
+                            "📱 [ContentView] Goals: \(result.goals.calories) kcal, \(result.goals.proteinG)g protein"
+                        )
                         
                         withAnimation {
                             authState = .authenticated
@@ -114,16 +97,16 @@ struct ContentView: View {
                             authState = .authenticated
                         }
                     )
-                        .task {
-                            guard !hasCheckedSubscription else { return }
-                            hasCheckedSubscription = true
-                            
-                            // Don't block - proceed immediately
-                            authState = .authenticated
-                            
-                            // NOTE: Subscription status is ONLY checked when HTML paywall closes
-                            // No automatic checks here
-                        }
+                    .task {
+                        guard !hasCheckedSubscription else { return }
+                        hasCheckedSubscription = true
+                        
+                        // Don't block - proceed immediately
+                        authState = .authenticated
+                        
+                        // NOTE: Subscription status is ONLY checked when HTML paywall closes
+                        // No automatic checks here
+                    }
                     
                 case .authenticated:
                     let mainTabView = MainTabView(repository: repository)
@@ -172,7 +155,7 @@ struct ContentView: View {
                     paywallItem = nil
                 }
             )
-
+            
             SDKView(
                 model: sdk,
                 page: page.page,
@@ -187,47 +170,60 @@ struct ContentView: View {
     
     // MARK: - Save Onboarding Data
     
-    private func saveOnboardingData(_ dict: [String: Any]) {
+    private func saveOnboardingResult(_ result: OnboardingResult) {
         let settings = UserSettings.shared
+        let answers = result.answers
         
-        // Extract height and weight from "height_weight" step
-        // Structure: height_weight -> { height: { value: Double, unit: String }, weight: { value: Double, unit: String } }
-        if let heightWeightData = dict["height_weight"] as? [String: Any] {
-            // Height
-            if let heightData = heightWeightData["height"] as? [String: Any] {
-                if let heightValue = heightData["value"] as? Double,
-                   let unit = heightData["unit"] as? String {
-                    // Convert to cm
-                    let heightInCm = unit == "cm" ? heightValue : heightValue * 30.48 // ft to cm
-                    settings.height = heightInCm
-                }
+        // Extract normalized height and weight from _normalized
+        if let normalized = answers["_normalized"] as? [String: Any] {
+            if let heightCm = normalized["height_cm"] as? Double {
+                settings.height = heightCm
             }
-            
-            // Weight
-            if let weightData = heightWeightData["weight"] as? [String: Any] {
-                if let weightValue = weightData["value"] as? Double,
-                   let unit = weightData["unit"] as? String {
-                    // Convert to kg
-                    let weightInKg = unit == "kg" ? weightValue : weightValue * 0.453592 // lbs to kg
-                    settings.updateWeight(weightInKg)
-                }
+            if let weightKg = normalized["weight_kg"] as? Double {
+                settings.updateWeight(weightKg)
             }
         }
         
         // Extract desired weight from "desired_weight" step
-        if let desiredWeightValue = dict["desired_weight"] as? Double {
+        if let desiredWeightData = answers["desired_weight"] as? [String: Any],
+           let desiredWeightValue = desiredWeightData["value"] as? Double {
             settings.targetWeight = desiredWeightValue
         }
         
-        // Mark onboarding as complete
-        settings.completeOnboarding()
+        // Extract goal type
+        if let goalData = answers["goal"] as? [String: Any],
+           let goalValue = goalData["value"] as? String {
+            // Map goal to settings if needed
+            print("📱 [ContentView] User goal: \(goalValue)")
+        }
+        
+        // Extract activity level
+        if let activityData = answers["activity_level"] as? [String: Any],
+           let activityValue = activityData["value"] as? String {
+            print("📱 [ContentView] Activity level: \(activityValue)")
+        }
+    }
+
+    private func saveGeneratedGoals(_ goals: OnboardingResult.GeneratedGoalsData) {
+        let settings = UserSettings.shared
+        settings.calorieGoal = goals.calories
+        settings.proteinGoal = goals.proteinG
+        settings.carbsGoal = goals.carbsG
+        settings.fatGoal = goals.fatG
+        
+        print("📱 [ContentView] Saved goals - Calories: \(goals.calories), Protein: \(goals.proteinG)g, Carbs: \(goals.carbsG)g, Fat: \(goals.fatG)g")
     }
 }
 
 #Preview {
     ContentView()
         .modelContainer(
-            for: [Meal.self, MealItem.self, DaySummary.self, WeightEntry.self],
+            for: [
+                Meal.self,
+                MealItem.self,
+                DaySummary.self,
+                WeightEntry.self
+            ],
             inMemory: true
         )
 }
