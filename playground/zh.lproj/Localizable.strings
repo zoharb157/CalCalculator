@@ -116,6 +116,11 @@
 "Generating PDF..." = "正在生成PDF...";
 "Export Error" = "导出错误";
 "An unknown error occurred." = "发生未知错误。";
+"Rate Us" = "评价我们";
+"If you're enjoying CalorieVisionAI, please take a moment to rate us on the App Store. Your feedback helps us improve!" = "如果您喜欢 CalorieVisionAI，请花一点时间在 App Store 上评价我们。您的反馈帮助我们改进！";
+"Send Feedback" = "发送反馈";
+"Your Feedback" = "您的反馈";
+"We'd love to hear your thoughts, suggestions, or report any issues you've encountered." = "我们很乐意听取您的想法、建议或报告您遇到的任何问题。";
 
 /* Weight */
 "Save Your Weight" = "保存您的体重";
@@ -190,7 +195,7 @@
 "View Daily Breakdown" = "查看每日明细";
 "Health Data" = "健康数据";
 "Health Access Required" = "需要健康访问权限";
-"Go to Settings > Privacy & Security > Health > CalCalculator" = "前往设置 > 隐私与安全性 > 健康 > CalCalculator";
+"Go to Settings > Privacy & Security > Health > CalorieVisionAI" = "前往设置 > 隐私与安全性 > 健康 > CalorieVisionAI";
 "Open Settings" = "打开设置";
 "Delete Entry" = "删除条目";
 "This cannot be undone." = "此操作无法撤销。";
@@ -223,7 +228,7 @@
 "View Daily Breakdown" = "查看每日明细";
 "Health Data" = "健康数据";
 "Health Access Required" = "需要健康访问权限";
-"Go to Settings > Privacy & Security > Health > CalCalculator" = "前往设置 > 隐私与安全性 > 健康 > CalCalculator";
+"Go to Settings > Privacy & Security > Health > CalorieVisionAI" = "前往设置 > 隐私与安全性 > 健康 > CalorieVisionAI";
 "Open Settings" = "打开设置";
 "Weight Progress" = "体重进度";
 "Current" = "当前";
@@ -366,14 +371,14 @@
 "High" = "高";
 "Medium" = "中";
 "Low" = "低";
-"Welcome to CalCalculator" = "欢迎使用 CalCalculator";
+"Welcome to CalorieVisionAI" = "欢迎使用 CalorieVisionAI";
 "What is your gender?" = "您的性别是什么？";
 "How old are you?" = "您多大了？";
 "Body Metrics" = "身体指标";
 "You can change this anytime in Settings." = "您可以随时在设置中更改此选项。";
 "Allow Notifications" = "允许通知";
 "Enable Notifications" = "启用通知";
-"CalCalculator" = "CalCalculator";
+"CalorieVisionAI" = "CalorieVisionAI";
 "Track your nutrition with ease" = "轻松跟踪您的营养";
 "Already have an account?" = "已有账户？";
 "Sign In" = "登录";

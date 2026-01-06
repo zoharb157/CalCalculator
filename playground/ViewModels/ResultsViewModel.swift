@@ -27,7 +27,9 @@ final class ResultsViewModel {
     }
     
     var items: [MealItem] {
-        meal.items
+        // Safely access items relationship by creating a local copy first
+        // This prevents InvalidFutureBackingData errors
+        Array(meal.items)
     }
     
     // MARK: - Meal Editing
@@ -40,27 +42,38 @@ final class ResultsViewModel {
     
     func updateItemPortion(_ item: MealItem, newPortion: Double) {
         guard newPortion > 0 else { return }
+        guard item.originalPortion > 0 else {
+            print("⚠️ [ResultsViewModel] Cannot update portion: originalPortion is 0")
+            return
+        }
         
-        // Calculate scaling ratio
+        // Calculate scaling ratio based on original portion
+        // This is simpler and safer than the previous complex calculation
         let ratio = newPortion / item.originalPortion
         
-        // Scale macros proportionally
-        let baseCaloriesPerUnit = Double(item.calories) / (item.portion / item.originalPortion)
-        let baseProteinPerUnit = item.proteinG / (item.portion / item.originalPortion)
-        let baseCarbsPerUnit = item.carbsG / (item.portion / item.originalPortion)
-        let baseFatPerUnit = item.fatG / (item.portion / item.originalPortion)
+        // Scale macros proportionally based on the ratio
+        // If current portion differs from original, we need to account for that
+        let currentRatio = item.portion > 0 ? item.portion / item.originalPortion : 1.0
+        let baseCalories = Double(item.calories) / currentRatio
+        let baseProtein = item.proteinG / currentRatio
+        let baseCarbs = item.carbsG / currentRatio
+        let baseFat = item.fatG / currentRatio
         
-        item.calories = Int(baseCaloriesPerUnit * ratio)
-        item.proteinG = baseProteinPerUnit * ratio
-        item.carbsG = baseCarbsPerUnit * ratio
-        item.fatG = baseFatPerUnit * ratio
+        // Apply new ratio
+        item.calories = Int(baseCalories * ratio)
+        item.proteinG = baseProtein * ratio
+        item.carbsG = baseCarbs * ratio
+        item.fatG = baseFat * ratio
         item.portion = newPortion
         
         HapticManager.shared.selection()
     }
     
     func deleteItem(_ item: MealItem) {
-        meal.items.removeAll { $0.id == item.id }
+        // Safely access items relationship by creating a local copy first
+        // Then filter and reassign to prevent InvalidFutureBackingData errors
+        let itemsArray = Array(meal.items)
+        meal.items = itemsArray.filter { $0.id != item.id }
         HapticManager.shared.impact(.light)
     }
     

@@ -1,7 +1,8 @@
 //
-//  SupportEmailView.swift
+//  SendFeedbackView.swift
+//  playground
 //
-//  Support Email screen with dynamic user information
+//  Send Feedback screen with email functionality
 //
 
 import SwiftUI
@@ -12,14 +13,14 @@ import MessageUI
 import UIKit
 #endif
 
-struct SupportEmailView: View {
+struct SendFeedbackView: View {
     @ObservedObject private var localizationManager = LocalizationManager.shared
     @Environment(\.dismiss) private var dismiss
-    @State private var issueDescription = ""
+    @State private var feedbackText = ""
     @State private var showingMailComposer = false
     @State private var showCopiedAlert = false
     
-    private let supportEmail = "support@calai.app"
+    private let feedbackEmail = "feedback@calai.app"
     
     // Device and app info
     private var deviceInfo: DeviceInfo {
@@ -27,26 +28,19 @@ struct SupportEmailView: View {
     }
     
     var body: some View {
-        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
-        let _ = localizationManager.currentLanguage
-        
-        return NavigationStack {
+        NavigationStack {
             Form {
                 recipientSection
-                senderSection
-                subjectSection
                 messageSection
                 deviceInfoSection
             }
-            .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.supportRequest))
-                
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.sendFeedback))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
                         dismiss()
                     }
-                    
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     sendButton
@@ -54,19 +48,17 @@ struct SupportEmailView: View {
             }
             #if canImport(MessageUI)
             .sheet(isPresented: $showingMailComposer) {
-                SupportEmailMailComposeView(
-                    recipients: [supportEmail],
-                    subject: localizationManager.localizedString(for: AppStrings.Profile.supportRequest),
+                MailComposeView(
+                    recipients: [feedbackEmail],
+                    subject: localizationManager.localizedString(for: AppStrings.Profile.sendFeedback),
                     body: generateEmailBody()
                 )
             }
             #endif
             .alert(localizationManager.localizedString(for: AppStrings.Common.success), isPresented: $showCopiedAlert) {
-                Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) { }
-                    
+                Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) {}
             } message: {
                 Text(localizationManager.localizedString(for: AppStrings.Profile.emailContentCopied))
-                    
             }
         }
     }
@@ -75,41 +67,21 @@ struct SupportEmailView: View {
     
     private var recipientSection: some View {
         Section {
-            Text(supportEmail)
+            Text(feedbackEmail)
                 .foregroundStyle(.blue)
         } header: {
             Text(localizationManager.localizedString(for: AppStrings.Profile.to))
-                
-        }
-    }
-    
-    private var senderSection: some View {
-        Section {
-            Text(deviceInfo.userName)
-                .foregroundStyle(.secondary)
-        } header: {
-            Text(localizationManager.localizedString(for: AppStrings.Profile.from))
-                
-        }
-    }
-    
-    private var subjectSection: some View {
-        Section {
-            Text(localizationManager.localizedString(for: AppStrings.Profile.supportRequest))
-                
-        } header: {
-            Text(localizationManager.localizedString(for: AppStrings.Profile.subject))
-                
         }
     }
     
     private var messageSection: some View {
         Section {
-            TextEditor(text: $issueDescription)
+            TextEditor(text: $feedbackText)
                 .frame(minHeight: 150)
         } header: {
-            Text(localizationManager.localizedString(for: AppStrings.Profile.pleaseDescribeIssue))
-                
+            Text(localizationManager.localizedString(for: AppStrings.Profile.feedbackDescription))
+        } footer: {
+            Text(localizationManager.localizedString(for: AppStrings.Profile.feedbackFooter))
         }
     }
     
@@ -126,10 +98,8 @@ struct SupportEmailView: View {
             .foregroundStyle(.secondary)
         } header: {
             Text(localizationManager.localizedString(for: AppStrings.Profile.debugInformation))
-                
         } footer: {
             Text(localizationManager.localizedString(for: AppStrings.Profile.debugInfoHelpsDiagnose))
-                
         }
     }
     
@@ -145,38 +115,34 @@ struct SupportEmailView: View {
             copyEmailToClipboard()
             #endif
         } label: {
-            Image(systemName: "arrow.up.circle.fill")
-                .font(.title2)
-                .foregroundStyle(.blue)
+            Text(localizationManager.localizedString(for: AppStrings.Common.send))
+                .fontWeight(.semibold)
         }
-        .disabled(issueDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        .disabled(feedbackText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
     }
     
     // MARK: - Helpers
     
     private func generateEmailBody() -> String {
-        """
-        \(issueDescription)
+        var body = feedbackText
         
-        ---
-        \(localizationManager.localizedString(for: AppStrings.Profile.userId)): \(deviceInfo.userId)
-        \(localizationManager.localizedString(for: AppStrings.Profile.appVersion)): \(deviceInfo.appVersion)
-        \(localizationManager.localizedString(for: AppStrings.Profile.platform)): \(localizationManager.localizedString(for: AppStrings.Profile.ios))
-        \(localizationManager.localizedString(for: AppStrings.Profile.iosVersion)): \(deviceInfo.osVersion)
-        \(localizationManager.localizedString(for: AppStrings.Profile.device)): \(deviceInfo.deviceModel)
-        """
+        body += "\n\n---\n"
+        body += "\(localizationManager.localizedString(for: AppStrings.Profile.debugInformation)):\n"
+        body += "\(localizationManager.localizedString(for: AppStrings.Profile.userId)): \(deviceInfo.userId)\n"
+        body += "\(localizationManager.localizedString(for: AppStrings.Profile.appVersion)): \(deviceInfo.appVersion)\n"
+        body += "\(localizationManager.localizedString(for: AppStrings.Profile.platform)): \(localizationManager.localizedString(for: AppStrings.Profile.ios))\n"
+        body += "\(localizationManager.localizedString(for: AppStrings.Profile.iosVersion)): \(deviceInfo.osVersion)\n"
+        body += "\(localizationManager.localizedString(for: AppStrings.Profile.device)): \(deviceInfo.deviceModel)"
+        
+        return body
     }
     
     private func copyEmailToClipboard() {
-        #if canImport(UIKit)
-        UIPasteboard.general.string = """
-        \(localizationManager.localizedString(for: AppStrings.Profile.to)) \(supportEmail)
-        \(localizationManager.localizedString(for: AppStrings.Profile.subject)) \(localizationManager.localizedString(for: AppStrings.Profile.supportRequest))
+        let emailBody = generateEmailBody()
+        let fullEmail = "To: \(feedbackEmail)\nSubject: \(localizationManager.localizedString(for: AppStrings.Profile.sendFeedback))\n\n\(emailBody)"
         
-        \(generateEmailBody())
-        """
+        UIPasteboard.general.string = fullEmail
         showCopiedAlert = true
-        #endif
     }
 }
 
@@ -235,11 +201,10 @@ private struct DeviceInfo {
 // MARK: - Mail Compose View
 
 #if canImport(MessageUI)
-struct SupportEmailMailComposeView: UIViewControllerRepresentable {
+struct MailComposeView: UIViewControllerRepresentable {
     let recipients: [String]
     let subject: String
     let body: String
-    @Environment(\.dismiss) private var dismiss
     
     func makeUIViewController(context: Context) -> MFMailComposeViewController {
         let composer = MFMailComposeViewController()
@@ -253,23 +218,17 @@ struct SupportEmailMailComposeView: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: MFMailComposeViewController, context: Context) {}
     
     func makeCoordinator() -> Coordinator {
-        Coordinator(self)
+        Coordinator()
     }
     
     class Coordinator: NSObject, MFMailComposeViewControllerDelegate {
-        let parent: SupportEmailMailComposeView
-        
-        init(_ parent: SupportEmailMailComposeView) {
-            self.parent = parent
-        }
-        
         func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: Error?) {
-            parent.dismiss()
+            controller.dismiss(animated: true)
         }
     }
 }
 #endif
 
 #Preview {
-    SupportEmailView()
+    SendFeedbackView()
 }

@@ -12,6 +12,7 @@ import Charts
 struct DietView: View {
     @Bindable var viewModel: HistoryViewModel
     let repository: MealRepository
+    let scrollToTopTrigger: UUID
     @ObservedObject private var localizationManager = LocalizationManager.shared
 
     @Environment(\.modelContext) private var modelContext
@@ -22,6 +23,25 @@ struct DietView: View {
     @State private var selectedTimeFilter: HistoryTimeFilter = .all
     @State private var showingEditPlan = false
     @State private var showingInsights = false
+    @State private var showingMealVerification: ScheduledMeal?
+    // ScanViewModel - computed property using repository
+    private var scanViewModel: ScanViewModel {
+        ScanViewModel(
+            repository: repository,
+            analysisService: CaloriesAPIService(),
+            imageStorage: .shared
+        )
+    }
+    
+    init(
+        viewModel: HistoryViewModel,
+        repository: MealRepository,
+        scrollToTopTrigger: UUID = UUID()
+    ) {
+        self.viewModel = viewModel
+        self.repository = repository
+        self.scrollToTopTrigger = scrollToTopTrigger
+    }
 
     // Diet summary state
     @State private var selectedDietDate = Date()
@@ -65,9 +85,18 @@ struct DietView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                dietSummarySection
-                    .padding()
+            ScrollViewReader { proxy in
+                ScrollView {
+                    dietSummarySection
+                        .id("diet-top") // Anchor point for scrolling to top
+                        .padding()
+                }
+                .onChange(of: scrollToTopTrigger) { _, _ in
+                    // Scroll to top when history tab is tapped (trigger changes)
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        proxy.scrollTo("diet-top", anchor: .top)
+                    }
+                }
             }
             .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.myDiet))
             .id("my-diet-nav-\(localizationManager.currentLanguage)")
@@ -116,6 +145,15 @@ struct DietView: View {
             }
             .sheet(isPresented: $showingInsights) {
                 DietInsightsView(activePlans: activePlans, repository: dietPlanRepository)
+            }
+            .sheet(item: $showingMealVerification) { scheduledMeal in
+                MealVerificationView(
+                    scheduledMealId: scheduledMeal.id,
+                    mealName: scheduledMeal.name,
+                    category: scheduledMeal.category,
+                    expectedCalories: scheduledMeal.mealTemplate?.expectedCalories,
+                    scanViewModel: scanViewModel
+                )
             }
             .task {
                 await viewModel.loadData()
@@ -216,9 +254,10 @@ struct DietView: View {
                     color: .red
                 )
 
+                // Safely access scheduledMeals relationship by creating a local copy first
                 StatPill(
                     icon: "fork.knife",
-                    value: "\(data.scheduledMeals.count)",
+                    value: "\(Array(data.scheduledMeals).count)",
                     label: "Scheduled",
                     color: .blue
                 )
@@ -266,7 +305,10 @@ struct DietView: View {
                 .font(.headline)
                 .padding(.horizontal)
 
-            if data.scheduledMeals.isEmpty {
+            // Safely access scheduledMeals relationship by creating a local copy first
+            let scheduledMealsArray = Array(data.scheduledMeals)
+            
+            if scheduledMealsArray.isEmpty {
                 ContentUnavailableView(
                     "No Meals Scheduled",
                     systemImage: "calendar.badge.exclamationmark",
@@ -277,14 +319,14 @@ struct DietView: View {
                 .frame(height: 150)
                 .id("add-meals-desc-label-\(localizationManager.currentLanguage)")
             } else {
-                mealCardsView(data: data)
+                mealCardsView(data: data, scheduledMeals: scheduledMealsArray)
             }
         }
     }
 
     @ViewBuilder
-    private func mealCardsView(data: DietAdherenceData) -> some View {
-        let sortedMeals = data.scheduledMeals.sorted(by: { $0.time < $1.time })
+    private func mealCardsView(data: DietAdherenceData, scheduledMeals: [ScheduledMeal]) -> some View {
+        let sortedMeals = scheduledMeals.sorted(by: { $0.time < $1.time })
         let missedMealIds = Set(data.missedMeals.map { $0.id })
 
         VStack(spacing: 8) {
@@ -303,15 +345,61 @@ struct DietView: View {
                     goalMissed: goalMissed,
                     onTap: {
                         if !isCompleted {
-                            completeMeal(meal)
+                            // Show meal verification view to allow image upload and analysis
+                            showingMealVerification = meal
                         }
-                    }
+                    },
+                    onDelete: isCompleted ? {
+                        deleteCompletedMeal(meal)
+                    } : nil
                 )
             }
         }
     }
 
+    // Note: completeMeal now opens MealVerificationView to allow image upload and analysis
+    // This provides a better UX where users can verify their meal with a photo
     private func completeMeal(_ scheduledMeal: ScheduledMeal) {
+        // Show meal verification view to allow image upload and analysis
+        showingMealVerification = scheduledMeal
+    }
+    
+    // Delete a completed meal - removes the meal and marks the scheduled meal as incomplete
+    private func deleteCompletedMeal(_ scheduledMeal: ScheduledMeal) {
+        Task {
+            do {
+                // Find the meal reminder for this scheduled meal
+                if let reminder = try dietPlanRepository.fetchMealReminder(
+                    by: scheduledMeal.id,
+                    for: Date()
+                ), let completedMealId = reminder.completedMealId {
+                    // Delete the completed meal from MealRepository
+                    let mealRepository = MealRepository(context: modelContext)
+                    if let meal = try mealRepository.fetchMeal(by: completedMealId) {
+                        try mealRepository.deleteMeal(meal)
+                    }
+                    
+                    // Update the reminder to mark as incomplete
+                    try dietPlanRepository.updateMealReminderCompletion(reminder, completedMealId: nil)
+                    
+                    // Notify other parts of the app about the meal deletion
+                    NotificationCenter.default.post(name: .foodLogged, object: nil)
+                    
+                    // Reload adherence data
+                    loadAdherenceData()
+                    await viewModel.loadData()
+                    
+                    HapticManager.shared.notification(.success)
+                }
+            } catch {
+                print("Failed to delete completed meal: \(error)")
+                HapticManager.shared.notification(.error)
+            }
+        }
+    }
+    
+    // Legacy function - kept for reference but no longer used
+    private func completeMealLegacy(_ scheduledMeal: ScheduledMeal) {
         Task {
             do {
                 let meal: Meal
@@ -328,6 +416,10 @@ struct DietView: View {
 
                 let mealRepository = MealRepository(context: modelContext)
                 try mealRepository.saveMeal(meal)
+                
+                // Notify other parts of the app about the new meal
+                // This triggers HomeView to refresh and update widgets
+                NotificationCenter.default.post(name: .foodLogged, object: nil)
 
                 if let reminder = try dietPlanRepository.fetchMealReminder(
                     by: scheduledMeal.id,
@@ -490,27 +582,32 @@ struct DietView: View {
     }
 
     private func loadWeeklyAdherence() {
-        Task {
+        Task { @MainActor in
             let calendar = Calendar.current
-            let startDate = selectedTimeRange.startDate
+            guard let startDate = selectedTimeRange.startDate else {
+                weeklyAdherence = []
+                return
+            }
             let endDate = Date()
 
             var adherence: [DailyAdherence] = []
+            let plans = Array(activePlans)
 
             var currentDate = startDate
             while currentDate <= endDate {
                 do {
                     let data = try dietPlanRepository.getDietAdherence(
                         for: currentDate,
-                        activePlans: activePlans
+                        activePlans: plans
                     )
 
+                    // Safely access scheduledMeals relationship by creating a local copy first
                     adherence.append(
                         DailyAdherence(
                             date: currentDate,
                             completionRate: data.completionRate,
                             completedMeals: data.completedMeals.count,
-                            totalMeals: data.scheduledMeals.count,
+                            totalMeals: Array(data.scheduledMeals).count,
                             goalAchievementRate: data.goalAchievementRate
                         ))
                 } catch {

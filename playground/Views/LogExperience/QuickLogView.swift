@@ -111,13 +111,20 @@ struct QuickLogView: View {
             }
             .alert("Saved Successfully!", isPresented: $showSuccess) {
                 Button(localizationManager.localizedString(for: AppStrings.Common.ok)) {
-                    dismiss()
+                    // Add smooth dismiss animation
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        dismiss()
+                    }
                 }
             } message: {
                 Text(
                     selectedType == .food
                         ? "Your food has been logged."
                         : "Your exercise has been logged.")
+            }
+            .transaction { transaction in
+                // Ensure smooth animations for dismiss
+                transaction.animation = .easeOut(duration: 0.3)
             }
             .alert("Error", isPresented: $showError) {
                 Button(localizationManager.localizedString(for: AppStrings.Common.ok)) { }
@@ -447,6 +454,23 @@ struct QuickLogView: View {
                 
                 // Use repository for consistent saving
                 try repository.saveExercise(exercise)
+                
+                // Also save to HealthKit if available and authorized
+                // This ensures our exercise data overwrites HealthKit data (our data is the source of truth)
+                let healthKitManager = HealthKitManager.shared
+                if healthKitManager.isHealthDataAvailable && healthKitManager.isAuthorized {
+                    do {
+                        try await healthKitManager.saveExercise(
+                            calories: Int(exerciseCalories) ?? 0,
+                            durationMinutes: Int(exerciseDuration) ?? 30,
+                            startDate: exercise.date
+                        )
+                        print("✅ [QuickLogView] Exercise saved to HealthKit: \(Int(exerciseCalories) ?? 0) cal, \(Int(exerciseDuration) ?? 30) min")
+                    } catch {
+                        // Continue even if HealthKit save fails - SwiftData is primary source
+                        print("⚠️ [QuickLogView] Failed to save exercise to HealthKit: \(error.localizedDescription)")
+                    }
+                }
                 
                 // Notify that an exercise was saved
                 NotificationCenter.default.post(name: .exerciseSaved, object: nil)

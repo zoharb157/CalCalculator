@@ -116,6 +116,11 @@
 "Generating PDF..." = "PDF जेनरेट हो रहा है...";
 "Export Error" = "निर्यात त्रुटि";
 "An unknown error occurred." = "एक अज्ञात त्रुटि हुई।";
+"Rate Us" = "हमें रेट करें";
+"If you're enjoying CalorieVisionAI, please take a moment to rate us on the App Store. Your feedback helps us improve!" = "यदि आप CalorieVisionAI का आनंद ले रहे हैं, तो कृपया App Store पर हमें रेट करने के लिए एक पल लें। आपकी प्रतिक्रिया हमें सुधारने में मदद करती है!";
+"Send Feedback" = "प्रतिक्रिया भेजें";
+"Your Feedback" = "आपकी प्रतिक्रिया";
+"We'd love to hear your thoughts, suggestions, or report any issues you've encountered." = "हम आपके विचार, सुझाव सुनना चाहेंगे या आपके सामने आई किसी भी समस्या की रिपोर्ट करना चाहेंगे।";
 
 /* Weight */
 "Save Your Weight" = "अपना वजन सहेजें";
@@ -189,7 +194,7 @@
 "View Daily Breakdown" = "दैनिक विवरण देखें";
 "Health Data" = "स्वास्थ्य डेटा";
 "Health Access Required" = "स्वास्थ्य पहुंच आवश्यक";
-"Go to Settings > Privacy & Security > Health > CalCalculator" = "सेटिंग्स > गोपनीयता और सुरक्षा > स्वास्थ्य > CalCalculator पर जाएं";
+"Go to Settings > Privacy & Security > Health > CalorieVisionAI" = "सेटिंग्स > गोपनीयता और सुरक्षा > स्वास्थ्य > CalorieVisionAI पर जाएं";
 "Open Settings" = "सेटिंग्स खोलें";
 "Delete Entry" = "प्रविष्टि हटाएं";
 "This cannot be undone." = "इसे पूर्ववत नहीं किया जा सकता।";
@@ -222,7 +227,7 @@
 "View Daily Breakdown" = "दैनिक विवरण देखें";
 "Health Data" = "स्वास्थ्य डेटा";
 "Health Access Required" = "स्वास्थ्य पहुंच आवश्यक";
-"Go to Settings > Privacy & Security > Health > CalCalculator" = "सेटिंग्स > गोपनीयता और सुरक्षा > स्वास्थ्य > CalCalculator पर जाएं";
+"Go to Settings > Privacy & Security > Health > CalorieVisionAI" = "सेटिंग्स > गोपनीयता और सुरक्षा > स्वास्थ्य > CalorieVisionAI पर जाएं";
 "Open Settings" = "सेटिंग्स खोलें";
 "Weight Progress" = "वजन प्रगति";
 "Current" = "वर्तमान";
@@ -334,14 +339,14 @@
 "High" = "उच्च";
 "Medium" = "मध्यम";
 "Low" = "कम";
-"Welcome to CalCalculator" = "CalCalculator में आपका स्वागत है";
+"Welcome to CalorieVisionAI" = "CalorieVisionAI में आपका स्वागत है";
 "What is your gender?" = "आपका लिंग क्या है?";
 "How old are you?" = "आपकी उम्र क्या है?";
 "Body Metrics" = "शरीर मेट्रिक्स";
 "You can change this anytime in Settings." = "आप इसे कभी भी सेटिंग्स में बदल सकते हैं।";
 "Allow Notifications" = "सूचनाएं अनुमति दें";
 "Enable Notifications" = "सूचनाएं सक्षम करें";
-"CalCalculator" = "CalCalculator";
+"CalorieVisionAI" = "CalorieVisionAI";
 "Track your nutrition with ease" = "आसानी से अपने पोषण को ट्रैक करें";
 "Already have an account?" = "पहले से खाता है?";
 "Sign In" = "साइन इन करें";

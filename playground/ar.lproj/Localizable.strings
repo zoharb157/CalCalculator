@@ -116,6 +116,11 @@
 "Generating PDF..." = "جاري إنشاء PDF...";
 "Export Error" = "خطأ في التصدير";
 "An unknown error occurred." = "حدث خطأ غير معروف.";
+"Rate Us" = "قيمنا";
+"If you're enjoying CalorieVisionAI, please take a moment to rate us on the App Store. Your feedback helps us improve!" = "إذا كنت تستمتع بـ CalorieVisionAI، يرجى أخذ لحظة لتقييمنا في App Store. ملاحظاتك تساعدنا على التحسين!";
+"Send Feedback" = "إرسال الملاحظات";
+"Your Feedback" = "ملاحظاتك";
+"We'd love to hear your thoughts, suggestions, or report any issues you've encountered." = "نود أن نسمع أفكارك واقتراحاتك أو الإبلاغ عن أي مشاكل واجهتها.";
 
 /* Weight */
 "Save Your Weight" = "احفظ وزنك";
@@ -189,7 +194,7 @@
 "View Daily Breakdown" = "عرض التفصيل اليومي";
 "Health Data" = "بيانات الصحة";
 "Health Access Required" = "مطلوب الوصول للصحة";
-"Go to Settings > Privacy & Security > Health > CalCalculator" = "انتقل إلى الإعدادات > الخصوصية والأمان > الصحة > CalCalculator";
+"Go to Settings > Privacy & Security > Health > CalorieVisionAI" = "انتقل إلى الإعدادات > الخصوصية والأمان > الصحة > CalorieVisionAI";
 "Open Settings" = "فتح الإعدادات";
 "Delete Entry" = "حذف الإدخال";
 "This cannot be undone." = "لا يمكن التراجع عن هذا.";
@@ -222,7 +227,7 @@
 "View Daily Breakdown" = "عرض التفصيل اليومي";
 "Health Data" = "بيانات الصحة";
 "Health Access Required" = "مطلوب الوصول للصحة";
-"Go to Settings > Privacy & Security > Health > CalCalculator" = "انتقل إلى الإعدادات > الخصوصية والأمان > الصحة > CalCalculator";
+"Go to Settings > Privacy & Security > Health > CalorieVisionAI" = "انتقل إلى الإعدادات > الخصوصية والأمان > الصحة > CalorieVisionAI";
 "Open Settings" = "فتح الإعدادات";
 "Weight Progress" = "تقدم الوزن";
 "Current" = "الحالي";
@@ -334,14 +339,14 @@
 "High" = "عالي";
 "Medium" = "متوسط";
 "Low" = "منخفض";
-"Welcome to CalCalculator" = "مرحباً بك في CalCalculator";
+"Welcome to CalorieVisionAI" = "مرحباً بك في CalorieVisionAI";
 "What is your gender?" = "ما هو جنسك؟";
 "How old are you?" = "كم عمرك؟";
 "Body Metrics" = "مقاييس الجسم";
 "You can change this anytime in Settings." = "يمكنك تغيير هذا في أي وقت في الإعدادات.";
 "Allow Notifications" = "السماح بالإشعارات";
 "Enable Notifications" = "تفعيل الإشعارات";
-"CalCalculator" = "CalCalculator";
+"CalorieVisionAI" = "CalorieVisionAI";
 "Track your nutrition with ease" = "تتبع تغذيتك بسهولة";
 "Already have an account?" = "هل لديك حساب بالفعل؟";
 "Sign In" = "تسجيل الدخول";

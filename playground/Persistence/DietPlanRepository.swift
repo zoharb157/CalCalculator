@@ -22,8 +22,12 @@ final class DietPlanRepository {
     /// Only one active diet plan is allowed at a time.
     /// - Throws: `DietPlanError.noMeals` if the plan has no scheduled meals
     func saveDietPlan(_ plan: DietPlan) throws {
+        // Safely access scheduledMeals relationship by creating a local copy first
+        // This prevents InvalidFutureBackingData errors
+        let scheduledMealsArray = Array(plan.scheduledMeals)
+        
         // Validate that the plan has at least one scheduled meal
-        guard !plan.scheduledMeals.isEmpty else {
+        guard !scheduledMealsArray.isEmpty else {
             throw DietPlanError.noMeals
         }
         

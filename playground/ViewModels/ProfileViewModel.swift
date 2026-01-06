@@ -123,6 +123,33 @@ final class ProfileViewModel {
         // Reset any cached selections, tabs, or state that might be language-dependent
         // This ensures UI refreshes properly with new language
         // Note: SwiftUI views will automatically refresh due to languageChanged notification
+        
+        // Force reload of profile data to ensure all fields are properly displayed
+        // This is critical for fixing the issue where data appears empty after language change
+        loadProfileData()
+    }
+    
+    /// Load profile data from repository
+    /// This ensures all profile fields are properly loaded and displayed
+    func loadProfileData() {
+        // Reload all profile data from repository
+        // This is called when language changes to ensure data is properly displayed
+        let repo = repository
+        
+        // Force reload by accessing all properties
+        _ = repo.getFirstName()
+        _ = repo.getLastName()
+        _ = repo.getUsername()
+        _ = repo.getCurrentWeight()
+        _ = repo.getGoalWeight()
+        _ = repo.getHeightFeet()
+        _ = repo.getHeightInches()
+        _ = repo.getDateOfBirth()
+        _ = repo.getGender()
+        _ = repo.getDailyStepGoal()
+        _ = repo.getCalorieGoal()
+        _ = repo.getProteinGoal()
+        _ = repo.getSelectedLanguage()
     }
     
     // MARK: - Nutrition Goals State

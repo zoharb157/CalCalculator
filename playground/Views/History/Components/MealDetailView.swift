@@ -304,14 +304,18 @@ struct MealDetailView: View {
                     .font(.headline)
                     .id("ingredients-label-\(localizationManager.currentLanguage)")
                 Spacer()
-                Text("\(meal.items.count) \(localizationManager.localizedString(for: AppStrings.History.items))")
+                // Safely access items relationship by creating a local copy first
+                // This prevents InvalidFutureBackingData errors
+                Text("\(Array(meal.items).count) \(localizationManager.localizedString(for: AppStrings.History.items))")
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .id("items-count-\(localizationManager.currentLanguage)")
             }
             
             VStack(spacing: 12) {
-                ForEach(meal.items, id: \.id) { item in
+                // Safely access items relationship by creating a local copy first
+                // This prevents InvalidFutureBackingData errors
+                ForEach(Array(meal.items), id: \.id) { item in
                     ingredientCard(for: item)
                 }
             }

@@ -52,6 +52,7 @@ struct AppStrings {
         static let readMore = "Read More"
         static let showLess = "Show Less"
         static let actions = "Actions"
+        static let send = "Send"
     }
     
     // MARK: - Home
@@ -109,6 +110,8 @@ struct AppStrings {
         static let overDifferentPeriods = "Over different periods"
         static let progressPhotos = "Progress Photos"
         static let dailyAverageCalories = "Daily Average Calories"
+        static let todayTrend = "Today's Trend"
+        static let noDataToday = "No data for today"
         static let bmi = "BMI"
         static let healthKit = "HealthKit"
         static let saveWeight = "Save Weight"
@@ -146,7 +149,7 @@ struct AppStrings {
         static let viewDailyBreakdown = "View Daily Breakdown"
         static let healthData = "Health Data"
         static let healthAccessRequired = "Health Access Required"
-        static let goToSettings = "Go to Settings > Privacy & Security > Health > CalCalculator"
+        static let goToSettings = "Go to Settings > Privacy & Security > Health > CalorieVisionAI"
         static let openSettings = "Open Settings"
         static let steps = "Steps"
         static let activeCalories = "Active Calories"
@@ -249,6 +252,8 @@ struct AppStrings {
         static let voiceLoggingRequiresMicrophone = "Voice logging requires microphone access. Please enable it in Settings to use this feature."
         static let recentlyUploaded = "Recently uploaded"
         static let delete = "Delete"
+        static let saveToQuickAdd = "Save to Quick Add"
+        static let saveToQuickAddDescription = "Save this food to your Quick Add list for easy access later"
         static let categoryColon = "Category:"
         static let analyzingYourFood = "Analyzing your food..."
         static let usingAIToIdentifyCalories = "Using AI to identify calories and nutrients"
@@ -308,6 +313,9 @@ struct AppStrings {
         static let weights = "Weights"
         static let cycling = "Cycling"
         static let weightLifting = "Weight Lifting"
+        static let reps = "Reps"
+        static let sets = "Sets"
+        static let weight = "Weight"
         static let chillWalk = "Chill Walk"
     }
     
@@ -327,6 +335,7 @@ struct AppStrings {
         static let noMealsScheduled = "No meals scheduled"
         static let addScheduledMeal = "Add Scheduled Meal"
         static let dailyCalorieGoal = "Daily Calorie Goal"
+        static let calculatedMacros = "Calculated Macros"
         static let adherence = "Adherence"
         static let adherenceTrend = "Adherence Trend"
         static let todaySchedule = "Today's Schedule"
@@ -378,6 +387,7 @@ struct AppStrings {
         static let today = "Today"
         static let thisWeek = "This Week"
         static let thisMonth = "This Month"
+        static let allDays = "All Days"
         static let scanYourFood = "Scan Your Food"
         static let openCameraToScan = "This will open the camera to scan and analyze your food"
         static let saveMealAsPlanned = "Save Meal as Planned"
@@ -495,6 +505,14 @@ struct AppStrings {
         static let appearanceCalorieTrackingNotifications = "Appearance, calorie tracking, and notifications"
         static let support = "Support"
         static let contactSupport = "Contact Support"
+        static let rateUs = "Rate Us"
+        static let rateUsDescription = "If you're enjoying CalorieVisionAI, please take a moment to rate us on the App Store. Your feedback helps us improve!"
+        static let rateOnAppStore = "Rate on App Store"
+        static let sendFeedback = "Send Feedback"
+        static let feedbackDescription = "Your Feedback"
+        static let feedbackFooter = "We'd love to hear your thoughts, suggestions, or report any issues you've encountered."
+        static let feedbackSubject = "CalorieVisionAI Feedback"
+        static let mailNotConfigured = "Mail is not configured on this device. Please configure Mail in Settings or send feedback to feedback@calai.app"
         static let termsOfService = "Terms of Service"
         static let privacyPolicy = "Privacy Policy"
         static let version = "Version 1.0.0"
@@ -533,6 +551,10 @@ struct AppStrings {
         static let aggregatedDailyTotals = "Aggregated daily totals"
         static let exportAllData = "Export All Data"
         static let completeDataBackup = "Complete data backup"
+        static let units = "Units"
+        static let weightUnits = "Weight Units"
+        static let metricUnits = "Kilograms (kg)"
+        static let imperialUnits = "Pounds (lbs)"
         static let noWeightEntriesYet = "No weight entries yet"
         static let startTrackingWeight = "Start tracking your weight to see your progress here"
         static let addFirstEntry = "Add First Entry"
@@ -715,11 +737,12 @@ struct AppStrings {
     
     // MARK: - Onboarding
     struct Onboarding {
+        static let allowTracking = "Allow Tracking"
         static let welcome = "Welcome"
         static let getStarted = "Get Started"
         static let skip = "Skip"
         static let back = "Back"
-        static let welcomeToCalCalculator = "Welcome to CalCalculator"
+        static let welcomeToCalorieVisionAI = "Welcome to CalorieVisionAI"
         static let whatIsYourGender = "What is your gender?"
         static let howOldAreYou = "How old are you?"
         static let bodyMetrics = "Body Metrics"
@@ -817,7 +840,7 @@ struct AppStrings {
     
     // MARK: - Authentication
     struct Authentication {
-        static let calCalculator = "CalCalculator"
+        static let calorieVisionAI = "CalorieVisionAI"
         static let trackNutritionWithEase = "Track your nutrition with ease"
         static let getStarted = "Get Started"
         static let alreadyHaveAccount = "Already have an account?"

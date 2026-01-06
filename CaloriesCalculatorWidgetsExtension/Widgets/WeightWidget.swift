@@ -9,7 +9,6 @@ import WidgetKit
 import SwiftUI
 import AppIntents
 
-@available(iOS 16.0, *)
 struct WeightWidget: Widget {
     let kind: String = "WeightWidget"
     

@@ -288,6 +288,12 @@ final class ScanViewModel {
         do {
             try repository.saveMeal(meal)
 
+            // Notify that food was logged so HomeViewModel can refresh
+            NotificationCenter.default.post(name: .foodLogged, object: nil)
+            
+            // Sync widget data after saving meal
+            repository.syncWidgetData()
+
             pendingMeal = nil
             pendingImage = nil
             showingResults = false

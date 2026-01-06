@@ -122,7 +122,13 @@ struct ScanView: View {
             SelectedImageView(
                 image: image,
                 onAnalyze: analyzeImage,
-                onRetake: { viewModel.clearSelection() }
+                onRetake: { 
+                    viewModel.clearSelection()
+                    // Reopen camera after clearing selection
+                    Task {
+                        await viewModel.openCamera()
+                    }
+                }
             )
         } else {
             CaptureOptionsView(
@@ -139,20 +145,36 @@ struct ScanView: View {
                 message: viewModel.noFoodDetectedMessage,
                 image: Image(uiImage: image),
                 onRetry: { 
-                    // Clear selection to allow taking a new photo
+                    // Clear selection and reopen camera to allow taking a new photo
                     viewModel.clearSelection()
+                    Task {
+                        await viewModel.openCamera()
+                    }
                 },
                 onRetake: { 
-                    // Clear selection to allow taking a new photo
+                    // Clear selection and reopen camera to allow taking a new photo
                     viewModel.clearSelection()
+                    Task {
+                        await viewModel.openCamera()
+                    }
                 }
             )
         } else {
             NoFoodDetectedView(
                 message: viewModel.noFoodDetectedMessage,
                 image: nil,
-                onRetry: { viewModel.clearSelection() },
-                onRetake: { viewModel.clearSelection() }
+                onRetry: { 
+                    viewModel.clearSelection()
+                    Task {
+                        await viewModel.openCamera()
+                    }
+                },
+                onRetake: { 
+                    viewModel.clearSelection()
+                    Task {
+                        await viewModel.openCamera()
+                    }
+                }
             )
         }
     }

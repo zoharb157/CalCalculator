@@ -31,6 +31,8 @@ struct ProfileView: View {
     @State private var showingDataExport = false
     @State private var showingReferralCode = false
     @State private var showingBadges = false
+    @State private var showingRateUs = false
+    @State private var showingSendFeedback = false
     
     // MARK: - Body
     
@@ -55,7 +57,12 @@ struct ProfileView: View {
             }
             .background(Color(UIColor.systemGroupedBackground))
             .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.title))
+                .id("profile-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.large)
+            .onChange(of: localizationManager.currentLanguage) { oldValue, newValue in
+                // Force view refresh when language changes
+                viewModel.loadProfileData()
+            }
         }
         .sheet(isPresented: $showingPersonalDetails) {
             PersonalDetailsView(viewModel: viewModel)
@@ -86,6 +93,12 @@ struct ProfileView: View {
         }
         .sheet(isPresented: $showingBadges) {
             BadgesView()
+        }
+        .sheet(isPresented: $showingRateUs) {
+            RateUsView()
+        }
+        .sheet(isPresented: $showingSendFeedback) {
+            SendFeedbackView()
         }
     }
     
@@ -207,6 +220,24 @@ struct ProfileView: View {
                     iconColor: .blue,
                     title: localizationManager.localizedString(for: AppStrings.Profile.contactSupport),
                     action: { showingSupportEmail = true }
+                )
+                
+                SettingsDivider()
+                
+                SettingsRow(
+                    icon: "star.fill",
+                    iconColor: .yellow,
+                    title: localizationManager.localizedString(for: AppStrings.Profile.rateUs),
+                    action: { showingRateUs = true }
+                )
+                
+                SettingsDivider()
+                
+                SettingsRow(
+                    icon: "paperplane.fill",
+                    iconColor: .green,
+                    title: localizationManager.localizedString(for: AppStrings.Profile.sendFeedback),
+                    action: { showingSendFeedback = true }
                 )
                 
                 SettingsDivider()

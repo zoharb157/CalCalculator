@@ -116,6 +116,11 @@
 "Generating PDF..." = "Создание PDF...";
 "Export Error" = "Ошибка экспорта";
 "An unknown error occurred." = "Произошла неизвестная ошибка.";
+"Rate Us" = "Оцените нас";
+"If you're enjoying CalorieVisionAI, please take a moment to rate us on the App Store. Your feedback helps us improve!" = "Если вам нравится CalorieVisionAI, пожалуйста, найдите время, чтобы оценить нас в App Store. Ваш отзыв помогает нам улучшаться!";
+"Send Feedback" = "Отправить Отзыв";
+"Your Feedback" = "Ваш Отзыв";
+"We'd love to hear your thoughts, suggestions, or report any issues you've encountered." = "Мы будем рады услышать ваши мысли, предложения или сообщить о любых проблемах, с которыми вы столкнулись.";
 
 /* Weight */
 "Save Your Weight" = "Сохраните свой вес";
@@ -190,7 +195,7 @@
 "View Daily Breakdown" = "Просмотр дневной разбивки";
 "Health Data" = "Данные о здоровье";
 "Health Access Required" = "Требуется доступ к здоровью";
-"Go to Settings > Privacy & Security > Health > CalCalculator" = "Перейдите в Настройки > Конфиденциальность и безопасность > Здоровье > CalCalculator";
+"Go to Settings > Privacy & Security > Health > CalorieVisionAI" = "Перейдите в Настройки > Конфиденциальность и безопасность > Здоровье > CalorieVisionAI";
 "Open Settings" = "Открыть настройки";
 "Delete Entry" = "Удалить запись";
 "This cannot be undone." = "Это нельзя отменить.";
@@ -223,7 +228,7 @@
 "View Daily Breakdown" = "Просмотр дневной разбивки";
 "Health Data" = "Данные о здоровье";
 "Health Access Required" = "Требуется доступ к здоровью";
-"Go to Settings > Privacy & Security > Health > CalCalculator" = "Перейдите в Настройки > Конфиденциальность и безопасность > Здоровье > CalCalculator";
+"Go to Settings > Privacy & Security > Health > CalorieVisionAI" = "Перейдите в Настройки > Конфиденциальность и безопасность > Здоровье > CalorieVisionAI";
 "Open Settings" = "Открыть настройки";
 "Weight Progress" = "Прогресс веса";
 "Current" = "Текущий";
@@ -335,14 +340,14 @@
 "High" = "Высокая";
 "Medium" = "Средняя";
 "Low" = "Низкая";
-"Welcome to CalCalculator" = "Добро пожаловать в CalCalculator";
+"Welcome to CalorieVisionAI" = "Добро пожаловать в CalorieVisionAI";
 "What is your gender?" = "Какой у вас пол?";
 "How old are you?" = "Сколько вам лет?";
 "Body Metrics" = "Показатели тела";
 "You can change this anytime in Settings." = "Вы можете изменить это в любое время в Настройках.";
 "Allow Notifications" = "Разрешить уведомления";
 "Enable Notifications" = "Включить уведомления";
-"CalCalculator" = "CalCalculator";
+"CalorieVisionAI" = "CalorieVisionAI";
 "Track your nutrition with ease" = "Отслеживайте свое питание с легкостью";
 "Already have an account?" = "Уже есть аккаунт?";
 "Sign In" = "Войти";

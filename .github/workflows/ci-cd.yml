@@ -112,11 +112,23 @@ jobs:
       
       - name: Upload test results
         if: always()
+        run: |
+          # Create test_output directory if it doesn't exist
+          mkdir -p fastlane/test_output
+          # Create a placeholder file if directory is empty (to avoid upload error)
+          if [ ! "$(ls -A fastlane/test_output 2>/dev/null)" ]; then
+            echo "No test results found" > fastlane/test_output/no-results.txt
+          fi
+        continue-on-error: true
+      
+      - name: Upload test results artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: fastlane/test_output
           retention-days: 7
+          if-no-files-found: warn
 
   deploy:
     name: Deploy to TestFlight

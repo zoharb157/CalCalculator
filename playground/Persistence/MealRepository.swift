@@ -331,7 +331,9 @@ final class MealRepository {
                 timestamp: meal.timestamp,
                 totalCalories: meal.totalCalories,
                 macros: meal.totalMacros,
-                items: meal.items.map { item in
+                // Safely access items relationship by creating a local copy first
+                // This prevents InvalidFutureBackingData errors
+                items: Array(meal.items).map { item in
                     ExportMealItem(
                         name: item.name,
                         portion: item.portion,

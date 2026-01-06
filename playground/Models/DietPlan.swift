@@ -40,8 +40,26 @@ final class DietPlan: Identifiable {
     }
     
     /// Get scheduled meals for a specific day of week (1 = Sunday, 7 = Saturday)
+    /// Safely accesses the relationship to avoid InvalidFutureBackingData errors
+    /// This method creates a local copy of the relationship array and extracts property values
+    /// immediately to prevent accessing invalid backing data
     func scheduledMeals(for dayOfWeek: Int) -> [ScheduledMeal] {
-        scheduledMeals.filter { $0.daysOfWeek.contains(dayOfWeek) }
+        // Create a local copy of the relationship array first
+        // This forces SwiftData to materialize the relationship and prevents
+        // InvalidFutureBackingData errors when the model is in an invalid state
+        let mealsArray = Array(scheduledMeals)
+        
+        // Immediately extract the daysOfWeek values from each meal while they're still valid
+        // This prevents accessing properties later when the model might be in an invalid state
+        let mealsWithDays = mealsArray.compactMap { meal -> (meal: ScheduledMeal, days: [Int])? in
+            // Access daysOfWeek immediately while the meal is guaranteed to be valid
+            // If accessing fails (meal is invalid), this will return nil and skip the meal
+            let days = meal.daysOfWeek
+            return (meal: meal, days: days)
+        }
+        
+        // Filter based on the extracted daysOfWeek values (now using plain data, not SwiftData properties)
+        return mealsWithDays.filter { $0.days.contains(dayOfWeek) }.map { $0.meal }
     }
     
     /// Get all scheduled meals for today

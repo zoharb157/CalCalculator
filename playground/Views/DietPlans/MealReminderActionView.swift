@@ -185,6 +185,10 @@ struct MealReminderActionView: View {
                 // Save meal
                 try mealRepository.saveMeal(meal)
                 
+                // Notify other parts of the app about the new meal
+                // This triggers HomeView to refresh and update widgets
+                NotificationCenter.default.post(name: .foodLogged, object: nil)
+                
                 // Mark reminder as completed
                 let reminder = try dietPlanRepository.fetchMealReminder(
                     by: scheduledMealId,
@@ -205,7 +209,9 @@ struct MealReminderActionView: View {
     private func findScheduledMeal() async throws -> ScheduledMeal? {
         let plans = try dietPlanRepository.fetchAllDietPlans()
         for plan in plans {
-            if let meal = plan.scheduledMeals.first(where: { $0.id == scheduledMealId }) {
+            // Safely access scheduledMeals relationship by creating a local copy first
+            let scheduledMealsArray = Array(plan.scheduledMeals)
+            if let meal = scheduledMealsArray.first(where: { $0.id == scheduledMealId }) {
                 return meal
             }
         }

@@ -78,24 +78,62 @@ struct QuickAddFood: Identifiable {
     let fatG: Double
 
     static let commonFoods: [QuickAddFood] = [
+        // Fruits
         QuickAddFood(name: "Apple", emoji: "🍎", calories: 95, proteinG: 0.5, carbsG: 25, fatG: 0.3),
-        QuickAddFood(
-            name: "Banana", emoji: "🍌", calories: 105, proteinG: 1.3, carbsG: 27, fatG: 0.4),
-        QuickAddFood(name: "Egg", emoji: "🥚", calories: 78, proteinG: 6, carbsG: 0.6, fatG: 5),
-        QuickAddFood(
-            name: "Chicken Breast", emoji: "🍗", calories: 165, proteinG: 31, carbsG: 0, fatG: 3.6),
-        QuickAddFood(
-            name: "Rice (1 cup)", emoji: "🍚", calories: 206, proteinG: 4.3, carbsG: 45, fatG: 0.4),
-        QuickAddFood(
-            name: "Bread Slice", emoji: "🍞", calories: 79, proteinG: 2.7, carbsG: 15, fatG: 1),
-        QuickAddFood(name: "Coffee", emoji: "☕", calories: 2, proteinG: 0.3, carbsG: 0, fatG: 0),
-        QuickAddFood(
-            name: "Protein Shake", emoji: "🥤", calories: 150, proteinG: 25, carbsG: 5, fatG: 2),
-        QuickAddFood(name: "Salad", emoji: "🥗", calories: 120, proteinG: 3, carbsG: 12, fatG: 7),
-        QuickAddFood(name: "Yogurt", emoji: "🥛", calories: 100, proteinG: 17, carbsG: 6, fatG: 0.7),
-        QuickAddFood(
-            name: "Almonds (1oz)", emoji: "🥜", calories: 164, proteinG: 6, carbsG: 6, fatG: 14),
+        QuickAddFood(name: "Banana", emoji: "🍌", calories: 105, proteinG: 1.3, carbsG: 27, fatG: 0.4),
+        QuickAddFood(name: "Orange", emoji: "🍊", calories: 62, proteinG: 1.2, carbsG: 15, fatG: 0.2),
+        QuickAddFood(name: "Strawberries", emoji: "🍓", calories: 32, proteinG: 0.7, carbsG: 7.7, fatG: 0.3),
+        QuickAddFood(name: "Blueberries", emoji: "🫐", calories: 57, proteinG: 0.7, carbsG: 14, fatG: 0.3),
+        QuickAddFood(name: "Grapes", emoji: "🍇", calories: 62, proteinG: 0.6, carbsG: 16, fatG: 0.2),
+        QuickAddFood(name: "Watermelon", emoji: "🍉", calories: 30, proteinG: 0.6, carbsG: 7.6, fatG: 0.2),
         QuickAddFood(name: "Avocado", emoji: "🥑", calories: 160, proteinG: 2, carbsG: 9, fatG: 15),
+        
+        // Proteins
+        QuickAddFood(name: "Egg", emoji: "🥚", calories: 78, proteinG: 6, carbsG: 0.6, fatG: 5),
+        QuickAddFood(name: "Chicken Breast", emoji: "🍗", calories: 165, proteinG: 31, carbsG: 0, fatG: 3.6),
+        QuickAddFood(name: "Salmon", emoji: "🐟", calories: 208, proteinG: 20, carbsG: 0, fatG: 13),
+        QuickAddFood(name: "Tuna", emoji: "🐟", calories: 144, proteinG: 30, carbsG: 0, fatG: 1),
+        QuickAddFood(name: "Turkey Breast", emoji: "🦃", calories: 135, proteinG: 30, carbsG: 0, fatG: 1),
+        QuickAddFood(name: "Ground Beef (90/10)", emoji: "🥩", calories: 250, proteinG: 26, carbsG: 0, fatG: 17),
+        QuickAddFood(name: "Greek Yogurt", emoji: "🥛", calories: 100, proteinG: 17, carbsG: 6, fatG: 0.7),
+        QuickAddFood(name: "Cottage Cheese", emoji: "🧀", calories: 98, proteinG: 11, carbsG: 3.4, fatG: 4.3),
+        QuickAddFood(name: "Protein Shake", emoji: "🥤", calories: 150, proteinG: 25, carbsG: 5, fatG: 2),
+        
+        // Grains & Carbs
+        QuickAddFood(name: "Rice (1 cup)", emoji: "🍚", calories: 206, proteinG: 4.3, carbsG: 45, fatG: 0.4),
+        QuickAddFood(name: "Quinoa (1 cup)", emoji: "🌾", calories: 222, proteinG: 8, carbsG: 39, fatG: 3.6),
+        QuickAddFood(name: "Oatmeal (1 cup)", emoji: "🥣", calories: 158, proteinG: 6, carbsG: 27, fatG: 3),
+        QuickAddFood(name: "Bread Slice", emoji: "🍞", calories: 79, proteinG: 2.7, carbsG: 15, fatG: 1),
+        QuickAddFood(name: "Pasta (1 cup)", emoji: "🍝", calories: 220, proteinG: 8, carbsG: 43, fatG: 1.3),
+        QuickAddFood(name: "Sweet Potato", emoji: "🍠", calories: 103, proteinG: 2, carbsG: 24, fatG: 0.2),
+        QuickAddFood(name: "Potato", emoji: "🥔", calories: 161, proteinG: 4.3, carbsG: 37, fatG: 0.2),
+        
+        // Vegetables
+        QuickAddFood(name: "Salad", emoji: "🥗", calories: 120, proteinG: 3, carbsG: 12, fatG: 7),
+        QuickAddFood(name: "Broccoli", emoji: "🥦", calories: 55, proteinG: 4, carbsG: 11, fatG: 0.6),
+        QuickAddFood(name: "Spinach", emoji: "🥬", calories: 23, proteinG: 2.9, carbsG: 3.6, fatG: 0.4),
+        QuickAddFood(name: "Carrots", emoji: "🥕", calories: 41, proteinG: 0.9, carbsG: 10, fatG: 0.2),
+        QuickAddFood(name: "Tomato", emoji: "🍅", calories: 18, proteinG: 0.9, carbsG: 3.9, fatG: 0.2),
+        
+        // Nuts & Seeds
+        QuickAddFood(name: "Almonds (1oz)", emoji: "🥜", calories: 164, proteinG: 6, carbsG: 6, fatG: 14),
+        QuickAddFood(name: "Peanuts (1oz)", emoji: "🥜", calories: 161, proteinG: 7, carbsG: 4.6, fatG: 14),
+        QuickAddFood(name: "Walnuts (1oz)", emoji: "🌰", calories: 185, proteinG: 4.3, carbsG: 3.9, fatG: 18),
+        QuickAddFood(name: "Chia Seeds (1oz)", emoji: "🌱", calories: 138, proteinG: 4.7, carbsG: 12, fatG: 8.7),
+        
+        // Dairy
+        QuickAddFood(name: "Milk (1 cup)", emoji: "🥛", calories: 103, proteinG: 8, carbsG: 12, fatG: 2.4),
+        QuickAddFood(name: "Cheese (1oz)", emoji: "🧀", calories: 113, proteinG: 7, carbsG: 0.4, fatG: 9),
+        QuickAddFood(name: "Yogurt", emoji: "🥛", calories: 100, proteinG: 17, carbsG: 6, fatG: 0.7),
+        
+        // Beverages
+        QuickAddFood(name: "Coffee", emoji: "☕", calories: 2, proteinG: 0.3, carbsG: 0, fatG: 0),
+        QuickAddFood(name: "Green Tea", emoji: "🍵", calories: 2, proteinG: 0, carbsG: 0, fatG: 0),
+        QuickAddFood(name: "Smoothie", emoji: "🥤", calories: 200, proteinG: 5, carbsG: 40, fatG: 2),
+        
+        // Snacks
+        QuickAddFood(name: "Hummus (2 tbsp)", emoji: "🥄", calories: 50, proteinG: 2.4, carbsG: 4.4, fatG: 2.4),
+        QuickAddFood(name: "Peanut Butter (2 tbsp)", emoji: "🥜", calories: 188, proteinG: 8, carbsG: 6, fatG: 16),
     ]
 }
 
@@ -124,6 +162,7 @@ final class LogExperienceViewModel {
     var manualFat: String = ""
     var manualPortion: String = "1"
     var manualUnit: String = "serving"
+    var saveToQuickAdd: Bool = false // Option to save to quick add
 
     // Recent and saved foods
     var recentFoods: [FoodLogEntry] = []
@@ -365,40 +404,48 @@ final class LogExperienceViewModel {
         ]
 
         for (pattern, baseFood) in foodPatterns {
-            if lowercased.contains(pattern) {
-                var food = baseFood
+            // Only match if the pattern is a complete word (not a substring)
+            // This prevents matching partial words like "egg" in "leg" or "apple" in "pineapple"
+            let wordBoundaryPattern = "\\b\(NSRegularExpression.escapedPattern(for: pattern))\\b"
+            if let regex = try? NSRegularExpression(pattern: wordBoundaryPattern, options: .caseInsensitive) {
+                let range = NSRange(lowercased.startIndex..<lowercased.endIndex, in: lowercased)
+                let matches = regex.matches(in: lowercased, options: [], range: range)
+                
+                if !matches.isEmpty {
+                    var food = baseFood
 
-                // Check for quantity modifiers
-                for (quantityPattern, multiplier) in quantityPatterns {
-                    if lowercased.contains(quantityPattern) && lowercased.contains(pattern) {
-                        // Check if the quantity is near the food word
-                        if let patternRange = lowercased.range(of: pattern),
-                            let quantityRange = lowercased.range(of: quantityPattern)
-                        {
-                            let distance = abs(
-                                lowercased.distance(
-                                    from: quantityRange.lowerBound, to: patternRange.lowerBound))
-                            if distance < 20 {  // Within 20 characters
-                                if multiplier == 0 {  // Half
-                                    food.calories = Int(Double(food.calories) * 0.5)
-                                    food.proteinG *= 0.5
-                                    food.carbsG *= 0.5
-                                    food.fatG *= 0.5
-                                    food.portion = 0.5
-                                } else {
-                                    food.calories *= multiplier
-                                    food.proteinG *= Double(multiplier)
-                                    food.carbsG *= Double(multiplier)
-                                    food.fatG *= Double(multiplier)
-                                    food.portion = Double(multiplier)
+                    // Check for quantity modifiers
+                    for (quantityPattern, multiplier) in quantityPatterns {
+                        if lowercased.contains(quantityPattern) && lowercased.contains(pattern) {
+                            // Check if the quantity is near the food word
+                            if let patternRange = lowercased.range(of: pattern),
+                                let quantityRange = lowercased.range(of: quantityPattern)
+                            {
+                                let distance = abs(
+                                    lowercased.distance(
+                                        from: quantityRange.lowerBound, to: patternRange.lowerBound))
+                                if distance < 20 {  // Within 20 characters
+                                    if multiplier == 0 {  // Half
+                                        food.calories = Int(Double(food.calories) * 0.5)
+                                        food.proteinG *= 0.5
+                                        food.carbsG *= 0.5
+                                        food.fatG *= 0.5
+                                        food.portion = 0.5
+                                    } else {
+                                        food.calories *= multiplier
+                                        food.proteinG *= Double(multiplier)
+                                        food.carbsG *= Double(multiplier)
+                                        food.fatG *= Double(multiplier)
+                                        food.portion = Double(multiplier)
+                                    }
+                                    break
                                 }
-                                break
                             }
                         }
                     }
-                }
 
-                foods.append(food)
+                    foods.append(food)
+                }
             }
         }
 
@@ -456,6 +503,10 @@ final class LogExperienceViewModel {
         let success = await saveFoodEntry(entry)
 
         if success {
+            // If user wants to save to quick add, add it
+            if saveToQuickAdd {
+                addToQuickAdd(entry)
+            }
             clearManualEntry()
         }
 
@@ -471,6 +522,7 @@ final class LogExperienceViewModel {
         manualFat = ""
         manualPortion = "1"
         manualUnit = "serving"
+        saveToQuickAdd = false
     }
 
     // MARK: - Quick Add
@@ -651,6 +703,47 @@ final class LogExperienceViewModel {
         guard let data = try? JSONEncoder().encode(savedFoods) else { return }
         UserDefaults.standard.set(data, forKey: savedFoodsKey)
     }
+    
+    /// Add a custom food to quick add (saved foods)
+    /// This allows users to add their own foods to the quick add list
+    func addToQuickAdd(_ entry: FoodLogEntry) {
+        saveToFavorites(entry)
+    }
+    
+    /// Get all quick add foods (common + saved, without duplicates)
+    /// Returns the last 2 saved foods (most recent) + common foods
+    var allQuickAddFoods: [QuickAddFood] {
+        var foods: [QuickAddFood] = []
+        
+        // Add saved foods (converted to QuickAddFood) - last 2 without duplicates
+        let uniqueSavedFoods = Array(Set(savedFoods.map { $0.name.lowercased() }))
+            .compactMap { name -> FoodLogEntry? in
+                savedFoods.first { $0.name.lowercased() == name }
+            }
+            .suffix(2)
+            .reversed()
+        
+        for savedFood in uniqueSavedFoods {
+            foods.append(QuickAddFood(
+                name: savedFood.name,
+                emoji: "⭐", // Custom food indicator
+                calories: savedFood.calories,
+                proteinG: savedFood.proteinG,
+                carbsG: savedFood.carbsG,
+                fatG: savedFood.fatG
+            ))
+        }
+        
+        // Add common foods, excluding duplicates
+        let savedNames = Set(foods.map { $0.name.lowercased() })
+        for commonFood in QuickAddFood.commonFoods {
+            if !savedNames.contains(commonFood.name.lowercased()) {
+                foods.append(commonFood)
+            }
+        }
+        
+        return foods
+    }
 
     // MARK: - Computed Properties
 
@@ -678,17 +771,27 @@ final class LogExperienceViewModel {
     }
 
     /// Update a specific analyzed food's portion
+    /// Safely handles division by zero
     func updateAnalyzedFoodPortion(_ food: FoodLogEntry, multiplier: Double) {
         guard let index = analyzedFoods.firstIndex(where: { $0.id == food.id }) else { return }
+        guard multiplier > 0 else { return }
 
         let originalFood = analyzedFoods[index]
+        
+        // Safely calculate new values, avoiding division by zero
+        guard originalFood.portion > 0 else {
+            print("⚠️ [LogExperienceViewModel] Cannot update portion: original portion is 0")
+            return
+        }
+        
+        let ratio = multiplier / originalFood.portion
         analyzedFoods[index] = FoodLogEntry(
             id: originalFood.id,
             name: originalFood.name,
-            calories: Int(Double(originalFood.calories) * multiplier / originalFood.portion),
-            proteinG: originalFood.proteinG * multiplier / originalFood.portion,
-            carbsG: originalFood.carbsG * multiplier / originalFood.portion,
-            fatG: originalFood.fatG * multiplier / originalFood.portion,
+            calories: Int(Double(originalFood.calories) * ratio),
+            proteinG: originalFood.proteinG * ratio,
+            carbsG: originalFood.carbsG * ratio,
+            fatG: originalFood.fatG * ratio,
             portion: multiplier,
             unit: originalFood.unit,
             timestamp: originalFood.timestamp,

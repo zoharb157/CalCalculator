@@ -84,6 +84,10 @@ struct PersonalDetailsView: View {
                 loadCurrentValues()
                 loadProfileImage()
             }
+            .onChange(of: localizationManager.currentLanguage) { oldValue, newValue in
+                // Force reload of all data when language changes to ensure proper display
+                loadCurrentValues()
+            }
         }
         .sheet(isPresented: $isEditingName) {
             editNameSheet

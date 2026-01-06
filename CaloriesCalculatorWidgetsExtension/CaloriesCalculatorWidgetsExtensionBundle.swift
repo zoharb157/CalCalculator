@@ -12,8 +12,6 @@ import SwiftUI
 struct CaloriesCalculatorWidgetsExtensionBundle: WidgetBundle {
     var body: some Widget {
         CaloriesWidget()
-        if #available(iOS 16.0, *) {
-            WeightWidget()
-        }
+        WeightWidget()
     }
 }

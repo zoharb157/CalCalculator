@@ -94,7 +94,9 @@ struct MealReminderHandler: ViewModifier {
             let plans = try dietRepo.fetchAllDietPlans()
             var scheduledMeal: ScheduledMeal?
             for plan in plans {
-                if let meal = plan.scheduledMeals.first(where: { $0.id == scheduledMealId }) {
+                // Safely access scheduledMeals relationship by creating a local copy first
+                let scheduledMealsArray = Array(plan.scheduledMeals)
+                if let meal = scheduledMealsArray.first(where: { $0.id == scheduledMealId }) {
                     scheduledMeal = meal
                     break
                 }
@@ -120,7 +122,12 @@ struct MealReminderHandler: ViewModifier {
             }
             
             // Save meal
+            // This automatically updates DaySummary and syncs widget data
             try mealRepo.saveMeal(newMeal)
+            
+            // Notify other parts of the app about the new meal
+            // This triggers HomeView to refresh and update widgets
+            NotificationCenter.default.post(name: .foodLogged, object: nil)
             
             // Mark reminder as completed
             if let reminder = try dietRepo.fetchMealReminder(by: scheduledMealId, for: Date()) {

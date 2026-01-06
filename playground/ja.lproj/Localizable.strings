@@ -116,6 +116,11 @@
 "Generating PDF..." = "PDFを生成中...";
 "Export Error" = "エクスポートエラー";
 "An unknown error occurred." = "不明なエラーが発生しました。";
+"Rate Us" = "評価する";
+"If you're enjoying CalorieVisionAI, please take a moment to rate us on the App Store. Your feedback helps us improve!" = "CalorieVisionAIをお楽しみいただいている場合は、App Storeで評価していただけると幸いです。フィードバックは改善に役立ちます！";
+"Send Feedback" = "フィードバックを送信";
+"Your Feedback" = "フィードバック";
+"We'd love to hear your thoughts, suggestions, or report any issues you've encountered." = "ご意見、ご提案、または問題の報告をお聞かせください。";
 
 /* Weight */
 "Save Your Weight" = "体重を保存";
@@ -189,7 +194,7 @@
 "View Daily Breakdown" = "日次内訳を表示";
 "Health Data" = "ヘルスデータ";
 "Health Access Required" = "ヘルスアクセスが必要";
-"Go to Settings > Privacy & Security > Health > CalCalculator" = "設定 > プライバシーとセキュリティ > ヘルスケア > CalCalculator に移動";
+"Go to Settings > Privacy & Security > Health > CalorieVisionAI" = "設定 > プライバシーとセキュリティ > ヘルスケア > CalorieVisionAI に移動";
 "Open Settings" = "設定を開く";
 "Delete Entry" = "エントリを削除";
 "This cannot be undone." = "これは元に戻せません。";
@@ -222,7 +227,7 @@
 "View Daily Breakdown" = "日次内訳を表示";
 "Health Data" = "ヘルスデータ";
 "Health Access Required" = "ヘルスアクセスが必要";
-"Go to Settings > Privacy & Security > Health > CalCalculator" = "設定 > プライバシーとセキュリティ > ヘルスケア > CalCalculator に移動";
+"Go to Settings > Privacy & Security > Health > CalorieVisionAI" = "設定 > プライバシーとセキュリティ > ヘルスケア > CalorieVisionAI に移動";
 "Open Settings" = "設定を開く";
 "Weight Progress" = "体重の進捗";
 "Current" = "現在";
@@ -334,14 +339,14 @@
 "High" = "高";
 "Medium" = "中";
 "Low" = "低";
-"Welcome to CalCalculator" = "CalCalculatorへようこそ";
+"Welcome to CalorieVisionAI" = "CalorieVisionAIへようこそ";
 "What is your gender?" = "性別は？";
 "How old are you?" = "年齢は？";
 "Body Metrics" = "身体測定";
 "You can change this anytime in Settings." = "設定でいつでも変更できます。";
 "Allow Notifications" = "通知を許可";
 "Enable Notifications" = "通知を有効化";
-"CalCalculator" = "CalCalculator";
+"CalorieVisionAI" = "CalorieVisionAI";
 "Track your nutrition with ease" = "簡単に栄養を追跡";
 "Already have an account?" = "すでにアカウントをお持ちですか？";
 "Sign In" = "サインイン";

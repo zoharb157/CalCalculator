@@ -13,19 +13,27 @@ final class Exercise: Identifiable {
     var id: UUID
     var type: ExerciseType
     var calories: Int
-    var duration: Int // in minutes
+    var duration: Int // in minutes (for cardio exercises)
     var intensity: ExerciseIntensity?
     var notes: String?
     var date: Date
+    
+    // Weight lifting specific fields
+    var reps: Int? // Number of repetitions per set
+    var sets: Int? // Number of sets
+    var weight: Double? // Weight in lbs (will be converted based on user settings)
     
     init(
         id: UUID = UUID(),
         type: ExerciseType,
         calories: Int,
-        duration: Int,
+        duration: Int = 0,
         intensity: ExerciseIntensity? = nil,
         notes: String? = nil,
-        date: Date = Date()
+        date: Date = Date(),
+        reps: Int? = nil,
+        sets: Int? = nil,
+        weight: Double? = nil
     ) {
         self.id = id
         self.type = type
@@ -33,6 +41,9 @@ final class Exercise: Identifiable {
         self.duration = duration
         self.intensity = intensity
         self.notes = notes
+        self.reps = reps
+        self.sets = sets
+        self.weight = weight
         // Normalize date to start of day for consistent querying (like WeightEntry)
         self.date = Calendar.current.startOfDay(for: date)
     }

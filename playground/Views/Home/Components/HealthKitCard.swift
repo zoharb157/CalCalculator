@@ -390,7 +390,7 @@ struct HealthKitCard: View {
     
     private func openHealthSettings() {
         // Direct approach: Open Settings app to the app's settings page
-        // User can then navigate to: Privacy & Security > Health > CalCalculator
+        // User can then navigate to: Privacy & Security > Health > CalorieVisionAI
         guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else {
             print("❌ [HealthKitCard] Failed to create settings URL")
             return

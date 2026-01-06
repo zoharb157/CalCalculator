@@ -116,6 +116,11 @@
 "Generating PDF..." = "PDF wird generiert...";
 "Export Error" = "Exportfehler";
 "An unknown error occurred." = "Ein unbekannter Fehler ist aufgetreten.";
+"Rate Us" = "Bewerten Sie uns";
+"If you're enjoying CalorieVisionAI, please take a moment to rate us on the App Store. Your feedback helps us improve!" = "Wenn Ihnen CalorieVisionAI gefällt, nehmen Sie sich bitte einen Moment Zeit, um uns im App Store zu bewerten. Ihr Feedback hilft uns, uns zu verbessern!";
+"Send Feedback" = "Feedback Senden";
+"Your Feedback" = "Ihr Feedback";
+"We'd love to hear your thoughts, suggestions, or report any issues you've encountered." = "Wir würden gerne Ihre Gedanken, Vorschläge hören oder über Probleme berichten, auf die Sie gestoßen sind.";
 
 /* Weight */
 "Save Your Weight" = "Ihr Gewicht Speichern";
@@ -189,7 +194,7 @@
 "View Daily Breakdown" = "Tägliche Aufschlüsselung Anzeigen";
 "Health Data" = "Gesundheitsdaten";
 "Health Access Required" = "Gesundheitszugriff Erforderlich";
-"Go to Settings > Privacy & Security > Health > CalCalculator" = "Gehen Sie zu Einstellungen > Datenschutz & Sicherheit > Gesundheit > CalCalculator";
+"Go to Settings > Privacy & Security > Health > CalorieVisionAI" = "Gehen Sie zu Einstellungen > Datenschutz & Sicherheit > Gesundheit > CalorieVisionAI";
 "Open Settings" = "Einstellungen Öffnen";
 "Delete Entry" = "Eintrag Löschen";
 "This cannot be undone." = "Dies kann nicht rückgängig gemacht werden.";
@@ -222,7 +227,7 @@
 "View Daily Breakdown" = "Tägliche Aufschlüsselung Anzeigen";
 "Health Data" = "Gesundheitsdaten";
 "Health Access Required" = "Gesundheitszugriff Erforderlich";
-"Go to Settings > Privacy & Security > Health > CalCalculator" = "Gehen Sie zu Einstellungen > Datenschutz & Sicherheit > Gesundheit > CalCalculator";
+"Go to Settings > Privacy & Security > Health > CalorieVisionAI" = "Gehen Sie zu Einstellungen > Datenschutz & Sicherheit > Gesundheit > CalorieVisionAI";
 "Open Settings" = "Einstellungen Öffnen";
 "Weight Progress" = "Gewichtsfortschritt";
 "Current" = "Aktuell";
@@ -334,14 +339,14 @@
 "High" = "Hoch";
 "Medium" = "Mittel";
 "Low" = "Niedrig";
-"Welcome to CalCalculator" = "Willkommen bei CalCalculator";
+"Welcome to CalorieVisionAI" = "Willkommen bei CalorieVisionAI";
 "What is your gender?" = "Was ist Ihr Geschlecht?";
 "How old are you?" = "Wie alt sind Sie?";
 "Body Metrics" = "Körpermaße";
 "You can change this anytime in Settings." = "Sie können dies jederzeit in den Einstellungen ändern.";
 "Allow Notifications" = "Benachrichtigungen zulassen";
 "Enable Notifications" = "Benachrichtigungen aktivieren";
-"CalCalculator" = "CalCalculator";
+"CalorieVisionAI" = "CalorieVisionAI";
 "Track your nutrition with ease" = "Verfolgen Sie Ihre Ernährung mit Leichtigkeit";
 "Already have an account?" = "Haben Sie bereits ein Konto?";
 "Sign In" = "Anmelden";

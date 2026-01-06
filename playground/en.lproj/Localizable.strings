@@ -116,6 +116,11 @@
 "Generating PDF..." = "Generating PDF...";
 "Export Error" = "Export Error";
 "An unknown error occurred." = "An unknown error occurred.";
+"Rate Us" = "Rate Us";
+"If you're enjoying CalorieVisionAI, please take a moment to rate us on the App Store. Your feedback helps us improve!" = "If you're enjoying CalorieVisionAI, please take a moment to rate us on the App Store. Your feedback helps us improve!";
+"Send Feedback" = "Send Feedback";
+"Your Feedback" = "Your Feedback";
+"We'd love to hear your thoughts, suggestions, or report any issues you've encountered." = "We'd love to hear your thoughts, suggestions, or report any issues you've encountered.";
 
 /* Weight */
 "Save Your Weight" = "Save Your Weight";
@@ -188,7 +193,7 @@
 "View Daily Breakdown" = "View Daily Breakdown";
 "Health Data" = "Health Data";
 "Health Access Required" = "Health Access Required";
-"Go to Settings > Privacy & Security > Health > CalCalculator" = "Go to Settings > Privacy & Security > Health > CalCalculator";
+"Go to Settings > Privacy & Security > Health > CalorieVisionAI" = "Go to Settings > Privacy & Security > Health > CalorieVisionAI";
 "Open Settings" = "Open Settings";
 "Delete Entry" = "Delete Entry";
 "This cannot be undone." = "This cannot be undone.";
@@ -222,7 +227,7 @@
 "View Daily Breakdown" = "View Daily Breakdown";
 "Health Data" = "Health Data";
 "Health Access Required" = "Health Access Required";
-"Go to Settings > Privacy & Security > Health > CalCalculator" = "Go to Settings > Privacy & Security > Health > CalCalculator";
+"Go to Settings > Privacy & Security > Health > CalorieVisionAI" = "Go to Settings > Privacy & Security > Health > CalorieVisionAI";
 "Open Settings" = "Open Settings";
 "Weight Progress" = "Weight Progress";
 "Current" = "Current";
@@ -365,7 +370,7 @@
 "Build Consistency" = "Build Consistency";
 "C" = "C";
 "Cal AI" = "Cal AI";
-"CalCalculator" = "CalCalculator";
+"CalorieVisionAI" = "CalorieVisionAI";
 "Calculates optimal macros based on your profile and current calorie goal" = "Calculates optimal macros based on your profile and current calorie goal";
 "Calculating portion sizes..." = "Calculating portion sizes...";
 "Calorie Goal" = "Calorie Goal";
@@ -708,7 +713,7 @@
 "Weight Goal" = "Weight Goal";
 "Weight History" = "Weight History";
 "Weights" = "Weights";
-"Welcome to CalCalculator" = "Welcome to CalCalculator";
+"Welcome to CalorieVisionAI" = "Welcome to CalorieVisionAI";
 "Welcome to Diet Plans!" = "Welcome to Diet Plans!";
 "What is this food?" = "What is this food?";
 "What is your gender?" = "What is your gender?";

@@ -13,24 +13,28 @@ enum DietTimeRange: String, CaseIterable {
     case today = "Today"
     case week = "This Week"
     case month = "This Month"
+    case allDays = "All Days"
     
     var localizedKey: String {
         switch self {
         case .today: return AppStrings.DietPlan.today
         case .week: return AppStrings.DietPlan.thisWeek
         case .month: return AppStrings.DietPlan.thisMonth
+        case .allDays: return AppStrings.DietPlan.allDays
         }
     }
     
-    var startDate: Date {
+    var startDate: Date? {
         let calendar = Calendar.current
         switch self {
         case .today:
             return calendar.startOfDay(for: Date())
         case .week:
-            return calendar.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+            return calendar.date(byAdding: .day, value: -7, to: Date())
         case .month:
-            return calendar.date(byAdding: .month, value: -1, to: Date()) ?? Date()
+            return calendar.date(byAdding: .month, value: -1, to: Date())
+        case .allDays:
+            return nil // No start date filter for all days
         }
     }
 }
@@ -74,7 +78,10 @@ final class DaySummary {
     }
     
     /// Add a meal's macros to the daily summary
+    /// Safely accesses the meal's items relationship to avoid InvalidFutureBackingData errors
     func addMeal(_ meal: Meal) {
+        // Access meal.totalMacros which safely handles the items relationship
+        // The totalMacros property creates a local copy of items before accessing
         let mealMacros = meal.totalMacros
         totalCalories += mealMacros.calories
         totalProteinG += mealMacros.proteinG
@@ -84,7 +91,10 @@ final class DaySummary {
     }
     
     /// Remove a meal's macros from the daily summary
+    /// Safely accesses the meal's items relationship to avoid InvalidFutureBackingData errors
     func removeMeal(_ meal: Meal) {
+        // Access meal.totalMacros which safely handles the items relationship
+        // The totalMacros property creates a local copy of items before accessing
         let mealMacros = meal.totalMacros
         totalCalories = max(0, totalCalories - mealMacros.calories)
         totalProteinG = max(0, totalProteinG - mealMacros.proteinG)

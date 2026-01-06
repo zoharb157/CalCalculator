@@ -21,7 +21,6 @@ struct playgroundApp: App {
     @State var sdk: TheSDK
     @State private var subscriptionStatus: Bool = false
     @State private var previousSubscriptionStatus: Bool = false
-    @State private var languageRefreshID = UUID()
     @State private var currentLocale: Locale = LocalizationManager.shared.currentLocale
     @State private var currentLayoutDirection: LayoutDirection = LocalizationManager.shared.layoutDirection
 
@@ -69,13 +68,29 @@ struct playgroundApp: App {
                 apnsHandler: { event in
                     switch event {
                     case .didReceive(let notification, let details):
-                        guard details == .appOpened else { return }
-                        if let urlString = notification["webviewUrl"] as? String,
-                            let url = URL(string: urlString)
-                        {
-                            print("📱 Deep link received: \(url)")
+                        // Handle remote notification received
+                        print("📬 [SDK] Received remote notification: \(notification)")
+                        
+                        // Handle deep links when app is opened from notification
+                        if details == .appOpened {
+                            if let urlString = notification["webviewUrl"] as? String,
+                                let url = URL(string: urlString)
+                            {
+                                print("📱 [SDK] Deep link received: \(url)")
+                                // TODO: Navigate to deep link URL
+                            }
                         }
-                    default:
+                        
+                        // Handle other notification payloads
+                        // Example: Update app state, refresh data, etc.
+                        
+                    case .didFailToRegisterForNotifications(let error):
+                        // Registration failure (handled in AppDelegate)
+                        print("❌ [SDK] Failed to register for notifications: \(error)")
+                        
+                    @unknown default:
+                        // Handle any other APNS events
+                        print("📱 [SDK] APNS event: \(event)")
                         break
                     }
                 }))
@@ -90,7 +105,7 @@ struct playgroundApp: App {
                 .environment(\.localization, LocalizationManager.shared)
                 .environment(\.layoutDirection, currentLayoutDirection)
                 .environment(\.locale, currentLocale)
-                .id(languageRefreshID)  // Force view refresh when language changes
+                // Removed .id() to prevent view hierarchy recreation - views update via @ObservedObject
                 .onReceive(NotificationCenter.default.publisher(for: .appearanceModeChanged)) {
                     notification in
                     if let mode = notification.object as? AppearanceMode {
@@ -111,18 +126,11 @@ struct playgroundApp: App {
                         // Update localization environment to trigger @ObservedObject updates
                         LocalizationManager.shared.objectWillChange.send()
                         
-                        // CRITICAL: Update ID to force SwiftUI to recreate the entire view hierarchy
-                        // This ensures all views (including those using LocalizedStringKey) refresh
-                        languageRefreshID = UUID()
-                        
                         // Update environment values immediately
                         Task { @MainActor in
-                            // Update environment values again to ensure they're current
+                            // Update environment values to ensure they're current
                             currentLocale = LocalizationManager.shared.currentLocale
                             currentLayoutDirection = LocalizationManager.shared.layoutDirection
-                            
-                            // Force another refresh to catch any views that didn't update
-                            languageRefreshID = UUID()
                             
                             // Ensure environment values are updated and notify all observers
                             LocalizationManager.shared.objectWillChange.send()

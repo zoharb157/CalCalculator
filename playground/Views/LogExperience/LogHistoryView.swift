@@ -62,7 +62,8 @@ struct LogHistoryView: View {
     private var allEntries: [LogEntry] {
         let mealEntries = meals.map { LogEntry.meal($0) }
         let exerciseEntries = exercises.map { LogEntry.exercise($0) }
-        return (mealEntries + exerciseEntries).sorted { $0.timestamp < $1.timestamp }
+        // Sort by timestamp descending (newest first) to show most recent activities at the top
+        return (mealEntries + exerciseEntries).sorted { $0.timestamp > $1.timestamp }
     }
 
     private var totalCaloriesConsumed: Int {
@@ -410,7 +411,10 @@ struct LogEntryRow: View {
     private var entryDetails: String? {
         switch entry {
         case .meal(let meal):
-            return "\(meal.items.count) items"
+            // Safely access items relationship by creating a local copy first
+            // This prevents InvalidFutureBackingData errors
+            let itemsArray = Array(meal.items)
+            return "\(itemsArray.count) items"
         case .exercise(let exercise):
             return "\(exercise.duration) min"
         }

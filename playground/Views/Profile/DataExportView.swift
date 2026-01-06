@@ -8,11 +8,26 @@
 import SwiftUI
 import SwiftData
 import PDFKit
+import SDK
 
 struct DataExportView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.isSubscribed) private var isSubscribed
+    @Environment(TheSDK.self) private var sdk
     @ObservedObject private var localizationManager = LocalizationManager.shared
+    
+    // User settings for weight units
+    private var settings: UserSettings {
+        UserSettings.shared
+    }
+    
+    // App name from Bundle
+    private var appName: String {
+        Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String 
+            ?? Bundle.main.infoDictionary?["CFBundleName"] as? String 
+            ?? "CalorieVisionAI"
+    }
     
     @Query(sort: \WeightEntry.date, order: .reverse) private var weightEntries: [WeightEntry]
     @Query(sort: \Meal.timestamp, order: .reverse) private var meals: [Meal]
@@ -21,6 +36,8 @@ struct DataExportView: View {
     @State private var exportError: String?
     @State private var shareSheetURL: URL?
     @State private var showShareSheet = false
+    @State private var showingPaywall = false
+    @State private var showDeclineConfirmation = false
     
     var body: some View {
         // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
@@ -37,7 +54,11 @@ struct DataExportView: View {
                         subtitle: "\(weightEntries.count) entries",
                         isDisabled: weightEntries.isEmpty
                     ) {
-                        exportWeightDataPDF()
+                        if isSubscribed {
+                            exportWeightDataPDF()
+                        } else {
+                            showingPaywall = true
+                        }
                     }
                 } header: {
                     Text(localizationManager.localizedString(for: AppStrings.Profile.weightData))
@@ -54,7 +75,11 @@ struct DataExportView: View {
                         subtitle: "\(meals.count) meals logged",
                         isDisabled: meals.isEmpty
                     ) {
-                        exportMealDataPDF()
+                        if isSubscribed {
+                            exportMealDataPDF()
+                        } else {
+                            showingPaywall = true
+                        }
                     }
                     
                     ExportOptionRow(
@@ -64,7 +89,11 @@ struct DataExportView: View {
                         subtitle: localizationManager.localizedString(for: AppStrings.Profile.aggregatedDailyTotals),
                         isDisabled: meals.isEmpty
                     ) {
-                        exportDailyNutritionSummaryPDF()
+                        if isSubscribed {
+                            exportDailyNutritionSummaryPDF()
+                        } else {
+                            showingPaywall = true
+                        }
                     }
                 } header: {
                     Text(localizationManager.localizedString(for: AppStrings.Profile.nutritionData))
@@ -81,7 +110,11 @@ struct DataExportView: View {
                         subtitle: localizationManager.localizedString(for: AppStrings.Profile.completeDataBackup),
                         isDisabled: weightEntries.isEmpty && meals.isEmpty
                     ) {
-                        exportAllDataPDF()
+                        if isSubscribed {
+                            exportAllDataPDF()
+                        } else {
+                            showingPaywall = true
+                        }
                     }
                 } footer: {
                     Text(localizationManager.localizedString(for: AppStrings.Profile.exportAllDescription))
@@ -137,6 +170,16 @@ struct DataExportView: View {
                     ShareSheet(items: [url])
                 }
             }
+            .fullScreenCover(isPresented: $showingPaywall) {
+                SDKView(
+                    model: sdk,
+                    page: .splash,
+                    show: paywallBinding(showPaywall: $showingPaywall, sdk: sdk, showDeclineConfirmation: $showDeclineConfirmation),
+                    backgroundColor: .white,
+                    ignoreSafeArea: true
+                )
+                .paywallDismissalOverlay(showPaywall: $showingPaywall, showDeclineConfirmation: $showDeclineConfirmation)
+            }
         }
     }
     
@@ -177,7 +220,11 @@ struct DataExportView: View {
         
         Task { @MainActor in
             let pdfData = generateComprehensivePDF()
-            let filename = "calcalculator_report_\(dateString()).pdf"
+            // Get app name for filename
+            let appNameForFile = (Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String 
+                ?? Bundle.main.infoDictionary?["CFBundleName"] as? String 
+                ?? "CalorieVisionAI").lowercased().replacingOccurrences(of: " ", with: "_")
+            let filename = "\(appNameForFile)_report_\(dateString()).pdf"
             sharePDF(pdfData, filename: filename)
         }
     }
@@ -205,17 +252,23 @@ struct DataExportView: View {
             
             // Summary
             if !weightEntries.isEmpty {
-                let latestWeight = weightEntries.first?.weight ?? 0
-                let startWeight = weightEntries.last?.weight ?? 0
-                let change = latestWeight - startWeight
+                let latestWeightKg = weightEntries.first?.weight ?? 0
+                let startWeightKg = weightEntries.last?.weight ?? 0
+                let changeKg = latestWeightKg - startWeightKg
+                
+                // Convert to display units
+                let latestWeight = settings.useMetricUnits ? latestWeightKg : latestWeightKg * 2.20462
+                let startWeight = settings.useMetricUnits ? startWeightKg : startWeightKg * 2.20462
+                let change = settings.useMetricUnits ? changeKg : changeKg * 2.20462
+                let unit = settings.weightUnit
                 let changeText = change >= 0 ? "+\(String(format: "%.1f", change))" : String(format: "%.1f", change)
                 
                 yPosition = drawSummaryBox(
                     items: [
                         ("Total Entries", "\(weightEntries.count)"),
-                        ("Current Weight", String(format: "%.1f lbs", latestWeight)),
-                        ("Starting Weight", String(format: "%.1f lbs", startWeight)),
-                        ("Total Change", "\(changeText) lbs")
+                        ("Current Weight", String(format: "%.1f %@", latestWeight, unit)),
+                        ("Starting Weight", String(format: "%.1f %@", startWeight, unit)),
+                        ("Total Change", "\(changeText) \(unit)")
                     ],
                     at: yPosition,
                     pageWidth: pageWidth,
@@ -225,8 +278,9 @@ struct DataExportView: View {
             }
             
             // Table Header
+            let weightUnit = settings.weightUnit
             yPosition = drawTableHeader(
-                columns: ["Date", "Weight (lbs)", "Note"],
+                columns: ["Date", "Weight (\(weightUnit))", "Note"],
                 widths: [150, 100, 262],
                 at: yPosition,
                 margin: margin
@@ -239,10 +293,13 @@ struct DataExportView: View {
                     yPosition = margin
                 }
                 
+                // Convert weight to display units
+                let displayWeight = settings.useMetricUnits ? entry.weight : entry.weight * 2.20462
+                
                 yPosition = drawTableRow(
                     values: [
                         formattedDate(entry.date),
-                        String(format: "%.1f", entry.weight),
+                        String(format: "%.1f", displayWeight),
                         entry.note ?? "-"
                     ],
                     widths: [150, 100, 262],
@@ -419,15 +476,17 @@ struct DataExportView: View {
             context.beginPage()
             var yPosition: CGFloat = pageHeight / 3
             
-            // App Title
+            // App Title - Get from Bundle
+            let appName = Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String 
+                ?? Bundle.main.infoDictionary?["CFBundleName"] as? String 
+                ?? "CalorieVisionAI"
             let titleFont = UIFont.boldSystemFont(ofSize: 36)
             let titleAttributes: [NSAttributedString.Key: Any] = [
                 .font: titleFont,
                 .foregroundColor: UIColor.systemBlue
             ]
-            let titleText = "CalCalculator"
-            let titleSize = titleText.size(withAttributes: titleAttributes)
-            titleText.draw(
+            let titleSize = appName.size(withAttributes: titleAttributes)
+            appName.draw(
                 at: CGPoint(x: (pageWidth - titleSize.width) / 2, y: yPosition),
                 withAttributes: titleAttributes
             )
@@ -458,8 +517,9 @@ struct DataExportView: View {
                 yPosition = drawSectionTitle("Weight History", at: yPosition, pageWidth: pageWidth, margin: margin)
                 yPosition += 20
                 
+                let weightUnit = settings.weightUnit
                 yPosition = drawTableHeader(
-                    columns: ["Date", "Weight (lbs)", "Note"],
+                    columns: ["Date", "Weight (\(weightUnit))", "Note"],
                     widths: [150, 100, 262],
                     at: yPosition,
                     margin: margin
@@ -471,10 +531,13 @@ struct DataExportView: View {
                         yPosition = margin
                     }
                     
+                    // Convert weight to display units
+                    let displayWeight = settings.useMetricUnits ? entry.weight : entry.weight * 2.20462
+                    
                     yPosition = drawTableRow(
                         values: [
                             formattedDate(entry.date),
-                            String(format: "%.1f", entry.weight),
+                            String(format: "%.1f", displayWeight),
                             entry.note ?? "-"
                         ],
                         widths: [150, 100, 262],

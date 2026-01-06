@@ -58,21 +58,32 @@ final class MealItem {
     }
     
     /// Recalculates macros when portion changes
+    /// Safely handles division by zero and maintains accuracy
     func updatePortion(to newPortion: Double) {
-        guard originalPortion > 0 else { return }
+        guard newPortion > 0 else { return }
+        guard originalPortion > 0 else {
+            print("⚠️ [MealItem] Cannot update portion: originalPortion is 0")
+            return
+        }
         
-        // Get base values per original portion
-        let baseCaloriesPerUnit = Double(calories) / (portion / originalPortion)
-        let baseProteinPerUnit = proteinG / (portion / originalPortion)
-        let baseCarbsPerUnit = carbsG / (portion / originalPortion)
-        let baseFatPerUnit = fatG / (portion / originalPortion)
-        
-        // Calculate new values
+        // Calculate the ratio of new portion to original portion
         let newRatio = newPortion / originalPortion
-        calories = Int(baseCaloriesPerUnit * newRatio / (portion / originalPortion))
-        proteinG = baseProteinPerUnit * newRatio / (portion / originalPortion)
-        carbsG = baseCarbsPerUnit * newRatio / (portion / originalPortion)
-        fatG = baseFatPerUnit * newRatio / (portion / originalPortion)
+        
+        // Get the current ratio (how much the current portion differs from original)
+        // If portion is 0, assume it's the same as original (ratio = 1.0)
+        let currentRatio = portion > 0 ? portion / originalPortion : 1.0
+        
+        // Calculate base values (what they would be for the original portion)
+        let baseCalories = Double(calories) / currentRatio
+        let baseProtein = proteinG / currentRatio
+        let baseCarbs = carbsG / currentRatio
+        let baseFat = fatG / currentRatio
+        
+        // Apply the new ratio to get the new values
+        calories = Int(baseCalories * newRatio)
+        proteinG = baseProtein * newRatio
+        carbsG = baseCarbs * newRatio
+        fatG = baseFat * newRatio
         
         portion = newPortion
     }

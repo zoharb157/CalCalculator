@@ -84,9 +84,19 @@ final class Meal: Identifiable {
     }
     
     /// Computed total macros from all items
+    /// Safely accesses the items relationship to avoid InvalidFutureBackingData errors
     nonisolated var totalMacros: MacroData {
-        items.reduce(MacroData.zero) { result, item in
-            result + item.macros
+        // Create a local copy of the relationship array first
+        // This forces SwiftData to materialize the relationship and prevents
+        // InvalidFutureBackingData errors when the model is in an invalid state
+        let itemsArray = Array(items)
+        
+        // Immediately extract property values from each item while they're still valid
+        // This prevents accessing properties later when the model might be in an invalid state
+        return itemsArray.reduce(MacroData.zero) { result, item in
+            // Access item properties immediately while the item is guaranteed to be valid
+            let macros = item.macros
+            return result + macros
         }
     }
     

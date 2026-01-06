@@ -116,6 +116,11 @@
 "Generating PDF..." = "PDF 생성 중...";
 "Export Error" = "내보내기 오류";
 "An unknown error occurred." = "알 수 없는 오류가 발생했습니다.";
+"Rate Us" = "평가하기";
+"If you're enjoying CalorieVisionAI, please take a moment to rate us on the App Store. Your feedback helps us improve!" = "CalorieVisionAI를 즐기고 계시다면 App Store에서 평가해 주세요. 피드백은 개선에 도움이 됩니다!";
+"Send Feedback" = "피드백 보내기";
+"Your Feedback" = "피드백";
+"We'd love to hear your thoughts, suggestions, or report any issues you've encountered." = "귀하의 생각, 제안 또는 발견한 문제를 보고해 주시면 감사하겠습니다.";
 
 /* Weight */
 "Save Your Weight" = "체중 저장";
@@ -189,7 +194,7 @@
 "View Daily Breakdown" = "일일 세부 내역 보기";
 "Health Data" = "건강 데이터";
 "Health Access Required" = "건강 접근 권한 필요";
-"Go to Settings > Privacy & Security > Health > CalCalculator" = "설정 > 개인정보 보호 및 보안 > 건강 > CalCalculator로 이동";
+"Go to Settings > Privacy & Security > Health > CalorieVisionAI" = "설정 > 개인정보 보호 및 보안 > 건강 > CalorieVisionAI로 이동";
 "Open Settings" = "설정 열기";
 "Delete Entry" = "항목 삭제";
 "This cannot be undone." = "이 작업은 취소할 수 없습니다.";
@@ -222,7 +227,7 @@
 "View Daily Breakdown" = "일일 세부 내역 보기";
 "Health Data" = "건강 데이터";
 "Health Access Required" = "건강 접근 권한 필요";
-"Go to Settings > Privacy & Security > Health > CalCalculator" = "설정 > 개인정보 보호 및 보안 > 건강 > CalCalculator로 이동";
+"Go to Settings > Privacy & Security > Health > CalorieVisionAI" = "설정 > 개인정보 보호 및 보안 > 건강 > CalorieVisionAI로 이동";
 "Open Settings" = "설정 열기";
 "Weight Progress" = "체중 진행 상황";
 "Current" = "현재";
@@ -334,14 +339,14 @@
 "High" = "높음";
 "Medium" = "중간";
 "Low" = "낮음";
-"Welcome to CalCalculator" = "CalCalculator에 오신 것을 환영합니다";
+"Welcome to CalorieVisionAI" = "CalorieVisionAI에 오신 것을 환영합니다";
 "What is your gender?" = "성별은 무엇인가요?";
 "How old are you?" = "나이가 어떻게 되나요?";
 "Body Metrics" = "신체 지표";
 "You can change this anytime in Settings." = "설정에서 언제든지 변경할 수 있습니다.";
 "Allow Notifications" = "알림 허용";
 "Enable Notifications" = "알림 활성화";
-"CalCalculator" = "CalCalculator";
+"CalorieVisionAI" = "CalorieVisionAI";
 "Track your nutrition with ease" = "쉽게 영양을 추적하세요";
 "Already have an account?" = "이미 계정이 있으신가요?";
 "Sign In" = "로그인";

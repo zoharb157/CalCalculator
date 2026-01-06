@@ -15,7 +15,9 @@ struct VoiceLogView: View {
     @State private var isListening = false
     @State private var transcribedText: String = ""
     @State private var showingPermissionAlert = false
+    @State private var showingComingSoonAlert = false
     @State private var animationAmount: CGFloat = 1.0
+    @State private var isViewPresented = false
 
     var body: some View {
         // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
@@ -57,6 +59,26 @@ struct VoiceLogView: View {
                             .foregroundColor(.secondary)
                     }
                 }
+            }
+            .task {
+                // Mark view as presented after a small delay to ensure hierarchy is stable
+                // This prevents UIAlertController assertion failures
+                try? await Task.sleep(nanoseconds: 200_000_000) // 0.2 seconds
+                isViewPresented = true
+            }
+            .onDisappear {
+                // Mark view as not presented to prevent alerts after dismissal
+                isViewPresented = false
+                // Also reset alert state to prevent showing after dismissal
+                showingComingSoonAlert = false
+                showingPermissionAlert = false
+            }
+            .alert(localizationManager.localizedString(for: AppStrings.Food.comingSoon), isPresented: $showingComingSoonAlert) {
+                Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) {}
+                    .id("ok-coming-soon-\(localizationManager.currentLanguage)")
+            } message: {
+                Text(localizationManager.localizedString(for: AppStrings.Food.voiceLoggingInDevelopment))
+                    .id("coming-soon-message-\(localizationManager.currentLanguage)")
             }
             .alert(localizationManager.localizedString(for: AppStrings.Food.microphoneAccess), isPresented: $showingPermissionAlert) {
                 Button(localizationManager.localizedString(for: AppStrings.Common.settings), role: .none) {
@@ -199,13 +221,27 @@ struct VoiceLogView: View {
     }
 
     // MARK: - Actions
-
+    
     private func toggleListening() {
         HapticManager.shared.impact(.medium)
 
-        // Show coming soon message for now
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-            isListening.toggle()
+        // Only show alert if view is fully presented and stable
+        // This prevents crashes when the view is being dismissed or not fully in the hierarchy
+        guard isViewPresented else {
+            print("⚠️ [VoiceLogView] Skipping alert - view not fully presented")
+            return
+        }
+        
+        // Use a small delay to ensure the view hierarchy is stable before presenting alert
+        // This prevents UIAlertController assertion failures
+        Task { @MainActor in
+            // Small delay to ensure view is stable
+            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+            
+            // Double-check view is still presented before showing alert
+            guard isViewPresented else { return }
+            
+            showingComingSoonAlert = true
         }
 
         // Auto-stop removed - user should manually stop listening

@@ -21,6 +21,11 @@ struct ExerciseDetailView: View {
     @State private var exerciseDescription: String = ""
     @State private var manualCalories: String = ""
     
+    // Weight lifting specific
+    @State private var reps: String = ""
+    @State private var sets: String = ""
+    @State private var weight: String = ""
+    
     var body: some View {
         // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
         let _ = localizationManager.currentLanguage
@@ -32,8 +37,11 @@ struct ExerciseDetailView: View {
                     describeExerciseView
                 } else if exerciseType == .manual {
                     manualExerciseView
+                } else if exerciseType == .weightLifting {
+                    // Weight lifting uses reps, sets, weight instead of duration
+                    weightLiftingView
                 } else {
-                    // Run and Weight Lifting use intensity and duration
+                    // Run uses intensity and duration
                     intensityAndDurationView
                 }
             }
@@ -44,9 +52,12 @@ struct ExerciseDetailView: View {
             BurnedCaloriesView(
                 calories: calculatedCalories,
                 exerciseType: exerciseType,
-                duration: selectedDuration,
-                intensity: exerciseType == .describe || exerciseType == .manual ? nil : selectedIntensity,
-                notes: exerciseType == .describe ? exerciseDescription.trimmingCharacters(in: .whitespacesAndNewlines) : nil
+                duration: exerciseType == .weightLifting ? 0 : selectedDuration,
+                intensity: exerciseType == .describe || exerciseType == .manual || exerciseType == .weightLifting ? nil : selectedIntensity,
+                notes: exerciseType == .describe ? exerciseDescription.trimmingCharacters(in: .whitespacesAndNewlines) : nil,
+                reps: exerciseType == .weightLifting ? Int(reps) : nil,
+                sets: exerciseType == .weightLifting ? Int(sets) : nil,
+                weight: exerciseType == .weightLifting ? (Double(weight) ?? nil) : nil
             )
         }
         .onReceive(NotificationCenter.default.publisher(for: .exerciseFlowShouldDismiss)) { _ in
@@ -62,6 +73,9 @@ struct ExerciseDetailView: View {
             calculatedCalories = Int.random(in: 1...10000)
             exerciseDescription = ""
             manualCalories = ""
+            reps = ""
+            sets = ""
+            weight = ""
         }
     }
     
@@ -200,7 +214,86 @@ struct ExerciseDetailView: View {
         }
     }
     
-    // MARK: - Intensity and Duration View (for Run and Weight Lifting)
+    // MARK: - Weight Lifting View
+    
+    private var weightLiftingView: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            // Reps Section
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Image(systemName: "repeat")
+                    Text(localizationManager.localizedString(for: AppStrings.Exercise.reps))
+                        .id("reps-label-\(localizationManager.currentLanguage)")
+                        .font(.headline)
+                }
+                
+                TextField("Reps", text: $reps)
+                    .keyboardType(.numberPad)
+                    .textFieldStyle(.roundedBorder)
+                    .keyboardDoneButton()
+            }
+            .padding()
+            
+            // Sets Section
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Image(systemName: "list.number")
+                    Text(localizationManager.localizedString(for: AppStrings.Exercise.sets))
+                        .id("sets-label-\(localizationManager.currentLanguage)")
+                        .font(.headline)
+                }
+                
+                TextField("Sets", text: $sets)
+                    .keyboardType(.numberPad)
+                    .textFieldStyle(.roundedBorder)
+                    .keyboardDoneButton()
+            }
+            .padding()
+            
+            // Weight Section
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Image(systemName: "scalemass")
+                    Text(localizationManager.localizedString(for: AppStrings.Exercise.weight))
+                        .id("weight-label-\(localizationManager.currentLanguage)")
+                        .font(.headline)
+                }
+                
+                TextField("Weight (kg)", text: $weight)
+                    .keyboardType(.decimalPad)
+                    .textFieldStyle(.roundedBorder)
+                    .keyboardDoneButton()
+            }
+            .padding()
+            
+            Spacer()
+            
+            // Continue Button - only show when valid
+            if let repsValue = Int(reps), repsValue > 0,
+               let setsValue = Int(sets), setsValue > 0,
+               let weightValue = Double(weight), weightValue > 0 {
+                Button {
+                    // Calculate calories based on reps, sets, and weight
+                    // Temporary: Generate random calories between 1-10000 until API is connected
+                    calculatedCalories = Int.random(in: 1...10000)
+                    showingBurnedCalories = true
+                } label: {
+                    Text(localizationManager.localizedString(for: AppStrings.Common.continue_))
+                        .id("continue-\(localizationManager.currentLanguage)")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.black)
+                        .cornerRadius(12)
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 40)
+            }
+        }
+    }
+    
+    // MARK: - Intensity and Duration View (for Run)
     
     private var intensityAndDurationView: some View {
         VStack(alignment: .leading, spacing: 24) {

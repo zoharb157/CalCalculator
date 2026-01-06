@@ -305,7 +305,7 @@ struct ReferralCodeView: View {
     }
     
     private func shareCode() {
-        let message = "Use my referral code \(viewModel.promoCode) to get started with CalCalculator!"
+        let message = "Use my referral code \(viewModel.promoCode) to get started with CalorieVisionAI!"
         let activityVC = UIActivityViewController(
             activityItems: [message],
             applicationActivities: nil

@@ -201,6 +201,54 @@ struct ToggleSettingRow: View {
     }
 }
 
+// MARK: - Weight Unit Toggle Row
+
+/// A row for toggling between metric (kg) and imperial (lbs) weight units
+struct WeightUnitToggleRow: View {
+    @Binding var useMetricUnits: Bool
+    @ObservedObject private var localizationManager = LocalizationManager.shared
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            // Icon
+            ZStack {
+                Circle()
+                    .fill(Color.blue.opacity(0.15))
+                    .frame(width: 40, height: 40)
+                
+                Image(systemName: "scalemass")
+                    .font(.system(size: 16))
+                    .foregroundColor(.blue)
+            }
+            
+            // Text content
+            VStack(alignment: .leading, spacing: 2) {
+                Text(localizationManager.localizedString(for: AppStrings.Profile.weightUnits))
+                    .font(.body)
+                    .foregroundColor(.primary)
+                
+                Text(useMetricUnits 
+                     ? localizationManager.localizedString(for: AppStrings.Profile.metricUnits)
+                     : localizationManager.localizedString(for: AppStrings.Profile.imperialUnits))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+            
+            // Segmented control style toggle
+            Picker("", selection: $useMetricUnits) {
+                Text("kg").tag(true)
+                Text("lbs").tag(false)
+            }
+            .pickerStyle(.segmented)
+            .frame(width: 100)
+        }
+        .padding(.vertical, 12)
+        .padding(.horizontal, 16)
+    }
+}
+
 // MARK: - Profile Info Card
 
 /// The user profile card at the top of the profile screen

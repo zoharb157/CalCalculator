@@ -86,26 +86,37 @@ struct WeekDayItem: View {
                         .strokeBorder(day.isSelected ? Color.clear : Color.gray.opacity(0.3), style: StrokeStyle(lineWidth: 2, dash: [3, 2]))
                         .frame(width: 36, height: 36)
                 } else {
-                    // Solid border
+                    // Solid border - thicker and more visible for today
                     Circle()
-                        .strokeBorder(day.isSelected ? Color.clear : Color.gray.opacity(0.3), lineWidth: 2)
+                        .strokeBorder(
+                            day.isSelected ? Color.clear : (day.isToday ? Color.blue : Color.gray.opacity(0.3)),
+                            lineWidth: day.isToday ? 3 : 2
+                        )
                         .frame(width: 36, height: 36)
                     
                     // Progress circle (only show if not selected)
                     if !day.isSelected {
                         Circle()
                             .trim(from: 0, to: min(day.progress, 1.0))
-                            .stroke(day.progressColor, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                            .stroke(day.progressColor, style: StrokeStyle(lineWidth: day.isToday ? 3 : 2, lineCap: .round))
                             .rotationEffect(.degrees(-90))
                             .frame(width: 36, height: 36)
                     }
                 }
                 
-                // Day number
+                // Day number - bolder for today
                 Text("\(day.dayNumber)")
-                    .font(.system(size: 14, weight: day.isSelected ? .bold : (day.isToday ? .semibold : .regular), design: .rounded))
-                    .foregroundColor(day.isSelected ? .black : (day.isToday ? .primary : .secondary))
+                    .font(.system(size: 14, weight: day.isSelected ? .bold : (day.isToday ? .bold : .regular), design: .rounded))
+                    .foregroundColor(day.isSelected ? .black : (day.isToday ? .blue : .secondary))
             }
+            // Add subtle background highlight for today when not selected
+            .background(
+                day.isToday && !day.isSelected
+                    ? Circle()
+                        .fill(Color.blue.opacity(0.1))
+                        .frame(width: 40, height: 40)
+                    : nil
+            )
         }
         .frame(maxWidth: .infinity)
         .contentShape(Rectangle())

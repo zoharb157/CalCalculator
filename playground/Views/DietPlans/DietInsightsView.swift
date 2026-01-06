@@ -286,16 +286,19 @@ struct DietInsightsView: View {
                     activePlans: activePlans
                 )
                 
+                // Safely access scheduledMeals relationship by creating a local copy first
+                let scheduledMealsArray = Array(data.scheduledMeals)
+                
                 dailyAdherence.append(DailyAdherence(
                     date: currentDate,
                     completionRate: data.completionRate,
                     completedMeals: data.completedMeals.count,
-                    totalMeals: data.scheduledMeals.count,
+                    totalMeals: scheduledMealsArray.count,
                     goalAchievementRate: data.goalAchievementRate
                 ))
                 
                 // Track by category
-                for meal in data.scheduledMeals {
+                for meal in scheduledMealsArray {
                     if categoryStats.first(where: { $0.category == meal.category }) == nil {
                         categoryStats.append(CategoryStat(
                             category: meal.category,
@@ -313,7 +316,7 @@ struct DietInsightsView: View {
                 }
                 
                 // Track by time slot
-                for meal in data.scheduledMeals {
+                for meal in scheduledMealsArray {
                     let hour = calendar.component(.hour, from: meal.time)
                     let timeSlot = hour < 12 ? localizationManager.localizedString(for: AppStrings.DietPlan.morning) : (hour < 17 ? localizationManager.localizedString(for: AppStrings.DietPlan.afternoon) : localizationManager.localizedString(for: AppStrings.DietPlan.evening))
                     timeSlotCompletions[timeSlot, default: 0] += data.completedMeals.contains(meal.id) ? 1 : 0

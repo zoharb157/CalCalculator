@@ -51,13 +51,16 @@ struct DietPlanCard: View {
                             }
                         }
                         
-                        NavigationLink {
-                            EnhancedDietSummaryView()
-                        } label: {
-                            Text(localizationManager.localizedString(for: AppStrings.Home.viewAll))
-                                .font(.caption)
-                                .foregroundColor(.accentColor)
-                                .id("view-all-diet-\(localizationManager.currentLanguage)")
+                        // Only show navigation link if there's an active plan
+                        if !activePlans.isEmpty {
+                            NavigationLink {
+                                EnhancedDietSummaryView()
+                            } label: {
+                                Text(localizationManager.localizedString(for: AppStrings.Home.viewAll))
+                                    .font(.caption)
+                                    .foregroundColor(.accentColor)
+                                    .id("view-all-diet-\(localizationManager.currentLanguage)")
+                            }
                         }
                     }
                 }

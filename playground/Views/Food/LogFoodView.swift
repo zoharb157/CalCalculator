@@ -258,42 +258,76 @@ struct LogFoodView: View {
 
     private var quickAddSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(localizationManager.localizedString(for: AppStrings.Food.quickAdd))
-                .id("quick-add-\(localizationManager.currentLanguage)")
-                .font(.headline)
-
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 12) {
-                ForEach(QuickAddFood.commonFoods.prefix(6)) { food in
-                    QuickAddFoodButton(food: food) {
-                        Task {
-                            let success = await viewModel.quickAddFood(food)
-                            if success {
-                                dismiss()
+            HStack {
+                Text(localizationManager.localizedString(for: AppStrings.Food.quickAdd))
+                    .id("quick-add-\(localizationManager.currentLanguage)")
+                    .font(.headline)
+                
+                Spacer()
+                
+                // Add manual button - small plus button next to title
+                Button {
+                    showingManualEntry = true
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(.blue)
+                }
+            }
+            
+            // Horizontal scrolling list of quick add foods
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(viewModel.allQuickAddFoods) { food in
+                        QuickAddFoodButton(food: food) {
+                            Task {
+                                let success = await viewModel.quickAddFood(food)
+                                if success {
+                                    dismiss()
+                                }
                             }
                         }
                     }
                 }
+                .padding(.horizontal, 4)
             }
         }
     }
 
     private var quickAddGridSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(localizationManager.localizedString(for: AppStrings.Food.commonFoods))
-                .id("common-foods-\(localizationManager.currentLanguage)")
-                .font(.headline)
-
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 12) {
-                ForEach(QuickAddFood.commonFoods) { food in
-                    QuickAddFoodButton(food: food) {
-                        Task {
-                            let success = await viewModel.quickAddFood(food)
-                            if success {
-                                dismiss()
+            HStack {
+                Text(localizationManager.localizedString(for: AppStrings.Food.commonFoods))
+                    .id("common-foods-\(localizationManager.currentLanguage)")
+                    .font(.headline)
+                
+                Spacer()
+                
+                // Add manual button - small plus button next to title
+                Button {
+                    showingManualEntry = true
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(.blue)
+                }
+            }
+            
+            // Horizontal scrolling list of quick add foods
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(viewModel.allQuickAddFoods) { food in
+                        QuickAddFoodButton(food: food) {
+                            Task {
+                                let success = await viewModel.quickAddFood(food)
+                                if success {
+                                    dismiss()
+                                }
                             }
                         }
                     }
                 }
+                .padding(.horizontal, 4)
             }
         }
     }
@@ -683,6 +717,14 @@ struct ManualFoodEntryView: View {
                         }
                     }
                 }
+                
+                Section {
+                    Toggle(localizationManager.localizedString(for: AppStrings.Food.saveToQuickAdd), isOn: $viewModel.saveToQuickAdd)
+                        .id("save-to-quick-add-\(localizationManager.currentLanguage)")
+                } footer: {
+                    Text(localizationManager.localizedString(for: AppStrings.Food.saveToQuickAddDescription))
+                        .id("save-to-quick-add-desc-\(localizationManager.currentLanguage)")
+                }
             }
             .navigationTitle(localizationManager.localizedString(for: AppStrings.Food.manualEntry))
                 .id("manual-entry-title-\(localizationManager.currentLanguage)")
@@ -787,9 +829,20 @@ struct AnalyzedFoodsResultView: View {
                 // Foods list
                 List {
                     ForEach(viewModel.analyzedFoods) { food in
-                        AnalyzedFoodRow(food: food) { multiplier in
-                            viewModel.updateAnalyzedFoodPortion(food, multiplier: multiplier)
-                        }
+                        AnalyzedFoodRow(
+                            food: food,
+                            isSaved: viewModel.isSaved(food),
+                            onPortionChange: { multiplier in
+                                viewModel.updateAnalyzedFoodPortion(food, multiplier: multiplier)
+                            },
+                            onSave: {
+                                if viewModel.isSaved(food) {
+                                    viewModel.removeFromFavorites(food)
+                                } else {
+                                    viewModel.saveToFavorites(food)
+                                }
+                            }
+                        )
                         .swipeActions(edge: .trailing) {
                             Button(role: .destructive) {
                                 viewModel.removeAnalyzedFood(food)
@@ -853,14 +906,18 @@ struct AnalyzedFoodsResultView: View {
 
 struct AnalyzedFoodRow: View {
     let food: FoodLogEntry
+    let isSaved: Bool
     let onPortionChange: (Double) -> Void
+    let onSave: () -> Void
     @ObservedObject private var localizationManager = LocalizationManager.shared
 
     @State private var portionMultiplier: Double
 
-    init(food: FoodLogEntry, onPortionChange: @escaping (Double) -> Void) {
+    init(food: FoodLogEntry, isSaved: Bool, onPortionChange: @escaping (Double) -> Void, onSave: @escaping () -> Void) {
         self.food = food
+        self.isSaved = isSaved
         self.onPortionChange = onPortionChange
+        self.onSave = onSave
         _portionMultiplier = State(initialValue: food.portion)
     }
 
@@ -871,6 +928,14 @@ struct AnalyzedFoodRow: View {
                     .font(.headline)
 
                 Spacer()
+                
+                // Save/Bookmark button
+                Button(action: onSave) {
+                    Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
+                        .foregroundColor(isSaved ? .yellow : .gray)
+                        .font(.system(size: 18))
+                }
+                .buttonStyle(.plain)
 
                 Text("\(food.calories) cal")
                     .font(.subheadline)

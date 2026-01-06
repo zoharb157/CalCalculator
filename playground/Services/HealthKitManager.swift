@@ -61,7 +61,9 @@ final class HealthKitManager {
         
         let typesToWrite: Set<HKSampleType> = [
             HKQuantityType(.bodyMass),
-            HKQuantityType(.dietaryWater)
+            HKQuantityType(.dietaryWater),
+            HKQuantityType(.activeEnergyBurned)
+            // Note: HKQuantityType(.appleExerciseTime) is read-only and cannot be written to
         ]
         
         try await store.requestAuthorization(toShare: typesToWrite, read: typesToRead)
@@ -331,6 +333,37 @@ final class HealthKitManager {
         let sample = HKQuantitySample(type: weightType, quantity: quantity, start: Date(), end: Date())
         
         try await store.save(sample)
+    }
+    
+    // MARK: - Write Exercise to HealthKit
+    
+    /// Saves exercise data to HealthKit (active calories and exercise time)
+    /// This ensures our exercise data overwrites HealthKit data (our data is the source of truth)
+    /// - Parameters:
+    ///   - calories: Calories burned during the exercise
+    ///   - durationMinutes: Duration of exercise in minutes
+    ///   - startDate: Start date of the exercise (defaults to now)
+    func saveExercise(calories: Int, durationMinutes: Int, startDate: Date = Date()) async throws {
+        guard let store = healthStore else {
+            throw HealthKitError.notAvailable
+        }
+        
+        let endDate = startDate.addingTimeInterval(TimeInterval(durationMinutes * 60))
+        
+        // Save active energy burned (calories)
+        let caloriesType = HKQuantityType(.activeEnergyBurned)
+        let caloriesQuantity = HKQuantity(unit: .kilocalorie(), doubleValue: Double(calories))
+        let caloriesSample = HKQuantitySample(
+            type: caloriesType,
+            quantity: caloriesQuantity,
+            start: startDate,
+            end: endDate
+        )
+        
+        // Note: HKQuantityType(.appleExerciseTime) is read-only and cannot be written to
+        // Apple automatically calculates exercise time from active energy burned
+        // So we only save the active calories, and HealthKit will calculate exercise time automatically
+        try await store.save(caloriesSample)
     }
     
     // MARK: - Fetch Weight History

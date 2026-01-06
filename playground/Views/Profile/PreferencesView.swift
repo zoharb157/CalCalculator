@@ -76,7 +76,7 @@ struct PreferencesView: View {
     
     @ViewBuilder
     private var behaviorSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 16) {
             ProfileSectionHeader(title: localizationManager.localizedString(for: AppStrings.Profile.calorieTracking))
                 .id("calorie-tracking-header-\(localizationManager.currentLanguage)")
             
@@ -111,6 +111,19 @@ struct PreferencesView: View {
                     isOn: $viewModel.autoAdjustMacros
                 )
                 .id("auto-adjust-macros-\(localizationManager.currentLanguage)")
+            }
+            
+            // Weight Unit Section
+            ProfileSectionHeader(title: localizationManager.localizedString(for: AppStrings.Profile.units))
+                .id("units-header-\(localizationManager.currentLanguage)")
+            
+            ProfileSectionCard {
+                WeightUnitToggleRow(
+                    useMetricUnits: Binding(
+                        get: { UserSettings.shared.useMetricUnits },
+                        set: { UserSettings.shared.useMetricUnits = $0 }
+                    )
+                )
             }
         }
     }

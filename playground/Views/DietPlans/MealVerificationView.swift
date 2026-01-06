@@ -287,8 +287,10 @@ struct MealVerificationView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 
-                if !meal.items.isEmpty {
-                    ForEach(meal.items.prefix(3)) { item in
+                // Safely access items relationship by creating a local copy first
+                let itemsArray = Array(meal.items)
+                if !itemsArray.isEmpty {
+                    ForEach(itemsArray.prefix(3)) { item in
                         HStack {
                             Text("• \(item.name)")
                             Spacer()
@@ -400,7 +402,12 @@ struct MealVerificationView: View {
         Task {
             do {
                 // Save the meal
+                // This automatically updates DaySummary and syncs widget data
                 try mealRepository.saveMeal(meal)
+                
+                // Notify other parts of the app about the new meal
+                // This triggers HomeView to refresh and update widgets
+                NotificationCenter.default.post(name: .foodLogged, object: nil)
                 
                 // Find the scheduled meal and evaluate goal achievement
                 let plans = try dietPlanRepository.fetchAllDietPlans()

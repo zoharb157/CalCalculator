@@ -17,6 +17,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // Register notification categories with actions
         registerNotificationCategories()
         
+        // Register for remote notifications (APNs)
+        // This requests a device token from Apple Push Notification service
+        application.registerForRemoteNotifications()
+        
         return true
     }
     
@@ -156,6 +160,70 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 "type": "weight_reminder"
             ]
         )
+    }
+    
+    // MARK: - Remote Notifications (APNs)
+    
+    /// Called when device token is successfully registered with APNs
+    /// This token should be sent to your server to enable push notifications
+    func application(
+        _ application: UIApplication,
+        didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
+    ) {
+        // Convert device token to string format
+        let tokenParts = deviceToken.map { data in String(format: "%02.2hhx", data) }
+        let token = tokenParts.joined()
+        
+        print("✅ [AppDelegate] Successfully registered for remote notifications")
+        print("📱 [AppDelegate] Device Token: \(token)")
+        
+        // Store token locally (for debugging and retry logic)
+        UserDefaults.standard.set(token, forKey: "apns_device_token")
+        
+        // Send token to server
+        Task {
+            guard let userId = AuthenticationManager.shared.userId else {
+                print("⚠️ [AppDelegate] Cannot send token: No user ID. Will retry when user is authenticated.")
+                // Store token to send later when user is authenticated
+                return
+            }
+            
+            // Send with retry logic
+            await NotificationService.shared.sendDeviceTokenWithRetry(token: token, userId: userId)
+        }
+    }
+    
+    /// Called when remote notification registration fails
+    func application(
+        _ application: UIApplication,
+        didFailToRegisterForRemoteNotificationsWithError error: Error
+    ) {
+        print("❌ [AppDelegate] Failed to register for remote notifications: \(error.localizedDescription)")
+        
+        // Common causes:
+        // 1. App is running in simulator (simulators don't support push notifications)
+        // 2. Push Notifications capability not enabled in Xcode
+        // 3. Invalid provisioning profile
+        // 4. Network issues
+    }
+    
+    /// Called when a remote notification is received while app is in background or terminated
+    /// This is called before the notification is delivered to the user
+    func application(
+        _ application: UIApplication,
+        didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+        fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
+    ) {
+        print("📬 [AppDelegate] Received remote notification: \(userInfo)")
+        
+        // Handle the notification payload here
+        // You can update app state, refresh data, etc.
+        
+        // Notify SDK about the remote notification (if needed)
+        // The SDK's apnsHandler in playgroundApp.swift will also be called
+        
+        // Call completion handler to indicate result
+        completionHandler(.newData)
     }
 }
 

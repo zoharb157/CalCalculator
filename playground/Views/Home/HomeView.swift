@@ -55,11 +55,13 @@ struct HomeView: View {
 
     var body: some View {
         // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
+        // This forces the view to update when the language changes
         let _ = localizationManager.currentLanguage
         
         let baseView = mainContent
         
-        // Break up the modifier chain into smaller sub-expressions
+        // Break up the modifier chain into smaller sub-expressions for better compiler performance
+        // and to avoid "expression too complex" errors
         let withRefreshAndTasks = baseView
             .refreshable {
                 HapticManager.shared.impact(.light)
@@ -67,7 +69,7 @@ struct HomeView: View {
                 HapticManager.shared.notification(.success)
             }
             .task {
-                // Load data without blocking UI
+                // Load data asynchronously without blocking the UI
                 let startTime = Date()
                 print("🟢 [HomeView] .task started - loading data")
                 await viewModel.loadData()
@@ -75,20 +77,23 @@ struct HomeView: View {
                 print(
                     "🟢 [HomeView] .task completed - total time: \(String(format: "%.3f", elapsed))s"
                 )
+                
+                // Check for newly earned badges after data loads
                 checkForBadges()
                 
                 // Request notification permission when user first reaches homepage
-                // Only request if status is not determined (first time)
+                // Only requests if authorization status is .notDetermined (first time user sees homepage)
                 await requestNotificationPermissionIfNeeded()
                 
-                // QA Version: Check real subscription status from SDK (for monitoring)
+                // QA: Check real subscription status from SDK for monitoring purposes
+                // This is only active in non-DEBUG builds (TestFlight/App Store)
                 #if !DEBUG
                 Task { @MainActor in
                     do {
                         _ = try await sdk.updateIsSubscribed()
                         let realStatus = sdk.isSubscribed
                         print("🔍 [QA] Real SDK subscription status: \(realStatus ? "Subscribed" : "Not Subscribed")")
-                        // Note: We don't update the override - this is just for QA monitoring
+                        // Note: We don't update the debug override - this is just for QA monitoring
                     } catch {
                         print("⚠️ [QA] Failed to check real SDK subscription status: \(error)")
                     }
@@ -96,7 +101,8 @@ struct HomeView: View {
                 #endif
             }
             .task(id: viewModel.weekDays.count) {
-                // Re-check badges when week days are loaded
+                // Re-check badges when week days data is loaded
+                // This ensures badges are checked after week summaries are available
                 if !viewModel.weekDays.isEmpty {
                     checkForBadges()
                 }
@@ -119,50 +125,54 @@ struct HomeView: View {
         
         let withNotifications = withDataObservers
             .onReceive(NotificationCenter.default.publisher(for: .updateLiveActivity)) { _ in
-                // Update Live Activity when requested (e.g., from preferences toggle)
+                // Update Live Activity when explicitly requested (e.g., from preferences toggle)
                 viewModel.updateLiveActivityIfNeeded()
             }
             .onReceive(NotificationCenter.default.publisher(for: .exerciseSaved)) { _ in
-                // Refresh burned calories when an exercise is saved
+                // Refresh burned calories when a new exercise is saved
+                // This ensures the calorie goal adjustment is recalculated
                 Task {
                     await viewModel.refreshBurnedCalories()
-                    // Update Live Activity with new burned calories
+                    // Update Live Activity with the new burned calories value
                     viewModel.updateLiveActivityIfNeeded()
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: .addBurnedCaloriesToggled)) { _ in
-                // Refresh burned calories and update UI when toggle changes
+                // Refresh burned calories and update UI when the toggle setting changes
+                // This recalculates the effective calorie goal
                 Task {
                     await viewModel.refreshBurnedCalories()
-                    // Update Live Activity with new goal
+                    // Update Live Activity with the new goal calculation
                     viewModel.updateLiveActivityIfNeeded()
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: .foodLogged)) { _ in
-                // Refresh data when food is logged from the log experience
+                // Refresh data when food is logged from the log experience flow
+                // This ensures the UI immediately reflects the new meal
                 Task {
                     await viewModel.refreshTodayData()
                     checkForBadges()
-                    confettiCounter += 1
+                    confettiCounter += 1 // Trigger confetti animation
                     viewModel.updateLiveActivityIfNeeded()
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: .languageChanged)) { _ in
                 // Rebuild weekDays with new locale when language changes
+                // This ensures day names and formatting update correctly
                 Task { @MainActor in
-                    // Force rebuild weekDays with new locale
+                    // Force rebuild weekDays with the new locale
                     if let weekSummaries = try? repository.fetchWeekSummaries() {
                         let newWeekDays = viewModel.buildWeekDays(from: weekSummaries, selectedDate: viewModel.selectedDate)
                         viewModel.weekDays = newWeekDays
                     }
-                    // Also reload all data to ensure everything updates
+                    // Also reload all data to ensure all localized strings update
                     await viewModel.loadData()
                 }
             }
         
-        // Break up sheets and overlays into separate expression
+        // Break up sheets and overlays into separate expression for better organization
         let withSheets = withNotifications
-            // No need for onChange - SwiftUI automatically re-evaluates views when
+            // Note: No need for onChange modifier - SwiftUI automatically re-evaluates views when
             // @ObservedObject properties change. Since localizationManager.currentLanguage
             // is @Published, all views using localizationManager will update automatically.
             .sheet(isPresented: $showScanSheet) {
@@ -213,6 +223,12 @@ struct HomeView: View {
             }
         
         let withOverlays = withSheets
+            .onChange(of: localizationManager.currentLanguage) { oldValue, newValue in
+                // Force reload of data when language changes to ensure proper display
+                Task {
+                    await viewModel.loadData()
+                }
+            }
             .paywallDismissalOverlay(showPaywall: $showingPaywall, showDeclineConfirmation: $showDeclineConfirmation)
             .overlay {
                 if badgeManager.showBadgeAlert, let badge = badgeManager.newlyEarnedBadge {
@@ -299,34 +315,79 @@ struct HomeView: View {
                 }
                 .listStyle(.plain)
                 .onChange(of: scrollToTopTrigger) { _, _ in
-                    // Scroll to top when home tab is tapped (trigger changes)
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        proxy.scrollTo("home-top", anchor: .top)
+                    // Two-step behavior for Home tab re-tap:
+                    // 1. If not at top: scroll to top of the list
+                    // 2. If already at top: navigate to today's date view
+                    if isAtTop {
+                        // Already at top - navigate to today's date if not already selected
+                        let today = Date()
+                        if !Calendar.current.isDate(viewModel.selectedDate, inSameDayAs: today) {
+                            HapticManager.shared.impact(.medium)
+                            viewModel.selectDay(today)
+                        }
+                    } else {
+                        // Not at top - scroll to top with smooth animation
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            proxy.scrollTo("home-top", anchor: .top)
+                        }
+                        // Mark as at top after scroll animation completes
+                        // Wait for animation duration (0.35 seconds) before updating state
+                        Task { @MainActor in
+                            try? await Task.sleep(nanoseconds: 350_000_000) // 0.35 seconds
+                            isAtTop = true
+                        }
                     }
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .scrollHomeToTop)) { _ in
-                    // Also support notification-based scrolling
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        proxy.scrollTo("home-top", anchor: .top)
+                    // Also support notification-based scrolling (for programmatic triggers)
+                    if !isAtTop {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            proxy.scrollTo("home-top", anchor: .top)
+                        }
+                        Task { @MainActor in
+                            try? await Task.sleep(nanoseconds: 350_000_000) // Wait for animation
+                            isAtTop = true
+                        }
                     }
+                }
+                // Track scroll position using GeometryReader to update isAtTop state
+                // This allows us to detect when the user is at the top of the list
+                .background(
+                    GeometryReader { geometry in
+                        Color.clear
+                            .preference(
+                                key: ScrollOffsetPreferenceKey.self,
+                                value: geometry.frame(in: .named("scroll")).minY
+                            )
+                    }
+                )
+                .coordinateSpace(name: "scroll")
+                .onPreferenceChange(ScrollOffsetPreferenceKey.self) { offset in
+                    // Update isAtTop based on scroll position
+                    // Consider at top if offset is close to 0 (within 10 points for List)
+                    // This accounts for List's internal padding and safe area insets
+                    isAtTop = offset <= 10
                 }
             }
         }
     }
 
     @State private var showLogHistorySheet = false
+    @State private var isAtTop = true // Tracks if the scroll view is currently at the top position
 
     @State private var showDietSummarySheet = false
     @State private var showingEditDietPlan = false
     @State private var selectedDietPlan: DietPlan?
     
     private var logExperienceSection: some View {
-        // Use selected date's burned calories, or today's if selected date is today
+        // Use selected date's burned calories, or today's if viewing today
+        // This ensures the card shows correct data when viewing historical dates
         let burnedCalories = Calendar.current.isDateInToday(viewModel.selectedDate) 
             ? viewModel.todaysBurnedCalories 
             : viewModel.selectedDateBurnedCalories
         
         // Use selected date's exercise count from viewModel
+        // This ensures consistency with the burned calories calculation
         let exercisesCount = viewModel.selectedDateExercisesCount
         
         return LogExperienceCard(
@@ -362,7 +423,14 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showDietSummarySheet) {
             NavigationStack {
-                EnhancedDietSummaryView()
+                if activeDietPlans.isEmpty {
+                    // No active plan - show create plan screen
+                    DietPlansListView()
+                        .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.myDiet))
+                } else {
+                    // Active plan exists - show diet summary
+                    EnhancedDietSummaryView()
+                }
             }
         }
         .sheet(isPresented: $showingEditDietPlan) {
@@ -372,7 +440,7 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - FAB Button Constants
+    // MARK: - FAB (Floating Action Button) Constants
     
     private enum FABConstants {
         static let fabSize: CGFloat = 60
@@ -381,7 +449,8 @@ struct HomeView: View {
     
     @ViewBuilder
     private var floatingMenuOverlay: some View {
-        // Only show + button if selected date is today
+        // Only show the floating action button if the selected date is today
+        // Users can only log new meals/exercises for the current day
         if Calendar.current.isDateInToday(viewModel.selectedDate) {
             VStack {
                 Spacer()
@@ -390,6 +459,7 @@ struct HomeView: View {
                     Spacer()
 
                     // FAB button - opens camera directly to scan food
+                    // This is the primary action for logging meals
                     Button {
                         HapticManager.shared.impact(.light)
                         showScanSheet = true
@@ -433,9 +503,10 @@ struct HomeView: View {
             .spring(response: 0.6, dampingFraction: 0.8),
             value: viewModel.weekDays.map { $0.progress })
     }
-
+    
     private var progressSection: some View {
-        // Use selected date's burned calories, or today's if selected date is today
+        // Use selected date's burned calories, or today's if viewing today
+        // This ensures the progress card shows correct data when viewing historical dates
         let burnedCalories = Calendar.current.isDateInToday(viewModel.selectedDate) 
             ? viewModel.todaysBurnedCalories 
             : viewModel.selectedDateBurnedCalories
@@ -507,7 +578,8 @@ struct HomeView: View {
             .listRowBackground(Color.clear)
     }
 
-    // Recently uploaded empty section - matches reference design
+    // Recently uploaded empty section - shown when no meals are logged for today
+    // Matches the reference design with proper styling
     @ViewBuilder
     private var recentlyUploadedEmptySection: some View {
         Section {
@@ -524,7 +596,8 @@ struct HomeView: View {
         }
     }
     
-    // Meals section with images - shown at the end when there are meals
+    // Meals section with images - shown at the end when there are meals to display
+    // Displays recent meals in a scrollable grid format
     @ViewBuilder
     private var mealsSection: some View {
         RecentMealsSection(
@@ -541,19 +614,21 @@ struct HomeView: View {
     
     // MARK: - Notification Permission
     
-    /// Request notification permission when user first reaches homepage
-    /// Only requests if status is .notDetermined (first time)
+    /// Requests notification permission when user first reaches the homepage
+    /// Only requests if authorization status is .notDetermined (first time user sees homepage)
+    /// This ensures we don't repeatedly prompt users who have already granted or denied permission
     @MainActor
     private func requestNotificationPermissionIfNeeded() async {
         let center = UNUserNotificationCenter.current()
         let settings = await center.notificationSettings()
         
         // Only request if status is not determined (first time user sees homepage)
+        // If already granted or denied, we respect that decision
         guard settings.authorizationStatus == .notDetermined else {
             return
         }
         
-        // Request permission (this will show the system dialog)
+        // Request permission (this will show the system permission dialog)
         do {
             let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
             if granted {
@@ -564,6 +639,18 @@ struct HomeView: View {
         } catch {
             print("❌ [HomeView] Failed to request notification permission: \(error)")
         }
+    }
+}
+
+// MARK: - Scroll Position Tracking
+
+/// Preference key to track scroll offset for detecting when the user is at the top of the list
+/// Used to implement the two-step Home tab behavior (scroll to top, then select today)
+struct ScrollOffsetPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
     }
 }
 

@@ -22,17 +22,25 @@ struct BurnedCaloriesView: View {
     @State private var errorMessage = ""
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
-    // Exercise types that require duration
+    // Weight lifting specific
+    let reps: Int?
+    let sets: Int?
+    let weight: Double?
+    
+    // Exercise types that require duration (not weight lifting)
     private var requiresDuration: Bool {
-        exerciseType == .run || exerciseType == .weightLifting
+        exerciseType == .run
     }
     
-    init(calories: Int, exerciseType: ExerciseType, duration: Int, intensity: ExerciseIntensity? = nil, notes: String? = nil) {
+    init(calories: Int, exerciseType: ExerciseType, duration: Int, intensity: ExerciseIntensity? = nil, notes: String? = nil, reps: Int? = nil, sets: Int? = nil, weight: Double? = nil) {
         self.calories = calories
         self.exerciseType = exerciseType
         self.duration = duration
         self.intensity = intensity
         self.notes = notes
+        self.reps = reps
+        self.sets = sets
+        self.weight = weight
         _editedCalories = State(initialValue: calories)
     }
     
@@ -152,10 +160,21 @@ struct BurnedCaloriesView: View {
             return
         }
         
-        // Only validate duration for exercise types that require it
+        // Only validate duration for exercise types that require it (not weight lifting)
         if requiresDuration {
             guard duration > 0 else {
                 errorMessage = "Please enter a valid duration."
+                showError = true
+                return
+            }
+        }
+        
+        // For weight lifting, validate reps, sets, weight
+        if exerciseType == .weightLifting {
+            guard let repsValue = reps, repsValue > 0,
+                  let setsValue = sets, setsValue > 0,
+                  let weightValue = weight, weightValue > 0 else {
+                errorMessage = "Please enter valid reps, sets, and weight."
                 showError = true
                 return
             }
@@ -170,12 +189,35 @@ struct BurnedCaloriesView: View {
                 calories: editedCalories,
                 duration: exerciseDuration,
                 intensity: intensity,
-                notes: notes
+                notes: notes,
+                reps: exerciseType == .weightLifting ? reps : nil,
+                sets: exerciseType == .weightLifting ? sets : nil,
+                weight: exerciseType == .weightLifting ? weight : nil
             )
             
             // Use repository pattern for consistent saving
             let repository = MealRepository(context: modelContext)
             try repository.saveExercise(exercise)
+            
+            // Sync widget data after saving exercise
+            repository.syncWidgetData()
+            
+            // Also save to HealthKit if available and authorized
+            // This ensures our exercise data overwrites HealthKit data (our data is the source of truth)
+            let healthKitManager = HealthKitManager.shared
+            if healthKitManager.isHealthDataAvailable && healthKitManager.isAuthorized {
+                do {
+                    try await healthKitManager.saveExercise(
+                        calories: editedCalories,
+                        durationMinutes: exerciseDuration,
+                        startDate: exercise.date
+                    )
+                    print("✅ [BurnedCaloriesView] Exercise saved to HealthKit: \(editedCalories) cal, \(exerciseDuration) min")
+                } catch {
+                    // Continue even if HealthKit save fails - SwiftData is primary source
+                    print("⚠️ [BurnedCaloriesView] Failed to save exercise to HealthKit: \(error.localizedDescription)")
+                }
+            }
             
             // Notify that an exercise was saved so HomeViewModel can refresh burned calories
             NotificationCenter.default.post(name: .exerciseSaved, object: nil)

@@ -44,7 +44,7 @@ struct LoginView: View {
                         .animation(.spring(response: 0.6, dampingFraction: 0.7), value: isAnimating)
                     
                     VStack(spacing: 8) {
-                        Text(LocalizationManager.shared.localizedString(for: AppStrings.Authentication.calCalculator))
+                        Text(LocalizationManager.shared.localizedString(for: AppStrings.Authentication.calorieVisionAI))
                             .font(.system(size: 32, weight: .bold, design: .rounded))
                             .foregroundColor(colorScheme == .dark ? .white : .primary)
                         
