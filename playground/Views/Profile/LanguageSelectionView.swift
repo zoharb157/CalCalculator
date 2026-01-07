@@ -25,9 +25,12 @@ struct LanguageSelectionView: View {
                             // Update language immediately
                             viewModel.selectedLanguage = language.name
                             
-                            // Close the sheet after language change
-                            // User stays in ProfileView, just the language sheet closes
-                            dismiss()
+                            // Close the sheet after language change with a small delay
+                            // This ensures the language change is processed before dismissing
+                            Task { @MainActor in
+                                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+                                dismiss()
+                            }
                         }
                     )
                 }
