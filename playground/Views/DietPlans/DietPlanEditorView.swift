@@ -95,7 +95,9 @@ struct DietPlanEditorView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
-                        savePlan()
+                        Task {
+                            await savePlan()
+                        }
                     } label: {
                         Text(localizationManager.localizedString(for: AppStrings.Common.save))
                             .fontWeight(.semibold)
@@ -422,7 +424,7 @@ struct DietPlanEditorView: View {
     
     // MARK: - Actions
     
-    private func savePlan() {
+    private func savePlan() async {
         guard !scheduledMeals.isEmpty else {
             showNoMealsAlert = true
             HapticManager.shared.notification(.error)
