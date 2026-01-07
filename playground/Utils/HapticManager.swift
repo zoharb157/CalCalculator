@@ -13,18 +13,54 @@ final class HapticManager {
     
     private init() {}
     
+    /// Check if running on a physical device (haptics don't work well on simulator)
+    private var isPhysicalDevice: Bool {
+        #if targetEnvironment(simulator)
+        return false
+        #else
+        return true
+        #endif
+    }
+    
     func impact(_ style: UIImpactFeedbackGenerator.FeedbackStyle = .medium) {
-        let generator = UIImpactFeedbackGenerator(style: style)
-        generator.impactOccurred()
+        // Skip haptics on simulator to avoid errors
+        guard isPhysicalDevice else { return }
+        
+        do {
+            let generator = UIImpactFeedbackGenerator(style: style)
+            generator.prepare()
+            generator.impactOccurred()
+        } catch {
+            // Silently fail - haptics are optional
+            // This prevents console spam on simulator
+        }
     }
     
     func notification(_ type: UINotificationFeedbackGenerator.FeedbackType) {
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(type)
+        // Skip haptics on simulator to avoid errors
+        guard isPhysicalDevice else { return }
+        
+        do {
+            let generator = UINotificationFeedbackGenerator()
+            generator.prepare()
+            generator.notificationOccurred(type)
+        } catch {
+            // Silently fail - haptics are optional
+            // This prevents console spam on simulator
+        }
     }
     
     func selection() {
-        let generator = UISelectionFeedbackGenerator()
-        generator.selectionChanged()
+        // Skip haptics on simulator to avoid errors
+        guard isPhysicalDevice else { return }
+        
+        do {
+            let generator = UISelectionFeedbackGenerator()
+            generator.prepare()
+            generator.selectionChanged()
+        } catch {
+            // Silently fail - haptics are optional
+            // This prevents console spam on simulator
+        }
     }
 }
