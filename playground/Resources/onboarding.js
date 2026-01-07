@@ -707,7 +707,7 @@ async function generateGoalsViaApi() {
           btn.classList.add("selected");
           btn.setAttribute("aria-checked", "true");
           updatePrimaryEnabled(step);
-          setTimeout(() => goNext(), 160);
+          // Don't auto-advance - user must click Continue button
         });
 
         options.appendChild(btn);
@@ -770,7 +770,7 @@ async function generateGoalsViaApi() {
           btn.classList.add("selected");
           btn.setAttribute("aria-checked", "true");
           updatePrimaryEnabled(step);
-          setTimeout(() => goNext(), 160);
+          // Don't auto-advance - user must click Continue button
         });
 
         options.appendChild(btn);
