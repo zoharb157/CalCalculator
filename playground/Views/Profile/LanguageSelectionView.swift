@@ -25,13 +25,15 @@ struct LanguageSelectionView: View {
                             // Update language immediately
                             print("🌐 [LanguageSelectionView] User selected language: '\(language.name)'")
                             print("🌐 [LanguageSelectionView] Current selectedLanguage: '\(viewModel.selectedLanguage)'")
-                            viewModel.selectedLanguage = language.name
-                            print("🌐 [LanguageSelectionView] After update, selectedLanguage: '\(viewModel.selectedLanguage)'")
                             
-                            // Close the sheet after language change with a small delay
-                            // This ensures the language change is processed before dismissing
+                            // Use Task to ensure the update happens on the main thread
                             Task { @MainActor in
-                                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+                                viewModel.selectedLanguage = language.name
+                                print("🌐 [LanguageSelectionView] After update, selectedLanguage: '\(viewModel.selectedLanguage)'")
+                                
+                                // Close the sheet after language change with a small delay
+                                // This ensures the language change is processed before dismissing
+                                try? await Task.sleep(nanoseconds: 200_000_000) // 0.2 seconds
                                 dismiss()
                             }
                         }
