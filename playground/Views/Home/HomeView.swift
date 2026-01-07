@@ -36,6 +36,7 @@ struct HomeView: View {
     @State private var showingCreateDiet = false
     @State private var showingPaywall = false
     @State private var showDeclineConfirmation = false
+    @State private var showingDietWelcome = false
     @Environment(\.modelContext) private var modelContext
     @Query(filter: #Predicate<DietPlan> { $0.isActive == true }) private var activeDietPlans: [DietPlan]
 
@@ -239,12 +240,26 @@ struct HomeView: View {
                     await viewModel.loadData()
                 }
             }
+            .onReceive(NotificationCenter.default.publisher(for: .dietPlanChanged)) { _ in
+                // Show welcome view after diet plan is created (if user hasn't seen it)
+                if !UserSettings.shared.hasSeenDietWelcome && !activeDietPlans.isEmpty {
+                    // Small delay to ensure the sheet is dismissed first
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        showingDietWelcome = true
+                    }
+                }
+            }
             .paywallDismissalOverlay(showPaywall: $showingPaywall, showDeclineConfirmation: $showDeclineConfirmation)
             .overlay {
                 if badgeManager.showBadgeAlert, let badge = badgeManager.newlyEarnedBadge {
                     BadgeAlertView(badge: badge) {
                         badgeManager.dismissBadgeAlert()
                     }
+                }
+            }
+            .overlay {
+                if showingDietWelcome {
+                    DietWelcomeView(isPresented: $showingDietWelcome)
                 }
             }
             .overlay(alignment: Alignment.bottomTrailing) {
