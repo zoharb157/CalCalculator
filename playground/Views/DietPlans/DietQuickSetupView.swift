@@ -534,7 +534,9 @@ struct DietQuickSetupView: View {
                     }
                     HapticManager.shared.impact(.light)
                 } else {
-                    createPlan()
+                    Task {
+                        await createPlan()
+                    }
                 }
             } label: {
                 HStack {

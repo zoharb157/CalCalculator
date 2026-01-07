@@ -67,38 +67,40 @@ struct DietPlansListView: View {
             }
             .sheet(isPresented: $showingTemplates) {
                 DietPlanTemplatesView { template in
-                    // Template selected - create/replace plan (only one active diet allowed)
-                    // Check premium subscription before saving
-                    guard isSubscribed else {
-                        showingPaywall = true
-                        HapticManager.shared.notification(.warning)
-                        return
-                    }
-                    
-                    let plan = template.createDietPlan()
-                    do {
-                        try dietPlanRepository.saveDietPlan(plan)
-                        
-                        // Schedule reminders before showing success
-                        let reminderService = MealReminderService.shared(context: modelContext)
-                        do {
-                            try await reminderService.requestAuthorization()
-                            try await reminderService.scheduleAllReminders()
-                            
-                            // Count scheduled reminders for feedback
-                            let totalReminders = plan.scheduledMeals.count
-                            print("✅ Successfully scheduled \(totalReminders) meal reminders")
-                        } catch {
-                            print("⚠️ Failed to schedule reminders: \(error)")
-                            // Continue anyway - diet plan is saved
+                    Task {
+                        // Template selected - create/replace plan (only one active diet allowed)
+                        // Check premium subscription before saving
+                        guard isSubscribed else {
+                            showingPaywall = true
+                            HapticManager.shared.notification(.warning)
+                            return
                         }
                         
-                        NotificationCenter.default.post(name: .dietPlanChanged, object: nil)
-                        
-                        // Show success notification
-                        HapticManager.shared.notification(.success)
-                    } catch {
-                        print("Failed to create plan from template: \(error)")
+                        let plan = template.createDietPlan()
+                        do {
+                            try dietPlanRepository.saveDietPlan(plan)
+                            
+                            // Schedule reminders before showing success
+                            let reminderService = MealReminderService.shared(context: modelContext)
+                            do {
+                                try await reminderService.requestAuthorization()
+                                try await reminderService.scheduleAllReminders()
+                                
+                                // Count scheduled reminders for feedback
+                                let totalReminders = plan.scheduledMeals.count
+                                print("✅ Successfully scheduled \(totalReminders) meal reminders")
+                            } catch {
+                                print("⚠️ Failed to schedule reminders: \(error)")
+                                // Continue anyway - diet plan is saved
+                            }
+                            
+                            NotificationCenter.default.post(name: .dietPlanChanged, object: nil)
+                            
+                            // Show success notification
+                            HapticManager.shared.notification(.success)
+                        } catch {
+                            print("Failed to create plan from template: \(error)")
+                        }
                     }
                 }
             }
@@ -680,22 +682,6 @@ struct ActionRow: View {
             .padding()
         }
         .buttonStyle(.plain)
-    }
-    
-    // MARK: - Paywall View
-    
-    private var paywallView: some View {
-        SDKView(
-            model: sdk,
-            page: .splash,
-            show: paywallBinding(
-                showPaywall: $showingPaywall,
-                sdk: sdk,
-                showDeclineConfirmation: $showDeclineConfirmation
-            ),
-            backgroundColor: .white,
-            ignoreSafeArea: true
-        )
     }
 }
 
