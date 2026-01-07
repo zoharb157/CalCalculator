@@ -46,6 +46,14 @@ struct playgroundApp: App {
                 try? fileManager.createDirectory(
                     at: appSupportURL, withIntermediateDirectories: true)
             }
+            
+            // Also ensure App Group directory exists for shared data
+            let appGroupIdentifier = "group.CalCalculatorAiPlaygournd.shared"
+            if let appGroupURL = fileManager.containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier) {
+                let appGroupSupportURL = appGroupURL.appendingPathComponent("Library/Application Support")
+                try? fileManager.createDirectory(
+                    at: appGroupSupportURL, withIntermediateDirectories: true)
+            }
 
             let modelConfiguration = ModelConfiguration(
                 schema: schema,
