@@ -190,25 +190,15 @@ struct NoFoodDetectedView: View {
     
     private var actionButtons: some View {
         VStack(spacing: 16) {
-            Button(action: onRetry) {
-                Label(localizationManager.localizedString(for: AppStrings.Scanning.tryAgain), systemImage: "arrow.clockwise")
-                    .id("try-again-scan-\(localizationManager.currentLanguage)")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .foregroundColor(.white)
-                    .background(Color.accentColor)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-            }
-            
+            // Only show "Take New Photo" button - removed "Try Again" button
             Button(action: onRetake) {
                 Label(localizationManager.localizedString(for: AppStrings.Scanning.takeNewPhoto), systemImage: "camera.fill")
                     .id("take-new-photo-\(localizationManager.currentLanguage)")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .foregroundColor(.accentColor)
-                    .background(Color.accentColor.opacity(0.1))
+                    .foregroundColor(.white)
+                    .background(Color.accentColor)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
         }
