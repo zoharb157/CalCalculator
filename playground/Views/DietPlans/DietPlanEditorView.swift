@@ -6,6 +6,7 @@
 
 import SwiftUI
 import SwiftData
+import SDK
 
 struct DietPlanEditorView: View {
     @Environment(\.dismiss) private var dismiss
