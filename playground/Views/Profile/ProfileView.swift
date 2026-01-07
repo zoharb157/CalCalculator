@@ -88,9 +88,10 @@ struct ProfileView: View {
         .sheet(isPresented: $showingDataExport) {
             DataExportView()
         }
-        .sheet(isPresented: $showingReferralCode) {
-            ReferralCodeView()
-        }
+        // Referral code screen commented out - no longer needed
+        // .sheet(isPresented: $showingReferralCode) {
+        //     ReferralCodeView()
+        // }
         .sheet(isPresented: $showingBadges) {
             BadgesView()
         }
@@ -194,15 +195,16 @@ struct ProfileView: View {
                     action: { showingDataExport = true }
                 )
                 
-                SettingsDivider()
-                
-                SettingsRow(
-                    icon: "gift.fill",
-                    iconColor: .pink,
-                    title: localizationManager.localizedString(for: AppStrings.Profile.referralCode),
-                    subtitle: localizationManager.localizedString(for: AppStrings.Profile.shareEarnRewards),
-                    action: { showingReferralCode = true }
-                )
+                // Referral code row commented out - no longer needed
+                // SettingsDivider()
+                // 
+                // SettingsRow(
+                //     icon: "gift.fill",
+                //     iconColor: .pink,
+                //     title: localizationManager.localizedString(for: AppStrings.Profile.referralCode),
+                //     subtitle: localizationManager.localizedString(for: AppStrings.Profile.shareEarnRewards),
+                //     action: { showingReferralCode = true }
+                // )
             }
         }
     }

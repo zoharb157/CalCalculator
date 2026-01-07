@@ -95,17 +95,18 @@
       type: "info",
       title: "Stay on track",
       description: "You can enable notifications later in settings to get reminders for meals and weight tracking.",
-      next: "referral",
+      next: "generating", // Changed from "referral" - referral step commented out
     },
-    {
-      id: "referral",
-      type: "question",
-      title: "Enter referral code (optional)",
-      description: "You can skip this step.",
-      optional: true,
-      input: { type: "text", placeholder: "Referral code" },
-      next: "generating",
-    },
+    // Referral code step commented out - no longer needed
+    // {
+    //   id: "referral",
+    //   type: "question",
+    //   title: "Enter referral code (optional)",
+    //   description: "You can skip this step.",
+    //   optional: true,
+    //   input: { type: "text", placeholder: "Referral code" },
+    //   next: "generating",
+    // },
     {
       id: "generating",
       type: "goals_generation",
