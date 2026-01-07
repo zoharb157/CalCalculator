@@ -9,7 +9,19 @@ import SwiftUI
 import SwiftData
 import Charts
 
+// MARK: - EnhancedDietSummaryView (with NavigationStack - for standalone use)
+
 struct EnhancedDietSummaryView: View {
+    var body: some View {
+        NavigationStack {
+            EnhancedDietSummaryContent()
+        }
+    }
+}
+
+// MARK: - EnhancedDietSummaryContent (without NavigationStack - for embedding)
+
+struct EnhancedDietSummaryContent: View {
     @Query(filter: #Predicate<DietPlan> { $0.isActive == true }) private var activePlans: [DietPlan]
     @Environment(\.modelContext) private var modelContext
     @ObservedObject private var localizationManager = LocalizationManager.shared
@@ -21,15 +33,6 @@ struct EnhancedDietSummaryView: View {
     @State private var isLoading = false
     @State private var showingInsights = false
     @State private var showingEditPlan = false
-    @State private var showingMealVerification: ScheduledMeal?
-    // ScanViewModel - computed property to access modelContext
-    private var scanViewModel: ScanViewModel {
-        ScanViewModel(
-            repository: MealRepository(context: modelContext),
-            analysisService: CaloriesAPIService(),
-            imageStorage: .shared
-        )
-    }
     
     private var dietPlanRepository: DietPlanRepository {
         DietPlanRepository(context: modelContext)
@@ -39,106 +42,78 @@ struct EnhancedDietSummaryView: View {
         // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
         let _ = localizationManager.currentLanguage
         
-        // Single source of truth - check if there's an active plan
-        if activePlans.isEmpty {
-            // No active plan - show create plan screen
-            return AnyView(
-                NavigationStack {
-                    DietPlansListView()
-                        .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.myDiet))
+        ScrollView {
+            VStack(spacing: 24) {
+                // Time range selector
+                timeRangeSelector
+                
+                // Main adherence card
+                if let data = adherenceData {
+                    adherenceOverviewCard(data: data)
                 }
-            )
+                
+                // Trend chart
+                if !weeklyAdherence.isEmpty {
+                    adherenceTrendChart
+                }
+                
+                // Today's schedule
+                if let data = adherenceData {
+                    todaysScheduleSection(data: data)
+                }
+                
+                // Insights section
+                insightsSection
+                
+                // Weekly stats
+                weeklyStatsSection
+                
+                // Off-diet analysis
+                if let data = adherenceData, data.offDietCalories > 0 {
+                    offDietAnalysisSection(data: data)
+                }
+            }
+            .padding()
         }
-        
-        // Active plan exists - show diet summary
-        return AnyView(
-            NavigationStack {
-                ScrollView {
-                    VStack(spacing: 24) {
-                        // Time range selector
-                        timeRangeSelector
-                        
-                        // Main adherence card
-                        if let data = adherenceData {
-                            adherenceOverviewCard(data: data)
+        .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.myDiet))
+            
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                HStack(spacing: 16) {
+                    Button {
+                        if activePlans.first != nil {
+                            showingEditPlan = true
                         }
-                        
-                        // Trend chart
-                        if !weeklyAdherence.isEmpty {
-                            adherenceTrendChart
-                        }
-                        
-                        // Today's schedule
-                        if let data = adherenceData {
-                            todaysScheduleSection(data: data)
-                        }
-                        
-                        // Insights section
-                        insightsSection
-                        
-                        // Weekly stats
-                        weeklyStatsSection
-                        
-                        // Off-diet analysis
-                        if let data = adherenceData, data.offDietCalories > 0 {
-                            offDietAnalysisSection(data: data)
-                        }
+                    } label: {
+                        Image(systemName: "pencil")
                     }
-                    .padding()
-                }
-                .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.myDiet))
-                .toolbar {
-                    ToolbarItem(placement: .primaryAction) {
-                        HStack(spacing: 16) {
-                            Button {
-                                if activePlans.first != nil {
-                                    showingEditPlan = true
-                                }
-                            } label: {
-                                Image(systemName: "pencil")
-                            }
-                            
-                            Button {
-                                showingInsights = true
-                            } label: {
-                                Image(systemName: "chart.bar.fill")
-                            }
-                        }
-                    }
-                }
-                .onChange(of: selectedDate) { _, _ in
-                    loadAdherenceData()
-                }
-                .onChange(of: selectedTimeRange) { _, _ in
-                    loadWeeklyAdherence()
-                }
-                .task {
-                    loadAdherenceData()
-                    loadWeeklyAdherence()
-                }
-                .sheet(isPresented: $showingInsights) {
-                    DietInsightsView(activePlans: activePlans, repository: dietPlanRepository)
-                }
-                .sheet(item: $showingMealVerification) { scheduledMeal in
-                    MealVerificationView(
-                        scheduledMealId: scheduledMeal.id,
-                        mealName: scheduledMeal.name,
-                        category: scheduledMeal.category,
-                        expectedCalories: scheduledMeal.mealTemplate?.expectedCalories,
-                        scanViewModel: scanViewModel
-                    )
-                    .onDisappear {
-                        // Reload data after meal verification is dismissed
-                        loadAdherenceData()
-                    }
-                }
-                .sheet(isPresented: $showingEditPlan) {
-                    if let plan = activePlans.first {
-                        DietPlanEditorView(plan: plan, repository: dietPlanRepository)
+                    
+                    Button {
+                        showingInsights = true
+                    } label: {
+                        Image(systemName: "chart.bar.fill")
                     }
                 }
             }
-        )
+        }
+        .onChange(of: selectedDate) { _, _ in
+            loadAdherenceData()
+        }
+        .onChange(of: selectedTimeRange) { _, _ in
+            loadWeeklyAdherence()
+        }
+        .task {
+            loadAdherenceData()
+            loadWeeklyAdherence()
+        }
+        .sheet(isPresented: $showingInsights) {
+            DietInsightsView(activePlans: activePlans, repository: dietPlanRepository)
+        }
+        .sheet(isPresented: $showingEditPlan) {
+            if let plan = activePlans.first {
+                DietPlanEditorView(plan: plan, repository: dietPlanRepository)
+            }
+        }
     }
     
     // MARK: - Time Range Selector
@@ -208,10 +183,9 @@ struct EnhancedDietSummaryView: View {
                     color: .red
                 )
                 
-                // Safely access scheduledMeals relationship by creating a local copy first
                 StatPill(
                     icon: "fork.knife",
-                    value: "\(Array(data.scheduledMeals).count)",
+                    value: "\(data.scheduledMeals.count)",
                     label: localizationManager.localizedString(for: AppStrings.History.scheduled),
                     color: .blue
                 )
@@ -263,11 +237,7 @@ struct EnhancedDietSummaryView: View {
                 .font(.headline)
                 .padding(.horizontal)
             
-            // Safely access scheduledMeals relationship by creating a local copy first
-            // This prevents InvalidFutureBackingData errors
-            let scheduledMealsArray = Array(data.scheduledMeals)
-            
-            if scheduledMealsArray.isEmpty {
+            if data.scheduledMeals.isEmpty {
                 ContentUnavailableView(
                     localizationManager.localizedString(for: AppStrings.DietPlan.noMealsAlert),
                     systemImage: "calendar.badge.exclamationmark",
@@ -276,14 +246,14 @@ struct EnhancedDietSummaryView: View {
                 .frame(height: 150)
                 
             } else {
-                mealCardsView(data: data, scheduledMeals: scheduledMealsArray)
+                mealCardsView(data: data)
             }
         }
     }
     
     @ViewBuilder
-    private func mealCardsView(data: DietAdherenceData, scheduledMeals: [ScheduledMeal]) -> some View {
-        let sortedMeals = scheduledMeals.sorted(by: { $0.time < $1.time })
+    private func mealCardsView(data: DietAdherenceData) -> some View {
+        let sortedMeals = data.scheduledMeals.sorted(by: { $0.time < $1.time })
         let missedMealIds = Set(data.missedMeals.map { $0.id })
         
         VStack(spacing: 8) {
@@ -302,53 +272,76 @@ struct EnhancedDietSummaryView: View {
                     goalMissed: goalMissed,
                     onTap: {
                         if !isCompleted {
-                            // Show meal verification view to allow image upload and analysis
-                            showingMealVerification = meal
+                            completeMeal(meal)
                         }
-                    },
-                    onDelete: isCompleted ? {
-                        deleteCompletedMeal(meal)
-                    } : nil
+                    }
                 )
             }
         }
     }
     
-    // Note: completeMeal now opens MealVerificationView to allow image upload and analysis
-    // This provides a better UX where users can verify their meal with a photo
     private func completeMeal(_ scheduledMeal: ScheduledMeal) {
-        // Show meal verification view to allow image upload and analysis
-        showingMealVerification = scheduledMeal
-    }
-    
-    // Delete a completed meal - removes the meal and marks the scheduled meal as incomplete
-    private func deleteCompletedMeal(_ scheduledMeal: ScheduledMeal) {
         Task {
             do {
-                // Find the meal reminder for this scheduled meal
+                // Create a meal from the scheduled meal template or basic meal
+                let meal: Meal
+                if let template = scheduledMeal.mealTemplate {
+                    meal = template.createMeal(at: Date(), category: scheduledMeal.category)
+                } else {
+                    meal = Meal(
+                        name: scheduledMeal.name,
+                        timestamp: Date(),
+                        category: scheduledMeal.category,
+                        items: []
+                    )
+                }
+                
+                // Save the meal
+                let mealRepository = MealRepository(context: modelContext)
+                try mealRepository.saveMeal(meal)
+                
+                // Mark reminder as completed
                 if let reminder = try dietPlanRepository.fetchMealReminder(
                     by: scheduledMeal.id,
                     for: Date()
-                ), let completedMealId = reminder.completedMealId {
-                    // Delete the completed meal from MealRepository
-                    let mealRepository = MealRepository(context: modelContext)
-                    if let meal = try mealRepository.fetchMeal(by: completedMealId) {
-                        try mealRepository.deleteMeal(meal)
-                    }
-                    
-                    // Update the reminder to mark as incomplete
-                    try dietPlanRepository.updateMealReminderCompletion(reminder, completedMealId: nil)
-                    
-                    // Notify other parts of the app about the meal deletion
-                    NotificationCenter.default.post(name: .foodLogged, object: nil)
-                    
-                    // Reload adherence data
-                    loadAdherenceData()
-                    
-                    HapticManager.shared.notification(.success)
+                ) {
+                    try dietPlanRepository.updateMealReminderCompletion(reminder, completedMealId: meal.id)
+                } else {
+                    // Create new reminder if it doesn't exist
+                    let reminder = MealReminder(
+                        scheduledMealId: scheduledMeal.id,
+                        reminderDate: Date(),
+                        wasCompleted: true,
+                        completedMealId: meal.id,
+                        completedAt: Date()
+                    )
+                    try dietPlanRepository.saveMealReminder(reminder)
                 }
+                
+                // Evaluate goal achievement if template exists
+                if scheduledMeal.mealTemplate != nil {
+                    let (achieved, deviation) = dietPlanRepository.evaluateMealGoalAchievement(
+                        actualMeal: meal,
+                        scheduledMeal: scheduledMeal
+                    )
+                    if let reminder = try dietPlanRepository.fetchMealReminder(
+                        by: scheduledMeal.id,
+                        for: Date()
+                    ) {
+                        try dietPlanRepository.updateMealReminderGoalAchievement(
+                            reminder,
+                            goalAchieved: achieved,
+                            goalDeviation: deviation
+                        )
+                    }
+                }
+                
+                HapticManager.shared.notification(.success)
+                
+                // Reload data to reflect the change
+                loadAdherenceData()
             } catch {
-                print("Failed to delete completed meal: \(error)")
+                print("Failed to complete meal: \(error)")
                 HapticManager.shared.notification(.error)
             }
         }
@@ -477,23 +470,10 @@ struct EnhancedDietSummaryView: View {
     private func loadWeeklyAdherence() {
         Task {
             let calendar = Calendar.current
+            let startDate = selectedTimeRange.startDate
             let endDate = Date()
             
             var adherence: [DailyAdherence] = []
-            
-            // Handle allDays case - start from first meal date or 30 days ago
-            let startDate: Date
-            if let rangeStart = selectedTimeRange.startDate {
-                startDate = rangeStart
-            } else {
-                // For allDays, start from 30 days ago or first meal date, whichever is earlier
-                let thirtyDaysAgo = calendar.date(byAdding: .day, value: -30, to: endDate) ?? endDate
-                // Try to find first meal date from active plans
-                let firstMealDate = activePlans.flatMap { $0.scheduledMeals }
-                    .compactMap { $0.time }
-                    .min() ?? thirtyDaysAgo
-                startDate = min(thirtyDaysAgo, firstMealDate)
-            }
             
             var currentDate = startDate
             while currentDate <= endDate {
@@ -503,12 +483,11 @@ struct EnhancedDietSummaryView: View {
                         activePlans: activePlans
                     )
                     
-                    // Safely access scheduledMeals relationship by creating a local copy first
                     adherence.append(DailyAdherence(
                         date: currentDate,
                         completionRate: data.completionRate,
                         completedMeals: data.completedMeals.count,
-                        totalMeals: Array(data.scheduledMeals).count,
+                        totalMeals: data.scheduledMeals.count,
                         goalAchievementRate: data.goalAchievementRate
                     ))
                 } catch {
@@ -621,7 +600,6 @@ struct ScheduledMealCard: View {
     let goalAchieved: Bool
     let goalMissed: Bool
     var onTap: (() -> Void)? = nil
-    var onDelete: (() -> Void)? = nil
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
@@ -662,37 +640,25 @@ struct ScheduledMealCard: View {
                 
                 Spacer()
                 
-                HStack(spacing: 8) {
-                    if isCompleted {
-                        if goalAchieved {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(.green)
-                        } else if goalMissed {
-                            Image(systemName: "exclamationmark.circle.fill")
-                                .foregroundColor(.orange)
-                        } else {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(.blue)
-                        }
-                        
-                        // Delete button for completed meals
-                        if let onDelete = onDelete {
-                            Button(action: onDelete) {
-                                Image(systemName: "trash")
-                                    .foregroundColor(.red)
-                                    .font(.caption)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    } else if isMissed {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.red)
+                if isCompleted {
+                    if goalAchieved {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                    } else if goalMissed {
+                        Image(systemName: "exclamationmark.circle.fill")
+                            .foregroundColor(.orange)
                     } else {
-                        // Show tap indicator for incomplete meals
-                        Image(systemName: "circle")
-                            .foregroundColor(.gray)
-                            .font(.title3)
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.blue)
                     }
+                } else if isMissed {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.red)
+                } else {
+                    // Show tap indicator for incomplete meals
+                    Image(systemName: "circle")
+                        .foregroundColor(.gray)
+                        .font(.title3)
                 }
             }
             .padding()
@@ -700,7 +666,7 @@ struct ScheduledMealCard: View {
             .cornerRadius(12)
         }
         .buttonStyle(.plain)
-        .disabled(isCompleted) // Disable tap if already completed (but allow delete)
+        .disabled(isCompleted) // Disable if already completed
     }
 }
 
