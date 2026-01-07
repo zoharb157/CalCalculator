@@ -208,13 +208,6 @@ struct MainTabView: View {
                 }
             }
         }
-        .onChange(of: localizationManager.currentLanguage) { oldValue, newValue in
-            // When language changes, preserve the current tab selection
-            // This prevents navigation to home tab when language changes
-            if selectedTabRaw != storedTab {
-                selectedTabRaw = storedTab
-            }
-        }
         .onChange(of: hasActiveDiet) { oldValue, newValue in
             // When diet tab is removed, redirect user if they were on it
             if oldValue && !newValue && selectedTabRaw == MainTab.myDiet.rawValue {
