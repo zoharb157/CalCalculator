@@ -20,6 +20,7 @@ struct DietPlansListView: View {
     @State private var selectedPlan: DietPlan?
     @State private var showingDeleteConfirmation = false
     @State private var planToDelete: DietPlan?
+    @State private var showingWelcome = false
     
     private var dietPlanRepository: DietPlanRepository {
         DietPlanRepository(context: modelContext)
@@ -104,6 +105,17 @@ struct DietPlansListView: View {
                 }
             } message: {
                 Text(localizationManager.localizedString(for: AppStrings.DietPlan.deleteConfirmation))
+            }
+            .overlay {
+                if showingWelcome {
+                    DietWelcomeView(isPresented: $showingWelcome)
+                }
+            }
+            .onAppear {
+                // Show welcome view if user hasn't seen it and has no active plan
+                if !hasActivePlan && !UserSettings.shared.hasSeenDietWelcome {
+                    showingWelcome = true
+                }
             }
         }
     }

@@ -185,6 +185,8 @@ struct DietWelcomeView: View {
     }
     
     private func dismiss() {
+        // Mark welcome as seen when dismissed
+        UserSettings.shared.hasSeenDietWelcome = true
         withAnimation {
             isPresented = false
         }
