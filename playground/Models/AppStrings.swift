@@ -805,7 +805,7 @@ struct AppStrings {
         static let analyzeMeal = "Analyze Meal"
         static let noFoodInImage = "We couldn't identify any food in this image."
         static let tipsForBetterResults = "Tips for better results"
-        static let calAI = "Cal AI"
+        static let calAI = "CalorieVisionAI"
         static let tryAgain = "Try Again"
         static let takeNewPhoto = "Take New Photo"
         static let ohNo = "Oh no!"
