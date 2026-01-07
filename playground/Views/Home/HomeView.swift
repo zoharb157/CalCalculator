@@ -137,6 +137,16 @@ struct HomeView: View {
                     viewModel.updateLiveActivityIfNeeded()
                 }
             }
+            .onReceive(NotificationCenter.default.publisher(for: .exerciseDeleted)) { _ in
+                // Refresh burned calories and today's data when an exercise is deleted
+                // This ensures the calorie goal adjustment is recalculated and UI is updated
+                Task {
+                    await viewModel.refreshBurnedCalories()
+                    await viewModel.refreshTodayData()
+                    // Update Live Activity with the updated burned calories value
+                    viewModel.updateLiveActivityIfNeeded()
+                }
+            }
             .onReceive(NotificationCenter.default.publisher(for: .addBurnedCaloriesToggled)) { _ in
                 // Refresh burned calories and update UI when the toggle setting changes
                 // This recalculates the effective calorie goal

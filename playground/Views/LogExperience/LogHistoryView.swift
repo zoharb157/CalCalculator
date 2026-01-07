@@ -316,6 +316,8 @@ struct LogHistoryView: View {
             case .exercise(let exercise):
                 try repository.deleteExercise(exercise)
                 exercises.removeAll { $0.id == exercise.id }
+                // Notify that an exercise was deleted so HomeViewModel can refresh burned calories
+                NotificationCenter.default.post(name: .exerciseDeleted, object: nil)
             }
 
             HapticManager.shared.notification(.success)
