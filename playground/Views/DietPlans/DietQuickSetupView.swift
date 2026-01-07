@@ -6,10 +6,13 @@
 
 import SwiftUI
 import SwiftData
+import SDK
 
 struct DietQuickSetupView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.isSubscribed) private var isSubscribed
+    @Environment(TheSDK.self) private var sdk
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @State private var currentStep = 0
@@ -18,6 +21,8 @@ struct DietQuickSetupView: View {
     @State private var meals: [ScheduledMeal] = []
     @State private var showingMealEditor = false
     @State private var editingMeal: ScheduledMeal?
+    @State private var showingPaywall = false
+    @State private var showDeclineConfirmation = false
     
     private var dietPlanRepository: DietPlanRepository {
         DietPlanRepository(context: modelContext)
@@ -558,6 +563,13 @@ struct DietQuickSetupView: View {
     // MARK: - Actions
     
     private func createPlan() {
+        // Check premium subscription before saving
+        guard isSubscribed else {
+            showingPaywall = true
+            HapticManager.shared.notification(.warning)
+            return
+        }
+        
         do {
             let plan = DietPlan(
                 name: planName,

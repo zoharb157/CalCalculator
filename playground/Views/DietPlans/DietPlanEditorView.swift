@@ -10,6 +10,8 @@ import SwiftData
 struct DietPlanEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.isSubscribed) private var isSubscribed
+    @Environment(TheSDK.self) private var sdk
     @Query(filter: #Predicate<DietPlan> { $0.isActive == true }) private var existingActivePlans: [DietPlan]
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
@@ -26,6 +28,8 @@ struct DietPlanEditorView: View {
     @State private var showNoMealsAlert = false
     @State private var showDeleteMealConfirmation = false
     @State private var mealToDelete: ScheduledMeal?
+    @State private var showingPaywall = false
+    @State private var showDeclineConfirmation = false
     @FocusState private var isNameFocused: Bool
     @FocusState private var isCalorieGoalFocused: Bool
     
@@ -125,6 +129,13 @@ struct DietPlanEditorView: View {
                     }
                 )
             }
+            .fullScreenCover(isPresented: $showingPaywall) {
+                paywallView
+            }
+            .paywallDismissalOverlay(
+                showPaywall: $showingPaywall,
+                showDeclineConfirmation: $showDeclineConfirmation
+            )
             .alert(localizationManager.localizedString(for: AppStrings.DietPlan.mealsRequired), isPresented: $showNoMealsAlert) {
                 Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) {}
             } message: {
@@ -417,6 +428,13 @@ struct DietPlanEditorView: View {
             return
         }
         
+        // Check premium subscription before saving
+        guard isSubscribed else {
+            showingPaywall = true
+            HapticManager.shared.notification(.warning)
+            return
+        }
+        
         do {
             let calorieGoal = dailyCalorieGoal.isEmpty ? nil : Int(dailyCalorieGoal)
             
@@ -479,6 +497,22 @@ struct DietPlanEditorView: View {
             }
         }
         HapticManager.shared.notification(.success)
+    }
+    
+    // MARK: - Paywall View
+    
+    private var paywallView: some View {
+        SDKView(
+            model: sdk,
+            page: .splash,
+            show: paywallBinding(
+                showPaywall: $showingPaywall,
+                sdk: sdk,
+                showDeclineConfirmation: $showDeclineConfirmation
+            ),
+            backgroundColor: .white,
+            ignoreSafeArea: true
+        )
     }
 }
 

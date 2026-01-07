@@ -7,11 +7,14 @@
 
 import SwiftUI
 import SwiftData
+import SDK
 
 struct DietPlansListView: View {
     @Query(filter: #Predicate<DietPlan> { $0.isActive == true }) private var activePlans: [DietPlan]
     @Query(sort: \DietPlan.createdAt, order: .reverse) private var allPlans: [DietPlan]
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.isSubscribed) private var isSubscribed
+    @Environment(TheSDK.self) private var sdk
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @State private var showingCreatePlan = false
@@ -21,6 +24,8 @@ struct DietPlansListView: View {
     @State private var showingDeleteConfirmation = false
     @State private var planToDelete: DietPlan?
     @State private var showingWelcome = false
+    @State private var showingPaywall = false
+    @State private var showDeclineConfirmation = false
     
     private var dietPlanRepository: DietPlanRepository {
         DietPlanRepository(context: modelContext)
@@ -63,6 +68,13 @@ struct DietPlansListView: View {
             .sheet(isPresented: $showingTemplates) {
                 DietPlanTemplatesView { template in
                     // Template selected - create/replace plan (only one active diet allowed)
+                    // Check premium subscription before saving
+                    guard isSubscribed else {
+                        showingPaywall = true
+                        HapticManager.shared.notification(.warning)
+                        return
+                    }
+                    
                     let plan = template.createDietPlan()
                     do {
                         try dietPlanRepository.saveDietPlan(plan)
@@ -658,6 +670,22 @@ struct ActionRow: View {
             .padding()
         }
         .buttonStyle(.plain)
+    }
+    
+    // MARK: - Paywall View
+    
+    private var paywallView: some View {
+        SDKView(
+            model: sdk,
+            page: .splash,
+            show: paywallBinding(
+                showPaywall: $showingPaywall,
+                sdk: sdk,
+                showDeclineConfirmation: $showDeclineConfirmation
+            ),
+            backgroundColor: .white,
+            ignoreSafeArea: true
+        )
     }
 }
 

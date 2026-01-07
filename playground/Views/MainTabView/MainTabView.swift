@@ -231,11 +231,8 @@ struct MainTabView: View {
     // MARK: - Actions
     
     private func handleCreateDiet() {
-        if isSubscribed {
-            showingCreateDiet = true
-        } else {
-            showingPaywall = true
-        }
+        // Allow all users to access diet creation - paywall will appear only when saving
+        showingCreateDiet = true
     }
     
     // MARK: - Paywall View
