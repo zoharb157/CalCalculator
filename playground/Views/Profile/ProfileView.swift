@@ -57,7 +57,6 @@ struct ProfileView: View {
             }
             .background(Color(UIColor.systemGroupedBackground))
             .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.title))
-                .id("profile-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.large)
             .onChange(of: localizationManager.currentLanguage) { oldValue, newValue in
                 // Force view refresh when language changes
