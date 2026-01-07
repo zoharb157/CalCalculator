@@ -48,6 +48,18 @@ struct ExerciseDetailView: View {
         }
         .navigationTitle(exerciseType.displayName)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            // Add single keyboard toolbar for weight lifting view only
+            if exerciseType == .weightLifting {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button(localizationManager.localizedString(for: AppStrings.Common.done)) {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
+                    .id("done-keyboard-\(localizationManager.currentLanguage)")
+                }
+            }
+        }
         .sheet(isPresented: $showingBurnedCalories) {
             BurnedCaloriesView(
                 calories: calculatedCalories,
@@ -230,7 +242,6 @@ struct ExerciseDetailView: View {
                 TextField("Reps", text: $reps)
                     .keyboardType(.numberPad)
                     .textFieldStyle(.roundedBorder)
-                    .keyboardDoneButton()
             }
             .padding()
             
@@ -246,7 +257,6 @@ struct ExerciseDetailView: View {
                 TextField("Sets", text: $sets)
                     .keyboardType(.numberPad)
                     .textFieldStyle(.roundedBorder)
-                    .keyboardDoneButton()
             }
             .padding()
             
@@ -262,7 +272,6 @@ struct ExerciseDetailView: View {
                 TextField("Weight (kg)", text: $weight)
                     .keyboardType(.decimalPad)
                     .textFieldStyle(.roundedBorder)
-                    .keyboardDoneButton()
             }
             .padding()
             
@@ -289,6 +298,15 @@ struct ExerciseDetailView: View {
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 40)
+            }
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button(localizationManager.localizedString(for: AppStrings.Common.done)) {
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }
+                .id("done-keyboard-\(localizationManager.currentLanguage)")
             }
         }
     }
