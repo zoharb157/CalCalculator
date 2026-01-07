@@ -12,7 +12,6 @@ struct LoginView: View {
     @State private var isAnimating = false
     
     var onGetStarted: () -> Void
-    var onSignIn: () -> Void
     
     var body: some View {
         ZStack {
@@ -92,24 +91,6 @@ struct LoginView: View {
                     .opacity(isAnimating ? 1 : 0)
                     .offset(y: isAnimating ? 0 : 20)
                     .animation(.easeOut(duration: 0.5).delay(0.4), value: isAnimating)
-                    
-                    // Secondary button - Sign In
-                    HStack(spacing: 8) {
-                        Text(LocalizationManager.shared.localizedString(for: AppStrings.Authentication.alreadyHaveAccount))
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.secondary)
-                        
-                        Button(action: onSignIn) {
-                            Text(LocalizationManager.shared.localizedString(for: AppStrings.Authentication.signIn))
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(.accentColor)
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 56)
-                    .animation(.easeOut(duration: 0.5).delay(0.5), value: isAnimating)
-                    .opacity(isAnimating ? 1 : 0)
-                    .offset(y: isAnimating ? 0 : 20)
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 50)
@@ -132,15 +113,13 @@ struct ScaleButtonStyle: ButtonStyle {
 
 #Preview {
     LoginView(
-        onGetStarted: { print("Get Started tapped") },
-        onSignIn: { print("Sign In tapped") }
+        onGetStarted: { print("Get Started tapped") }
     )
 }
 
 #Preview("Dark Mode") {
     LoginView(
-        onGetStarted: { print("Get Started tapped") },
-        onSignIn: { print("Sign In tapped") }
+        onGetStarted: { print("Get Started tapped") }
     )
     .preferredColorScheme(.dark)
 }

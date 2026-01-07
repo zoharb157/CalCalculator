@@ -14,10 +14,9 @@ struct ContentView: View {
     @Environment(TheSDK.self) private var sdk
     
     @State private var repository: MealRepository?
-    @State private var authState: AuthState = .login
+    @State private var authState: AuthState = .welcome
     @State private var onboardingResult: [String: Any] = [:]
     @State private var paywallItem: PaywallItem?
-    @State private var hasCheckedSubscription = false
     
     private var settings = UserSettings.shared
     
@@ -40,9 +39,8 @@ struct ContentView: View {
     }
     
     enum AuthState {
-        case login
+        case welcome
         case onboarding
-        case signIn
         case authenticated
     }
     
@@ -50,13 +48,10 @@ struct ContentView: View {
         Group {
             if let repository = repository {
                 switch authState {
-                case .login:
+                case .welcome:
                     LoginView(
                         onGetStarted: {
                             authState = .onboarding
-                        },
-                        onSignIn: {
-                            authState = .signIn
                         }
                     )
                     
@@ -71,10 +66,6 @@ struct ContentView: View {
                         // Mark onboarding as completed
                         settings.completeOnboarding()
                         
-                        // Save user as authenticated
-                        AuthenticationManager.shared.setUserId(
-                            AuthenticationManager.shared.userId ?? "")
-                        
                         // Log for debugging
                         print("📱 [ContentView] Onboarding completed at: \(result.completedAt)")
                         print(
@@ -84,28 +75,6 @@ struct ContentView: View {
                         withAnimation {
                             authState = .authenticated
                         }
-                    }
-                    
-                case .signIn:
-                    // Sign in is handled via LoginView in the authentication flow
-                    LoginView(
-                        onGetStarted: {
-                            authState = .onboarding
-                        },
-                        onSignIn: {
-                            // Sign in functionality can be added here if needed
-                            authState = .authenticated
-                        }
-                    )
-                    .task {
-                        guard !hasCheckedSubscription else { return }
-                        hasCheckedSubscription = true
-                        
-                        // Don't block - proceed immediately
-                        authState = .authenticated
-                        
-                        // NOTE: Subscription status is ONLY checked when HTML paywall closes
-                        // No automatic checks here
                     }
                     
                 case .authenticated:

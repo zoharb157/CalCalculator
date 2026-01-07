@@ -37,7 +37,7 @@ struct WeekDay: Identifiable {
     }
     
     /// Progress ring color based on calories over goal
-    /// - Green: Up to 100 calories over goal (slightly over)
+    /// - Green: Less than 100 calories over goal (0-99 over)
     /// - Yellow: 100-200 calories over goal (moderately over)
     /// - Red: More than 200 calories over goal (significantly over)
     /// - Gray: No meals logged (used with dotted ring)
@@ -47,9 +47,9 @@ struct WeekDay: Identifiable {
         }
         
         switch caloriesOverGoal {
-        case 0...100:
+        case 0..<100:
             return .green
-        case 101...200:
+        case 100...200:
             return .yellow
         default:
             return .red

@@ -15,8 +15,9 @@ struct VoiceLogView: View {
     @State private var isListening = false
     @State private var transcribedText: String = ""
     @State private var showingPermissionAlert = false
-    @State private var showingComingSoonAlert = false
+    @State private var showingComingSoonMessage = false
     @State private var animationAmount: CGFloat = 1.0
+    @State private var iconRotation: Double = 0
     @State private var isViewPresented = false
 
     var body: some View {
@@ -32,6 +33,12 @@ struct VoiceLogView: View {
 
                 // Status text
                 statusText
+                
+                // Coming soon message (shown after button click)
+                if showingComingSoonMessage {
+                    comingSoonMessageView
+                        .transition(.scale.combined(with: .opacity))
+                }
 
                 // Transcribed text display
                 if !transcribedText.isEmpty {
@@ -42,9 +49,6 @@ struct VoiceLogView: View {
 
                 // Microphone button
                 microphoneButton
-
-                // Help text
-                helpText
             }
             .padding()
             .navigationTitle(localizationManager.localizedString(for: AppStrings.Food.voiceLog))
@@ -70,15 +74,8 @@ struct VoiceLogView: View {
                 // Mark view as not presented to prevent alerts after dismissal
                 isViewPresented = false
                 // Also reset alert state to prevent showing after dismissal
-                showingComingSoonAlert = false
+                showingComingSoonMessage = false
                 showingPermissionAlert = false
-            }
-            .alert(localizationManager.localizedString(for: AppStrings.Food.comingSoon), isPresented: $showingComingSoonAlert) {
-                Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) {}
-                    .id("ok-coming-soon-\(localizationManager.currentLanguage)")
-            } message: {
-                Text(localizationManager.localizedString(for: AppStrings.Food.voiceLoggingInDevelopment))
-                    .id("coming-soon-message-\(localizationManager.currentLanguage)")
             }
             .alert(localizationManager.localizedString(for: AppStrings.Food.microphoneAccess), isPresented: $showingPermissionAlert) {
                 Button(localizationManager.localizedString(for: AppStrings.Common.settings), role: .none) {
@@ -200,24 +197,62 @@ struct VoiceLogView: View {
         }
         .padding(.horizontal)
     }
-
-    // MARK: - Help Text
-
-    private var helpText: some View {
-        VStack(spacing: 8) {
+    
+    // MARK: - Coming Soon Message View
+    
+    private var comingSoonMessageView: some View {
+        VStack(spacing: 16) {
+            // Icon
+            Image(systemName: "sparkles")
+                .font(.system(size: 50))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [.blue, .purple],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .rotationEffect(.degrees(iconRotation))
+                .scaleEffect(1.0 + sin(iconRotation * .pi / 180) * 0.1)
+                .onAppear {
+                    withAnimation(.linear(duration: 3).repeatForever(autoreverses: false)) {
+                        iconRotation = 360
+                    }
+                }
+            
+            // Coming Soon text
             Text(localizationManager.localizedString(for: AppStrings.Food.comingSoon))
-                .id("coming-soon-\(localizationManager.currentLanguage)")
-                .font(.headline)
-                .foregroundColor(.secondary)
-
+                .id("coming-soon-title-\(localizationManager.currentLanguage)")
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(.primary)
+            
+            // Description
             Text(localizationManager.localizedString(for: AppStrings.Food.voiceLoggingInDevelopment))
-                .id("voice-dev-text-\(localizationManager.currentLanguage)")
-                .font(.caption)
-                .foregroundColor(Color(.tertiaryLabel))
+                .id("coming-soon-desc-\(localizationManager.currentLanguage)")
+                .font(.body)
+                .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, 20)
         }
-        .padding(.bottom, 20)
+        .padding(24)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color(.systemBackground))
+                .shadow(color: .blue.opacity(0.15), radius: 20, x: 0, y: 10)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(
+                    LinearGradient(
+                        colors: [.blue.opacity(0.3), .purple.opacity(0.3)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 2
+                )
+        )
+        .padding(.horizontal, 20)
     }
 
     // MARK: - Actions
@@ -225,27 +260,15 @@ struct VoiceLogView: View {
     private func toggleListening() {
         HapticManager.shared.impact(.medium)
 
-        // Only show alert if view is fully presented and stable
-        // This prevents crashes when the view is being dismissed or not fully in the hierarchy
         guard isViewPresented else {
-            print("⚠️ [VoiceLogView] Skipping alert - view not fully presented")
+            print("⚠️ [VoiceLogView] Skipping - view not fully presented")
             return
         }
         
-        // Use a small delay to ensure the view hierarchy is stable before presenting alert
-        // This prevents UIAlertController assertion failures
-        Task { @MainActor in
-            // Small delay to ensure view is stable
-            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
-            
-            // Double-check view is still presented before showing alert
-            guard isViewPresented else { return }
-            
-            showingComingSoonAlert = true
-        }
-
-        // Auto-stop removed - user should manually stop listening
-        // Voice recognition will complete when actual transcription finishes
+        // Show coming soon message with animation
+        withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+            showingComingSoonMessage = true
+        }        
     }
 
     private func openSettings() {
