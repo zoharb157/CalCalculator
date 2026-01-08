@@ -112,17 +112,15 @@ struct ProgressDashboardView: View {
                                 if viewModel.healthKitAuthorizationDenied {
                                     HealthKitSettingsPromptCard()
                                 } else {
-                                    PremiumLockedContent(isProgressPage: true) {
-                                        HealthDataSection(
-                                            steps: viewModel.steps,
-                                            activeCalories: viewModel.activeCalories,
-                                            exerciseMinutes: viewModel.exerciseMinutes,
-                                            heartRate: viewModel.heartRate,
-                                            distance: viewModel.distance,
-                                            sleepHours: viewModel.sleepHours,
-                                            isSubscribed: isSubscribed
-                                        )
-                                    }
+                                    HealthDataSection(
+                                        steps: viewModel.steps,
+                                        activeCalories: viewModel.activeCalories,
+                                        exerciseMinutes: viewModel.exerciseMinutes,
+                                        heartRate: viewModel.heartRate,
+                                        distance: viewModel.distance,
+                                        sleepHours: viewModel.sleepHours,
+                                        isSubscribed: isSubscribed
+                                    )
                                 }
                             }
                         }
