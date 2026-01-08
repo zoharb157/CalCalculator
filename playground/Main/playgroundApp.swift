@@ -283,7 +283,6 @@ extension Notification.Name {
     static let exerciseSaved = Notification.Name("exerciseSaved")
     static let exerciseDeleted = Notification.Name("exerciseDeleted")
     static let exerciseFlowShouldDismiss = Notification.Name("exerciseFlowShouldDismiss")
-    static let scrollHomeToTop = Notification.Name("scrollHomeToTop")
     static let addBurnedCaloriesToggled = Notification.Name("addBurnedCaloriesToggled")
     static let languageChanged = Notification.Name("languageChanged")
     static let mealReminderAction = Notification.Name("mealReminderAction")
@@ -292,5 +291,4 @@ extension Notification.Name {
     static let dietPlanChanged = Notification.Name("dietPlanChanged")
     static let foodLogged = Notification.Name("foodLogged")
     static let subscriptionStatusUpdated = Notification.Name("subscriptionStatusUpdated")
-    static let homeTabTapped = Notification.Name("homeTabTapped")
 }

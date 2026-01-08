@@ -12,7 +12,6 @@ import Charts
 struct DietView: View {
     @Bindable var viewModel: HistoryViewModel
     let repository: MealRepository
-    let scrollToTopTrigger: UUID
     @ObservedObject private var localizationManager = LocalizationManager.shared
 
     @Environment(\.modelContext) private var modelContext
@@ -35,12 +34,10 @@ struct DietView: View {
     
     init(
         viewModel: HistoryViewModel,
-        repository: MealRepository,
-        scrollToTopTrigger: UUID = UUID()
+        repository: MealRepository
     ) {
         self.viewModel = viewModel
         self.repository = repository
-        self.scrollToTopTrigger = scrollToTopTrigger
     }
 
     // Diet summary state
@@ -85,18 +82,9 @@ struct DietView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollViewReader { proxy in
-                ScrollView {
-                    dietSummarySection
-                        .id("diet-top") // Anchor point for scrolling to top
-                        .padding()
-                }
-                .onChange(of: scrollToTopTrigger) { _, _ in
-                    // Scroll to top when history tab is tapped (trigger changes)
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        proxy.scrollTo("diet-top", anchor: .top)
-                    }
-                }
+            ScrollView {
+                dietSummarySection
+                    .padding()
             }
             .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.myDiet))
             .id("my-diet-nav-\(localizationManager.currentLanguage)")
