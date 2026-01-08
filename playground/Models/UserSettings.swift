@@ -184,16 +184,6 @@ final class UserSettings {
         useMetricUnits ? "cm" : "in"
     }
     
-    /// Distance unit string (km or mi)
-    var distanceUnit: String {
-        useMetricUnits ? "km" : "mi"
-    }
-    
-    /// Preferred DistanceUnit based on metric setting
-    var preferredDistanceUnit: DistanceUnit {
-        useMetricUnits ? .kilometers : .miles
-    }
-    
     // MARK: - Initialization
     private init() {
         self.hasCompletedOnboarding = defaults.bool(forKey: Keys.hasCompletedOnboarding)

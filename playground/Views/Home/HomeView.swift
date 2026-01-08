@@ -14,6 +14,7 @@ struct HomeView: View {
     @Bindable var viewModel: HomeViewModel
     let repository: MealRepository
     @Bindable var scanViewModel: ScanViewModel
+    let scrollToTopTrigger: UUID
     var onMealSaved: () -> Void
 
     @Environment(\.isSubscribed) private var isSubscribed
@@ -43,11 +44,13 @@ struct HomeView: View {
         viewModel: HomeViewModel,
         repository: MealRepository,
         scanViewModel: ScanViewModel,
+        scrollToTopTrigger: UUID = UUID(),
         onMealSaved: @escaping () -> Void
     ) {
         self.viewModel = viewModel
         self.repository = repository
         self.scanViewModel = scanViewModel
+        self.scrollToTopTrigger = scrollToTopTrigger
         self.onMealSaved = onMealSaved
     }
 
@@ -309,8 +312,11 @@ struct HomeView: View {
 
     private var contentView: some View {
         VStack(spacing: 0) {
-            // Week days header - sticky at top
+            // Week days header at the very top
             weekDaysSection
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+                .padding(.bottom, 12)
                 .background(Color(.systemGroupedBackground))
 
             // Rest of the content
@@ -333,6 +339,46 @@ struct HomeView: View {
                     }
                 }
                 .listStyle(.plain)
+                .onChange(of: scrollToTopTrigger) { _, _ in
+                    // Home tab tap behavior:
+                    // - Always scroll to top
+                    // - Navigate to current day ONLY if:
+                    //   1. Already at top BEFORE this tap (no scroll animation will happen)
+                    //   2. Not already on current day
+                    
+                    // Check scroll position directly from scrollView to get accurate reading
+                    let actualScrollOffset = getCurrentScrollOffset()
+                    let wasAtTopBeforeScroll = actualScrollOffset <= 50
+                    
+                    let currentSelectedDate = viewModel.selectedDate
+                    let today = Date()
+                    let isOnCurrentDay = Calendar.current.isDate(currentSelectedDate, inSameDayAs: today)
+                    
+                    // If we're already at top, navigate to current day immediately (no scroll needed)
+                    if wasAtTopBeforeScroll {
+                        if !isOnCurrentDay {
+                            HapticManager.shared.impact(.medium)
+                            viewModel.selectDay(today)
+                        }
+                    } else {
+                        // Not at top - scroll to top only, don't navigate
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            proxy.scrollTo("home-top", anchor: .top)
+                        }
+                    }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .scrollHomeToTop)) { _ in
+                    // Also support notification-based scrolling (for programmatic triggers)
+                    if !isAtTop {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            proxy.scrollTo("home-top", anchor: .top)
+                        }
+                        Task { @MainActor in
+                            try? await Task.sleep(nanoseconds: 350_000_000) // Wait for animation
+                            isAtTop = true
+                        }
+                    }
+                }
                 // Track scroll position using UIViewRepresentable with UIScrollView delegate
                 .background(
                     ListScrollTracker(isAtTop: $isAtTop)
@@ -343,6 +389,56 @@ struct HomeView: View {
 
     @State private var showLogHistorySheet = false
     @State private var isAtTop = true // Tracks if the scroll view is currently at the top position
+    
+    /// Gets the current scroll offset by finding the UIScrollView in the view hierarchy
+    /// Tries to find the List's scrollView specifically
+    private func getCurrentScrollOffset() -> CGFloat {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first(where: { $0.isKeyWindow }) ?? windowScene.windows.first else {
+            return 0
+        }
+        
+        // Find all UIScrollViews and try to find the one that belongs to our List
+        // SwiftUI List uses UICollectionView which contains a UIScrollView
+        // We'll look for the largest scrollView (likely the main List scrollView)
+        var allScrollViews: [UIScrollView] = []
+        findAllScrollViews(in: window.rootViewController?.view, found: &allScrollViews)
+        
+        // Find the scrollView with the largest contentSize (likely the main List)
+        if let mainScrollView = allScrollViews.max(by: { $0.contentSize.height < $1.contentSize.height }) {
+            return mainScrollView.contentOffset.y
+        }
+        
+        return 0
+    }
+    
+    private func findAllScrollViews(in view: UIView?, found: inout [UIScrollView]) {
+        guard let view = view else { return }
+        
+        if let scrollView = view as? UIScrollView {
+            found.append(scrollView)
+        }
+        
+        for subview in view.subviews {
+            findAllScrollViews(in: subview, found: &found)
+        }
+    }
+    
+    private func findScrollViewInHierarchy(startingFrom view: UIView?) -> UIScrollView? {
+        guard let view = view else { return nil }
+        
+        if let scrollView = view as? UIScrollView {
+            return scrollView
+        }
+        
+        for subview in view.subviews {
+            if let scrollView = findScrollViewInHierarchy(startingFrom: subview) {
+                return scrollView
+            }
+        }
+        
+        return nil
+    }
 
     @State private var showDietSummarySheet = false
     @State private var showingEditDietPlan = false
@@ -463,17 +559,10 @@ struct HomeView: View {
     private var weekDaysSection: some View {
         // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
         let _ = localizationManager.currentLanguage
-        return VStack(spacing: 0) {
-            WeekDaysHeader(weekDays: viewModel.weekDays) { selectedDate in
-                HapticManager.shared.impact(.medium)
-                viewModel.selectDay(selectedDate)
-            }
+        return WeekDaysHeader(weekDays: viewModel.weekDays) { selectedDate in
+            HapticManager.shared.impact(.medium)
+            viewModel.selectDay(selectedDate)
         }
-        .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.06), radius: 6, x: 0, y: 2)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
         .transition(.opacity.combined(with: .scale(scale: 0.95)))
         .animation(
             .spring(response: 0.6, dampingFraction: 0.8),
