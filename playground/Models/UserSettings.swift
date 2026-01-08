@@ -18,6 +18,7 @@ final class UserSettings {
     // MARK: - Keys
     private enum Keys {
         static let hasCompletedOnboarding = "hasCompletedOnboarding"
+        static let onboardingCompletedDate = "onboardingCompletedDate" // First day of app installation/onboarding completion
         static let calorieGoal = "calorieGoal"
         static let proteinGoal = "proteinGoal"
         static let carbsGoal = "carbsGoal"
@@ -37,6 +38,11 @@ final class UserSettings {
     // MARK: - Properties
     var hasCompletedOnboarding: Bool {
         didSet { defaults.set(hasCompletedOnboarding, forKey: Keys.hasCompletedOnboarding) }
+    }
+    
+    /// The date when onboarding was completed (first day of app installation)
+    var onboardingCompletedDate: Date? {
+        didSet { defaults.set(onboardingCompletedDate, forKey: Keys.onboardingCompletedDate) }
     }
     
     var calorieGoal: Int {
@@ -181,6 +187,7 @@ final class UserSettings {
     // MARK: - Initialization
     private init() {
         self.hasCompletedOnboarding = defaults.bool(forKey: Keys.hasCompletedOnboarding)
+        self.onboardingCompletedDate = defaults.object(forKey: Keys.onboardingCompletedDate) as? Date
         self.calorieGoal = defaults.object(forKey: Keys.calorieGoal) as? Int ?? 2000
         self.proteinGoal = defaults.object(forKey: Keys.proteinGoal) as? Double ?? 150
         self.carbsGoal = defaults.object(forKey: Keys.carbsGoal) as? Double ?? 250
@@ -207,6 +214,10 @@ final class UserSettings {
     
     func completeOnboarding() {
         hasCompletedOnboarding = true
+        // Save the date when onboarding was completed (first day of app installation)
+        if onboardingCompletedDate == nil {
+            onboardingCompletedDate = Calendar.current.startOfDay(for: Date())
+        }
     }
     
     /// Update all nutrition goals at once

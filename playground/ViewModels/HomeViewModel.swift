@@ -566,15 +566,19 @@ final class HomeViewModel {
     /// - Parameters:
     ///   - summaries: Dictionary of day summaries keyed by date
     ///   - selectedDate: The currently selected date (affects isSelected property)
-    /// - Returns: Array of WeekDay structs ready for display
+    /// Builds week days array starting from the first day of app installation (onboarding completion date)
+    /// Shows all days from the first day of installation until today, plus 1 week forward from today
+    /// Even if there's no data for some days, they will still be displayed
+    /// - Parameters:
+    ///   - summaries: Dictionary of day summaries keyed by date
+    ///   - selectedDate: The currently selected date (affects isSelected property)
+    /// - Returns: Array of WeekDay structs ready for display, sorted by date (oldest first)
     func buildWeekDays(from summaries: [Date: DaySummary], selectedDate: Date) -> [WeekDay] {
         let calendar = Calendar.current
         let today = Date()
+        let todayStart = calendar.startOfDay(for: today)
         let calorieGoalValue = effectiveCalorieGoal
         let calorieGoalDouble = Double(calorieGoalValue)
-        
-        // Start from today only (as requested: "בחלון של הימים להתחיל רק מהיום הנוכחי")
-        let startOfRange = calendar.startOfDay(for: today)
         
         let dayFormatter = DateFormatter()
         dayFormatter.dateFormat = "EEE"
@@ -582,23 +586,53 @@ final class HomeViewModel {
         
         var days: [WeekDay] = []
         
-        // Build 21 days starting from today (today + 20 days forward)
-        for dayOffset in 0..<21 {
-            guard let date = calendar.date(byAdding: .day, value: dayOffset, to: startOfRange) else { continue }
-            
-            let dayStart = calendar.startOfDay(for: date)
-            let summary = summaries[dayStart]
+        // Get the first day of app installation (onboarding completion date)
+        let settings = UserSettings.shared
+        let firstDayStart: Date
+        
+        if let onboardingDate = settings.onboardingCompletedDate {
+            // Start from the day onboarding was completed (first day of app installation)
+            firstDayStart = calendar.startOfDay(for: onboardingDate)
+        } else {
+            // Fallback: if onboarding date is not set, use today
+            firstDayStart = todayStart
+        }
+        
+        // Calculate end date: today + 1 week forward
+        guard let endDate = calendar.date(byAdding: .day, value: 7, to: todayStart) else {
+            // Fallback: just show today if date calculation fails
+            let weekDay = WeekDay(
+                date: today,
+                dayName: dayFormatter.string(from: today),
+                dayNumber: calendar.component(.day, from: today),
+                isToday: true,
+                isSelected: calendar.isDate(today, inSameDayAs: selectedDate),
+                progress: 0,
+                summary: nil,
+                caloriesConsumed: 0,
+                calorieGoal: calorieGoalValue,
+                hasMeals: false
+            )
+            return [weekDay]
+        }
+        
+        // Build days from the first day of installation until today + 1 week forward
+        // This includes all days, even if there's no data for them
+        var currentDate = firstDayStart
+        while currentDate <= endDate {
+            let dayStart = calendar.startOfDay(for: currentDate)
+            let summary = summaries[dayStart] // May be nil if no data exists for this day
             let caloriesConsumed = summary?.totalCalories ?? 0
             let caloriesDouble = Double(caloriesConsumed)
             let progress = calorieGoalDouble > 0 ? caloriesDouble / calorieGoalDouble : 0
             let hasMeals = (summary?.mealCount ?? 0) > 0
             
             let weekDay = WeekDay(
-                date: date,
-                dayName: dayFormatter.string(from: date),
-                dayNumber: calendar.component(.day, from: date),
-                isToday: calendar.isDateInToday(date),
-                isSelected: calendar.isDate(date, inSameDayAs: selectedDate),
+                date: currentDate,
+                dayName: dayFormatter.string(from: currentDate),
+                dayNumber: calendar.component(.day, from: currentDate),
+                isToday: calendar.isDateInToday(currentDate),
+                isSelected: calendar.isDate(currentDate, inSameDayAs: selectedDate),
                 progress: progress,
                 summary: summary,
                 caloriesConsumed: caloriesConsumed,
@@ -607,6 +641,10 @@ final class HomeViewModel {
             )
             
             days.append(weekDay)
+            
+            // Move to next day
+            guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else { break }
+            currentDate = nextDate
         }
         
         return days

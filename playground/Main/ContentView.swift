@@ -63,8 +63,12 @@ struct ContentView: View {
                         // Save generated goals
                         saveGeneratedGoals(result.goals)
                         
-                        // Mark onboarding as completed
+                        // Mark onboarding as completed and save the completion date
                         settings.completeOnboarding()
+                        // Set the onboarding completion date from the result
+                        if settings.onboardingCompletedDate == nil {
+                            settings.onboardingCompletedDate = Calendar.current.startOfDay(for: result.completedAt)
+                        }
                         
                         // Log for debugging
                         print("📱 [ContentView] Onboarding completed at: \(result.completedAt)")

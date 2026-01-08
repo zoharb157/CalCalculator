@@ -292,4 +292,5 @@ extension Notification.Name {
     static let dietPlanChanged = Notification.Name("dietPlanChanged")
     static let foodLogged = Notification.Name("foodLogged")
     static let subscriptionStatusUpdated = Notification.Name("subscriptionStatusUpdated")
+    static let homeTabTapped = Notification.Name("homeTabTapped")
 }
