@@ -36,6 +36,8 @@ struct DietPlansListView: View {
     }
     
     private var inactivePlans: [DietPlan] {
+        // Filter out ALL active plans to prevent any active plan from appearing in saved plans section
+        // This handles edge cases where multiple plans might be marked active temporarily
         allPlans.filter { !$0.isActive }
     }
     
@@ -108,10 +110,13 @@ struct DietPlansListView: View {
                 DietQuickSetupView()
             }
             .sheet(isPresented: $showingTemplates) {
-                DietPlanTemplatesView { template in
-                    Task {
-                        await createPlanFromTemplate(template)
-                    }
+                // Note: DietPlanTemplatesView already creates the plan in TemplatePreviewView.useTemplate()
+                // We only need to dismiss and post notification - do NOT create another plan here
+                DietPlanTemplatesView { _ in
+                    // Plan was already created by TemplatePreviewView.useTemplate()
+                    // Just post notification to refresh UI
+                    NotificationCenter.default.post(name: .dietPlanChanged, object: nil)
+                    HapticManager.shared.notification(.success)
                 }
             }
             .sheet(isPresented: $showingCreateFromScratch) {
@@ -384,32 +389,6 @@ struct DietPlansListView: View {
     
     // MARK: - Actions
     
-    private func createPlanFromTemplate(_ template: DietPlanTemplate) async {
-        guard isSubscribed else {
-            showingPaywall = true
-            HapticManager.shared.notification(.warning)
-            return
-        }
-        
-        let plan = template.createDietPlan()
-        do {
-            try dietPlanRepository.saveDietPlan(plan)
-            
-            let reminderService = MealReminderService.shared(context: modelContext)
-            do {
-                try await reminderService.requestAuthorization()
-                try await reminderService.scheduleAllReminders()
-            } catch {
-                print("Failed to schedule reminders: \(error)")
-            }
-            
-            NotificationCenter.default.post(name: .dietPlanChanged, object: nil)
-            HapticManager.shared.notification(.success)
-        } catch {
-            print("Failed to create plan from template: \(error)")
-        }
-    }
-    
     private func activatePlan(_ plan: DietPlan) {
         guard isSubscribed else {
             showingPaywall = true
@@ -418,14 +397,8 @@ struct DietPlansListView: View {
         }
         
         do {
-            // Deactivate all other plans
-            for existingPlan in allPlans where existingPlan.id != plan.id {
-                existingPlan.isActive = false
-            }
-            
-            // Activate the selected plan
-            plan.isActive = true
-            try modelContext.save()
+            // Use repository to activate plan (handles deactivating others)
+            try dietPlanRepository.activatePlan(plan)
             
             // Reschedule reminders
             Task {

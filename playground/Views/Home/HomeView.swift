@@ -21,10 +21,10 @@ struct HomeView: View {
     @Environment(TheSDK.self) private var sdk
     @Environment(\.locale) private var locale
     @ObservedObject private var localizationManager = LocalizationManager.shared
-
+    
     private var settings = UserSettings.shared
     @State private var badgeManager = BadgeManager.shared
-
+    
     @State private var showScanSheet = false
     @State private var showLogFoodSheet = false
     @State private var showLogExerciseSheet = false
@@ -39,7 +39,7 @@ struct HomeView: View {
     @State private var showingDietWelcome = false
     @Environment(\.modelContext) private var modelContext
     @Query(filter: #Predicate<DietPlan> { $0.isActive == true }) private var activeDietPlans: [DietPlan]
-
+    
     init(
         viewModel: HomeViewModel,
         repository: MealRepository,
@@ -53,7 +53,7 @@ struct HomeView: View {
         self.scrollToTopTrigger = scrollToTopTrigger
         self.onMealSaved = onMealSaved
     }
-
+    
     var body: some View {
         // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
         // This forces the view to update when the language changes
@@ -296,7 +296,7 @@ struct HomeView: View {
             proteinGoal: settings.proteinGoal
         )
     }
-
+    
     // MARK: - Private Views
 
     private var mainContent: some View {
@@ -309,7 +309,7 @@ struct HomeView: View {
             }
         }
     }
-
+    
     private var contentView: some View {
         VStack(spacing: 0) {
             // Week days header at the very top
@@ -317,22 +317,21 @@ struct HomeView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
                 .padding(.bottom, 12)
-                .background(Color(.systemGroupedBackground))
-
+            Divider()
             // Rest of the content
             ScrollViewReader { proxy in
                 List {
-                    progressSection
+            progressSection
                         .id("home-top") // Anchor point for scrolling to top
                     logExperienceSection
                     dietPlanSection
-                    macroSection
+            macroSection
                     badgesSection
                     healthKitSection
                     
                     // Recently uploaded section - show meals or empty state
                     if !viewModel.recentMeals.isEmpty {
-                        mealsSection
+            mealsSection
                     } else if Calendar.current.isDateInToday(viewModel.selectedDate) {
                         // Show empty state only for today
                         recentlyUploadedEmptySection
@@ -517,31 +516,31 @@ struct HomeView: View {
         // Only show the floating action button if the selected date is today
         // Users can only log new meals/exercises for the current day
         if Calendar.current.isDateInToday(viewModel.selectedDate) {
-            VStack {
-                Spacer()
+        VStack {
+            Spacer()
 
-                HStack {
-                    Spacer()
+            HStack {
+                Spacer()
 
                     // FAB button - opens camera directly to scan food
                     // This is the primary action for logging meals
-                    Button {
+                Button {
                         HapticManager.shared.impact(.light)
-                        showScanSheet = true
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(.white)
+                    showScanSheet = true
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.white)
                             .frame(width: FABConstants.fabSize, height: FABConstants.fabSize)
-                            .background(
-                                LinearGradient(
+                        .background(
+                            LinearGradient(
                                     colors: [.blue, .blue.opacity(0.8)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
                             )
-                            .clipShape(Circle())
+                        )
+                        .clipShape(Circle())
                             .shadow(
                                 color: Color.blue.opacity(0.4),
                                 radius: 8,
@@ -555,7 +554,7 @@ struct HomeView: View {
             }
         }
     }
-
+    
     private var weekDaysSection: some View {
         // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
         let _ = localizationManager.currentLanguage
@@ -563,6 +562,7 @@ struct HomeView: View {
             HapticManager.shared.impact(.medium)
             viewModel.selectDay(selectedDate)
         }
+        .padding(.vertical, 8)
         .transition(.opacity.combined(with: .scale(scale: 0.95)))
         .animation(
             .spring(response: 0.6, dampingFraction: 0.8),
@@ -616,7 +616,7 @@ struct HomeView: View {
         .listRowSeparator(.hidden)
         .listRowBackground(Color.clear)
     }
-
+    
     private var macroSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(localizationManager.localizedString(for: AppStrings.Home.macronutrients))
@@ -625,19 +625,19 @@ struct HomeView: View {
                 .padding(.horizontal, 4)
             
             PremiumLockedContent {
-                MacroCardsSection(
-                    summary: viewModel.todaysSummary,
-                    goals: settings.macroGoals
-                )
+        MacroCardsSection(
+            summary: viewModel.todaysSummary,
+            goals: settings.macroGoals
+        )
             }
         }
         .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
         .listRowSeparator(.hidden)
         .listRowBackground(Color.clear)
     }
-
+    
     private var healthKitSection: some View {
-        HealthKitCard()
+        HealthKitCard(selectedDate: viewModel.selectedDate)
             .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
             .listRowSeparator(.hidden)
             .listRowBackground(Color.clear)
@@ -665,15 +665,15 @@ struct HomeView: View {
     // Displays recent meals in a scrollable grid format
     @ViewBuilder
     private var mealsSection: some View {
-        RecentMealsSection(
-            meals: viewModel.recentMeals,
-            repository: repository,
-            onDelete: { meal in
-                Task {
-                    await viewModel.deleteMeal(meal)
-                }
-            }
-        )
+                RecentMealsSection(
+                    meals: viewModel.recentMeals,
+                    repository: repository,
+                    onDelete: { meal in
+                        Task {
+                            await viewModel.deleteMeal(meal)
+                        }
+                    }
+                )
         .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
     
@@ -829,7 +829,7 @@ class ScrollObserver: NSObject {
         analysisService: CaloriesAPIService(),
         imageStorage: .shared
     )
-
+    
     HomeView(
         viewModel: viewModel,
         repository: repository,

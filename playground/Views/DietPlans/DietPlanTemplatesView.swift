@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import SDK
 
 struct DietPlanTemplatesView: View {
     @Environment(\.dismiss) private var dismiss
@@ -111,9 +112,14 @@ struct TemplatePreviewView: View {
     
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.isSubscribed) private var isSubscribed
+    @Environment(TheSDK.self) private var sdk
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @State private var customizing = false
+    @State private var showingPaywall = false
+    @State private var showDeclineConfirmation = false
+    @State private var isSaving = false
     
     private var dietPlanRepository: DietPlanRepository {
         DietPlanRepository(context: modelContext)
@@ -186,25 +192,73 @@ struct TemplatePreviewView: View {
                 }
             }
         }
+        .fullScreenCover(isPresented: $showingPaywall) {
+            paywallView
+        }
+        .paywallDismissalOverlay(
+            showPaywall: $showingPaywall,
+            showDeclineConfirmation: $showDeclineConfirmation
+        )
+    }
+    
+    private var paywallView: some View {
+        SDKView(
+            model: sdk,
+            page: .splash,
+            show: paywallBinding(
+                showPaywall: $showingPaywall,
+                sdk: sdk,
+                showDeclineConfirmation: $showDeclineConfirmation
+            ),
+            backgroundColor: .white,
+            ignoreSafeArea: true
+        )
     }
     
     private func useTemplate() async {
+        // Prevent double-taps from triggering multiple saves
+        guard !isSaving else { return }
+        
+        // Check premium subscription before saving
+        guard isSubscribed else {
+            showingPaywall = true
+            HapticManager.shared.notification(.warning)
+            return
+        }
+        
+        isSaving = true
+        defer { isSaving = false }
+        
         do {
-            let plan = template.createDietPlan()
-            try dietPlanRepository.saveDietPlan(plan)
+            // Convert template meals to data tuples
+            let mealData = template.meals.map { meal in
+                let daysOfWeek = meal.days.map { dayName -> Int in
+                    let days = ["Sun": 1, "Mon": 2, "Tue": 3, "Wed": 4, "Thu": 5, "Fri": 6, "Sat": 7]
+                    return days[dayName] ?? 1
+                }
+                let formatter = DateFormatter()
+                formatter.dateFormat = "h:mm a"
+                let time = formatter.date(from: meal.time) ?? Date()
+                
+                return (name: meal.name, category: meal.category, time: time, daysOfWeek: daysOfWeek)
+            }
+            
+            // Use repository to create plan
+            let plan = try dietPlanRepository.createDietPlan(
+                name: template.name,
+                description: template.description,
+                isActive: true,
+                dailyCalorieGoal: nil,
+                scheduledMeals: mealData
+            )
             
             // Schedule reminders before calling onUse
             let reminderService = MealReminderService.shared(context: modelContext)
             do {
                 try await reminderService.requestAuthorization()
                 try await reminderService.scheduleAllReminders()
-                
-                // Count scheduled reminders for feedback
-                let totalReminders = plan.scheduledMeals.count
-                print("✅ Successfully scheduled \(totalReminders) meal reminders from template")
             } catch {
                 print("⚠️ Failed to schedule reminders: \(error)")
-                // Continue anyway - diet plan is saved
             }
             
             onUse(plan)
@@ -268,8 +322,10 @@ struct DietPlanTemplate: Identifiable {
         }
     }
     
-    func createDietPlan() -> DietPlan {
-        let scheduledMeals = meals.map { templateMeal in
+    /// Creates standalone ScheduledMeal objects without a parent DietPlan.
+    /// Use this to avoid SwiftData auto-insertion issues.
+    func createScheduledMeals() -> [ScheduledMeal] {
+        return meals.map { templateMeal in
             let daysOfWeek = templateMeal.days.map { dayNameToInt($0) }
             let time = parseTime(templateMeal.time)
             
@@ -280,14 +336,6 @@ struct DietPlanTemplate: Identifiable {
                 daysOfWeek: daysOfWeek
             )
         }
-        
-        return DietPlan(
-            name: name,
-            planDescription: description,
-            isActive: true,
-            dailyCalorieGoal: nil, // Can be set later in editor
-            scheduledMeals: scheduledMeals
-        )
     }
     
     private func dayNameToInt(_ day: String) -> Int {

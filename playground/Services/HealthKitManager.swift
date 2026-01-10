@@ -169,16 +169,22 @@ final class HealthKitManager {
     // MARK: - Fetch Today's Data
     
     func fetchTodayData() async {
+        await fetchData(for: Date())
+    }
+    
+    /// Fetches HealthKit data for a specific date
+    /// - Parameter date: The date to fetch data for
+    func fetchData(for date: Date) async {
         guard healthStore != nil else { return }
         
-        async let stepsResult = fetchStepsValue()
-        async let caloriesResult = fetchActiveCaloriesValue()
-        async let exerciseResult = fetchExerciseMinutesValue()
-        async let standResult = fetchStandHoursValue()
-        async let heartRateResult = fetchHeartRateValue()
-        async let distanceResult = fetchDistanceValue()
-        async let sleepResult = fetchSleepValue()
-        async let waterResult = fetchWaterIntakeValue()
+        async let stepsResult = fetchStepsValue(for: date)
+        async let caloriesResult = fetchActiveCaloriesValue(for: date)
+        async let exerciseResult = fetchExerciseMinutesValue(for: date)
+        async let standResult = fetchStandHoursValue(for: date)
+        async let heartRateResult = fetchHeartRateValue(for: date)
+        async let distanceResult = fetchDistanceValue(for: date)
+        async let sleepResult = fetchSleepValue(for: date)
+        async let waterResult = fetchWaterIntakeValue(for: date)
         
         let results = await (stepsResult, caloriesResult, exerciseResult, standResult, heartRateResult, distanceResult, sleepResult, waterResult)
         
@@ -194,43 +200,47 @@ final class HealthKitManager {
     
     // MARK: - Steps
     
-    private func fetchStepsValue() async -> Int {
+    private func fetchStepsValue(for date: Date = Date()) async -> Int {
         let stepType = HKQuantityType(.stepCount)
-        let value = await fetchTodaySum(for: stepType, unit: .count())
+        let value = await fetchDaySum(for: stepType, unit: .count(), date: date)
         return Int(value)
     }
     
     // MARK: - Active Calories
     
-    private func fetchActiveCaloriesValue() async -> Int {
+    private func fetchActiveCaloriesValue(for date: Date = Date()) async -> Int {
         let calorieType = HKQuantityType(.activeEnergyBurned)
-        let value = await fetchTodaySum(for: calorieType, unit: .kilocalorie())
+        let value = await fetchDaySum(for: calorieType, unit: .kilocalorie(), date: date)
         return Int(value)
     }
     
     // MARK: - Exercise Minutes
     
-    private func fetchExerciseMinutesValue() async -> Int {
+    private func fetchExerciseMinutesValue(for date: Date = Date()) async -> Int {
         let exerciseType = HKQuantityType(.appleExerciseTime)
-        let value = await fetchTodaySum(for: exerciseType, unit: .minute())
+        let value = await fetchDaySum(for: exerciseType, unit: .minute(), date: date)
         return Int(value)
     }
     
     // MARK: - Stand Hours
     
-    private func fetchStandHoursValue() async -> Int {
+    private func fetchStandHoursValue(for date: Date = Date()) async -> Int {
         let standType = HKQuantityType(.appleStandTime)
-        let value = await fetchTodaySum(for: standType, unit: .minute())
+        let value = await fetchDaySum(for: standType, unit: .minute(), date: date)
         return Int(value / 60)
     }
     
     // MARK: - Heart Rate
     
-    private func fetchHeartRateValue() async -> Int {
+    private func fetchHeartRateValue(for date: Date = Date()) async -> Int {
         guard let store = healthStore else { return 0 }
         
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        let endOfDay = calendar.isDateInToday(date) ? Date() : calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? startOfDay
+        
         let heartRateType = HKQuantityType(.heartRate)
-        let predicate = HKQuery.predicateForSamples(withStart: Calendar.current.startOfDay(for: Date()), end: Date())
+        let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: endOfDay)
         
         return await withCheckedContinuation { continuation in
             let query = HKStatisticsQuery(
@@ -247,24 +257,25 @@ final class HealthKitManager {
     
     // MARK: - Distance
     
-    private func fetchDistanceValue() async -> Double {
+    private func fetchDistanceValue(for date: Date = Date()) async -> Double {
         let distanceType = HKQuantityType(.distanceWalkingRunning)
-        return await fetchTodaySum(for: distanceType, unit: .meterUnit(with: .kilo))
+        return await fetchDaySum(for: distanceType, unit: .meterUnit(with: .kilo), date: date)
     }
     
     // MARK: - Sleep
     
-    private func fetchSleepValue() async -> Double {
+    private func fetchSleepValue(for date: Date = Date()) async -> Double {
         guard let store = healthStore else { return 0 }
         
         let sleepType = HKCategoryType(.sleepAnalysis)
         let calendar = Calendar.current
-        let now = Date()
-        guard let startOfYesterday = calendar.date(byAdding: .day, value: -1, to: calendar.startOfDay(for: now)) else {
+        let startOfDay = calendar.startOfDay(for: date)
+        guard let startOfYesterday = calendar.date(byAdding: .day, value: -1, to: startOfDay) else {
             return 0
         }
         
-        let predicate = HKQuery.predicateForSamples(withStart: startOfYesterday, end: now)
+        let endOfDay = calendar.isDateInToday(date) ? Date() : calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? startOfDay
+        let predicate = HKQuery.predicateForSamples(withStart: startOfYesterday, end: endOfDay)
         
         return await withCheckedContinuation { continuation in
             let query = HKSampleQuery(
@@ -294,19 +305,20 @@ final class HealthKitManager {
     
     // MARK: - Water Intake
     
-    private func fetchWaterIntakeValue() async -> Double {
+    private func fetchWaterIntakeValue(for date: Date = Date()) async -> Double {
         let waterType = HKQuantityType(.dietaryWater)
-        return await fetchTodaySum(for: waterType, unit: .liter())
+        return await fetchDaySum(for: waterType, unit: .liter(), date: date)
     }
     
     // MARK: - Helper Methods
     
-    private func fetchTodaySum(for quantityType: HKQuantityType, unit: HKUnit) async -> Double {
+    private func fetchDaySum(for quantityType: HKQuantityType, unit: HKUnit, date: Date) async -> Double {
         guard let store = healthStore else { return 0 }
         
         let calendar = Calendar.current
-        let startOfDay = calendar.startOfDay(for: Date())
-        let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: Date())
+        let startOfDay = calendar.startOfDay(for: date)
+        let endOfDay = calendar.isDateInToday(date) ? Date() : calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? startOfDay
+        let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: endOfDay)
         
         return await withCheckedContinuation { continuation in
             let query = HKStatisticsQuery(

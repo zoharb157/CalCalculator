@@ -8,6 +8,10 @@
 import SwiftUI
 
 struct HealthKitCard: View {
+    // MARK: - Properties
+    
+    var selectedDate: Date = Date()
+    
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @State private var healthKitManager = HealthKitManager.shared
@@ -49,6 +53,11 @@ struct HealthKitCard: View {
         .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 4)
         .task {
             await loadHealthData()
+        }
+        .onChange(of: selectedDate) { _, newDate in
+            Task {
+                await loadHealthData(for: newDate, isInitialLoad: false)
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
             // Re-check authorization when app comes back from settings
@@ -412,23 +421,36 @@ struct HealthKitCard: View {
         }
     }
     
-    private func loadHealthData() async {
-        isLoading = true
-        animateRings = false
+    private func loadHealthData(for date: Date? = nil, isInitialLoad: Bool = true) async {
+        // Only show loading state on initial load, not on date changes
+        if isInitialLoad {
+            isLoading = true
+            animateRings = false
+        } else {
+            // For date changes, smoothly animate rings to 0 first
+            withAnimation(.easeOut(duration: 0.25)) {
+                animateRings = false
+            }
+            // Small delay to let the "collapse" animation complete
+            try? await Task.sleep(nanoseconds: 150_000_000) // 0.15 seconds
+        }
         
         // Check current status without requesting permission
         healthKitManager.checkCurrentAuthorizationStatus()
         
-        // If already authorized, fetch data
+        // If already authorized, fetch data for the specified date
         if healthKitManager.isAuthorized {
-            await healthKitManager.fetchTodayData()
+            let targetDate = date ?? selectedDate
+            await healthKitManager.fetchData(for: targetDate)
             
-            withAnimation(.easeOut(duration: 1.0)) {
+            withAnimation(.easeOut(duration: 0.8)) {
                 animateRings = true
             }
         }
         
-        isLoading = false
+        if isInitialLoad {
+            isLoading = false
+        }
     }
     
     // MARK: - Formatting
@@ -459,41 +481,48 @@ private struct ActivityRing: View {
     let lineWidth: CGFloat
     
     var body: some View {
-        ZStack {
-            // Background ring
-            Circle()
-                .stroke(ringColor.opacity(0.2), lineWidth: lineWidth)
+        GeometryReader { geometry in
+            let size = min(geometry.size.width, geometry.size.height)
+            let radius = (size - lineWidth) / 2
             
-            // Progress ring
-            Circle()
-                .trim(from: 0, to: progress)
-                .stroke(
-                    AngularGradient(
-                        gradient: Gradient(colors: [
-                            ringColor,
-                            ringColor.opacity(0.8),
-                            ringColor
-                        ]),
-                        center: .center,
-                        startAngle: .degrees(0),
-                        endAngle: .degrees(360 * progress)
-                    ),
-                    style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
-                )
-                .rotationEffect(.degrees(-90))
-                .animation(.spring(response: 1.0, dampingFraction: 0.8), value: progress)
-            
-            // End cap glow effect
-            if progress > 0.05 {
+            ZStack {
+                // Background ring
                 Circle()
-                    .fill(ringColor)
-                    .frame(width: lineWidth, height: lineWidth)
-                    .offset(y: -((100 - lineWidth) / 2) * (lineWidth == 12 ? 1 : (lineWidth == 12 ? 0.72 : 0.44)))
-                    .rotationEffect(.degrees(360 * progress - 90))
-                    .shadow(color: ringColor.opacity(0.5), radius: 4)
-                    .opacity(progress > 0 ? 1 : 0)
+                    .stroke(ringColor.opacity(0.2), lineWidth: lineWidth)
+                
+                // Progress ring
+                Circle()
+                    .trim(from: 0, to: progress)
+                    .stroke(
+                        AngularGradient(
+                            gradient: Gradient(colors: [
+                                ringColor,
+                                ringColor.opacity(0.8),
+                                ringColor
+                            ]),
+                            center: .center,
+                            startAngle: .degrees(0),
+                            endAngle: .degrees(360 * progress)
+                        ),
+                        style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
+                    )
+                    .rotationEffect(.degrees(-90))
                     .animation(.spring(response: 1.0, dampingFraction: 0.8), value: progress)
+                
+//                // End cap glow effect - positioned at the end of the progress arc
+//                if progress > 0.05 {
+//                    Circle()
+//                        .fill(ringColor)
+//                        .frame(width: lineWidth, height: lineWidth)
+//                        .position(
+//                            x: size / 2 + radius * cos(CGFloat(2 * .pi * progress - .pi / 2)),
+//                            y: size / 2 + radius * sin(CGFloat(2 * .pi * progress - .pi / 2))
+//                        )
+//                        .shadow(color: ringColor.opacity(0.5), radius: 4)
+//                        .animation(.spring(response: 1.0, dampingFraction: 0.8), value: progress)
+//                }
             }
+            .frame(width: size, height: size)
         }
     }
 }

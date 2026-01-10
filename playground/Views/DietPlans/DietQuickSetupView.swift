@@ -18,11 +18,12 @@ struct DietQuickSetupView: View {
     @State private var currentStep = 0
     @State private var planName = ""
     @State private var selectedTemplate: DietPlanTemplate?
-    @State private var meals: [ScheduledMeal] = []
+    @State private var mealsData: [ScheduledMealData] = [] // Use data struct instead of @Model
     @State private var showingMealEditor = false
-    @State private var editingMeal: ScheduledMeal?
+    @State private var editingMealData: ScheduledMealData?
     @State private var showingPaywall = false
     @State private var showDeclineConfirmation = false
+    @State private var isSaving = false
     
     private var dietPlanRepository: DietPlanRepository {
         DietPlanRepository(context: modelContext)
@@ -39,8 +40,8 @@ struct DietQuickSetupView: View {
         switch currentStep {
         case 0: return !planName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         case 1: return true // Template is optional
-        case 2: return !meals.isEmpty
-        case 3: return !planName.isEmpty && !meals.isEmpty
+        case 2: return !mealsData.isEmpty
+        case 3: return !planName.isEmpty && !mealsData.isEmpty
         default: return true
         }
     }
@@ -85,16 +86,16 @@ struct DietQuickSetupView: View {
                 }
             }
             .sheet(isPresented: $showingMealEditor) {
-                ScheduledMealEditorView(
-                    meal: editingMeal,
-                    onSave: { meal in
-                        if let editing = editingMeal,
-                           let index = meals.firstIndex(where: { $0.id == editing.id }) {
-                            meals[index] = meal
+                ScheduledMealDataEditorView(
+                    mealData: editingMealData,
+                    onSave: { mealData in
+                        if let editing = editingMealData,
+                           let index = mealsData.firstIndex(where: { $0.id == editing.id }) {
+                            mealsData[index] = mealData
                         } else {
-                            meals.append(meal)
+                            mealsData.append(mealData)
                         }
-                        editingMeal = nil
+                        editingMealData = nil
                         showingMealEditor = false
                     }
                 )
@@ -266,7 +267,7 @@ struct DietQuickSetupView: View {
                         isSelected: selectedTemplate == nil
                     ) {
                         selectedTemplate = nil
-                        meals = []
+                        mealsData = []
                         HapticManager.shared.impact(.light)
                     }
                     
@@ -279,7 +280,8 @@ struct DietQuickSetupView: View {
                             isSelected: selectedTemplate?.id == template.id
                         ) {
                             selectedTemplate = template
-                            meals = template.createDietPlan().scheduledMeals
+                            // Convert template scheduled meals to ScheduledMealData to avoid SwiftData auto-insertion
+                            mealsData = template.createScheduledMeals().map { ScheduledMealData(from: $0) }
                             HapticManager.shared.impact(.light)
                         }
                     }
@@ -310,7 +312,7 @@ struct DietQuickSetupView: View {
                         .font(.title2)
                         .fontWeight(.bold)
                     
-                    Text("\(meals.count) meals scheduled")
+                    Text("\(mealsData.count) meals scheduled")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -318,7 +320,7 @@ struct DietQuickSetupView: View {
                 Spacer()
                 
                 Button {
-                    editingMeal = nil
+                    editingMealData = nil
                     showingMealEditor = true
                 } label: {
                     Image(systemName: "plus.circle.fill")
@@ -328,7 +330,7 @@ struct DietQuickSetupView: View {
             }
             .padding()
             
-            if meals.isEmpty {
+            if mealsData.isEmpty {
                 Spacer()
                 
                 VStack(spacing: 20) {
@@ -346,7 +348,7 @@ struct DietQuickSetupView: View {
                         .multilineTextAlignment(.center)
                     
                     Button {
-                        editingMeal = nil
+                        editingMealData = nil
                         showingMealEditor = true
                     } label: {
                         Label(localizationManager.localizedString(for: AppStrings.DietPlan.addScheduledMeal), systemImage: "plus.circle.fill")
@@ -361,13 +363,13 @@ struct DietQuickSetupView: View {
             } else {
                 ScrollView {
                     VStack(spacing: 12) {
-                        ForEach(meals.sorted(by: { $0.time < $1.time })) { meal in
-                            QuickSetupMealCard(meal: meal) {
-                                editingMeal = meal
+                        ForEach(mealsData.sorted(by: { $0.time < $1.time })) { mealData in
+                            QuickSetupMealDataCard(mealData: mealData) {
+                                editingMealData = mealData
                                 showingMealEditor = true
                             } onDelete: {
                                 withAnimation {
-                                    meals.removeAll { $0.id == meal.id }
+                                    mealsData.removeAll { $0.id == mealData.id }
                                 }
                             }
                         }
@@ -412,7 +414,7 @@ struct DietQuickSetupView: View {
                     summaryRow(
                         icon: "fork.knife",
                         title: localizationManager.localizedString(for: AppStrings.DietPlan.totalMeals),
-                        value: "\(meals.count)"
+                        value: "\(mealsData.count)"
                     )
                     
                     Divider()
@@ -439,33 +441,33 @@ struct DietQuickSetupView: View {
                 .padding(.horizontal)
                 
                 // Meals preview
-                if !meals.isEmpty {
+                if !mealsData.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
                         Text(localizationManager.localizedString(for: AppStrings.DietPlan.scheduledMeals))
                             .font(.headline)
                             .padding(.horizontal)
                         
                         VStack(spacing: 8) {
-                            ForEach(meals.sorted(by: { $0.time < $1.time }).prefix(4)) { meal in
+                            ForEach(mealsData.sorted(by: { $0.time < $1.time }).prefix(4)) { mealData in
                                 HStack {
-                                    Image(systemName: meal.category.icon)
+                                    Image(systemName: mealData.category.icon)
                                         .foregroundColor(.accentColor)
                                         .frame(width: 24)
                                     
-                                    Text(meal.name)
+                                    Text(mealData.name)
                                         .font(.subheadline)
                                     
                                     Spacer()
                                     
-                                    Text(meal.formattedTime)
+                                    Text(mealData.formattedTime)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
                                 .padding(.horizontal)
                             }
                             
-                            if meals.count > 4 {
-                                Text("+\(meals.count - 4) more meals")
+                            if mealsData.count > 4 {
+                                Text("+\(mealsData.count - 4) more meals")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                     .padding(.horizontal)
@@ -501,7 +503,7 @@ struct DietQuickSetupView: View {
     }
     
     private var uniqueDaysString: String {
-        let allDays = Set(meals.flatMap { $0.daysOfWeek })
+        let allDays = Set(mealsData.flatMap { $0.daysOfWeek })
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: localizationManager.currentLanguage)
         guard let dayNames = formatter.shortWeekdaySymbols else { return "" }
@@ -547,12 +549,17 @@ struct DietQuickSetupView: View {
                 }
             } label: {
                 HStack {
-                    Text(currentStep < steps.count - 1 
-                         ? localizationManager.localizedString(for: AppStrings.Common.next)
-                         : localizationManager.localizedString(for: AppStrings.DietPlan.createDietPlan))
-                    
-                    if currentStep < steps.count - 1 {
-                        Image(systemName: "chevron.right")
+                    if isSaving {
+                        ProgressView()
+                            .tint(.white)
+                    } else {
+                        Text(currentStep < steps.count - 1 
+                             ? localizationManager.localizedString(for: AppStrings.Common.next)
+                             : localizationManager.localizedString(for: AppStrings.DietPlan.createDietPlan))
+                        
+                        if currentStep < steps.count - 1 {
+                            Image(systemName: "chevron.right")
+                        }
                     }
                 }
                 .font(.body)
@@ -560,10 +567,10 @@ struct DietQuickSetupView: View {
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .background(canProceed ? Color.accentColor : Color.gray)
+                .background(canProceed && !isSaving ? Color.accentColor : Color.gray)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
-            .disabled(!canProceed)
+            .disabled(!canProceed || isSaving)
         }
         .padding()
         .background(Color(.systemGroupedBackground))
@@ -572,6 +579,9 @@ struct DietQuickSetupView: View {
     // MARK: - Actions
     
     private func createPlan() async {
+        // Prevent double-taps from triggering multiple saves
+        guard !isSaving else { return }
+        
         // Check premium subscription before saving
         guard isSubscribed else {
             showingPaywall = true
@@ -579,29 +589,31 @@ struct DietQuickSetupView: View {
             return
         }
         
+        isSaving = true
+        defer { isSaving = false }
+        
         do {
-            let plan = DietPlan(
+            // Convert mealsData to data tuples
+            let mealTuples = mealsData.map { data in
+                (name: data.name, category: data.category, time: data.time, daysOfWeek: data.daysOfWeek)
+            }
+            
+            // Use repository to create plan
+            try dietPlanRepository.createDietPlan(
                 name: planName,
-                planDescription: selectedTemplate?.description,
+                description: selectedTemplate?.description,
                 isActive: true,
                 dailyCalorieGoal: nil,
-                scheduledMeals: meals
+                scheduledMeals: mealTuples
             )
-            
-            try dietPlanRepository.saveDietPlan(plan)
             
             // Schedule reminders before dismissing
             let reminderService = MealReminderService.shared(context: modelContext)
             do {
                 try await reminderService.requestAuthorization()
                 try await reminderService.scheduleAllReminders()
-                
-                // Count scheduled reminders for feedback
-                let totalReminders = meals.count
-                print("✅ Successfully scheduled \(totalReminders) meal reminders")
             } catch {
                 print("⚠️ Failed to schedule reminders: \(error)")
-                // Continue anyway - diet plan is saved
             }
             
             NotificationCenter.default.post(name: .dietPlanChanged, object: nil)
@@ -609,6 +621,7 @@ struct DietQuickSetupView: View {
             dismiss()
         } catch {
             print("Failed to create plan: \(error)")
+            HapticManager.shared.notification(.error)
         }
     }
     
@@ -688,7 +701,77 @@ struct TemplateOptionCard: View {
     }
 }
 
-// MARK: - Quick Setup Meal Card
+// MARK: - Quick Setup Meal Data Card (works with ScheduledMealData struct)
+
+struct QuickSetupMealDataCard: View {
+    let mealData: ScheduledMealData
+    let onEdit: () -> Void
+    let onDelete: () -> Void
+    
+    private var categoryColor: Color {
+        switch mealData.category {
+        case .breakfast: return .orange
+        case .lunch: return .green
+        case .dinner: return .blue
+        case .snack: return .purple
+        }
+    }
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(categoryColor.opacity(0.15))
+                    .frame(width: 44, height: 44)
+                
+                Image(systemName: mealData.category.icon)
+                    .font(.system(size: 18))
+                    .foregroundColor(categoryColor)
+            }
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(mealData.name)
+                    .font(.headline)
+                
+                HStack(spacing: 8) {
+                    Label(mealData.formattedTime, systemImage: "clock")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    Text(mealData.dayNames)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
+            }
+            
+            Spacer()
+            
+            Menu {
+                Button {
+                    onEdit()
+                } label: {
+                    Label("Edit", systemImage: "pencil")
+                }
+                
+                Button(role: .destructive) {
+                    onDelete()
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+            } label: {
+                Image(systemName: "ellipsis.circle.fill")
+                    .font(.title2)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+}
+
+// MARK: - Quick Setup Meal Card (for backward compatibility with ScheduledMeal @Model)
 
 struct QuickSetupMealCard: View {
     let meal: ScheduledMeal

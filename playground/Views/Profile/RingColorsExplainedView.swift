@@ -77,7 +77,9 @@ struct CalendarPreviewCard: View {
     var body: some View {
         VStack(spacing: 12) {
             HStack {
-                Image(systemName: "apple.logo")
+                Image(.splashLogo)
+                    .resizable()
+                    .frame(width: 32, height: 32)
                 Text(localizationManager.localizedString(for: AppStrings.Scanning.calAI))
                     .fontWeight(.semibold)
                 

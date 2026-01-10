@@ -18,37 +18,128 @@ final class DietPlanRepository {
     
     // MARK: - Diet Plan Operations
     
-    /// Save a diet plan. Respects the plan's isActive flag.
-    /// If the plan is marked as active, all other plans will be deactivated (only one active diet plan allowed at a time).
-    /// - Parameter plan: The diet plan to save
-    /// - Parameter forceActive: If true, the plan will be set to active regardless of its current isActive value. Defaults to false.
-    /// - Throws: `DietPlanError.noMeals` if the plan has no scheduled meals
-    func saveDietPlan(_ plan: DietPlan, forceActive: Bool = false) throws {
-        // Safely access scheduledMeals relationship by creating a local copy first
-        // This prevents InvalidFutureBackingData errors
-        let scheduledMealsArray = Array(plan.scheduledMeals)
-        
-        // Validate that the plan has at least one scheduled meal
-        guard !scheduledMealsArray.isEmpty else {
+    /// Creates a new diet plan.
+    /// If the plan is marked as active, all other plans will be deactivated.
+    /// - Parameters:
+    ///   - name: The name of the diet plan
+    ///   - description: Optional description
+    ///   - isActive: Whether this plan should be active (default: true)
+    ///   - dailyCalorieGoal: Optional daily calorie goal
+    ///   - scheduledMeals: Array of meal data to create scheduled meals from
+    /// - Returns: The created DietPlan
+    /// - Throws: `DietPlanError.noMeals` if no meals are provided
+    @discardableResult
+    func createDietPlan(
+        name: String,
+        description: String?,
+        isActive: Bool = true,
+        dailyCalorieGoal: Int?,
+        scheduledMeals mealData: [(name: String, category: MealCategory, time: Date, daysOfWeek: [Int])]
+    ) throws -> DietPlan {
+        guard !mealData.isEmpty else {
             throw DietPlanError.noMeals
         }
         
-        // If forceActive is true, set the plan to active
-        if forceActive {
-            plan.isActive = true
+        // If this plan will be active, deactivate all existing active plans first
+        if isActive {
+            try deactivateAllPlans()
         }
         
-        // If this plan is being set as active, deactivate all other plans
-        if plan.isActive {
-            let existingPlans = try fetchAllDietPlans()
-            for existingPlan in existingPlans {
-                if existingPlan.id != plan.id {
-                    existingPlan.isActive = false
-                }
-            }
+        // Create fresh ScheduledMeal objects (not passed in from outside)
+        let meals = mealData.map { data in
+            ScheduledMeal(
+                name: data.name,
+                category: data.category,
+                time: data.time,
+                daysOfWeek: data.daysOfWeek
+            )
         }
+        
+        // Create the new plan
+        let plan = DietPlan(
+            name: name,
+            planDescription: description,
+            isActive: isActive,
+            dailyCalorieGoal: dailyCalorieGoal,
+            scheduledMeals: meals
+        )
         
         context.insert(plan)
+        try context.save()
+        
+        return plan
+    }
+    
+    /// Updates an existing diet plan.
+    /// If the plan is being set to active, all other plans will be deactivated.
+    /// - Parameters:
+    ///   - plan: The plan to update
+    ///   - name: New name
+    ///   - description: New description
+    ///   - isActive: Whether this plan should be active
+    ///   - dailyCalorieGoal: New calorie goal
+    ///   - scheduledMeals: New array of meal data
+    /// - Throws: `DietPlanError.noMeals` if no meals are provided
+    func updateDietPlan(
+        _ plan: DietPlan,
+        name: String,
+        description: String?,
+        isActive: Bool,
+        dailyCalorieGoal: Int?,
+        scheduledMeals mealData: [(name: String, category: MealCategory, time: Date, daysOfWeek: [Int])]
+    ) throws {
+        guard !mealData.isEmpty else {
+            throw DietPlanError.noMeals
+        }
+        
+        // If activating this plan, deactivate others first
+        if isActive {
+            try deactivateAllPlans(except: plan.id)
+        }
+        
+        // Delete old scheduled meals
+        for meal in plan.scheduledMeals {
+            context.delete(meal)
+        }
+        
+        // Create new scheduled meals
+        let meals = mealData.map { data in
+            ScheduledMeal(
+                name: data.name,
+                category: data.category,
+                time: data.time,
+                daysOfWeek: data.daysOfWeek
+            )
+        }
+        
+        // Update plan properties
+        plan.name = name
+        plan.planDescription = description
+        plan.isActive = isActive
+        plan.dailyCalorieGoal = dailyCalorieGoal
+        plan.scheduledMeals = meals
+        
+        try context.save()
+    }
+    
+    /// Activates a specific plan and deactivates all others.
+    /// - Parameter plan: The plan to activate
+    func activatePlan(_ plan: DietPlan) throws {
+        try deactivateAllPlans(except: plan.id)
+        plan.isActive = true
+        try context.save()
+    }
+    
+    /// Deactivates all plans except the one with the given ID.
+    /// - Parameter exceptId: Optional ID of plan to keep active
+    private func deactivateAllPlans(except exceptId: UUID? = nil) throws {
+        let allPlans = try fetchAllDietPlans()
+        for existingPlan in allPlans {
+            if existingPlan.id != exceptId && existingPlan.isActive {
+                existingPlan.isActive = false
+            }
+        }
+        // Save immediately to ensure deactivation persists
         try context.save()
     }
     

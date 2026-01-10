@@ -7,11 +7,12 @@
 
 import SwiftUI
 
-// MARK: - Ring Colors (matching RingColorsExplainedView)
-/// Ring color logic based on calories over goal:
-/// - Green: Less than 100 calories over goal (on track)
-/// - Yellow: 100-200 calories over goal (moderately over)
-/// - Red: More than 200 calories over goal (significantly over)
+// MARK: - Ring Colors (matching CircularProgressView)
+/// Ring color logic based on progress towards calorie goal:
+/// - Blue: Less than 50% of goal consumed
+/// - Orange: 50-79% of goal consumed
+/// - Green: 80-100% of goal consumed (on track)
+/// - Red: Over 100% of goal (exceeded)
 /// - Gray (dotted): No meals logged that day
 
 struct WeekDaysHeader: View {
@@ -76,19 +77,21 @@ struct WeekDayItem: View {
     private let ringLineWidth: CGFloat = 2
     private let selectedLineWidth: CGFloat = 3
     
-    /// Ring color based on calories over goal (matching RingColorsExplainedView)
+    /// Ring color based on progress (matching CircularProgressView)
     private var ringColor: Color {
         if !day.hasMeals {
             return .gray
         }
         
-        switch day.caloriesOverGoal {
-        case 0..<100:
-            return .green
-        case 100...200:
-            return .yellow
-        default:
+        let progress = day.progress
+        if progress > 1 {
             return .red
+        } else if progress >= 0.8 {
+            return .green
+        } else if progress >= 0.5 {
+            return .orange
+        } else {
+            return .blue
         }
     }
     
@@ -259,10 +262,11 @@ struct WeekDayItem: View {
             Text("Ring Colors:")
                 .font(.headline)
             
-            HStack(spacing: 20) {
-                legendItem(color: .green, text: "On Track")
-                legendItem(color: .yellow, text: "100-200 Over")
-                legendItem(color: .red, text: ">200 Over")
+            HStack(spacing: 16) {
+                legendItem(color: .blue, text: "<50%")
+                legendItem(color: .orange, text: "50-79%")
+                legendItem(color: .green, text: "80-100%")
+                legendItem(color: .red, text: ">100%")
             }
             
             HStack(spacing: 8) {

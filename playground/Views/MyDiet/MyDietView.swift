@@ -28,9 +28,6 @@ struct MyDietView: View {
     
     // MARK: - State
     
-    @Query(filter: #Predicate<DietPlan> { $0.isActive == true })
-    private var activeDietPlans: [DietPlan]
-    
     @Query(sort: \DietPlan.createdAt, order: .reverse)
     private var allDietPlans: [DietPlan]
     
@@ -48,11 +45,19 @@ struct MyDietView: View {
     }
     
     private var activePlan: DietPlan? {
-        activeDietPlans.first
+        allDietPlans.first(where: { $0.isActive })
+    }
+    
+    private var activeDietPlans: [DietPlan] {
+        allDietPlans.filter { $0.isActive }
     }
     
     private var inactivePlans: [DietPlan] {
-        allDietPlans.filter { !$0.isActive }
+        // Explicitly exclude the active plan by ID to prevent duplicates
+        guard let activeId = activePlan?.id else {
+            return allDietPlans.filter { !$0.isActive }
+        }
+        return allDietPlans.filter { !$0.isActive && $0.id != activeId }
     }
     
     // MARK: - Body
@@ -118,13 +123,6 @@ struct MyDietView: View {
         .sheet(isPresented: $showingPlansList) {
             DietPlansListView()
         }
-        .confirmationDialog(
-            localizationManager.localizedString(for: AppStrings.DietPlan.switchPlan),
-            isPresented: $showingPlanSwitcher,
-            titleVisibility: .visible
-        ) {
-            planSwitcherOptions
-        }
         .fullScreenCover(isPresented: $showingPaywall) {
             paywallView
         }
@@ -146,8 +144,8 @@ struct MyDietView: View {
             viewModel.configure(modelContext: modelContext, activePlans: activeDietPlans)
             await viewModel.loadAllData()
         }
-        .onChange(of: activeDietPlans) { _, newPlans in
-            viewModel.activePlans = newPlans
+        .onChange(of: allDietPlans) { _, _ in
+            viewModel.activePlans = activeDietPlans
             Task {
                 await viewModel.loadAllData()
             }
@@ -249,6 +247,13 @@ struct MyDietView: View {
             )
         }
         .buttonStyle(.plain)
+        .confirmationDialog(
+            localizationManager.localizedString(for: AppStrings.DietPlan.switchPlan),
+            isPresented: $showingPlanSwitcher,
+            titleVisibility: .visible
+        ) {
+            planSwitcherOptions
+        }
     }
     
     // MARK: - Plan Switcher Options
@@ -283,14 +288,8 @@ struct MyDietView: View {
         }
         
         do {
-            // Deactivate all other plans
-            for existingPlan in allDietPlans where existingPlan.id != plan.id {
-                existingPlan.isActive = false
-            }
-            
-            // Activate the selected plan
-            plan.isActive = true
-            try modelContext.save()
+            // Use repository to activate plan (handles deactivating others)
+            try dietPlanRepository.activatePlan(plan)
             
             // Reschedule reminders
             Task {

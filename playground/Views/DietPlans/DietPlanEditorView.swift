@@ -8,12 +8,48 @@ import SwiftUI
 import SwiftData
 import SDK
 
+/// Lightweight struct to hold meal data without SwiftData auto-insertion
+struct ScheduledMealData: Identifiable {
+    let id: UUID
+    var name: String
+    var category: MealCategory
+    var time: Date
+    var daysOfWeek: [Int]
+    
+    init(id: UUID = UUID(), name: String, category: MealCategory, time: Date, daysOfWeek: [Int]) {
+        self.id = id
+        self.name = name
+        self.category = category
+        self.time = time
+        self.daysOfWeek = daysOfWeek
+    }
+    
+    init(from meal: ScheduledMeal) {
+        self.id = meal.id
+        self.name = meal.name
+        self.category = meal.category
+        self.time = meal.time
+        self.daysOfWeek = meal.daysOfWeek
+    }
+    
+    var formattedTime: String {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter.string(from: time)
+    }
+    
+    var dayNames: String {
+        let dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+        return daysOfWeek.sorted().map { dayNames[$0 - 1] }.joined(separator: ", ")
+    }
+}
+
 struct DietPlanEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.isSubscribed) private var isSubscribed
     @Environment(TheSDK.self) private var sdk
-    @Query(filter: #Predicate<DietPlan> { $0.isActive == true }) private var existingActivePlans: [DietPlan]
+    @Query(sort: \DietPlan.createdAt) private var allDietPlans: [DietPlan]
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     let plan: DietPlan?
@@ -24,12 +60,12 @@ struct DietPlanEditorView: View {
     @State private var planDescription: String
     @State private var isActive: Bool
     @State private var dailyCalorieGoal: String
-    @State private var scheduledMeals: [ScheduledMeal]
+    @State private var scheduledMealsData: [ScheduledMealData] // Use data struct instead of @Model
     @State private var showingAddMeal = false
-    @State private var editingMeal: ScheduledMeal?
+    @State private var editingMealData: ScheduledMealData?
     @State private var showNoMealsAlert = false
     @State private var showDeleteMealConfirmation = false
-    @State private var mealToDelete: ScheduledMeal?
+    @State private var mealDataToDelete: ScheduledMealData?
     @State private var showingPaywall = false
     @State private var showDeclineConfirmation = false
     @State private var isSaving = false
@@ -40,17 +76,21 @@ struct DietPlanEditorView: View {
         plan == nil
     }
     
+    private var hasOtherActivePlan: Bool {
+        allDietPlans.contains { $0.isActive && $0.id != plan?.id }
+    }
+    
     private var willReplaceExisting: Bool {
-        isCreatingNewPlan && isActive && !existingActivePlans.isEmpty && existingActivePlans.first?.id != plan?.id
+        isCreatingNewPlan && isActive && hasOtherActivePlan
     }
     
     // Computed properties for summary
     private var totalMealsPerWeek: Int {
-        scheduledMeals.reduce(0) { $0 + $1.daysOfWeek.count }
+        scheduledMealsData.reduce(0) { $0 + $1.daysOfWeek.count }
     }
     
     private var uniqueDays: Set<Int> {
-        Set(scheduledMeals.flatMap { $0.daysOfWeek })
+        Set(scheduledMealsData.flatMap { $0.daysOfWeek })
     }
     
     init(plan: DietPlan?, repository: DietPlanRepository, isEmbedded: Bool = false) {
@@ -61,7 +101,8 @@ struct DietPlanEditorView: View {
         _planDescription = State(initialValue: plan?.planDescription ?? "")
         _isActive = State(initialValue: plan?.isActive ?? true)
         _dailyCalorieGoal = State(initialValue: plan?.dailyCalorieGoal.map { String($0) } ?? "")
-        _scheduledMeals = State(initialValue: plan?.scheduledMeals ?? [])
+        // Convert ScheduledMeal @Model objects to lightweight data structs to avoid SwiftData auto-insertion
+        _scheduledMealsData = State(initialValue: plan?.scheduledMeals.map { ScheduledMealData(from: $0) } ?? [])
     }
     
     var body: some View {
@@ -76,7 +117,7 @@ struct DietPlanEditorView: View {
                 planDetailsSection
                 
                 // Quick summary card
-                if !scheduledMeals.isEmpty {
+                if !scheduledMealsData.isEmpty {
                     planSummaryCard
                 }
                 
@@ -110,33 +151,23 @@ struct DietPlanEditorView: View {
                             .fontWeight(.semibold)
                     }
                 }
-                .disabled(name.isEmpty || scheduledMeals.isEmpty || isSaving)
+                .disabled(name.isEmpty || scheduledMealsData.isEmpty || isSaving)
             }
         }
         .sheet(isPresented: $showingAddMeal) {
-            ScheduledMealEditorView(
-                meal: nil,
-                onSave: { meal in
-                    scheduledMeals.append(meal)
-                    // Schedule reminder immediately for new meal
-                    Task {
-                        let reminderService = MealReminderService.shared(context: modelContext)
-                        do {
-                            try await reminderService.requestAuthorization()
-                            try await reminderService.scheduleReminder(for: meal)
-                        } catch {
-                            print("Failed to schedule reminder for new meal: \(error)")
-                        }
-                    }
+            ScheduledMealDataEditorView(
+                mealData: nil,
+                onSave: { mealData in
+                    scheduledMealsData.append(mealData)
                 }
             )
         }
-        .sheet(item: $editingMeal) { meal in
-            ScheduledMealEditorView(
-                meal: meal,
-                onSave: { updatedMeal in
-                    if let index = scheduledMeals.firstIndex(where: { $0.id == meal.id }) {
-                        scheduledMeals[index] = updatedMeal
+        .sheet(item: $editingMealData) { mealData in
+            ScheduledMealDataEditorView(
+                mealData: mealData,
+                onSave: { updatedMealData in
+                    if let index = scheduledMealsData.firstIndex(where: { $0.id == mealData.id }) {
+                        scheduledMealsData[index] = updatedMealData
                     }
                 }
             )
@@ -304,7 +335,7 @@ struct DietPlanEditorView: View {
     private var planSummaryCard: some View {
         HStack(spacing: 0) {
             summaryItem(
-                value: "\(scheduledMeals.count)",
+                value: "\(scheduledMealsData.count)",
                 label: localizationManager.localizedString(for: AppStrings.History.meals),
                 icon: "fork.knife",
                 color: .blue
@@ -376,17 +407,17 @@ struct DietPlanEditorView: View {
                 }
             }
             
-            if scheduledMeals.isEmpty {
+            if scheduledMealsData.isEmpty {
                 // Empty state
                 emptyMealsState
             } else {
                 // Meals list
                 VStack(spacing: 12) {
-                    ForEach(scheduledMeals.sorted(by: { $0.time < $1.time })) { meal in
-                        EnhancedScheduledMealRow(meal: meal) {
-                            editingMeal = meal
+                    ForEach(scheduledMealsData.sorted(by: { $0.time < $1.time })) { mealData in
+                        EnhancedScheduledMealDataRow(mealData: mealData) {
+                            editingMealData = mealData
                         } onDelete: {
-                            deleteMeal(meal)
+                            deleteMealData(mealData)
                         }
                     }
                 }
@@ -442,7 +473,10 @@ struct DietPlanEditorView: View {
     // MARK: - Actions
     
     private func savePlan() async {
-        guard !scheduledMeals.isEmpty else {
+        // Prevent double-taps from triggering multiple saves
+        guard !isSaving else { return }
+        
+        guard !scheduledMealsData.isEmpty else {
             showNoMealsAlert = true
             HapticManager.shared.notification(.error)
             return
@@ -461,41 +495,30 @@ struct DietPlanEditorView: View {
         do {
             let calorieGoal = dailyCalorieGoal.isEmpty ? nil : Int(dailyCalorieGoal)
             
+            // Convert scheduledMealsData to meal data tuples
+            let mealData = scheduledMealsData.map { data in
+                (name: data.name, category: data.category, time: data.time, daysOfWeek: data.daysOfWeek)
+            }
+            
             if let existingPlan = plan {
-                // Update existing plan
-                existingPlan.name = name
-                existingPlan.planDescription = planDescription.isEmpty ? nil : planDescription
-                existingPlan.isActive = isActive
-                existingPlan.dailyCalorieGoal = calorieGoal
-                existingPlan.scheduledMeals = scheduledMeals
-                
-                // If activating this plan, deactivate others
-                if isActive {
-                    for otherPlan in existingActivePlans where otherPlan.id != existingPlan.id {
-                        otherPlan.isActive = false
-                    }
-                }
-                
-                try modelContext.save()
-            } else {
-                // Create new plan
-                let newPlan = DietPlan(
+                // Update existing plan using repository
+                try repository.updateDietPlan(
+                    existingPlan,
                     name: name,
-                    planDescription: planDescription.isEmpty ? nil : planDescription,
+                    description: planDescription.isEmpty ? nil : planDescription,
                     isActive: isActive,
                     dailyCalorieGoal: calorieGoal,
-                    scheduledMeals: scheduledMeals
+                    scheduledMeals: mealData
                 )
-                
-                // If activating this plan, deactivate others
-                if isActive {
-                    for otherPlan in existingActivePlans {
-                        otherPlan.isActive = false
-                    }
-                }
-                
-                modelContext.insert(newPlan)
-                try modelContext.save()
+            } else {
+                // Create new plan using repository
+                try repository.createDietPlan(
+                    name: name,
+                    description: planDescription.isEmpty ? nil : planDescription,
+                    isActive: isActive,
+                    dailyCalorieGoal: calorieGoal,
+                    scheduledMeals: mealData
+                )
             }
             
             // Schedule reminders
@@ -503,7 +526,6 @@ struct DietPlanEditorView: View {
             do {
                 try await reminderService.requestAuthorization()
                 try await reminderService.scheduleAllReminders()
-                print("Successfully scheduled meal reminders")
             } catch {
                 print("Failed to schedule reminders: \(error)")
             }
@@ -517,6 +539,7 @@ struct DietPlanEditorView: View {
                 HapticManager.shared.notification(.error)
             } else {
                 print("Failed to save diet plan: \(error)")
+                HapticManager.shared.notification(.error)
             }
         } catch {
             print("Failed to save diet plan: \(error)")
@@ -524,16 +547,10 @@ struct DietPlanEditorView: View {
         }
     }
     
-    private func deleteMeal(_ meal: ScheduledMeal) {
-        Task {
-            let reminderService = MealReminderService.shared(context: modelContext)
-            await reminderService.cancelReminders(for: meal)
-            try? await reminderService.scheduleAllReminders()
-        }
-        
-        if let index = scheduledMeals.firstIndex(where: { $0.id == meal.id }) {
+    private func deleteMealData(_ mealData: ScheduledMealData) {
+        if let index = scheduledMealsData.firstIndex(where: { $0.id == mealData.id }) {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                _ = scheduledMeals.remove(at: index)
+                _ = scheduledMealsData.remove(at: index)
             }
         }
         HapticManager.shared.notification(.success)
@@ -556,7 +573,408 @@ struct DietPlanEditorView: View {
     }
 }
 
-// MARK: - Enhanced Scheduled Meal Row
+// MARK: - Enhanced Scheduled Meal Data Row (works with ScheduledMealData struct)
+
+struct EnhancedScheduledMealDataRow: View {
+    let mealData: ScheduledMealData
+    let onTap: () -> Void
+    let onDelete: () -> Void
+    
+    @State private var showDeleteConfirmation = false
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // Category icon
+            ZStack {
+                Circle()
+                    .fill(categoryColor.opacity(0.15))
+                    .frame(width: 44, height: 44)
+                
+                Image(systemName: mealData.category.icon)
+                    .font(.system(size: 18))
+                    .foregroundColor(categoryColor)
+            }
+            
+            // Meal info
+            VStack(alignment: .leading, spacing: 4) {
+                Text(mealData.name)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                
+                HStack(spacing: 12) {
+                    Label(mealData.formattedTime, systemImage: "clock")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    Label(mealData.dayNames, systemImage: "calendar")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
+            }
+            
+            Spacer()
+            
+            // Actions
+            HStack(spacing: 8) {
+                Button {
+                    onTap()
+                } label: {
+                    Image(systemName: "pencil.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(.blue)
+                }
+                
+                Button {
+                    showDeleteConfirmation = true
+                } label: {
+                    Image(systemName: "trash.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(.red.opacity(0.8))
+                }
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .confirmationDialog(
+            "Delete Meal",
+            isPresented: $showDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                onDelete()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Are you sure you want to delete \"\(mealData.name)\"?")
+        }
+    }
+    
+    private var categoryColor: Color {
+        switch mealData.category {
+        case .breakfast: return .orange
+        case .lunch: return .green
+        case .dinner: return .blue
+        case .snack: return .purple
+        }
+    }
+}
+
+// MARK: - Scheduled Meal Data Editor View (works with ScheduledMealData struct)
+
+struct ScheduledMealDataEditorView: View {
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var localizationManager = LocalizationManager.shared
+    
+    let mealData: ScheduledMealData?
+    let onSave: (ScheduledMealData) -> Void
+    
+    @State private var name: String
+    @State private var category: MealCategory
+    @State private var time: Date
+    @State private var selectedDays: Set<Int> // 1 = Sunday, 7 = Saturday
+    
+    private let weekdays: [(id: Int, short: String, long: String)] = [
+        (1, "S", "Sun"),
+        (2, "M", "Mon"),
+        (3, "T", "Tue"),
+        (4, "W", "Wed"),
+        (5, "T", "Thu"),
+        (6, "F", "Fri"),
+        (7, "S", "Sat")
+    ]
+    
+    init(mealData: ScheduledMealData?, onSave: @escaping (ScheduledMealData) -> Void) {
+        self.mealData = mealData
+        self.onSave = onSave
+        
+        if let mealData = mealData {
+            _name = State(initialValue: mealData.name)
+            _category = State(initialValue: mealData.category)
+            _time = State(initialValue: mealData.time)
+            _selectedDays = State(initialValue: Set(mealData.daysOfWeek))
+        } else {
+            _name = State(initialValue: "")
+            _category = State(initialValue: .breakfast)
+            _time = State(initialValue: Date())
+            _selectedDays = State(initialValue: [])
+        }
+    }
+    
+    private var isValid: Bool {
+        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !selectedDays.isEmpty
+    }
+    
+    var body: some View {
+        let _ = localizationManager.currentLanguage
+        
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 24) {
+                    mealDetailsSection
+                    categorySection
+                    timeSection
+                    daysSection
+                    quickSelectSection
+                }
+                .padding()
+            }
+            .background(Color(.systemGroupedBackground))
+            .navigationTitle(mealData == nil 
+                             ? localizationManager.localizedString(for: AppStrings.DietPlan.newScheduledMeal) 
+                             : localizationManager.localizedString(for: AppStrings.DietPlan.editScheduledMeal))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button {
+                        saveMeal()
+                    } label: {
+                        Text(localizationManager.localizedString(for: AppStrings.Common.save))
+                            .fontWeight(.semibold)
+                    }
+                    .disabled(!isValid)
+                }
+            }
+        }
+    }
+    
+    private var mealDetailsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader(title: localizationManager.localizedString(for: AppStrings.DietPlan.mealDetails), icon: "fork.knife")
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text(localizationManager.localizedString(for: AppStrings.DietPlan.mealName))
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
+                
+                TextField("e.g., Morning Oatmeal", text: $name)
+                    .font(.body)
+                    .padding()
+                    .background(Color(.tertiarySystemGroupedBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+            .padding()
+            .background(Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+    }
+    
+    private var categorySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader(title: "Category", icon: "tag")
+            
+            HStack(spacing: 12) {
+                ForEach(MealCategory.allCases, id: \.self) { cat in
+                    categoryButton(cat)
+                }
+            }
+        }
+    }
+    
+    private func categoryButton(_ cat: MealCategory) -> some View {
+        let isSelected = category == cat
+        
+        return Button {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                category = cat
+            }
+            HapticManager.shared.impact(.light)
+        } label: {
+            VStack(spacing: 8) {
+                ZStack {
+                    Circle()
+                        .fill(isSelected ? categoryColor(cat) : Color(.tertiarySystemGroupedBackground))
+                        .frame(width: 48, height: 48)
+                    
+                    Image(systemName: cat.icon)
+                        .font(.system(size: 20))
+                        .foregroundColor(isSelected ? .white : .secondary)
+                }
+                
+                Text(cat.displayName)
+                    .font(.caption)
+                    .fontWeight(isSelected ? .semibold : .regular)
+                    .foregroundColor(isSelected ? categoryColor(cat) : .secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(isSelected ? categoryColor(cat).opacity(0.1) : Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(isSelected ? categoryColor(cat) : Color.clear, lineWidth: 2)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+    
+    private func categoryColor(_ cat: MealCategory) -> Color {
+        switch cat {
+        case .breakfast: return .orange
+        case .lunch: return .green
+        case .dinner: return .blue
+        case .snack: return .purple
+        }
+    }
+    
+    private var timeSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader(title: localizationManager.localizedString(for: AppStrings.DietPlan.time), icon: "clock")
+            
+            DatePicker(
+                "",
+                selection: $time,
+                displayedComponents: .hourAndMinute
+            )
+            .datePickerStyle(.wheel)
+            .labelsHidden()
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+    }
+    
+    private var daysSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                sectionHeader(title: localizationManager.localizedString(for: AppStrings.DietPlan.repeatOn), icon: "calendar")
+                
+                Spacer()
+                
+                if !selectedDays.isEmpty {
+                    Text("\(selectedDays.count) days")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Color(.tertiarySystemGroupedBackground))
+                        .clipShape(Capsule())
+                }
+            }
+            
+            HStack(spacing: 8) {
+                ForEach(weekdays, id: \.id) { day in
+                    dayButton(day: day)
+                }
+            }
+            
+            if selectedDays.isEmpty {
+                HStack {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.orange)
+                    Text(localizationManager.localizedString(for: AppStrings.DietPlan.selectAtLeastOneDay))
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                }
+                .padding(.top, 4)
+            }
+        }
+    }
+    
+    private func dayButton(day: (id: Int, short: String, long: String)) -> some View {
+        let isSelected = selectedDays.contains(day.id)
+        
+        return Button {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                if isSelected {
+                    selectedDays.remove(day.id)
+                } else {
+                    selectedDays.insert(day.id)
+                }
+            }
+            HapticManager.shared.impact(.light)
+        } label: {
+            VStack(spacing: 4) {
+                Text(day.short)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(isSelected ? .white : .primary)
+            }
+            .frame(width: 44, height: 44)
+            .background(isSelected ? Color.accentColor : Color(.secondarySystemGroupedBackground))
+            .clipShape(Circle())
+            .overlay(
+                Circle()
+                    .stroke(isSelected ? Color.accentColor : Color.gray.opacity(0.2), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+    
+    private var quickSelectSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Quick Select")
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(.secondary)
+            
+            HStack(spacing: 8) {
+                quickSelectButton(title: "Weekdays", days: [2, 3, 4, 5, 6])
+                quickSelectButton(title: "Weekends", days: [1, 7])
+                quickSelectButton(title: "Every Day", days: [1, 2, 3, 4, 5, 6, 7])
+            }
+        }
+    }
+    
+    private func quickSelectButton(title: String, days: [Int]) -> some View {
+        let isSelected = Set(days) == selectedDays
+        
+        return Button {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                selectedDays = Set(days)
+            }
+            HapticManager.shared.impact(.light)
+        } label: {
+            Text(title)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(isSelected ? .white : .primary)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .frame(maxWidth: .infinity)
+                .background(isSelected ? Color.accentColor : Color(.secondarySystemGroupedBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+    
+    private func sectionHeader(title: String, icon: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.headline)
+                .foregroundColor(.accentColor)
+            
+            Text(title)
+                .font(.headline)
+                .fontWeight(.semibold)
+        }
+    }
+    
+    private func saveMeal() {
+        let daysOfWeek = Array(selectedDays).sorted()
+        
+        let updatedMealData = ScheduledMealData(
+            id: mealData?.id ?? UUID(),
+            name: name,
+            category: category,
+            time: time,
+            daysOfWeek: daysOfWeek
+        )
+        onSave(updatedMealData)
+        
+        HapticManager.shared.notification(.success)
+        dismiss()
+    }
+}
+
+// MARK: - Enhanced Scheduled Meal Row (for backward compatibility with ScheduledMeal @Model)
 
 struct EnhancedScheduledMealRow: View {
     let meal: ScheduledMeal
