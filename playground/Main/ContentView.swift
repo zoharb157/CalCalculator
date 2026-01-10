@@ -17,8 +17,13 @@ struct ContentView: View {
     @State private var authState: AuthState = .welcome
     @State private var onboardingResult: [String: Any] = [:]
     @State private var paywallItem: PaywallItem?
+    // CRITICAL: Store a stable ID for MainTabView to prevent recreation
+    // This ID is created once and never changes, so SwiftUI will reuse the same MainTabView instance
+    @State private var mainTabViewID = UUID()
     
-    private var settings = UserSettings.shared
+    // CRITICAL: Don't observe UserSettings here - it causes ContentView to update
+    // and recreate MainTabView when UserSettings changes (like after saving weight)
+    // Access UserSettings.shared directly in methods instead
     
     struct PaywallItem: Equatable, Identifiable {
         let page: Page
@@ -64,6 +69,7 @@ struct ContentView: View {
                         saveGeneratedGoals(result.goals)
                         
                         // Mark onboarding as completed and save the completion date
+                        let settings = UserSettings.shared
                         settings.completeOnboarding()
                         // Set the onboarding completion date from the result
                         if settings.onboardingCompletedDate == nil {
@@ -82,9 +88,7 @@ struct ContentView: View {
                     }
                     
                 case .authenticated:
-                    let mainTabView = MainTabView(repository: repository)
-                    mainTabView
-                        .mealReminderHandler(scanViewModel: mainTabView.scanViewModel)
+                    MainTabViewWrapper(repository: repository, id: mainTabViewID)
                 }
             } else {
                 // Initialize repository immediately without splash screen
@@ -112,7 +116,7 @@ struct ContentView: View {
                         print("✅ [ContentView] Repository created in \(String(format: "%.3f", repoTime))s")
                         
                         // Check if onboarding is already completed
-                        if settings.hasCompletedOnboarding {
+                        if UserSettings.shared.hasCompletedOnboarding {
                             authState = .authenticated
                         }
                     }
@@ -297,4 +301,31 @@ struct ContentView: View {
             ],
             inMemory: true
         )
+}
+
+// MARK: - MainTabViewWrapper
+/// Wrapper to prevent MainTabView from being recreated when ContentView updates
+/// This ensures tab selection is preserved when UserSettings changes (like after saving weight)
+private struct MainTabViewWrapper: View {
+    let repository: MealRepository
+    let id: UUID
+    
+    @State private var mainTabView: MainTabView?
+    
+    var body: some View {
+        Group {
+            if let mainTabView = mainTabView {
+                mainTabView
+                    .mealReminderHandler(scanViewModel: mainTabView.scanViewModel)
+                    .id(id)
+            } else {
+                Color.clear
+                    .onAppear {
+                        if self.mainTabView == nil {
+                            self.mainTabView = MainTabView(repository: repository)
+                        }
+                    }
+            }
+        }
+    }
 }

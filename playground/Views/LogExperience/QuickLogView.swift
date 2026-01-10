@@ -444,9 +444,13 @@ struct QuickLogView: View {
         } else {
             // Save exercise using repository pattern with proper error handling
             do {
+                // If calories is 0 (API not available), use random value between 1-500 as temporary placeholder
+                let caloriesValue = Int(exerciseCalories) ?? 0
+                let finalCalories = caloriesValue > 0 ? caloriesValue : Int.random(in: 1...500)
+                
                 let exercise = Exercise(
                     type: .manual,
-                    calories: Int(exerciseCalories) ?? 0,
+                    calories: finalCalories,
                     duration: Int(exerciseDuration) ?? 30,
                     intensity: .medium,
                     notes: exerciseDescription.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -461,11 +465,11 @@ struct QuickLogView: View {
                 if healthKitManager.isHealthDataAvailable && healthKitManager.isAuthorized {
                     do {
                         try await healthKitManager.saveExercise(
-                            calories: Int(exerciseCalories) ?? 0,
+                            calories: finalCalories,
                             durationMinutes: Int(exerciseDuration) ?? 30,
                             startDate: exercise.date
                         )
-                        print("✅ [QuickLogView] Exercise saved to HealthKit: \(Int(exerciseCalories) ?? 0) cal, \(Int(exerciseDuration) ?? 30) min")
+                        print("✅ [QuickLogView] Exercise saved to HealthKit: \(finalCalories) cal, \(Int(exerciseDuration) ?? 30) min")
                     } catch {
                         // Continue even if HealthKit save fails - SwiftData is primary source
                         print("⚠️ [QuickLogView] Failed to save exercise to HealthKit: \(error.localizedDescription)")

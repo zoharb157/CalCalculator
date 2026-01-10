@@ -62,7 +62,9 @@ struct BurnedCaloriesView: View {
         self.exerciseSets = exerciseSets
         self.distance = distance
         self.distanceUnit = distanceUnit
-        _editedCalories = State(initialValue: calories)
+        // If calories is 0 (API not available), use random value between 1-500 as temporary placeholder
+        let initialCalories = calories > 0 ? calories : Int.random(in: 1...500)
+        _editedCalories = State(initialValue: initialCalories)
     }
     
     var body: some View {

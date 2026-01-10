@@ -10,7 +10,7 @@ import SwiftUI
 struct WeightInputSheet: View {
     let currentWeight: Double
     let unit: String
-    let onSave: (Double) -> Void
+    let onSave: (Double) async -> Void
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @Environment(\.dismiss) private var dismiss
@@ -85,8 +85,12 @@ struct WeightInputSheet: View {
                 // Save Button pinned to bottom
                 Button {
                     if let weight = Double(weightValue), weight > 0 {
-                        onSave(weight)
-                        dismiss()
+                        Task {
+                            // Call onSave and wait for it to complete
+                            await onSave(weight)
+                            // Dismiss after save completes
+                            dismiss()
+                        }
                     }
                 } label: {
                     Text(localizationManager.localizedString(for: AppStrings.Progress.saveWeight))
@@ -129,6 +133,6 @@ struct WeightInputSheet: View {
     WeightInputSheet(
         currentWeight: 75.5,
         unit: "kg",
-        onSave: { _ in }
+        onSave: { _ in await Task {} }
     )
 }

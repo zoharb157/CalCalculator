@@ -208,8 +208,18 @@ struct ProgressDashboardView: View {
                     currentWeight: settings.displayWeight,
                     unit: viewModel.weightUnit,
                     onSave: { weight in
-                        Task {
-                            await viewModel.updateWeight(weight)
+                        // CRITICAL: Save current tab before updating weight
+                        // This ensures we can restore it if TabView resets
+                        let currentTab = UserDefaults.standard.string(forKey: "selectedMainTab") ?? MainTab.progress.rawValue
+                        print("🔵 [ProgressView] Saving weight - current tab: \(currentTab)")
+                        
+                        await viewModel.updateWeight(weight)
+                        
+                        // CRITICAL: Restore tab selection after weight update
+                        // This prevents TabView from resetting to home
+                        DispatchQueue.main.async {
+                            UserDefaults.standard.set(MainTab.progress.rawValue, forKey: "selectedMainTab")
+                            print("🔵 [ProgressView] Restored tab to: \(MainTab.progress.rawValue)")
                         }
                     }
                 )

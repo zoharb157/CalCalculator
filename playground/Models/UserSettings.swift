@@ -108,6 +108,11 @@ final class UserSettings {
         )
     }
     
+    /// Returns the preferred distance unit based on metric/imperial setting
+    var preferredDistanceUnit: DistanceUnit {
+        return useMetricUnits ? .kilometers : .miles
+    }
+    
     var remainingCalories: Int {
         calorieGoal
     }
@@ -182,16 +187,6 @@ final class UserSettings {
     /// Height unit string
     var heightUnit: String {
         useMetricUnits ? "cm" : "in"
-    }
-    
-    /// Distance unit string (km or mi)
-    var distanceUnit: String {
-        useMetricUnits ? "km" : "mi"
-    }
-    
-    /// Preferred DistanceUnit based on metric setting
-    var preferredDistanceUnit: DistanceUnit {
-        useMetricUnits ? .kilometers : .miles
     }
     
     // MARK: - Initialization

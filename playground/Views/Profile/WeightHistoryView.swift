@@ -426,10 +426,13 @@ struct WeightHistoryView: View {
         )
         modelContext.insert(entry)
         
-        // Update current weight in repository if this is today's entry
+        // Update current weight in repository and UserSettings if this is today's entry
         // Repository expects weight in kg
         if Calendar.current.isDateInToday(selectedDate) {
             repository.setCurrentWeight(weightInKg)
+            // Also update UserSettings to keep it in sync
+            // This ensures all views that observe UserSettings stay updated
+            UserSettings.shared.updateWeight(weightInKg)
         }
         
         HapticManager.shared.notification(.success)
