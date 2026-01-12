@@ -150,6 +150,9 @@ struct playgroundApp: App {
                 }
                 .environment(\.isSubscribed, subscriptionStatus)  // Inject reactive subscription status
                 .task {
+                    // Debug: Log diet plans on app startup
+                    await logDietPlansOnStartup()
+                    
                     // QA Version: In Release builds, automatically enable subscription override
                     #if !DEBUG
                     let settings = UserSettings.shared
@@ -272,6 +275,26 @@ struct playgroundApp: App {
         // Reload widget timelines to reflect the change
         WidgetCenter.shared.reloadAllTimelines()
     }
+    
+    /// Logs diet plans on app startup for debugging persistence issues
+    @MainActor
+    private func logDietPlansOnStartup() async {
+        let context = modelContainer.mainContext
+        let repository = DietPlanRepository(context: context)
+        
+        do {
+            let allPlans = try repository.fetchAllDietPlans()
+            print("🍽️ [AppStartup] Found \(allPlans.count) diet plan(s) in database:")
+            for (index, plan) in allPlans.enumerated() {
+                print("  \(index + 1). '\(plan.name)' - isActive: \(plan.isActive), meals: \(plan.scheduledMeals.count), id: \(plan.id)")
+            }
+            if allPlans.isEmpty {
+                print("  (No diet plans found)")
+            }
+        } catch {
+            print("❌ [AppStartup] Failed to fetch diet plans: \(error)")
+        }
+    }
 }
 
 // MARK: - Notification Names
@@ -293,4 +316,5 @@ extension Notification.Name {
     static let foodLogged = Notification.Name("foodLogged")
     static let subscriptionStatusUpdated = Notification.Name("subscriptionStatusUpdated")
     static let homeTabTapped = Notification.Name("homeTabTapped")
+    static let showPaywall = Notification.Name("showPaywall")
 }

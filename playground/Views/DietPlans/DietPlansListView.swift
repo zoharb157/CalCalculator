@@ -291,6 +291,9 @@ struct DietPlansListView: View {
                     navigationPath.append(plan)
                 },
                 onActivate: nil,
+                onDeactivate: {
+                    deactivatePlan(plan)
+                },
                 onEdit: {
                     selectedPlanForEdit = plan
                 },
@@ -322,6 +325,7 @@ struct DietPlansListView: View {
                     onActivate: {
                         activatePlan(plan)
                     },
+                    onDeactivate: nil,
                     onEdit: {
                         selectedPlanForEdit = plan
                     },
@@ -414,6 +418,25 @@ struct DietPlansListView: View {
         }
     }
     
+    private func deactivatePlan(_ plan: DietPlan) {
+        do {
+            // Use repository to deactivate plan
+            try dietPlanRepository.deactivatePlan(plan)
+            
+            // Cancel reminders since there's no active plan
+            Task {
+                let reminderService = MealReminderService.shared(context: modelContext)
+                try? await reminderService.scheduleAllReminders()
+            }
+            
+            NotificationCenter.default.post(name: .dietPlanChanged, object: nil)
+            HapticManager.shared.notification(.success)
+        } catch {
+            print("Failed to deactivate plan: \(error)")
+            HapticManager.shared.notification(.error)
+        }
+    }
+    
     private func deletePlan(_ plan: DietPlan) {
         do {
             try dietPlanRepository.deleteDietPlan(plan)
@@ -454,6 +477,7 @@ struct DietPlanListCard: View {
     let isActive: Bool
     let onTap: () -> Void
     let onActivate: (() -> Void)?
+    let onDeactivate: (() -> Void)?
     let onEdit: () -> Void
     let onDelete: () -> Void
     
@@ -542,6 +566,18 @@ struct DietPlanListCard: View {
                         title: localizationManager.localizedString(for: AppStrings.DietPlan.activate),
                         color: .green,
                         action: onActivate
+                    )
+                    
+                    Divider()
+                        .frame(height: 24)
+                }
+                
+                if isActive, let onDeactivate = onDeactivate {
+                    actionButton(
+                        icon: "pause.circle",
+                        title: localizationManager.localizedString(for: AppStrings.DietPlan.deactivate),
+                        color: .orange,
+                        action: onDeactivate
                     )
                     
                     Divider()

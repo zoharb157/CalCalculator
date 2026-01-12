@@ -407,7 +407,7 @@ struct MealVerificationView: View {
                 
                 // Notify other parts of the app about the new meal
                 // This triggers HomeView to refresh and update widgets
-                NotificationCenter.default.post(name: .foodLogged, object: nil)
+                NotificationCenter.default.post(name: .foodLogged, object: meal.id)
                 
                 // Find the scheduled meal and evaluate goal achievement
                 let plans = try dietPlanRepository.fetchAllDietPlans()

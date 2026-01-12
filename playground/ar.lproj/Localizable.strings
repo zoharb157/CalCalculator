@@ -742,3 +742,9 @@
 
 "Finish" = "إنهاء";
 "Locked" = "مقفل";
+
+/* Diet Plan - Meal Analysis Options */
+"How would you like to log this meal?" = "كيف تريد تسجيل هذه الوجبة؟";
+"Text Log" = "تسجيل نصي";
+"Describe meal in words" = "صف وجبتك بالكلمات";
+"Search or create entry" = "البحث أو إنشاء إدخال";

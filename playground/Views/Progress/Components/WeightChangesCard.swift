@@ -2,7 +2,7 @@
 //  WeightChangesCard.swift
 //  playground
 //
-//  Weight Changes Chart Card showing changes over different timeframes with bar chart
+//  Weight Changes Chart Card showing all weight entries over time with a line chart
 //
 
 import SwiftUI
@@ -28,7 +28,7 @@ struct WeightChangeData: Identifiable {
     }
 }
 
-// MARK: - Weight Changes Chart Card
+// MARK: - Weight Changes Chart Card (Linear Chart)
 struct WeightChangesChartCard: View {
     let weightHistory: [WeightDataPoint]
     let currentWeight: Double
@@ -47,32 +47,68 @@ struct WeightChangesChartCard: View {
         useMetricUnits ? "kg" : "lbs"
     }
     
-    // Periods to display
-    private var periods: [(label: String, days: Int?)] {
-        [
-            (localizationManager.localizedString(for: AppStrings.Progress.sevenDay), 7),
-            (localizationManager.localizedString(for: AppStrings.Progress.fourteenDay), 14),
-            (localizationManager.localizedString(for: AppStrings.Progress.thirtyDay), 30),
-            (localizationManager.localizedString(for: AppStrings.Progress.ninetyDay), 90),
-            (localizationManager.localizedString(for: AppStrings.Progress.allTime), nil)
-        ]
+    // Convert and sort weight history for display
+    private var displayWeights: [WeightDataPoint] {
+        let convertedHistory: [WeightDataPoint] = useMetricUnits ? weightHistory : weightHistory.map { point in
+            WeightDataPoint(date: point.date, weight: point.weight * 2.20462, note: point.note)
+        }
+        
+        guard !convertedHistory.isEmpty else { return [] }
+        
+        // Sort by date
+        return convertedHistory.sorted { $0.date < $1.date }
     }
     
-    private var chartData: [WeightChangeData] {
-        periods.map { period in
-            let result = weightChange(for: period.days)
-            return WeightChangeData(
-                period: period.label,
-                days: period.days,
-                change: result.change,
-                hasData: result.hasChange
-            )
+    // Calculate min weight for Y-axis
+    private var minWeight: Double {
+        let weights = displayWeights.map(\.weight)
+        guard let minValue = weights.min(), let maxValue = weights.max() else { return 0 }
+        let range = maxValue - minValue
+        
+        if range == 0 || range < 0.1 {
+            return Swift.max(0, minValue - 2.0)
+        } else {
+            let padding = min(range * 0.15, 3.0)
+            return Swift.max(0, minValue - padding)
         }
     }
     
-    private var maxAbsChange: Double {
-        let maxChange = chartData.filter { $0.hasData }.map { abs($0.change) }.max() ?? 1.0
-        return max(maxChange, 0.5) // Minimum scale of 0.5 kg
+    // Calculate max weight for Y-axis
+    private var maxWeight: Double {
+        let weights = displayWeights.map(\.weight)
+        guard let minValue = weights.min(), let maxValue = weights.max() else { return 100 }
+        let range = maxValue - minValue
+        
+        if range == 0 || range < 0.1 {
+            return maxValue + 0.5
+        } else {
+            let padding = min(range * 0.15, 3.0)
+            return maxValue + padding
+        }
+    }
+    
+    // Calculate total weight change
+    private var totalWeightChange: (change: Double, hasChange: Bool) {
+        guard let first = displayWeights.first?.weight,
+              let last = displayWeights.last?.weight else {
+            return (0, false)
+        }
+        let change = last - first
+        return (change, abs(change) > 0.01)
+    }
+    
+    // Determine trend color
+    private var trendColor: Color {
+        let change = totalWeightChange.change
+        if abs(change) < 0.01 { return .blue }
+        return change > 0 ? .orange : .green
+    }
+    
+    // Determine trend icon
+    private var trendIcon: String {
+        let change = totalWeightChange.change
+        if abs(change) < 0.01 { return "minus" }
+        return change > 0 ? "arrow.up" : "arrow.down"
     }
     
     var body: some View {
@@ -92,79 +128,111 @@ struct WeightChangesChartCard: View {
                 
                 Spacer()
                 
-                // Summary badge
-                if let totalChange = chartData.last, totalChange.hasData {
+                // Total change badge
+                if totalWeightChange.hasChange {
                     HStack(spacing: 4) {
-                        Image(systemName: totalChange.icon)
+                        Image(systemName: trendIcon)
                             .font(.caption2)
-                        Text(String(format: "%.1f %@", abs(totalChange.change), weightUnit))
+                        Text(String(format: "%.1f %@", abs(totalWeightChange.change), weightUnit))
                             .font(.caption)
                             .fontWeight(.semibold)
                     }
-                    .foregroundColor(totalChange.color)
+                    .foregroundColor(trendColor)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
-                    .background(totalChange.color.opacity(0.12))
+                    .background(trendColor.opacity(0.12))
                     .clipShape(Capsule())
                 }
             }
             
-            // Chart
-            Chart(chartData) { data in
-                BarMark(
-                    x: .value("Period", data.period),
-                    y: .value("Change", data.hasData ? data.change : 0)
-                )
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: data.hasData ? 
-                            (data.change > 0 ? [.orange, .red.opacity(0.8)] : [.green, .teal.opacity(0.8)]) :
-                            [.gray.opacity(0.2), .gray.opacity(0.1)],
-                        startPoint: data.change > 0 ? .bottom : .top,
-                        endPoint: data.change > 0 ? .top : .bottom
+            // Line Chart
+            if displayWeights.isEmpty || displayWeights.count < 2 {
+                // Empty/insufficient data state
+                VStack(spacing: 12) {
+                    Image(systemName: "chart.line.uptrend.xyaxis")
+                        .font(.system(size: 40))
+                        .foregroundColor(.secondary.opacity(0.5))
+                    
+                    Text(localizationManager.localizedString(for: AppStrings.Progress.noWeightData))
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.secondary)
+                    
+                    Text(localizationManager.localizedString(for: AppStrings.Progress.saveWeightToSeeProgress))
+                        .font(.caption)
+                        .foregroundColor(.secondary.opacity(0.7))
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 180)
+            } else {
+                // Line chart showing all weight entries
+                Chart(displayWeights) { point in
+                    // Area fill under the line
+                    AreaMark(
+                        x: .value("Date", point.date),
+                        y: .value("Weight", point.weight)
                     )
-                )
-                .cornerRadius(6)
-                .annotation(position: data.change >= 0 ? .top : .bottom, spacing: 4) {
-                    if data.hasData && abs(data.change) > 0.01 {
-                        Text(String(format: "%@%.1f", data.change > 0 ? "+" : "", data.change))
-                            .font(.system(size: 10, weight: .semibold, design: .rounded))
-                            .foregroundColor(data.color)
+                    .interpolationMethod(.catmullRom)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [trendColor.opacity(0.3), trendColor.opacity(0.05)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    
+                    // Main line
+                    LineMark(
+                        x: .value("Date", point.date),
+                        y: .value("Weight", point.weight)
+                    )
+                    .interpolationMethod(.catmullRom)
+                    .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: totalWeightChange.change > 0 ? [.orange, .red.opacity(0.8)] : [.green, .teal],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    
+                    // Data points
+                    PointMark(
+                        x: .value("Date", point.date),
+                        y: .value("Weight", point.weight)
+                    )
+                    .foregroundStyle(trendColor)
+                    .symbolSize(30)
+                }
+                .chartYScale(domain: minWeight...maxWeight)
+                .chartXAxis {
+                    AxisMarks(values: .automatic(desiredCount: 4)) { value in
+                        AxisValueLabel(format: .dateTime.month(.abbreviated).day())
+                            .font(.caption2)
+                            .foregroundStyle(Color.secondary)
                     }
                 }
-            }
-            .chartYScale(domain: -maxAbsChange * 1.3 ... maxAbsChange * 1.3)
-            .chartXAxis {
-                AxisMarks { value in
-                    AxisValueLabel {
-                        if let period = value.as(String.self) {
-                            Text(period)
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
+                .chartYAxis {
+                    AxisMarks(position: .leading, values: .automatic(desiredCount: 5)) { value in
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4, 4]))
+                            .foregroundStyle(Color.gray.opacity(0.2))
+                        AxisValueLabel {
+                            if let val = value.as(Double.self) {
+                                Text(String(format: "%.1f", val))
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
                         }
                     }
                 }
-            }
-            .chartYAxis {
-                AxisMarks(position: .leading, values: .automatic(desiredCount: 5)) { value in
-                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4, 4]))
-                        .foregroundStyle(Color.gray.opacity(0.2))
-                    AxisValueLabel {
-                        if let val = value.as(Double.self) {
-                            Text(String(format: "%.1f", val))
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        }
-                    }
+                .chartPlotStyle { plotContent in
+                    plotContent
+                        .background(Color.clear)
                 }
+                .frame(height: 180)
             }
-            .chartPlotStyle { plotContent in
-                plotContent
-                    .background(Color.clear)
-            }
-            .frame(height: 180)
             
-            // Zero line indicator
+            // Legend
             HStack(spacing: 8) {
                 Circle()
                     .fill(Color.green)
@@ -188,76 +256,6 @@ struct WeightChangesChartCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
         .id(weightHistoryId)
-    }
-    
-    // MARK: - Weight Change Calculation
-    private func weightChange(for days: Int?) -> (change: Double, hasChange: Bool) {
-        guard !weightHistory.isEmpty else {
-            return (0, false)
-        }
-        
-        // Sort history by date (most recent first)
-        let sortedHistory = weightHistory.sorted { 
-            if $0.date != $1.date {
-                return $0.date > $1.date
-            }
-            return $0.weight > $1.weight
-        }
-        
-        // Get the most recent weight
-        guard let mostRecentWeight = sortedHistory.first?.weight else {
-            return (0, false)
-        }
-        
-        guard let days = days else {
-            // All Time - compare most recent with oldest weight
-            let oldestHistory = weightHistory.sorted { 
-                if $0.date != $1.date {
-                    return $0.date < $1.date
-                }
-                return $0.weight < $1.weight
-            }
-            guard let oldestWeight = oldestHistory.first?.weight else {
-                return (0, false)
-            }
-            
-            let change = mostRecentWeight - oldestWeight
-            return (change, abs(change) > 0.01)
-        }
-        
-        // For specific days, find weight at that point in time
-        let cutoffDate = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date()
-        let cutoffDayStart = Calendar.current.startOfDay(for: cutoffDate)
-        let todayStart = Calendar.current.startOfDay(for: Date())
-        
-        // Find entries before today (historical entries)
-        let historicalEntries = sortedHistory.filter { 
-            Calendar.current.startOfDay(for: $0.date) < todayStart 
-        }
-        
-        // Look for a weight entry on or before the cutoff date
-        if let weightAtDate = historicalEntries.first(where: { 
-            Calendar.current.startOfDay(for: $0.date) <= cutoffDayStart 
-        })?.weight {
-            let change = mostRecentWeight - weightAtDate
-            return (change, abs(change) > 0.01)
-        }
-        
-        // If no weight found at that date, but we have historical entries, use the oldest historical entry
-        if let oldestHistorical = historicalEntries.sorted(by: { $0.date < $1.date }).first?.weight {
-            let change = mostRecentWeight - oldestHistorical
-            return (change, abs(change) > 0.01)
-        }
-        
-        // If we only have today's entries, but there are multiple entries with different weights,
-        // compare the most recent with the oldest entry in history (even if same day)
-        if sortedHistory.count > 1 {
-            let oldestEntry = sortedHistory.last!
-            let change = mostRecentWeight - oldestEntry.weight
-            return (change, abs(change) > 0.01)
-        }
-        
-        return (0, false)
     }
 }
 

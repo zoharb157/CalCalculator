@@ -23,7 +23,13 @@ final class PersistenceController {
         let schema = Schema([
             Meal.self,
             MealItem.self,
-            DaySummary.self
+            DaySummary.self,
+            WeightEntry.self,
+            Exercise.self,
+            DietPlan.self,
+            ScheduledMeal.self,
+            MealTemplate.self,
+            MealReminder.self
         ])
         
         let modelConfiguration = ModelConfiguration(
@@ -55,6 +61,8 @@ final class PersistenceController {
             Meal.self,
             MealItem.self,
             DaySummary.self,
+            WeightEntry.self,
+            Exercise.self,
             DietPlan.self,
             ScheduledMeal.self,
             MealTemplate.self,

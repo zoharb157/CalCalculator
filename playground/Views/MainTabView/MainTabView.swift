@@ -31,8 +31,7 @@ struct MainTabView: View {
     @State private var lastTabChangeTime: Date = Date()
     @StateObject private var networkMonitor = NetworkMonitor.shared
     
-    // Diet creation state (for History tab's create diet prompt)
-    @State private var showingCreateDiet = false
+    // Paywall state
     @State private var showingPaywall = false
     @State private var showDeclineConfirmation = false
     @Environment(TheSDK.self) private var sdk
@@ -46,6 +45,13 @@ struct MainTabView: View {
     
     @Environment(\.isSubscribed) private var isSubscribed
     @Query(filter: #Predicate<DietPlan> { $0.isActive == true }) private var activeDietPlans: [DietPlan]
+    @Query private var allDietPlans: [DietPlan]
+    
+    /// User has premium subscription AND has at least one diet plan (active or not)
+    /// This controls whether the "My Diet" tab is shown
+    private var hasDietPlans: Bool {
+        !allDietPlans.isEmpty && isSubscribed
+    }
     
     /// User has premium subscription AND has at least one active diet plan
     private var hasActiveDiet: Bool {
@@ -120,8 +126,8 @@ struct MainTabView: View {
                     }
                     .tag(MainTab.progress.rawValue)
                 
-                // My Diet tab - only shown when user has premium AND active diet
-                if hasActiveDiet {
+                // My Diet tab - shown when user has premium AND any diet plan (active or not)
+                if hasDietPlans {
                     MyDietView(viewModel: myDietViewModel)
                         .tabItem {
                             Label(localizationManager.localizedString(for: AppStrings.DietPlan.myDiet), systemImage: "calendar")
@@ -133,9 +139,7 @@ struct MainTabView: View {
                 HistoryView(
                     viewModel: historyViewModel,
                     repository: repository,
-                    isSubscribed: isSubscribed,
-                    hasActiveDiet: hasActiveDiet,
-                    onCreateDiet: handleCreateDiet
+                    isSubscribed: isSubscribed
             )
             .tabItem {
                     Label(localizationManager.localizedString(for: AppStrings.History.title), systemImage: "clock.arrow.circlepath")
@@ -193,7 +197,7 @@ struct MainTabView: View {
                 lastTabChangeTime = now
             }
         }
-        .onChange(of: hasActiveDiet) { oldValue, newValue in
+        .onChange(of: hasDietPlans) { oldValue, newValue in
             // When diet tab is removed, redirect user if they were on it
             if oldValue && !newValue && selectedTabRaw == MainTab.myDiet.rawValue {
                 // User was on diet tab which is now hidden, move to history
@@ -209,9 +213,6 @@ struct MainTabView: View {
             // When home tab is tapped again, trigger scroll to top
             scrollHomeToTopTrigger = UUID()
         }
-        .sheet(isPresented: $showingCreateDiet) {
-            DietPlansListView()
-        }
         .fullScreenCover(isPresented: $showingPaywall) {
             paywallView
         }
@@ -219,12 +220,6 @@ struct MainTabView: View {
             showPaywall: $showingPaywall,
             showDeclineConfirmation: $showDeclineConfirmation
         )
-    }
-    
-    // MARK: - Actions
-    
-    private func handleCreateDiet() {
-        showingCreateDiet = true
     }
     
     // MARK: - Tab Bar Tap Detection

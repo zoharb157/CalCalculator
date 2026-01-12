@@ -759,3 +759,9 @@
 
 "Finish" = "Finish";
 "Locked" = "Locked";
+
+/* Diet Plan - Meal Analysis Options */
+"How would you like to log this meal?" = "How would you like to log this meal?";
+"Text Log" = "Text Log";
+"Describe meal in words" = "Describe meal in words";
+"Search or create entry" = "Search or create entry";

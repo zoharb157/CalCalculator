@@ -18,7 +18,11 @@ struct MealReminderActionView: View {
     let category: MealCategory
     var actionType: String? = nil // "EDIT_MEAL" or "ADD_NEW"
     
-    @State private var showingScan = false
+    @State private var showingFoodOptions = false
+    @State private var showingScanView = false
+    @State private var showingLogFoodView = false
+    @State private var showingQuickLogView = false
+    @State private var showingTextLogView = false
     @State private var selectedMeal: Meal?
     @State private var action: ReminderAction = .save
     
@@ -28,6 +32,15 @@ struct MealReminderActionView: View {
     
     private var dietPlanRepository: DietPlanRepository {
         DietPlanRepository(context: modelContext)
+    }
+    
+    private var scanViewModel: ScanViewModel {
+        ScanViewModel(
+            repository: mealRepository,
+            analysisService: CaloriesAPIService(),
+            imageStorage: .shared,
+            overrideCategory: category
+        )
     }
     
     enum ReminderAction {
@@ -74,7 +87,7 @@ struct MealReminderActionView: View {
                     
                     Button {
                         action = .edit
-                        showingScan = true
+                        showingFoodOptions = true
                     } label: {
                         Label(localizationManager.localizedString(for: AppStrings.DietPlan.editAndAddItems), systemImage: "pencil.circle.fill")
                             .frame(maxWidth: .infinity)
@@ -86,7 +99,7 @@ struct MealReminderActionView: View {
                     
                     Button {
                         action = .addNew
-                        showingScan = true
+                        showingFoodOptions = true
                     } label: {
                         Label(localizationManager.localizedString(for: AppStrings.DietPlan.addNewFood), systemImage: "plus.circle.fill")
                             .frame(maxWidth: .infinity)
@@ -121,43 +134,289 @@ struct MealReminderActionView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingScan) {
-                // Note: Full ScanView integration would require passing scanViewModel
-                // For now, show a placeholder that can be enhanced later
-                NavigationStack {
-                    VStack(spacing: 20) {
-                        Image(systemName: "camera.fill")
-                            .font(.system(size: 50))
-                            .foregroundColor(.accentColor)
-                        
-                        Text(localizationManager.localizedString(for: AppStrings.DietPlan.scanYourFood))
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                            
-                        
-                        Text(localizationManager.localizedString(for: AppStrings.DietPlan.openCameraToScan))
-                            
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
+            .sheet(isPresented: $showingFoodOptions) {
+                foodOptionsSheet
+            }
+            .sheet(isPresented: $showingScanView) {
+                ScanView(
+                    viewModel: scanViewModel,
+                    onMealSaved: {
+                        showingScanView = false
+                        markMealAsCompleted()
+                        dismiss()
+                    },
+                    onDismiss: {
+                        showingScanView = false
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color(.systemGroupedBackground))
-                    .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.addFood))
-                        
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .navigationBarLeading) {
-                            Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
-                                showingScan = false
+                )
+            }
+            .sheet(isPresented: $showingLogFoodView) {
+                LogFoodView()
+                    .onDisappear {
+                        // Check if meal was logged and mark as completed
+                        checkAndMarkCompleted()
+                    }
+            }
+            .sheet(isPresented: $showingQuickLogView) {
+                QuickLogView()
+                    .onDisappear {
+                        checkAndMarkCompleted()
+                    }
+            }
+            .sheet(isPresented: $showingTextLogView) {
+                TextFoodLogView()
+                    .onDisappear {
+                        checkAndMarkCompleted()
+                    }
+            }
+        }
+    }
+    
+    // MARK: - Food Options Sheet
+    
+    private var foodOptionsSheet: some View {
+        NavigationStack {
+            VStack(spacing: 20) {
+                // Header
+                VStack(spacing: 8) {
+                    Text(localizationManager.localizedString(for: AppStrings.DietPlan.addFood))
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                    
+                    Text(localizationManager.localizedString(for: AppStrings.DietPlan.scanOrSelectPhoto))
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(.top, 20)
+                
+                // Options Grid
+                VStack(spacing: 16) {
+                    // Scan with Camera - Primary option
+                    Button {
+                        showingFoodOptions = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            showingScanView = true
+                        }
+                    } label: {
+                        HStack(spacing: 16) {
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [.blue, .cyan],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 50, height: 50)
+                                
+                                Image(systemName: "camera.fill")
+                                    .font(.system(size: 22))
+                                    .foregroundColor(.white)
                             }
                             
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(localizationManager.localizedString(for: AppStrings.Home.scanFood))
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                
+                                Text(localizationManager.localizedString(for: AppStrings.DietPlan.openCameraToScan))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(2)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.secondary)
                         }
+                        .padding()
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .cornerRadius(16)
+                    }
+                    
+                    // Manual Food Log
+                    Button {
+                        showingFoodOptions = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            showingLogFoodView = true
+                        }
+                    } label: {
+                        HStack(spacing: 16) {
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [.green, .mint],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 50, height: 50)
+                                
+                                Image(systemName: "list.bullet.clipboard")
+                                    .font(.system(size: 22))
+                                    .foregroundColor(.white)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(localizationManager.localizedString(for: AppStrings.Food.logFood))
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                
+                                Text(localizationManager.localizedString(for: AppStrings.Food.searchOrCreate))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(2)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.secondary)
+                        }
+                        .padding()
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .cornerRadius(16)
+                    }
+                    
+                    // Quick Log
+                    Button {
+                        showingFoodOptions = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            showingQuickLogView = true
+                        }
+                    } label: {
+                        HStack(spacing: 16) {
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [.orange, .yellow],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 50, height: 50)
+                                
+                                Image(systemName: "bolt.fill")
+                                    .font(.system(size: 22))
+                                    .foregroundColor(.white)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(localizationManager.localizedString(for: AppStrings.Food.quickSave))
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                
+                                Text(localizationManager.localizedString(for: AppStrings.Food.quickSaveDescription))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(2)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.secondary)
+                        }
+                        .padding()
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .cornerRadius(16)
+                    }
+                    
+                    // Text Log
+                    Button {
+                        showingFoodOptions = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            showingTextLogView = true
+                        }
+                    } label: {
+                        HStack(spacing: 16) {
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [.purple, .indigo],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 50, height: 50)
+                                
+                                Image(systemName: "text.bubble.fill")
+                                    .font(.system(size: 22))
+                                    .foregroundColor(.white)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(localizationManager.localizedString(for: AppStrings.Food.textLog))
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                
+                                Text(localizationManager.localizedString(for: AppStrings.Food.textLogDescription))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(2)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.secondary)
+                        }
+                        .padding()
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .cornerRadius(16)
+                    }
+                }
+                .padding(.horizontal)
+                
+                Spacer()
+            }
+            .background(Color(.systemGroupedBackground))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
+                        showingFoodOptions = false
                     }
                 }
             }
         }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func markMealAsCompleted() {
+        Task {
+            do {
+                let reminder = try dietPlanRepository.fetchMealReminder(
+                    by: scheduledMealId,
+                    for: Date()
+                )
+                if let reminder = reminder {
+                    try dietPlanRepository.updateMealReminderCompletion(reminder, completedMealId: nil)
+                }
+                HapticManager.shared.notification(.success)
+            } catch {
+                print("Failed to mark meal as completed: \(error)")
+            }
+        }
+    }
+    
+    private func checkAndMarkCompleted() {
+        // Mark the scheduled meal as completed when returning from food logging
+        markMealAsCompleted()
+        dismiss()
     }
     
     private func saveFromTemplate() {
@@ -187,7 +446,7 @@ struct MealReminderActionView: View {
                 
                 // Notify other parts of the app about the new meal
                 // This triggers HomeView to refresh and update widgets
-                NotificationCenter.default.post(name: .foodLogged, object: nil)
+                NotificationCenter.default.post(name: .foodLogged, object: meal.id)
                 
                 // Mark reminder as completed
                 let reminder = try dietPlanRepository.fetchMealReminder(

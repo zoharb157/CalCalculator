@@ -238,7 +238,7 @@ struct QuickMealActionView: View {
                 
                 // Notify other parts of the app about the new meal
                 // This triggers HomeView to refresh and update widgets
-                NotificationCenter.default.post(name: .foodLogged, object: nil)
+                NotificationCenter.default.post(name: .foodLogged, object: meal.id)
                 
                 if let reminder = try dietPlanRepository.fetchMealReminder(
                     by: scheduledMealId,

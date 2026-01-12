@@ -185,12 +185,18 @@ final class LogExperienceViewModel {
     private let recentFoodsKey = "log_experience_recent_foods"
     private let savedFoodsKey = "log_experience_saved_foods"
 
-    init(repository: MealRepository, analysisService: FoodAnalysisServiceProtocol? = nil) {
+    init(repository: MealRepository, analysisService: FoodAnalysisServiceProtocol? = nil, initialCategory: MealCategory? = nil) {
         self.repository = repository
         self.analysisService = analysisService
         loadRecentFoods()
         loadSavedFoods()
-        inferCategory()
+        
+        // Use provided category or infer from time
+        if let category = initialCategory {
+            self.selectedCategory = category
+        } else {
+            inferCategory()
+        }
     }
 
     // MARK: - Category Inference
@@ -564,7 +570,8 @@ final class LogExperienceViewModel {
             addToRecentFoods(entry)
 
             // Notify that food was logged so HomeViewModel can refresh
-            NotificationCenter.default.post(name: .foodLogged, object: nil)
+            // Pass the meal ID so listeners can link to this specific meal
+            NotificationCenter.default.post(name: .foodLogged, object: meal.id)
 
             successMessage = "\(entry.name) logged successfully!"
             showSuccess = true
@@ -613,7 +620,8 @@ final class LogExperienceViewModel {
             }
 
             // Notify that food was logged so HomeViewModel can refresh
-            NotificationCenter.default.post(name: .foodLogged, object: nil)
+            // Pass the meal ID so listeners can link to this specific meal
+            NotificationCenter.default.post(name: .foodLogged, object: meal.id)
 
             // Clear analyzed foods
             analyzedFoods = []

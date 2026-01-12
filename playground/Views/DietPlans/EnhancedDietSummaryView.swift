@@ -33,6 +33,8 @@ struct EnhancedDietSummaryContent: View {
     @State private var isLoading = false
     @State private var showingInsights = false
     @State private var showingEditPlan = false
+    @State private var selectedMealForAction: ScheduledMeal?
+    @State private var showingMealActionSheet = false
     
     private var dietPlanRepository: DietPlanRepository {
         DietPlanRepository(context: modelContext)
@@ -112,6 +114,19 @@ struct EnhancedDietSummaryContent: View {
         .sheet(isPresented: $showingEditPlan) {
             if let plan = activePlans.first {
                 DietPlanEditorView(plan: plan, repository: dietPlanRepository)
+            }
+        }
+        .sheet(isPresented: $showingMealActionSheet) {
+            if let meal = selectedMealForAction {
+                MealAnalysisOptionsView(
+                    scheduledMealId: meal.id,
+                    mealName: meal.name,
+                    category: meal.category
+                )
+                .onDisappear {
+                    // Refresh data when returning from meal action
+                    loadAdherenceData()
+                }
             }
         }
     }
@@ -263,6 +278,7 @@ struct EnhancedDietSummaryContent: View {
                 let isMissed = missedMealIds.contains(meal.id)
                 let goalAchieved = data.goalAchievedMeals.contains(meal.id)
                 let goalMissed = data.goalMissedMeals.contains(meal.id)
+                let mealDetails = data.completedMealDetails[meal.id]
                 
                 ScheduledMealCard(
                     meal: meal,
@@ -270,9 +286,12 @@ struct EnhancedDietSummaryContent: View {
                     isMissed: isMissed,
                     goalAchieved: goalAchieved,
                     goalMissed: goalMissed,
+                    completedMealInfo: mealDetails,
                     onTap: {
                         if !isCompleted {
-                            completeMeal(meal)
+                            HapticManager.shared.impact(.light)
+                            selectedMealForAction = meal
+                            showingMealActionSheet = true
                         }
                     }
                 )
@@ -610,6 +629,7 @@ struct ScheduledMealCard: View {
     let isMissed: Bool
     let goalAchieved: Bool
     let goalMissed: Bool
+    var completedMealInfo: CompletedMealInfo? = nil
     var onTap: (() -> Void)? = nil
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
@@ -646,6 +666,14 @@ struct ScheduledMealCard: View {
                                 .cornerRadius(4)
                                 .id("goal-not-met-\(localizationManager.currentLanguage)")
                         }
+                    }
+                    
+                    // Show completed meal details if available
+                    if isCompleted, let mealInfo = completedMealInfo {
+                        Text(mealInfo.displayString)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
                     }
                 }
                 

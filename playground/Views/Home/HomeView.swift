@@ -321,17 +321,17 @@ struct HomeView: View {
             // Rest of the content
             ScrollViewReader { proxy in
                 List {
-            progressSection
+                    progressSection
                         .id("home-top") // Anchor point for scrolling to top
                     logExperienceSection
-                    dietPlanSection
-            macroSection
+                    macroSection
                     badgesSection
                     healthKitSection
+                    dietPlanSection
                     
                     // Recently uploaded section - show meals or empty state
                     if !viewModel.recentMeals.isEmpty {
-            mealsSection
+                        mealsSection
                     } else if Calendar.current.isDateInToday(viewModel.selectedDate) {
                         // Show empty state only for today
                         recentlyUploadedEmptySection
@@ -592,18 +592,24 @@ struct HomeView: View {
     
     @ViewBuilder
     private var dietPlanSection: some View {
-        if isSubscribed {
-            DietPlanCard()
-                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
-                .onReceive(NotificationCenter.default.publisher(for: Notification.Name("editDietPlan"))) { notification in
-                    if let plan = notification.object as? DietPlan {
-                        selectedDietPlan = plan
-                        showingEditDietPlan = true
-                    }
+        DietPlanCard(selectedDate: viewModel.selectedDate)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                HapticManager.shared.impact(.light)
+                showDietSummarySheet = true
+            }
+            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
+            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("editDietPlan"))) { notification in
+                if let plan = notification.object as? DietPlan {
+                    selectedDietPlan = plan
+                    showingEditDietPlan = true
                 }
-        }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .showPaywall)) { _ in
+                showingPaywall = true
+            }
     }
 
     private var badgesSection: some View {

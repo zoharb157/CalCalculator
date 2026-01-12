@@ -127,7 +127,7 @@ struct MealReminderHandler: ViewModifier {
             
             // Notify other parts of the app about the new meal
             // This triggers HomeView to refresh and update widgets
-            NotificationCenter.default.post(name: .foodLogged, object: nil)
+            NotificationCenter.default.post(name: .foodLogged, object: newMeal.id)
             
             // Mark reminder as completed
             if let reminder = try dietRepo.fetchMealReminder(by: scheduledMealId, for: Date()) {

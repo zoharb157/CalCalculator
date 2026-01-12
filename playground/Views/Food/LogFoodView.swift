@@ -18,10 +18,10 @@ struct LogFoodView: View {
     @State private var showingVoiceLog = false
     @FocusState private var isSearchFocused: Bool
 
-    init() {
+    init(initialCategory: MealCategory? = nil) {
         let persistence = PersistenceController.shared
         let repository = MealRepository(context: persistence.mainContext)
-        _viewModel = State(initialValue: LogExperienceViewModel(repository: repository))
+        _viewModel = State(initialValue: LogExperienceViewModel(repository: repository, initialCategory: initialCategory))
     }
 
     var body: some View {

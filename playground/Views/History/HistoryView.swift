@@ -14,17 +14,13 @@ struct HistoryView: View {
     @Bindable var viewModel: HistoryViewModel
     let repository: MealRepository
     let isSubscribed: Bool
-    let hasActiveDiet: Bool
-    let onCreateDiet: () -> Void
     
     var body: some View {
         NavigationStack {
             HistoryViewContent(
                 viewModel: viewModel,
                 repository: repository,
-                isSubscribed: isSubscribed,
-                hasActiveDiet: hasActiveDiet,
-                onCreateDiet: onCreateDiet
+                isSubscribed: isSubscribed
             )
         }
     }
@@ -37,8 +33,6 @@ struct HistoryViewContent: View {
     @Bindable var viewModel: HistoryViewModel
     let repository: MealRepository
     let isSubscribed: Bool
-    let hasActiveDiet: Bool
-    let onCreateDiet: () -> Void
     @ObservedObject private var localizationManager = LocalizationManager.shared
 
     @State private var selectedDate: SelectedDate?
@@ -79,16 +73,7 @@ struct HistoryViewContent: View {
         // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
         let _ = localizationManager.currentLanguage
         
-        ZStack(alignment: .bottom) {
-            content
-
-            // Diet creation prompt at bottom
-            if !hasActiveDiet {
-                dietPromptCard
-                    .padding()
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
-        }
+        content
         .navigationTitle(localizationManager.localizedString(for: AppStrings.History.title))
         .id("history-nav-\(localizationManager.currentLanguage)")
         .background(Color(.systemGroupedBackground))
@@ -104,15 +89,7 @@ struct HistoryViewContent: View {
         }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                if !hasActiveDiet {
-                    Button {
-                        onCreateDiet()
-                    } label: {
-                        Image(systemName: "calendar.badge.plus")
-                    }
-                } else {
-                    filterMenuButton
-                }
+                filterMenuButton
             }
         }
         .safeAreaInset(edge: .top, spacing: 0) {
@@ -238,7 +215,7 @@ struct HistoryViewContent: View {
             }
             .padding(.horizontal)
             .padding(.vertical, 8)
-            .padding(.bottom, hasActiveDiet ? 8 : 100) // Extra padding for diet prompt
+            .padding(.bottom, 8)
             .animation(.easeInOut(duration: 0.2), value: filteredSummaries.count)
         }
     }
@@ -352,51 +329,6 @@ struct HistoryViewContent: View {
         .background(Color(.systemGroupedBackground))
     }
 
-    private var dietPromptCard: some View {
-        VStack(spacing: 12) {
-            HStack {
-                Image(systemName: "calendar.badge.clock")
-                    .font(.title2)
-                    .foregroundColor(.blue)
-
-                VStack(alignment: .leading, spacing: 4) {
-                            Text(isSubscribed ? localizationManager.localizedString(for: AppStrings.History.createYourDietPlan) : localizationManager.localizedString(for: AppStrings.History.unlockDietPlans))
-                        .font(.headline)
-
-                    Text(
-                        isSubscribed
-                            ? localizationManager.localizedString(for: AppStrings.History.scheduleRepetitiveMeals)
-                            : localizationManager.localizedString(for: AppStrings.History.subscribeToCreateDietPlans)
-                    )
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                }
-
-                Spacer()
-            }
-
-            Button {
-                onCreateDiet()
-            } label: {
-                HStack {
-                    if !isSubscribed {
-                        Image(systemName: "crown.fill")
-                    }
-                    Text(isSubscribed ? localizationManager.localizedString(for: AppStrings.History.createDietPlan) : localizationManager.localizedString(for: AppStrings.History.subscribeCreate))
-                        .fontWeight(.semibold)
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(isSubscribed ? Color.blue : Color.orange)
-                .foregroundColor(.white)
-                .cornerRadius(12)
-            }
-        }
-        .padding()
-        .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
-        .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: -2)
-    }
 }
 
 
@@ -482,14 +414,9 @@ struct StatsSummaryCard: View {
                 
                 Spacer()
                 
-                Button {
-                    HapticManager.shared.impact(.light)
-                    showingChart = true
-                } label: {
-                    Image(systemName: "chart.bar.fill")
-                        .font(.title2)
-                        .foregroundColor(.blue.opacity(0.7))
-                }
+                Image(systemName: "chart.bar.fill")
+                    .font(.title2)
+                    .foregroundColor(.blue.opacity(0.7))
             }
             
             Divider()
@@ -517,6 +444,11 @@ struct StatsSummaryCard: View {
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .contentShape(Rectangle()) // Make entire card tappable
+        .onTapGesture {
+            HapticManager.shared.impact(.light)
+            showingChart = true
+        }
         .sheet(isPresented: $showingChart) {
             HistoryChartView(summaries: summaries, timeFilter: timeFilter)
         }

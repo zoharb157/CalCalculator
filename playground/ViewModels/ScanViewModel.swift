@@ -46,15 +46,22 @@ final class ScanViewModel {
     var canRetry = false
     var retryCount = 0
     private let maxRetries = 2
+    
+    // MARK: - Category Override
+    /// If set, this category will be applied to meals created from scan results
+    /// Used when scanning from diet plan scheduled meals
+    var overrideCategory: MealCategory?
 
     init(
         repository: MealRepository,
         analysisService: FoodAnalysisServiceProtocol,
-        imageStorage: ImageStorage
+        imageStorage: ImageStorage,
+        overrideCategory: MealCategory? = nil
     ) {
         self.repository = repository
         self.analysisService = analysisService
         self.imageStorage = imageStorage
+        self.overrideCategory = overrideCategory
         checkCameraPermission()
     }
 
@@ -198,6 +205,12 @@ final class ScanViewModel {
 
             print("🟢 [ScanViewModel] Meal created: \(meal.name)")
             
+            // Apply override category if set (e.g., from diet plan scheduled meal)
+            if let overrideCategory = overrideCategory {
+                meal.category = overrideCategory
+                print("🟢 [ScanViewModel] Applied override category: \(overrideCategory.rawValue)")
+            }
+            
             // Save image and get URL
             let imageURL = try imageStorage.saveImage(image, for: meal.id)
             meal.photoURL = imageURL.absoluteString
@@ -289,7 +302,8 @@ final class ScanViewModel {
             try repository.saveMeal(meal)
 
             // Notify that food was logged so HomeViewModel can refresh
-            NotificationCenter.default.post(name: .foodLogged, object: nil)
+            // Pass the meal ID so listeners can link to this specific meal
+            NotificationCenter.default.post(name: .foodLogged, object: meal.id)
             
             // Sync widget data after saving meal
             repository.syncWidgetData()

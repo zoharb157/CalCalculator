@@ -23,12 +23,14 @@ struct DietView: View {
     @State private var showingEditPlan = false
     @State private var showingInsights = false
     @State private var showingMealVerification: ScheduledMeal?
-    // ScanViewModel - computed property using repository
-    private var scanViewModel: ScanViewModel {
+    
+    // Helper to create ScanViewModel with category override for scheduled meals
+    private func createScanViewModel(forCategory category: MealCategory? = nil) -> ScanViewModel {
         ScanViewModel(
             repository: repository,
             analysisService: CaloriesAPIService(),
-            imageStorage: .shared
+            imageStorage: .shared,
+            overrideCategory: category
         )
     }
     
@@ -140,7 +142,7 @@ struct DietView: View {
                     mealName: scheduledMeal.name,
                     category: scheduledMeal.category,
                     expectedCalories: scheduledMeal.mealTemplate?.expectedCalories,
-                    scanViewModel: scanViewModel
+                    scanViewModel: createScanViewModel(forCategory: scheduledMeal.category)
                 )
             }
             .task {
@@ -323,6 +325,7 @@ struct DietView: View {
                 let isMissed = missedMealIds.contains(meal.id)
                 let goalAchieved = data.goalAchievedMeals.contains(meal.id)
                 let goalMissed = data.goalMissedMeals.contains(meal.id)
+                let mealDetails = data.completedMealDetails[meal.id]
 
                 ScheduledMealCard(
                     meal: meal,
@@ -330,6 +333,7 @@ struct DietView: View {
                     isMissed: isMissed,
                     goalAchieved: goalAchieved,
                     goalMissed: goalMissed,
+                    completedMealInfo: mealDetails,
                     onTap: {
                         if !isCompleted {
                             // Show meal verification view to allow image upload and analysis
@@ -406,7 +410,7 @@ struct DietView: View {
                 
                 // Notify other parts of the app about the new meal
                 // This triggers HomeView to refresh and update widgets
-                NotificationCenter.default.post(name: .foodLogged, object: nil)
+                NotificationCenter.default.post(name: .foodLogged, object: meal.id)
 
                 if let reminder = try dietPlanRepository.fetchMealReminder(
                     by: scheduledMeal.id,
