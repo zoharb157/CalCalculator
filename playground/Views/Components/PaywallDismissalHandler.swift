@@ -143,7 +143,11 @@ private final class SafeBindingWrapper {
     
     deinit {
         // Remove from storage when deallocated to prevent memory leaks
-        BindingWrapperStorage.shared.remove(id: wrapperId)
+        // Capture wrapperId since deinit is nonisolated and can't access MainActor properties directly
+        let id = wrapperId
+        Task { @MainActor in
+            BindingWrapperStorage.shared.remove(id: id)
+        }
     }
 }
 

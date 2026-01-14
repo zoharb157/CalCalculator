@@ -167,20 +167,6 @@ struct WeightChangesChartCard: View {
             } else {
                 // Line chart showing all weight entries
                 Chart(displayWeights) { point in
-                    // Area fill under the line
-                    AreaMark(
-                        x: .value("Date", point.date),
-                        y: .value("Weight", point.weight)
-                    )
-                    .interpolationMethod(.catmullRom)
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [trendColor.opacity(0.3), trendColor.opacity(0.05)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    
                     // Main line
                     LineMark(
                         x: .value("Date", point.date),

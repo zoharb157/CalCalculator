@@ -2,7 +2,49 @@
 
 (() => {
   // ---- Data (your onboarding steps) ----
+  // Updated flow: tracking_permission -> name_input -> welcome -> notifications_permission -> gender -> ... -> generating (no landing pages)
   const STEPS = [
+    {
+      id: "tracking_permission",
+      type: "permission",
+      permissionType: "tracking",
+      title: "Help Us Personalize Your Experience",
+      description: "We use app tracking to understand how you use the app and show you relevant content.",
+      icon: "📊",
+      benefits: [
+        { icon: "🎯", text: "Personalized recommendations based on your goals" },
+        { icon: "📈", text: "Better insights into your progress" },
+        { icon: "🔒", text: "Your data stays private and secure" },
+      ],
+      next: "name_input",
+    },
+    {
+      id: "name_input",
+      type: "name_input",
+      title: "What's your name?",
+      description: "Let's personalize your experience.",
+      next: "welcome",
+    },
+    {
+      id: "welcome",
+      type: "welcome",
+      title: "Welcome",
+      next: "notifications_permission",
+    },
+    {
+      id: "notifications_permission",
+      type: "permission",
+      permissionType: "notifications",
+      title: "Stay On Track",
+      description: "Get timely reminders to log your meals and track your progress.",
+      icon: "🔔",
+      benefits: [
+        { icon: "⏰", text: "Meal logging reminders" },
+        { icon: "🏆", text: "Goal achievement celebrations" },
+        { icon: "💪", text: "Daily motivation tips" },
+      ],
+      next: "gender",
+    },
     {
       id: "gender",
       type: "question",
@@ -27,7 +69,7 @@
       type: "form",
       title: "When were you born?",
       description: "Your age affects your daily calorie needs.",
-      fields: [{ id: "birthdate", label: "Birthdate", required: true, input: { type: "date" } }],
+      fields: [{ id: "birthdate", label: "Birthdate", required: true, input: { type: "date", defaultValue: "2000-01-01" } }],
       next: "activity_level",
     },
     {
@@ -38,11 +80,11 @@
       input: {
         type: "single_select",
         options: [
-          { value: "sedentary", label: "Sedentary", sub: "Little to no exercise, desk job" },
-          { value: "lightly_active", label: "Lightly Active", sub: "Light exercise 1-3 days/week" },
-          { value: "moderately_active", label: "Moderately Active", sub: "Moderate exercise 3-5 days/week" },
-          { value: "very_active", label: "Very Active", sub: "Hard exercise 6-7 days/week" },
-          { value: "extra_active", label: "Extra Active", sub: "Very hard exercise, physical job" },
+          { value: "sedentary", label: "Sedentary", sub: "Little to no exercise, desk job", icon: "🪑" },
+          { value: "lightly_active", label: "Lightly Active", sub: "Light exercise 1-3 days/week", icon: "🚶" },
+          { value: "moderately_active", label: "Moderately Active", sub: "Moderate exercise 3-5 days/week", icon: "🏃" },
+          { value: "very_active", label: "Very Active", sub: "Hard exercise 6-7 days/week", icon: "💪" },
+          { value: "extra_active", label: "Extra Active", sub: "Very hard exercise, physical job", icon: "🏋️" },
         ],
       },
       next: "goal",
@@ -55,9 +97,9 @@
       input: {
         type: "single_select",
         options: [
-          { value: "lose_weight", label: "Lose weight", sub: "Reduce calories gradually" },
-          { value: "maintain", label: "Maintain", sub: "Keep a steady intake" },
-          { value: "gain_weight", label: "Gain weight", sub: "Support lean gain" },
+          { value: "lose_weight", label: "Lose weight", sub: "Reduce calories gradually", icon: "📉" },
+          { value: "maintain", label: "Maintain", sub: "Keep a steady intake", icon: "⚖️" },
+          { value: "gain_weight", label: "Gain weight", sub: "Support lean gain", icon: "📈" },
         ],
       },
       next: "desired_weight",
@@ -84,34 +126,17 @@
       input: {
         type: "single_select",
         options: [
-          { value: "yes", label: "Yes", sub: "We'll align with your guidance" },
-          { value: "no", label: "No", sub: "We'll guide you step-by-step" },
+          { value: "yes", label: "Yes", sub: "We'll align with your guidance", icon: "👨‍🏫" },
+          { value: "no", label: "No", sub: "We'll guide you step-by-step", icon: "🤖" },
         ],
       },
-      next: "notifications",
+      next: "generating",
     },
-    {
-      id: "notifications",
-      type: "info",
-      title: "Stay on track",
-      description: "You can enable notifications later in settings to get reminders for meals and weight tracking.",
-      next: "generating", // Changed from "referral" - referral step commented out
-    },
-    // Referral code step commented out - no longer needed
-    // {
-    //   id: "referral",
-    //   type: "question",
-    //   title: "Enter referral code (optional)",
-    //   description: "You can skip this step.",
-    //   optional: true,
-    //   input: { type: "text", placeholder: "Referral code" },
-    //   next: "generating",
-    // },
     {
       id: "generating",
       type: "goals_generation",
       title: "Generating your plan",
-      next: null,
+      next: null, // No more landing pages - finish here
     },
   ];
 
@@ -123,7 +148,15 @@
     stack: [],
     answers: {},
     generatedGoals: null,
+    navigationDirection: "forward", // Track navigation direction for animations
+    permissions: {
+      tracking: null, // null = not asked, true = allowed, false = declined
+      notifications: null,
+    },
   };
+
+  // Minimum age requirement
+  const MIN_AGE = 13;
 
   // ---- Native bridge helper (iOS WKWebView) ----
   function postToNative(type, payload) {
@@ -206,6 +239,73 @@
       postToNative("generate_goals_via_native", { answers: state.answers });
     });
   }
+
+  // ---- Native Permission Bridge ----
+  // Allows the HTML onboarding flow to trigger *native* iOS permission prompts
+  // and wait for the result before continuing.
+  let __permSeq = 0;
+
+  /** @param {string} status */
+  function isPermissionGranted(status) {
+    return (
+      status === "authorized" ||
+      status === "granted" ||
+      status === "provisional" ||
+      status === "ephemeral"
+    );
+  }
+
+  /**
+   * Ask native iOS for a permission status / request / open settings.
+   * Native should respond by dispatching:
+   *   window.dispatchEvent(new CustomEvent('permission_result_native', { detail: { requestId, ok, permissionType, status, error? } }))
+   *
+   * @param {string} permissionType  e.g. 'notifications' | 'tracking'
+   * @param {'status' | 'request' | 'open_settings' | 'decline'} action
+   * @returns {Promise<{ok:boolean, requestId:string, permissionType:string, status:string, error?:string}>}
+   */
+  function permissionViaNative(permissionType, action) {
+    return new Promise((resolve) => {
+      const requestId = `${permissionType}_${Date.now()}_${++__permSeq}`;
+      const eventName = "permission_result_native";
+
+      const handler = (event) => {
+        const detail = event && event.detail ? event.detail : {};
+        if (detail.requestId !== requestId) return;
+        clearTimeout(timeout);
+        window.removeEventListener(eventName, handler);
+        resolve(detail);
+      };
+
+      const timeout = setTimeout(() => {
+        window.removeEventListener(eventName, handler);
+        resolve({
+          ok: false,
+          requestId,
+          permissionType,
+          status: "timeout",
+          error: "Timeout waiting for native permission response",
+        });
+      }, 25000);
+
+      window.addEventListener(eventName, handler);
+
+      const didPost = postToNative("permission_request", { requestId, permissionType, action });
+
+      // If we're not inside WKWebView (e.g. opened in a normal browser), don't block the flow.
+      if (!didPost) {
+        clearTimeout(timeout);
+        window.removeEventListener(eventName, handler);
+        resolve({
+          ok: true,
+          requestId,
+          permissionType,
+          status: "unavailable",
+        });
+      }
+    });
+  }
+
 
   function calculateAge(birthdate) {
     const birth = new Date(birthdate);
@@ -501,9 +601,13 @@ async function generateGoalsViaApi() {
     if (!step) return;
 
     const isGenerating = step.type === "goals_generation";
+    const isWelcome = step.type === "welcome";
+    const isPermission = step.type === "permission";
 
-    topbar.classList.toggle("hidden", isGenerating);
-    progressWrap.classList.toggle("hidden", isGenerating);
+    // Hide topbar and progress for special screens
+    const hideNav = isGenerating || isWelcome;
+    topbar.classList.toggle("hidden", hideNav);
+    progressWrap.classList.toggle("hidden", hideNav);
 
     const idx = order.indexOf(step.id);
     const total = order.length;
@@ -514,16 +618,22 @@ async function generateGoalsViaApi() {
     progressSteps.textContent = `${idx + 1} / ${total}`;
     stepMeta.textContent = `Step ${idx + 1} of ${total}`;
 
-    backBtn.disabled = state.stack.length === 0;
+    // Hide back button on first step (Step 1 requirement)
+    const isFirstStep = state.stack.length === 0;
+    backBtn.classList.toggle("hidden", isFirstStep);
+    backBtn.disabled = isFirstStep;
+    
     skipBtn.style.visibility = step.optional ? "visible" : "hidden";
 
     content.innerHTML = "";
     footer.innerHTML = "";
 
     const wrap = document.createElement("div");
-    wrap.className = "fadeIn";
+    // Apply transition animation based on navigation direction (Step 9)
+    const animClass = state.navigationDirection === "back" ? "slideInLeft" : "slideInRight";
+    wrap.className = animClass;
 
-    if (step.type !== "goals_generation") {
+    if (step.type !== "goals_generation" && step.type !== "welcome" && step.type !== "permission") {
       const h1 = document.createElement("h1");
       h1.textContent = step.title;
       wrap.appendChild(h1);
@@ -547,6 +657,15 @@ async function generateGoalsViaApi() {
       renderFooterButtons(step, { showPrimary: true, primaryTitle: "Continue" });
     } else if (step.type === "goals_generation") {
       wrap.appendChild(renderGoalsGeneration(step));
+    } else if (step.type === "name_input") {
+      wrap.appendChild(renderNameInput(step));
+      renderFooterButtons(step, { showPrimary: true });
+    } else if (step.type === "welcome") {
+      wrap.appendChild(renderWelcome(step));
+      renderFooterButtons(step, { showPrimary: true, primaryTitle: "Continue" });
+    } else if (step.type === "permission") {
+      wrap.appendChild(renderPermission(step));
+      // Permission screens have their own buttons
     } else {
       const p = document.createElement("p");
       p.className = "desc";
@@ -559,7 +678,7 @@ async function generateGoalsViaApi() {
 
     setTimeout(() => {
       const first = content.querySelector("input, button.opt");
-      if (first && step.type === "form") first.focus({ preventScroll: true });
+      if (first && (step.type === "form" || step.type === "name_input")) first.focus({ preventScroll: true });
     }, 80);
 
     updatePrimaryEnabled(step);
@@ -605,6 +724,10 @@ async function generateGoalsViaApi() {
       }
       if (field.input.type === "date") {
         input.autocomplete = "bday";
+        // Step 6: Set default date to January 1, 2000
+        if (field.input.defaultValue && !saved[field.id]) {
+          input.value = field.input.defaultValue;
+        }
       }
 
       // Load saved value - convert number to string for input.value
@@ -626,6 +749,9 @@ async function generateGoalsViaApi() {
         } else {
           input.value = String(savedValue);
         }
+      } else if (field.input.type === "date" && field.input.defaultValue) {
+        // Apply default value for date fields (Step 6)
+        input.value = field.input.defaultValue;
       } else {
         input.value = "";
       }
@@ -650,7 +776,14 @@ async function generateGoalsViaApi() {
 
       const error = document.createElement("div");
       error.className = "error";
-      error.textContent = `Please enter your ${field.label.toLowerCase()}.`;
+      error.id = `error_${step.id}_${field.id}`;
+      
+      // Custom error messages
+      if (field.id === "birthdate") {
+        error.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> <span class="errorText">Please enter your birthdate.</span>';
+      } else {
+        error.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> <span class="errorText">Please enter your ${field.label.toLowerCase()}.</span>`;
+      }
 
       const onChange = () => {
         const obj = state.answers[step.id] || {};
@@ -659,7 +792,16 @@ async function generateGoalsViaApi() {
         obj[field.id] = value;
         if (unitSelect) obj[`${field.id}__unit`] = unitSelect.value;
         state.answers[step.id] = obj;
-        validateStep(step, { soft: true });
+        
+        // Step 7: Age validation for birthdate field
+        if (field.id === "birthdate" && input.value) {
+          const ageValid = validateAge(input.value, fieldEl);
+          if (!ageValid) {
+            // Keep field marked as invalid
+          }
+        } else {
+          validateStep(step, { soft: true });
+        }
         updatePrimaryEnabled(step);
       };
 
@@ -682,12 +824,45 @@ async function generateGoalsViaApi() {
         hint.textContent = "You can change units anytime.";
         fieldEl.appendChild(hint);
       }
+      
+      // Step 7: Add age restriction notice for birthdate
+      if (field.id === "birthdate") {
+        const ageNotice = document.createElement("div");
+        ageNotice.className = "ageNotice";
+        ageNotice.style.display = "none";
+        ageNotice.id = "ageNotice";
+        ageNotice.innerHTML = '<svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg> <span>You must be at least 13 years old to use this app.</span>';
+        fieldEl.appendChild(ageNotice);
+      }
 
       fieldEl.appendChild(error);
       fieldsWrap.appendChild(fieldEl);
     });
 
     return fieldsWrap;
+  }
+
+  // Step 7: Age validation function
+  function validateAge(birthdateStr, fieldEl) {
+    const age = calculateAge(birthdateStr);
+    const ageNotice = document.getElementById("ageNotice");
+    const errorEl = fieldEl.querySelector(".error");
+    
+    if (age < MIN_AGE) {
+      fieldEl.classList.add("invalid");
+      if (ageNotice) ageNotice.style.display = "flex";
+      if (errorEl) {
+        const errorText = errorEl.querySelector(".errorText");
+        if (errorText) errorText.textContent = `You must be at least ${MIN_AGE} years old.`;
+        errorEl.style.display = "flex";
+      }
+      return false;
+    } else {
+      fieldEl.classList.remove("invalid");
+      if (ageNotice) ageNotice.style.display = "none";
+      if (errorEl) errorEl.style.display = "none";
+      return true;
+    }
   }
 
   function renderQuestion(step) {
@@ -756,6 +931,7 @@ async function generateGoalsViaApi() {
         const optValue = isObject ? opt.value : opt;
         const optLabel = isObject ? opt.label : opt;
         const optSub = isObject ? opt.sub : null;
+        const optIcon = isObject ? opt.icon : null; // Step 8: Get icon
 
         const btn = document.createElement("button");
         btn.type = "button";
@@ -763,7 +939,16 @@ async function generateGoalsViaApi() {
         btn.setAttribute("role", "radio");
         btn.setAttribute("aria-checked", "false");
 
+        // Step 8: Add icon if present
+        if (optIcon) {
+          const iconEl = document.createElement("div");
+          iconEl.className = "optIcon";
+          iconEl.textContent = optIcon;
+          btn.appendChild(iconEl);
+        }
+
         const left = document.createElement("div");
+        left.className = "optContent";
         const strong = document.createElement("strong");
         strong.textContent = optLabel;
         left.appendChild(strong);
@@ -981,6 +1166,421 @@ async function generateGoalsViaApi() {
     return frag;
   }
 
+  // ---- Name Input Screen (Step 3) ----
+  function renderNameInput(step) {
+    const saved = state.answers[step.id] || {};
+    const wrap = document.createElement("div");
+    wrap.className = "fields";
+
+    const fieldEl = document.createElement("div");
+    fieldEl.className = "field";
+    fieldEl.dataset.fieldId = "name";
+
+    const labelRow = document.createElement("div");
+    labelRow.className = "labelRow";
+
+    const label = document.createElement("label");
+    label.textContent = "Your Name";
+    label.setAttribute("for", "in_name_input");
+
+    const req = document.createElement("span");
+    req.className = "req";
+    req.textContent = "Required";
+
+    labelRow.appendChild(label);
+    labelRow.appendChild(req);
+
+    const control = document.createElement("div");
+    control.className = "control";
+
+    const input = document.createElement("input");
+    input.id = "in_name_input";
+    input.type = "text";
+    input.placeholder = "Enter your name";
+    input.autocomplete = "given-name";
+    input.autocapitalize = "words";
+    input.value = saved.value || "";
+
+    input.addEventListener("input", () => {
+      state.answers[step.id] = { value: input.value.trim() };
+      validateNameInput(fieldEl, input.value.trim());
+      updatePrimaryEnabled(step);
+    });
+
+    control.appendChild(input);
+
+    const error = document.createElement("div");
+    error.className = "error";
+    error.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> Please enter at least 2 characters.';
+
+    fieldEl.appendChild(labelRow);
+    fieldEl.appendChild(control);
+    fieldEl.appendChild(error);
+    wrap.appendChild(fieldEl);
+
+    // Initialize state
+    state.answers[step.id] = { value: saved.value || "" };
+
+    return wrap;
+  }
+
+  function validateNameInput(fieldEl, value) {
+    const isValid = value.length >= 2;
+    fieldEl.classList.toggle("invalid", !isValid && value.length > 0);
+    return isValid;
+  }
+
+  // ---- Welcome Screen (Step 4) ----
+  function renderWelcome(step) {
+    const userName = state.answers["name_input"]?.value || "Friend";
+    
+    const wrap = document.createElement("div");
+    wrap.className = "welcomeWrap scaleIn";
+
+    const avatar = document.createElement("div");
+    avatar.className = "welcomeAvatar";
+    avatar.textContent = userName.charAt(0).toUpperCase();
+
+    const title = document.createElement("h1");
+    title.className = "welcomeTitle";
+    title.textContent = `Welcome, ${userName}!`;
+
+    const subtitle = document.createElement("p");
+    subtitle.className = "welcomeSubtitle";
+    subtitle.textContent = "We're excited to help you on your health journey. Let's set up your personalized plan.";
+
+    wrap.appendChild(avatar);
+    wrap.appendChild(title);
+    wrap.appendChild(subtitle);
+
+    return wrap;
+  }
+
+  // ---- Permission Screens (Steps 2 & 5) ----
+  
+  function renderPermission(step) {
+    const wrap = document.createElement("div");
+    wrap.className = "permissionWrap";
+
+    const icon = document.createElement("div");
+    icon.className = "permissionIcon floaty";
+    icon.textContent = step.icon || "🔐";
+
+    const title = document.createElement("h2");
+    title.className = "permissionTitle";
+    title.textContent = step.title;
+
+    const desc = document.createElement("p");
+    desc.className = "permissionDesc";
+    desc.textContent = step.description;
+
+    const statusPill = document.createElement("div");
+    statusPill.className = "permissionStatusPill loading";
+    statusPill.innerHTML = `<span class="spinner" aria-hidden="true"></span><span>Checking permission…</span>`;
+
+    wrap.appendChild(icon);
+    wrap.appendChild(title);
+    wrap.appendChild(desc);
+    wrap.appendChild(statusPill);
+
+    if (step.benefits && step.benefits.length) {
+      const benefitsWrap = document.createElement("div");
+      benefitsWrap.className = "permissionBenefits";
+
+      step.benefits.forEach((benefit, idx) => {
+        const item = document.createElement("div");
+        item.className = "benefitItem slideUp";
+        item.style.animationDelay = `${0.05 + (idx * 0.05)}s`;
+
+        const bIcon = document.createElement("div");
+        bIcon.className = "benefitIcon";
+        bIcon.textContent = benefit.icon;
+
+        const bText = document.createElement("div");
+        bText.className = "benefitText";
+        bText.textContent = benefit.text;
+
+        item.appendChild(bIcon);
+        item.appendChild(bText);
+        benefitsWrap.appendChild(item);
+      });
+
+      wrap.appendChild(benefitsWrap);
+    }
+
+    // Footer buttons (native permission request lives in Swift)
+    footer.innerHTML = "";
+
+    const primaryBtn = document.createElement("button");
+    primaryBtn.className = "btn primary";
+    primaryBtn.type = "button";
+
+    const secondaryBtn = document.createElement("button");
+    secondaryBtn.className = "btn ghost";
+    secondaryBtn.type = "button";
+
+    let currentStatus = "checking";
+    let busy = false;
+
+    function setBusy(isBusy) {
+      busy = isBusy;
+      primaryBtn.disabled = isBusy;
+      secondaryBtn.disabled = isBusy;
+      statusPill.classList.toggle("loading", isBusy);
+
+      if (isBusy) {
+        // Keep the spinner visible while the system dialog is up
+        statusPill.innerHTML = `<span class="spinner" aria-hidden="true"></span><span>Waiting for iOS…</span>`;
+      }
+    }
+
+    function setStatus(status) {
+      currentStatus = status;
+
+      statusPill.classList.remove("ok", "bad", "warn", "neutral", "loading");
+      statusPill.classList.add("permissionStatusPill"); // ensure base
+
+      const granted = isPermissionGranted(status);
+
+      // Reset content + classes
+      if (status === "checking") {
+        statusPill.classList.add("loading");
+        statusPill.innerHTML = `<span class="spinner" aria-hidden="true"></span><span>Checking permission…</span>`;
+        return;
+      }
+
+      if (granted) {
+        statusPill.classList.add("ok");
+        statusPill.innerHTML = `<span class="dot okDot" aria-hidden="true"></span><span>Enabled</span>`;
+        return;
+      }
+
+      if (status === "denied" || status === "restricted") {
+        statusPill.classList.add("bad");
+        statusPill.innerHTML = `<span class="dot badDot" aria-hidden="true"></span><span>Not enabled</span>`;
+        return;
+      }
+
+      if (status === "not_determined") {
+        statusPill.classList.add("neutral");
+        statusPill.innerHTML = `<span class="dot neutralDot" aria-hidden="true"></span><span>Not requested yet</span>`;
+        return;
+      }
+
+      if (status === "unavailable") {
+        statusPill.classList.add("neutral");
+        statusPill.innerHTML = `<span class="dot neutralDot" aria-hidden="true"></span><span>Preview mode</span>`;
+        return;
+      }
+
+      statusPill.classList.add("neutral");
+      statusPill.innerHTML = `<span class="dot neutralDot" aria-hidden="true"></span><span>Status: ${String(status || "unknown")}</span>`;
+    }
+
+    function persistAnswer(status, action) {
+      const allowed = isPermissionGranted(status);
+      state.permissions[step.permissionType] = allowed;
+      state.answers[step.id] = { allowed, status, action };
+    }
+
+    function setButtonsForStatus(status) {
+      footer.innerHTML = "";
+
+      const granted = isPermissionGranted(status);
+
+      if (granted) {
+        primaryBtn.textContent = "Continue";
+        primaryBtn.onclick = () => {
+          persistAnswer(status, "continue");
+          goNext();
+        };
+        footer.appendChild(primaryBtn);
+        return;
+      }
+
+      if (status === "denied" || status === "restricted") {
+        secondaryBtn.textContent = "Continue";
+        secondaryBtn.onclick = () => {
+          persistAnswer(status, "continue");
+          goNext();
+        };
+
+        primaryBtn.textContent = "Open Settings";
+        primaryBtn.onclick = async () => {
+          setBusy(true);
+          await permissionViaNative(step.permissionType, "open_settings");
+          setBusy(false);
+          // After returning from Settings, we can re-check status
+          const res = await permissionViaNative(step.permissionType, "status");
+          if (res && res.ok) {
+            setStatus(res.status);
+            setButtonsForStatus(res.status);
+            persistAnswer(res.status, "status");
+          }
+        };
+
+        footer.appendChild(secondaryBtn);
+        footer.appendChild(primaryBtn);
+        return;
+      }
+
+      // Not determined / unknown → show Allow + Not now
+      secondaryBtn.textContent = "Not Now";
+      secondaryBtn.onclick = () => {
+        persistAnswer("skipped", "decline");
+        postToNative("permission_request", { permissionType: step.permissionType, action: "decline" });
+        goNext();
+      };
+
+      primaryBtn.textContent =
+        step.permissionType === "notifications" ? "Enable Notifications" : "Allow Tracking";
+
+      primaryBtn.onclick = async () => {
+        setBusy(true);
+        const res = await permissionViaNative(step.permissionType, "request");
+        setBusy(false);
+
+        const status = res && res.ok ? res.status : "unknown";
+        setStatus(status);
+        setButtonsForStatus(status);
+        persistAnswer(status, "request");
+
+        // If the user granted permission, keep the flow snappy and continue automatically.
+        if (isPermissionGranted(status)) {
+          setTimeout(() => goNext(), 420);
+        }
+      };
+
+      footer.appendChild(secondaryBtn);
+      footer.appendChild(primaryBtn);
+    }
+
+    // Initial status check (no prompt)
+    (async () => {
+      const res = await permissionViaNative(step.permissionType, "status");
+      const status = res && res.ok ? res.status : "not_determined";
+      setStatus(status);
+      setButtonsForStatus(status);
+      persistAnswer(status, "status");
+    })();
+
+    return wrap;
+  }
+
+
+  // ---- Landing Pages (Steps 11 & 12) ----
+  function renderLanding(step) {
+    const wrap = document.createElement("div");
+    wrap.className = "landingWrap";
+
+    if (step.landingType === "comparison") {
+      // App comparison chart (Step 12)
+      const icon = document.createElement("div");
+      icon.className = "landingIcon";
+      icon.textContent = "🏆";
+
+      const title = document.createElement("h1");
+      title.className = "landingTitle";
+      title.textContent = step.title;
+
+      const desc = document.createElement("p");
+      desc.className = "landingDesc";
+      desc.textContent = step.description;
+
+      wrap.appendChild(icon);
+      wrap.appendChild(title);
+      wrap.appendChild(desc);
+
+      // Comparison chart
+      const chart = document.createElement("div");
+      chart.className = "comparisonChart";
+
+      // Our App - 90%
+      const ourApp = document.createElement("div");
+      ourApp.className = "comparisonItem";
+      ourApp.innerHTML = `
+        <div class="comparisonHeader">
+          <div class="comparisonLabel ourApp">
+            <div class="appIcon">✓</div>
+            <span>Our App</span>
+          </div>
+          <span class="comparisonValue" style="color: var(--accent2);">90%</span>
+        </div>
+        <div class="comparisonTrack">
+          <div class="comparisonFill ourApp" data-width="90"></div>
+        </div>
+      `;
+
+      // Other Apps - 50%
+      const otherApps = document.createElement("div");
+      otherApps.className = "comparisonItem";
+      otherApps.innerHTML = `
+        <div class="comparisonHeader">
+          <div class="comparisonLabel otherApps">
+            <div class="appIcon">○</div>
+            <span>Other Apps</span>
+          </div>
+          <span class="comparisonValue" style="color: var(--muted);">50%</span>
+        </div>
+        <div class="comparisonTrack">
+          <div class="comparisonFill otherApps" data-width="50"></div>
+        </div>
+      `;
+
+      chart.appendChild(ourApp);
+      chart.appendChild(otherApps);
+      wrap.appendChild(chart);
+
+      // Animate bars after render (Step 10)
+      setTimeout(() => {
+        const fills = chart.querySelectorAll(".comparisonFill");
+        fills.forEach((fill) => {
+          const width = fill.getAttribute("data-width");
+          fill.style.width = `${width}%`;
+        });
+      }, 100);
+
+    } else if (step.landingType === "stats") {
+      // Stats grid (Step 11)
+      const icon = document.createElement("div");
+      icon.className = "landingIcon";
+      icon.textContent = "📊";
+
+      const title = document.createElement("h1");
+      title.className = "landingTitle";
+      title.textContent = step.title;
+
+      const desc = document.createElement("p");
+      desc.className = "landingDesc";
+      desc.textContent = step.description;
+
+      wrap.appendChild(icon);
+      wrap.appendChild(title);
+      wrap.appendChild(desc);
+
+      // Stats grid
+      const grid = document.createElement("div");
+      grid.className = "statsGrid";
+
+      if (step.stats) {
+        step.stats.forEach((stat, idx) => {
+          const card = document.createElement("div");
+          card.className = "statCard slideUp";
+          card.style.animationDelay = `${idx * 0.1}s`;
+          card.innerHTML = `
+            <div class="statValue">${stat.value}</div>
+            <div class="statLabel">${stat.label}</div>
+          `;
+          grid.appendChild(card);
+        });
+      }
+
+      wrap.appendChild(grid);
+    }
+
+    return wrap;
+  }
+
   function renderGoalsGeneration(step) {
     const wrap = document.createElement("div");
     wrap.className = "goalsGenWrap";
@@ -1194,7 +1794,9 @@ function showGoalsResults(goals) {
     </div>
   `;
 
-  renderFooterButtons(byId.get("generating"), { showPrimary: true, primaryTitle: "Get Started" });
+  // Render button to finish onboarding (no more landing pages)
+  const step = byId.get("generating");
+  renderFooterButtons(step, { showPrimary: true, primaryTitle: "Get Started" });
 }
 
 function showGoalsError(message, apiUrl) {
@@ -1230,11 +1832,20 @@ function showGoalsError(message, apiUrl) {
     primary.className = "btn primary";
     primary.type = "button";
 
-    primary.textContent = primaryTitle || (step.next ? "Continue" : "Finish");
+    primary.textContent = primaryTitle || (step.next ? "Continue" : "Get Started");
     primary.addEventListener("click", () => {
       if (step.type === "goals_generation") {
+        // After goals generation, finish onboarding (no more landing pages)
         finish();
         return;
+      }
+      if (step.type === "name_input") {
+        const nameValue = state.answers[step.id]?.value || "";
+        if (nameValue.length < 2) {
+          const fieldEl = content.querySelector('.field[data-field-id="name"]');
+          if (fieldEl) fieldEl.classList.add("invalid");
+          return;
+        }
       }
       const ok = validateStep(step, { soft: false });
       if (!ok) return;
@@ -1284,6 +1895,14 @@ function showGoalsError(message, apiUrl) {
       if (!isEmpty && field.input.type === "date") {
         const d = new Date(val);
         if (String(d) === "Invalid Date") invalid = true;
+        
+        // Step 7: Age validation
+        if (field.id === "birthdate" && !invalid) {
+          const age = calculateAge(val);
+          if (age < MIN_AGE) {
+            invalid = true;
+          }
+        }
       }
 
       if (invalid) ok = false;
@@ -1318,6 +1937,15 @@ function showGoalsError(message, apiUrl) {
       enabled = true;
     } else if (step.type === "goals_generation") {
       enabled = !!state.generatedGoals;
+    } else if (step.type === "name_input") {
+      // Step 3: Name requires at least 2 characters
+      const a = state.answers[step.id];
+      enabled = !!(a && a.value && a.value.trim().length >= 2);
+    } else if (step.type === "welcome") {
+      enabled = true;
+    } else if (step.type === "permission") {
+      // Permission screens have their own buttons
+      enabled = true;
     }
 
     primary.disabled = !enabled;
@@ -1335,6 +1963,9 @@ function showGoalsError(message, apiUrl) {
   function goNext() {
     const step = byId.get(state.currentId);
     if (!step) return;
+
+    // Set navigation direction for animation (Step 9)
+    state.navigationDirection = "forward";
 
     if (!step.next) {
       finish();
@@ -1378,6 +2009,16 @@ function showGoalsError(message, apiUrl) {
         }
       });
       state.answers[step.id] = obj;
+    }
+
+    // For name_input step, validate before proceeding
+    if (step.type === "name_input") {
+      const nameValue = state.answers[step.id]?.value || "";
+      if (nameValue.length < 2) {
+        const fieldEl = content.querySelector('.field[data-field-id="name"]');
+        if (fieldEl) fieldEl.classList.add("invalid");
+        return;
+      }
     }
 
     state.stack.push(step.id);
@@ -1458,6 +2099,8 @@ function showGoalsError(message, apiUrl) {
   function goBack() {
     const prev = state.stack.pop();
     if (!prev) return;
+    // Set navigation direction for animation (Step 9)
+    state.navigationDirection = "back";
     goTo(prev);
   }
 
@@ -1465,6 +2108,8 @@ function showGoalsError(message, apiUrl) {
     const payload = {
       answers: state.answers,
       goals: state.generatedGoals,
+      permissions: state.permissions,
+      userName: state.answers["name_input"]?.value || null,
       completedAt: new Date().toISOString(),
     };
 

@@ -30,6 +30,7 @@ final class UserSettings {
         static let gender = "gender"
         static let age = "age"
         static let birthdate = "birthdate"
+        static let userName = "userName"
         static let lastWeightDate = "lastWeightDate"
         static let lastWeightPromptDate = "lastWeightPromptDate"
         static let debugOverrideSubscription = "debugOverrideSubscription"
@@ -98,6 +99,20 @@ final class UserSettings {
                 defaults.removeObject(forKey: Keys.gender)
                 defaults.synchronize()
                 print("⚠️ [UserSettings] Removed gender")
+            }
+        }
+    }
+    
+    var userName: String? {
+        didSet {
+            if let userName = userName {
+                defaults.set(userName, forKey: Keys.userName)
+                defaults.synchronize()
+                print("✅ [UserSettings] Saved userName: \(userName)")
+            } else {
+                defaults.removeObject(forKey: Keys.userName)
+                defaults.synchronize()
+                print("⚠️ [UserSettings] Removed userName")
             }
         }
     }
@@ -261,6 +276,10 @@ final class UserSettings {
             print("✅ [UserSettings] Loaded gender from UserDefaults: \(gender)")
         } else {
             print("⚠️ [UserSettings] No gender found in UserDefaults")
+        }
+        self.userName = defaults.string(forKey: Keys.userName)
+        if let userName = defaults.string(forKey: Keys.userName) {
+            print("✅ [UserSettings] Loaded userName from UserDefaults: \(userName)")
         }
         let storedBirthdate = defaults.object(forKey: Keys.birthdate) as? Date
         self.birthdate = storedBirthdate

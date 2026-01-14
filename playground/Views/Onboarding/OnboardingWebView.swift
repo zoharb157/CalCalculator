@@ -7,6 +7,9 @@
 
 import SwiftUI
 import WebKit
+import UIKit
+import UserNotifications
+import AppTrackingTransparency
 
 /// A SwiftUI wrapper for the HTML-based onboarding flow
 struct OnboardingWebView: View {
@@ -177,9 +180,227 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
 
             case "complete":
                 handleComplete(payload: payload)
+                
+            case "permission_request":
+                handlePermissionRequest(payload: payload)
 
             default:
                 print("📱 [OnboardingWebView] Unknown message type: \(type)")
+            }
+        }
+
+        private func handlePermissionRequest(payload: [String: Any]) {
+            let requestId = payload["requestId"] as? String ?? UUID().uuidString
+
+            // JS might send "permissionType" (v2) or "type" (older code)
+            let permissionType =
+                (payload["permissionType"] as? String) ??
+                (payload["type"] as? String) ??
+                ""
+
+            let action = (payload["action"] as? String) ?? "request"
+
+            switch action {
+            case "open_settings":
+                DispatchQueue.main.async {
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                    }
+                }
+                postPermissionResultToJS(
+                    ok: true,
+                    requestId: requestId,
+                    permissionType: permissionType,
+                    status: "opened_settings"
+                )
+
+            case "decline":
+                // No OS prompt. We just acknowledge.
+                postPermissionResultToJS(
+                    ok: true,
+                    requestId: requestId,
+                    permissionType: permissionType,
+                    status: "declined"
+                )
+
+            case "status":
+                checkPermissionStatus(permissionType: permissionType, requestId: requestId)
+
+            case "request", "request_native":
+                requestPermission(permissionType: permissionType, requestId: requestId)
+
+            default:
+                postPermissionResultToJS(
+                    ok: false,
+                    requestId: requestId,
+                    permissionType: permissionType,
+                    status: "unknown",
+                    error: "Unknown action: \(action)"
+                )
+            }
+        }
+
+        private func checkPermissionStatus(permissionType: String, requestId: String) {
+            switch permissionType {
+            case "tracking":
+                let status = mapTrackingStatus(ATTrackingManager.trackingAuthorizationStatus)
+                postPermissionResultToJS(ok: true, requestId: requestId, permissionType: permissionType, status: status)
+
+            case "notifications":
+                UNUserNotificationCenter.current().getNotificationSettings { settings in
+                    let status = self.mapNotificationStatus(settings.authorizationStatus)
+                    self.postPermissionResultToJS(
+                        ok: true,
+                        requestId: requestId,
+                        permissionType: permissionType,
+                        status: status
+                    )
+                }
+
+            default:
+                postPermissionResultToJS(
+                    ok: false,
+                    requestId: requestId,
+                    permissionType: permissionType,
+                    status: "unknown",
+                    error: "Unsupported permissionType: \(permissionType)"
+                )
+            }
+        }
+
+        private func requestPermission(permissionType: String, requestId: String) {
+            switch permissionType {
+            case "tracking":
+                // Only shows the prompt if notDetermined.
+                DispatchQueue.main.async {
+                    let current = ATTrackingManager.trackingAuthorizationStatus
+                    guard current == .notDetermined else {
+                        let status = self.mapTrackingStatus(current)
+                        self.postPermissionResultToJS(ok: true, requestId: requestId, permissionType: permissionType, status: status)
+                        return
+                    }
+
+                    ATTrackingManager.requestTrackingAuthorization { newStatus in
+                        let status = self.mapTrackingStatus(newStatus)
+                        self.postPermissionResultToJS(
+                            ok: true,
+                            requestId: requestId,
+                            permissionType: permissionType,
+                            status: status
+                        )
+                    }
+                }
+
+            case "notifications":
+                let center = UNUserNotificationCenter.current()
+                center.getNotificationSettings { settings in
+                    switch settings.authorizationStatus {
+                    case .notDetermined:
+                        center.requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
+                            if granted {
+                                DispatchQueue.main.async {
+                                    UIApplication.shared.registerForRemoteNotifications()
+                                }
+                            }
+                            // Re-check actual status
+                            center.getNotificationSettings { updated in
+                                let status = self.mapNotificationStatus(updated.authorizationStatus)
+                                self.postPermissionResultToJS(
+                                    ok: (error == nil),
+                                    requestId: requestId,
+                                    permissionType: permissionType,
+                                    status: status,
+                                    error: error?.localizedDescription
+                                )
+                            }
+                        }
+
+                    default:
+                        let status = self.mapNotificationStatus(settings.authorizationStatus)
+                        self.postPermissionResultToJS(ok: true, requestId: requestId, permissionType: permissionType, status: status)
+                    }
+                }
+
+            default:
+                postPermissionResultToJS(
+                    ok: false,
+                    requestId: requestId,
+                    permissionType: permissionType,
+                    status: "unknown",
+                    error: "Unsupported permissionType: \(permissionType)"
+                )
+            }
+        }
+
+        private func mapTrackingStatus(_ status: ATTrackingManager.AuthorizationStatus) -> String {
+            switch status {
+            case .notDetermined: return "not_determined"
+            case .restricted:    return "restricted"
+            case .denied:        return "denied"
+            case .authorized:    return "authorized"
+            @unknown default:    return "unknown"
+            }
+        }
+
+        private func mapNotificationStatus(_ status: UNAuthorizationStatus) -> String {
+            switch status {
+            case .notDetermined: return "not_determined"
+            case .denied:        return "denied"
+            case .authorized:    return "authorized"
+            case .provisional:   return "provisional"
+            case .ephemeral:     return "ephemeral"
+            @unknown default:    return "unknown"
+            }
+        }
+
+        private func postPermissionResultToJS(
+            ok: Bool,
+            requestId: String,
+            permissionType: String,
+            status: String,
+            error: String? = nil
+        ) {
+            DispatchQueue.main.async { [weak self] in
+                guard let webView = self?.webView else {
+                    print("⚠️ [OnboardingWebView] WebView is nil, cannot post permission result to JS")
+                    return
+                }
+
+                var payload: [String: Any] = [
+                    "ok": ok,
+                    "requestId": requestId,
+                    "permissionType": permissionType,
+                    "status": status
+                ]
+                if let error = error {
+                    payload["error"] = error
+                }
+
+                guard let jsonData = try? JSONSerialization.data(withJSONObject: payload, options: []),
+                      let _ = String(data: jsonData, encoding: .utf8) else {
+                    print("❌ [OnboardingWebView] Failed to serialize permission payload to JSON")
+                    return
+                }
+
+                let base64String = jsonData.base64EncodedString()
+
+                let js = """
+                (function() {
+                  try {
+                    var jsonString = atob('\(base64String)');
+                    var detail = JSON.parse(jsonString);
+                    window.dispatchEvent(new CustomEvent('permission_result_native', { detail: detail }));
+                  } catch (e) {
+                    console.error('Failed to parse permission result:', e);
+                  }
+                })();
+                """
+
+                webView.evaluateJavaScript(js) { _, err in
+                    if let err = err {
+                        print("❌ [OnboardingWebView] Failed to post permission result to JS: \(err.localizedDescription)")
+                    }
+                }
             }
         }
 

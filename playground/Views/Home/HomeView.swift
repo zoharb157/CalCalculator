@@ -766,8 +766,8 @@ struct ListScrollTracker: UIViewRepresentable {
                 }
                 
                 // Add observer to track contentOffset
-                let observer = ScrollObserver { [weak self, weak scrollView] in
-                    guard let self = self, let scrollView = scrollView else { return }
+                let observer = ScrollObserver { [weak scrollView] in
+                    guard let scrollView = scrollView else { return }
                     let offset = scrollView.contentOffset.y
                     // Consider at top if offset is within 50 points (accounts for List padding and safe area)
                     self.isAtTop = offset <= 50

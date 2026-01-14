@@ -370,16 +370,13 @@ struct MainTabView: View {
             }
             // Note: When diet tab appears, no adjustment needed since tabs use stable identifiers
             
-            // CRITICAL: Update delegate's hasActiveDiet when it changes
-            // This ensures tab index mapping is correct
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-                guard let self = self else { return }
-                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                   let window = windowScene.windows.first(where: { $0.isKeyWindow }) ?? windowScene.windows.first,
-                   let tabBarController = self.findTabBarController(in: window.rootViewController),
-                   let delegate = objc_getAssociatedObject(tabBarController, "mainTabBarDelegate") as? MainTabBarDelegate {
-                    delegate.hasActiveDiet = newValue
-                }
+            // CRITICAL: Update delegate's hasActiveDiet IMMEDIATELY when it changes
+            // This ensures tab index mapping is correct before any tab taps occur
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = windowScene.windows.first(where: { $0.isKeyWindow }) ?? windowScene.windows.first,
+               let tabBarController = self.findTabBarController(in: window.rootViewController),
+               let delegate = objc_getAssociatedObject(tabBarController, "mainTabBarDelegate") as? MainTabBarDelegate {
+                delegate.hasActiveDiet = newValue
             }
         }
         .onAppear {
@@ -426,8 +423,7 @@ struct MainTabView: View {
     // MARK: - Tab Bar Tap Detection
     private func setupTabBarTapDetection() {
         // Find the tab bar controller and set up delegate
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-            guard let self = self else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             self.findAndSetupTabBarController()
         }
     }
@@ -436,8 +432,7 @@ struct MainTabView: View {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = windowScene.windows.first(where: { $0.isKeyWindow }) ?? windowScene.windows.first else {
             // Retry after delay
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                guard let self = self else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 self.findAndSetupTabBarController()
             }
             return
@@ -446,21 +441,22 @@ struct MainTabView: View {
         // Find UITabBarController
         guard let tabBarController = self.findTabBarController(in: window.rootViewController) else {
             // Retry after delay if not found
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                guard let self = self else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 self.findAndSetupTabBarController()
             }
             return
         }
         
         // Set up delegate to detect home tab re-taps and track tab changes
+        // CRITICAL: Always use the computed hasActiveDiet value from query/subscription state
+        let currentHasActiveDiet = !activeDietPlans.isEmpty && isSubscribed
         if let existingDelegate = objc_getAssociatedObject(tabBarController, "mainTabBarDelegate") as? MainTabBarDelegate {
             existingDelegate.onHomeTabTapped = {
                 DispatchQueue.main.async {
                     self.scrollHomeToTopTrigger = UUID()
                 }
             }
-            existingDelegate.hasActiveDiet = self.hasActiveDiet
+            existingDelegate.hasActiveDiet = currentHasActiveDiet
             existingDelegate.onTabChanged = { newTabRawValue in
                 DispatchQueue.main.async {
                     AppLogger.forClass("MainTabView").info("🔍 [TabBarDelegate] Updating selectedTabRaw: '\(self.selectedTabRaw)' -> '\(newTabRawValue)'")
@@ -486,7 +482,7 @@ struct MainTabView: View {
                         UserDefaults.standard.synchronize()
                     }
                 },
-                hasActiveDiet: self.hasActiveDiet
+                hasActiveDiet: currentHasActiveDiet
             )
             objc_setAssociatedObject(tabBarController, "mainTabBarDelegate", delegate, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
             tabBarController.delegate = delegate
@@ -542,7 +538,46 @@ private struct StableTabViewWrapper: View {
     let onMealSaved: () -> Void
     let handleCreateDiet: () -> Void
     
+    /// Updates the tab bar delegate's hasActiveDiet to match the current value
+    /// This ensures tab index mapping is correct immediately when the TabView structure changes
+    private func updateDelegateHasActiveDiet() {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first(where: { $0.isKeyWindow }) ?? windowScene.windows.first else {
+            return
+        }
+        
+        // Find UITabBarController
+        func findTabBarController(in viewController: UIViewController?) -> UITabBarController? {
+            guard let viewController = viewController else { return nil }
+            if let tabBarController = viewController as? UITabBarController {
+                return tabBarController
+            }
+            for child in viewController.children {
+                if let tabBarController = findTabBarController(in: child) {
+                    return tabBarController
+                }
+            }
+            if let presented = viewController.presentedViewController {
+                if let tabBarController = findTabBarController(in: presented) {
+                    return tabBarController
+                }
+            }
+            return nil
+        }
+        
+        if let tabBarController = findTabBarController(in: window.rootViewController),
+           let delegate = objc_getAssociatedObject(tabBarController, "mainTabBarDelegate") as? MainTabBarDelegate {
+            if delegate.hasActiveDiet != hasActiveDiet {
+                AppLogger.forClass("MainTabView").info("🔍 [StableTabViewWrapper] Updating delegate.hasActiveDiet: \(delegate.hasActiveDiet) -> \(hasActiveDiet)")
+                delegate.hasActiveDiet = hasActiveDiet
+            }
+        }
+    }
+    
     var body: some View {
+        // CRITICAL: Update delegate's hasActiveDiet immediately when body is computed
+        // This ensures the delegate's tab index mapping matches the actual TabView structure
+        let _ = updateDelegateHasActiveDiet()
         // CRITICAL: Use a custom binding that reads from UserDefaults to ensure TabView
         // always has the correct selection, even if selectedTabRaw was reset
         let currentStoredValue = UserDefaults.standard.string(forKey: "selectedMainTab") ?? MainTab.home.rawValue
@@ -621,6 +656,21 @@ private struct StableTabViewWrapper: View {
                 .tag(MainTab.profile.rawValue)
         }
         .id("main-tab-view-stable")
+        .onChange(of: hasActiveDiet) { oldValue, newValue in
+            // CRITICAL: Update delegate's hasActiveDiet when it changes
+            // This is a backup to ensure the delegate is always in sync
+            AppLogger.forClass("MainTabView").info("🔍 [StableTabViewWrapper onChange] hasActiveDiet changed: \(oldValue) -> \(newValue)")
+            updateDelegateHasActiveDiet()
+            
+            // If user was on myDiet tab and it's now hidden, redirect to history
+            if oldValue && !newValue && selectedTabRaw == MainTab.myDiet.rawValue {
+                AppLogger.forClass("MainTabView").info("🔍 [StableTabViewWrapper] Redirecting from myDiet to history")
+                selectedTabRaw = MainTab.history.rawValue
+                storedTab = MainTab.history.rawValue
+                UserDefaults.standard.set(MainTab.history.rawValue, forKey: "selectedMainTab")
+                UserDefaults.standard.synchronize()
+            }
+        }
     }
 }
 
@@ -703,11 +753,43 @@ class MainTabBarDelegate: NSObject, UITabBarControllerDelegate {
         let now = Date()
         let timeSinceLastTap = now.timeIntervalSince(lastTapTime)
         
-        // CRITICAL: Update selectedTabRaw when tab changes
-        // This ensures the selection is saved even if TabView's binding doesn't work
-        if newIndex != currentIndex && newIndex >= 0 {
-            let tabRawValue = self.tabRawValue(for: newIndex)
-            AppLogger.forClass("MainTabView").info("🔍 [TabBarDelegate] Tab changed: index \(currentIndex) -> \(newIndex), rawValue: '\(tabRawValue)' (hasActiveDiet: \(hasActiveDiet))")
+        // CRITICAL: Get the actual tab tag from the view controller instead of using index mapping
+        // This prevents issues when hasActiveDiet flag is out of sync with the actual tab structure
+        if newIndex != currentIndex && newIndex >= 0, let viewControllers = tabBarController.viewControllers {
+            // Extract the tag from the hosting controller
+            // SwiftUI wraps each tab in a UIHostingController with the tag we set
+            var tabRawValue = self.tabRawValue(for: newIndex) // Fallback to index mapping
+            
+            // Try to get the actual tag from the view controller
+            if newIndex < viewControllers.count {
+                let vc = viewControllers[newIndex]
+                // The tabBarItem.tag is set by SwiftUI based on our .tag() modifier
+                // However, SwiftUI uses the string hash for tags, so we need to map back
+                // Instead, we'll use the actual visible tab count to determine the correct mapping
+                let actualTabCount = viewControllers.count
+                
+                // Recalculate based on actual tab count to avoid stale hasActiveDiet flag
+                if actualTabCount == 5 { // All tabs visible (including myDiet)
+                    switch newIndex {
+                    case 0: tabRawValue = MainTab.home.rawValue
+                    case 1: tabRawValue = MainTab.progress.rawValue
+                    case 2: tabRawValue = MainTab.myDiet.rawValue
+                    case 3: tabRawValue = MainTab.history.rawValue
+                    case 4: tabRawValue = MainTab.profile.rawValue
+                    default: tabRawValue = MainTab.home.rawValue
+                    }
+                } else if actualTabCount == 4 { // myDiet tab hidden
+                    switch newIndex {
+                    case 0: tabRawValue = MainTab.home.rawValue
+                    case 1: tabRawValue = MainTab.progress.rawValue
+                    case 2: tabRawValue = MainTab.history.rawValue
+                    case 3: tabRawValue = MainTab.profile.rawValue
+                    default: tabRawValue = MainTab.home.rawValue
+                    }
+                }
+            }
+            
+            AppLogger.forClass("MainTabView").info("🔍 [TabBarDelegate] Tab changed: index \(currentIndex) -> \(newIndex), rawValue: '\(tabRawValue)' (hasActiveDiet: \(hasActiveDiet), actualTabCount: \(viewControllers.count))")
             onTabChanged?(tabRawValue)
         }
         

@@ -58,10 +58,13 @@ struct WeightChartCard: View {
         guard let minValue = weights.min(), let maxValue = weights.max() else { return 0 }
         let range = maxValue - minValue
         
+        // Add more padding to ensure the line stays within bounds
         if range == 0 || range < 0.1 {
-            return Swift.max(0, minValue - 2.0)
+            // For stable weight, add fixed padding
+            return Swift.max(0, minValue - 5.0)
         } else {
-            let padding = min(range * 0.15, 3.0)
+            // Add 20% padding below the minimum value
+            let padding = max(range * 0.2, 2.0)
             return Swift.max(0, minValue - padding)
         }
     }
@@ -71,10 +74,13 @@ struct WeightChartCard: View {
         guard let minValue = weights.min(), let maxValue = weights.max() else { return 100 }
         let range = maxValue - minValue
         
+        // Add more padding to ensure the line stays within bounds
         if range == 0 || range < 0.1 {
-            return maxValue + 0.5
+            // For stable weight, add fixed padding
+            return maxValue + 5.0
         } else {
-            let padding = min(range * 0.15, 3.0)
+            // Add 20% padding above the maximum value
+            let padding = max(range * 0.2, 2.0)
             return maxValue + padding
         }
     }
@@ -297,20 +303,6 @@ struct TrendChartView: View {
         let lastPoint = sortedWeights.last
         
         Chart(sortedWeights) { point in
-            // Area fill
-            AreaMark(
-                x: .value("Date", point.date),
-                y: .value("Weight", point.weight)
-            )
-            .interpolationMethod(.catmullRom)
-            .foregroundStyle(
-                LinearGradient(
-                    colors: [Color.blue.opacity(0.2), Color.cyan.opacity(0.05)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
-            
             // Glow line (behind)
             LineMark(
                 x: .value("Date", point.date),
@@ -359,11 +351,6 @@ struct TrendChartView: View {
             }
         }
         .chartYScale(domain: minWeight...maxWeight)
-        .chartPlotStyle { plotContent in
-            plotContent
-                .padding(.top, 30)
-                .padding(.bottom, 8)
-        }
         .chartXAxis {
             AxisMarks(values: .automatic(desiredCount: 4)) { value in
                 AxisValueLabel(format: .dateTime.month(.abbreviated).day())
@@ -385,6 +372,7 @@ struct TrendChartView: View {
             }
         }
         .frame(height: 180)
+        .clipped() // Ensure the line doesn't extend outside chart boundaries
     }
 }
 
