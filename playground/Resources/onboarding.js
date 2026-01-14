@@ -2,20 +2,14 @@
 
 (() => {
   // ---- Data (your onboarding steps) ----
-  // Updated flow: tracking_permission -> name_input -> welcome -> notifications_permission -> gender -> ... -> generating (no landing pages)
+  // Updated flow: gender -> name_input -> welcome -> ... -> permissions (last) -> generating
   const STEPS = [
     {
-      id: "tracking_permission",
-      type: "permission",
-      permissionType: "tracking",
-      title: "Help Us Personalize Your Experience",
-      description: "We use app tracking to understand how you use the app and show you relevant content.",
-      icon: "📊",
-      benefits: [
-        { icon: "🎯", text: "Personalized recommendations based on your goals" },
-        { icon: "📈", text: "Better insights into your progress" },
-        { icon: "🔒", text: "Your data stays private and secure" },
-      ],
+      id: "gender",
+      type: "question",
+      title: "What's your biological sex?",
+      description: "This helps us calculate your metabolism accurately.",
+      input: { type: "gender_select", options: ["Male", "Female"] },
       next: "name_input",
     },
     {
@@ -29,28 +23,6 @@
       id: "welcome",
       type: "welcome",
       title: "Welcome",
-      next: "notifications_permission",
-    },
-    {
-      id: "notifications_permission",
-      type: "permission",
-      permissionType: "notifications",
-      title: "Stay On Track",
-      description: "Get timely reminders to log your meals and track your progress.",
-      icon: "🔔",
-      benefits: [
-        { icon: "⏰", text: "Meal logging reminders" },
-        { icon: "🏆", text: "Goal achievement celebrations" },
-        { icon: "💪", text: "Daily motivation tips" },
-      ],
-      next: "gender",
-    },
-    {
-      id: "gender",
-      type: "question",
-      title: "What's your biological sex?",
-      description: "This helps us calculate your metabolism accurately.",
-      input: { type: "gender_select", options: ["Male", "Female"] },
       next: "height_weight",
     },
     {
@@ -130,6 +102,34 @@
           { value: "no", label: "No", sub: "We'll guide you step-by-step", icon: "🤖" },
         ],
       },
+      next: "tracking_permission",
+    },
+    {
+      id: "tracking_permission",
+      type: "permission",
+      permissionType: "tracking",
+      title: "Help Us Personalize Your Experience",
+      description: "We use app tracking to understand how you use the app and show you relevant content.",
+      icon: "📊",
+      benefits: [
+        { icon: "🎯", text: "Personalized recommendations based on your goals" },
+        { icon: "📈", text: "Better insights into your progress" },
+        { icon: "🔒", text: "Your data stays private and secure" },
+      ],
+      next: "notifications_permission",
+    },
+    {
+      id: "notifications_permission",
+      type: "permission",
+      permissionType: "notifications",
+      title: "Stay On Track",
+      description: "Get timely reminders to log your meals and track your progress.",
+      icon: "🔔",
+      benefits: [
+        { icon: "⏰", text: "Meal logging reminders" },
+        { icon: "🏆", text: "Goal achievement celebrations" },
+        { icon: "💪", text: "Daily motivation tips" },
+      ],
       next: "generating",
     },
     {
@@ -1455,13 +1455,31 @@ async function generateGoalsViaApi() {
       footer.appendChild(primaryBtn);
     }
 
-    // Initial status check (no prompt)
+    // Initial status check and auto-request permission if not determined
     (async () => {
       const res = await permissionViaNative(step.permissionType, "status");
       const status = res && res.ok ? res.status : "not_determined";
       setStatus(status);
-      setButtonsForStatus(status);
-      persistAnswer(status, "status");
+      
+      // If permission is not determined, automatically request it (show native prompt)
+      if (status === "not_determined") {
+        setBusy(true);
+        const requestRes = await permissionViaNative(step.permissionType, "request");
+        setBusy(false);
+        
+        const finalStatus = requestRes && requestRes.ok ? requestRes.status : status;
+        setStatus(finalStatus);
+        setButtonsForStatus(finalStatus);
+        persistAnswer(finalStatus, "request");
+        
+        // If the user granted permission, keep the flow snappy and continue automatically.
+        if (isPermissionGranted(finalStatus)) {
+          setTimeout(() => goNext(), 420);
+        }
+      } else {
+        setButtonsForStatus(status);
+        persistAnswer(status, "status");
+      }
     })();
 
     return wrap;
@@ -1880,7 +1898,15 @@ function showGoalsError(message, apiUrl) {
 
     step.fields.forEach((field) => {
       const fieldEl = content.querySelector(`.field[data-field-id="${field.id}"]`);
-      const val = (saved[field.id] ?? "").toString().trim();
+      let val = (saved[field.id] ?? "").toString().trim();
+
+      // If saved value is empty, check the actual input field value (for default values)
+      if (val.length === 0 && fieldEl) {
+        const input = fieldEl.querySelector(`input[type="${field.input.type}"]`);
+        if (input && input.value) {
+          val = input.value.trim();
+        }
+      }
 
       const required = !!field.required;
       const isEmpty = val.length === 0;
@@ -1979,11 +2005,14 @@ function showGoalsError(message, apiUrl) {
       step.fields.forEach((field) => {
         const input = content.querySelector(`#in_${step.id}_${field.id}`);
         if (input) {
-          // Only save if the input has a non-empty value
-          // This prevents saving default/placeholder values
           const rawValue = input.value.trim();
           
-          if (rawValue && rawValue !== "") {
+          // For date fields with default values, always save the value (even if it's the default)
+          // For other fields, only save if the input has a non-empty value
+          const shouldSave = (rawValue && rawValue !== "") || 
+                            (field.input.type === "date" && field.input.defaultValue && rawValue === field.input.defaultValue);
+          
+          if (shouldSave) {
             // Convert to number if field type is number, otherwise keep as string
             const value = field.input.type === "number" ? Number(rawValue) : rawValue;
             
@@ -1996,7 +2025,7 @@ function showGoalsError(message, apiUrl) {
                 obj[field.id] = value;
               }
             } else {
-              // For non-number fields, save the trimmed value
+              // For non-number fields (including date), save the trimmed value
               obj[field.id] = value;
             }
             

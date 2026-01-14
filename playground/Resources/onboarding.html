@@ -137,10 +137,11 @@
           linear-gradient(135deg, var(--accent), var(--accent2));
         box-shadow: 0 12px 32px rgba(124, 58, 237, 0.35);
       }
-      .brandText { display:flex; flex-direction:column; min-width:0; }
+      .brandText { display:flex; flex-direction:column; min-width:0; flex: 1; }
       .brandText b {
         font-size: 14px; letter-spacing:.2px;
         white-space: nowrap; overflow:hidden; text-overflow:ellipsis;
+        max-width: 140px;
       }
       .brandText span {
         font-size: 12px; color: var(--muted2);
@@ -1022,7 +1023,7 @@
           <div class="brand" aria-label="Onboarding">
             <div class="mark" aria-hidden="true"></div>
             <div class="brandText">
-              <b>Personal plan setup</b>
+              <b>Plan setup</b>
               <span id="stepMeta">Step</span>
             </div>
           </div>
