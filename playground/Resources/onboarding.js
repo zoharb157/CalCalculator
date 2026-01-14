@@ -1,6 +1,49 @@
 // @ts-check
+/**
+ * Onboarding Flow - JavaScript Implementation
+ * 
+ * Follows company standard pattern for events and macros:
+ * - Uses call/callAsync for native communication
+ * - Implements __handleEvent__ pattern for Swift-to-JS communication
+ * - Uses eventById map for async callback tracking
+ */
 
 (() => {
+  // ============================================================================
+  // CONSTANTS & CONFIGURATION
+  // ============================================================================
+  
+  /** @type {string} */
+  const VERSION = "1.0.0";
+  
+  /** @type {string} */
+  let CID = "";
+  
+  /** @type {string} */
+  let SESSION_ID = "";
+  
+  /** @type {boolean} */
+  let ISSUBSCRIBESERVER = false;
+  
+  /** @type {string} */
+  let USERID = "";
+  
+  /** @type {string} */
+  let APP_VERSION = "1.0";
+  
+  /** @type {string} */
+  let INSTALL_TIME = "";
+  
+  /** @type {number} */
+  let SECONDS = 0;
+  
+  // Onboarding completion tracking
+  const ONBOARDING_COMPLETED_KEY = 'caloriecount_onboarding_completed';
+  
+  // ============================================================================
+  // DATA
+  // ============================================================================
+  
   // ---- Data (your onboarding steps) ----
   // Updated flow: gender -> name_input -> welcome -> ... -> permissions (last) -> generating
   const STEPS = [
@@ -158,17 +201,275 @@
   // Minimum age requirement
   const MIN_AGE = 13;
 
-  // ---- Native bridge helper (iOS WKWebView) ----
-  function postToNative(type, payload) {
+  // ============================================================================
+  // ONBOARDING COMPLETION TRACKING
+  // ============================================================================
+  
+  /**
+   * Check if user has completed onboarding before
+   * @returns {boolean}
+   */
+  const hasCompletedOnboarding = () => {
     try {
-      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.onboarding) {
-        window.webkit.messageHandlers.onboarding.postMessage({ type, payload });
-        return true;
+      const completed = localStorage.getItem(ONBOARDING_COMPLETED_KEY);
+      return completed === 'true';
+    } catch (error) {
+      return false;
+    }
+  };
+  
+  /**
+   * Mark onboarding as completed (called when user reaches paywall/generating step)
+   */
+  const setOnboardingCompleted = () => {
+    try {
+      localStorage.setItem(ONBOARDING_COMPLETED_KEY, 'true');
+      sendPostRequest("onboarding_marked_completed", '', false);
+    } catch (error) {
+      // Silently fail if localStorage is not available
+    }
+  };
+  
+  /**
+   * Skip directly to generating/paywall step (for returning users)
+   */
+  const skipToPaywall = () => {
+    sendPostRequest("returning_user_skip_to_paywall", '', false);
+    state.currentId = "generating";
+    
+    // Try to load saved answers from localStorage
+    try {
+      const savedAnswers = localStorage.getItem('caloriecount_onboarding_answers');
+      if (savedAnswers) {
+        state.answers = JSON.parse(savedAnswers);
+        sendPostRequest("loaded_saved_answers", '', false);
       }
-    } catch (_) {}
-    window.dispatchEvent(new CustomEvent("onboarding", { detail: { type, payload } }));
-    return false;
+    } catch (error) {
+      // Use empty answers if loading fails
+    }
+    
+    render();
+  };
+  
+  /**
+   * Save answers to localStorage (for future sessions)
+   */
+  const saveAnswersToStorage = () => {
+    try {
+      localStorage.setItem('caloriecount_onboarding_answers', JSON.stringify(state.answers));
+    } catch (error) {
+      // Silently fail
+    }
+  };
+
+  // ============================================================================
+  // NATIVE BRIDGE - Company Standard Pattern
+  // ============================================================================
+  
+  /** @type {string} */
+  const swiftEndPoint = "onboarding";
+  
+  /** @type {Object.<string, Callback>} */
+  const eventById = {};
+  
+  /** @typedef {{( data: any | undefined, error: string | undefined): void}} Callback */
+  
+  /**
+   * @param {string} id
+   * @param {any} [payload]
+   * @param {string} [error]
+   * @description To be called by Swift only
+   */
+  const __handleEvent__ = (id, payload, error = undefined) => {
+    try {
+      document.dispatchEvent(new CustomEvent(id, { detail: payload }));
+      if (eventById[id]) {
+        eventById[id](payload, error);
+        delete eventById[id];
+      }
+    } catch (err) {
+      console.error("[onboarding] __handleEvent__ error:", err);
+    }
+  };
+  
+  // Expose __handleEvent__ globally so Swift can call it
+  window.__handleEvent__ = __handleEvent__;
+  
+  /**
+   * @param {string} id
+   * @param {string} action
+   * @param {Object.<string, any> | undefined} [params={}]
+   * @param {boolean} [replyRequierd=true]
+   */
+  const sendMessage = (id, action, params, replyRequierd) => {
+    try {
+      // Security: Validate payload size (max 1MB to prevent memory exhaustion)
+      const messageSize = JSON.stringify({ id, action, params, replyRequierd }).length;
+      if (messageSize > 1_048_576) { // 1MB limit
+        console.error("[onboarding] sendMessage error: Payload too large:", messageSize, "bytes");
+        return;
+      }
+      
+      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers[swiftEndPoint]) {
+        window.webkit.messageHandlers[swiftEndPoint].postMessage({
+          id,
+          action,
+          params,
+          replyRequierd,
+        });
+      } else {
+        // Fallback for testing
+        window.dispatchEvent(new CustomEvent("onboarding", { detail: { id, action, params, replyRequierd } }));
+      }
+    } catch (err) {
+      console.error("[onboarding] sendMessage error:", err);
+    }
+  };
+  
+  /** @returns {string} */
+  const uuid = () => {
+    // Add timestamp to reduce collision risk (ultra-deep safety)
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(16).slice(2);
+    return `${timestamp}_${random}`;
+  };
+  
+  /**
+   * Fire and forget - no response expected
+   * @param {string} action
+   * @param {Object.<string, any> | undefined} [params={}]
+   */
+  const call = (action, params = {}) => {
+    sendMessage(uuid(), action, params, false);
+  };
+  
+  /**
+   * Fire and forget with action object
+   * @param {{action: string, properties?: Object.<string, any>}} actionObj
+   */
+  const callAction = (actionObj) => {
+    sendMessage(uuid(), actionObj.action, actionObj.properties || {}, false);
+  };
+  
+  /**
+   * Async call with Promise - expects response
+   * @param {string} action
+   * @param {Object.<string, any> | undefined} [params={}]
+   * @param {number} [timeoutInSeconds]
+   * @returns {Promise<any>}
+   */
+  const callAsync = async (action, params = {}, timeoutInSeconds = undefined) => {
+    return new Promise((resolve, reject) => {
+      /** @type {Callback} */
+      const callback = (payload, error) => {
+        if (error) {
+          reject(new Error(error));
+        } else {
+          resolve(payload);
+        }
+      };
+      
+      /** @type {string} */
+      const id = uuid();
+      eventById[id] = callback;
+      
+      if (timeoutInSeconds) {
+        setTimeout(() => {
+          if (eventById[id]) {
+            delete eventById[id];
+            reject(new Error(`Timeout error, call exceeded ${timeoutInSeconds} seconds`));
+          }
+        }, timeoutInSeconds * 1000);
+      }
+      
+      sendMessage(id, action, params, true);
+    });
+  };
+  
+  /**
+   * Async call with action object
+   * @param {{action: string, properties?: Object.<string, any>}} actionObj
+   * @param {number} [timeoutInSeconds]
+   * @returns {Promise<any>}
+   */
+  const callActionAsync = async (actionObj, timeoutInSeconds = undefined) => {
+    return callAsync(actionObj.action, actionObj.properties || {}, timeoutInSeconds);
+  };
+  
+  // Legacy function for backward compatibility - maps to new pattern
+  function postToNative(type, payload) {
+    // Send payload directly as params (not nested under 'payload' key)
+    call(type, payload || {});
+    return true;
   }
+
+  // ============================================================================
+  // ANALYTICS - Post Request Pattern
+  // ============================================================================
+  
+  /**
+   * Helper to create query param string
+   */
+  const createQueryParamString = (data) => {
+    const params = [];
+    for (const [key, value] of Object.entries(data)) {
+      params.push(`${key}=${value}`);
+    }
+    return params.join("&");
+  };
+
+  /**
+   * Send analytics event (matches company pattern)
+   * @param {string} type - Event type
+   * @param {string} [identifier] - Ad identifier
+   * @param {boolean} [logAppsFlyer] - Whether to log to AppsFlyer
+   * @param {string} [info] - Additional info
+   * @param {Function} [cb] - Callback after request
+   */
+  const sendPostRequest = (type, identifier = "", logAppsFlyer = true, info = "", cb = () => {}) => {
+    const data = {
+      cid: CID,
+      userId: USERID,
+      installTime: INSTALL_TIME,
+      event: type,
+      source: "js",
+      appName: "Calorie Counter AI",
+      senderVersion: VERSION,
+      appVersion: APP_VERSION,
+      session_id: SESSION_ID,
+      info: info,
+    };
+    if (identifier) {
+      data["adIdentifier"] = identifier;
+    }
+    
+    if (logAppsFlyer) {
+      callActionAsync({ action: "appsFlyerEvent", properties: { name: type, values: data } }).then((res) => {
+      }).catch((error) => {
+        sendPostRequest("catchError_appsFlyerEvent", '', false, JSON.stringify(error));
+      });
+    }
+
+    const params = createQueryParamString(data);
+    const url = 'https://app.caloriecount-ai.com/pixel?' + params;
+
+    fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({}),
+      headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+    }).then(() => {
+      cb();
+    }).catch((error) => {
+      const errorData = {
+        eventType: type,
+        error: JSON.stringify(error),
+      };
+      if (type !== "fetchError") {
+        sendPostRequest("fetchError", '', false, JSON.stringify(errorData));
+      }
+      cb();
+    });
+  };
 
   // ---- Utilities ----
   function clamp(n, min, max) { return Math.min(max, Math.max(min, n)); }
@@ -257,53 +558,42 @@
 
   /**
    * Ask native iOS for a permission status / request / open settings.
-   * Native should respond by dispatching:
-   *   window.dispatchEvent(new CustomEvent('permission_result_native', { detail: { requestId, ok, permissionType, status, error? } }))
+   * Uses callAsync pattern for reliable communication with Swift.
    *
    * @param {string} permissionType  e.g. 'notifications' | 'tracking'
    * @param {'status' | 'request' | 'open_settings' | 'decline'} action
    * @returns {Promise<{ok:boolean, requestId:string, permissionType:string, status:string, error?:string}>}
    */
-  function permissionViaNative(permissionType, action) {
-    return new Promise((resolve) => {
-      const requestId = `${permissionType}_${Date.now()}_${++__permSeq}`;
-      const eventName = "permission_result_native";
-
-      const handler = (event) => {
-        const detail = event && event.detail ? event.detail : {};
-        if (detail.requestId !== requestId) return;
-        clearTimeout(timeout);
-        window.removeEventListener(eventName, handler);
-        resolve(detail);
+  async function permissionViaNative(permissionType, action) {
+    const requestId = `${permissionType}_${Date.now()}_${++__permSeq}`;
+    
+    try {
+      // Use callAsync with the company pattern - expects response via __handleEvent__
+      const response = await callAsync("permission_request", { 
+        requestId, 
+        permissionType, 
+        action 
+      }, 25); // 25 second timeout
+      
+      // Response should be { ok, requestId, permissionType, status, error? }
+      return {
+        ok: response?.ok ?? false,
+        requestId: response?.requestId ?? requestId,
+        permissionType: response?.permissionType ?? permissionType,
+        status: response?.status ?? "unknown",
+        error: response?.error
       };
-
-      const timeout = setTimeout(() => {
-        window.removeEventListener(eventName, handler);
-        resolve({
-          ok: false,
-          requestId,
-          permissionType,
-          status: "timeout",
-          error: "Timeout waiting for native permission response",
-        });
-      }, 25000);
-
-      window.addEventListener(eventName, handler);
-
-      const didPost = postToNative("permission_request", { requestId, permissionType, action });
-
-      // If we're not inside WKWebView (e.g. opened in a normal browser), don't block the flow.
-      if (!didPost) {
-        clearTimeout(timeout);
-        window.removeEventListener(eventName, handler);
-        resolve({
-          ok: true,
-          requestId,
-          permissionType,
-          status: "unavailable",
-        });
-      }
-    });
+    } catch (error) {
+      // Timeout or other error
+      console.error("[permissionViaNative] Error:", error);
+      return {
+        ok: false,
+        requestId,
+        permissionType,
+        status: "timeout",
+        error: error.message || "Failed to get permission status"
+      };
+    }
   }
 
 
@@ -620,10 +910,14 @@ async function generateGoalsViaApi() {
 
     // Hide back button on first step (Step 1 requirement)
     const isFirstStep = state.stack.length === 0;
-    backBtn.classList.toggle("hidden", isFirstStep);
-    backBtn.disabled = isFirstStep;
+    if (backBtn) {
+      backBtn.classList.toggle("hidden", isFirstStep);
+      backBtn.disabled = isFirstStep;
+    }
     
-    skipBtn.style.visibility = step.optional ? "visible" : "hidden";
+    if (skipBtn) {
+      skipBtn.style.visibility = step.optional ? "visible" : "hidden";
+    }
 
     content.innerHTML = "";
     footer.innerHTML = "";
@@ -1428,7 +1722,7 @@ async function generateGoalsViaApi() {
       secondaryBtn.textContent = "Not Now";
       secondaryBtn.onclick = () => {
         persistAnswer("skipped", "decline");
-        postToNative("permission_request", { permissionType: step.permissionType, action: "decline" });
+        call("permission_request", { permissionType: step.permissionType, action: "decline" });
         goNext();
       };
 
@@ -1653,108 +1947,118 @@ async function generateGoalsViaApi() {
       if (msgIndex < messages.length && statusEl) statusEl.textContent = messages[msgIndex];
     }, 650);
 
+    // Ensure interval is always cleared, even on unexpected errors
     (async () => {
-      // Try native first (bypasses CORS)
-      console.log("🔵 [startGoalsGeneration] Attempting to generate goals via native...");
-      const nativeResult = await tryGenerateGoalsViaNative();
-      
-      if (nativeResult.success) {
-        console.log("✅ [startGoalsGeneration] Goals generated successfully via native");
-        const apiGoals = nativeResult.goals;
-        
-        // Map API response to the UI's expected keys
-        const g = apiGoals || {};
-        const m = g.macros || {};
-
-        state.generatedGoals = {
-          calories: Math.round(Number(g.daily_calories || g.calories || 0)),
-          proteinG: Math.round(Number(m.protein_g || g.proteinG || 0)),
-          carbsG: Math.round(Number(m.carbs_g || g.carbsG || 0)),
-          fatG: Math.round(Number(m.fat_g || g.fatG || 0)),
-
-          // Keep extra fields
-          fiberG: Number(m.fiber_g || g.fiberG) ?? null,
-          bmi: g.bmi ?? null,
-          bmr: g.bmr ?? null,
-          tdee: g.tdee ?? null,
-          calorie_adjustment: g.calorie_adjustment ?? null,
-          time_to_goal_weeks: g.time_to_goal_weeks ?? null,
-          notes: g.notes ?? null,
-          _raw: g._raw ?? null,
-        };
-
-        // Keep normalized (metric) values for convenience
-        const hw = state.answers["height_weight"] || {};
-        const heightVal = hw.height ?? 170;
-        const heightUnit = hw["height__unit"] || "cm";
-        const weightVal = hw.weight ?? 70;
-        const weightUnit = hw["weight__unit"] || "kg";
-
-        state.answers._normalized = {
-          height_cm: toCm(heightVal, heightUnit),
-          weight_kg: toKg(weightVal, weightUnit),
-        };
-
-        clearInterval(msgInterval);
-        showGoalsResults(state.generatedGoals);
-
-        console.log("✅ [Goals API] Goals generated successfully, posting to native");
-        postToNative("goals_generated", { ok: true, goals: state.generatedGoals });
-        return; // Exit early, don't try JavaScript API
-      } else {
-        console.warn("⚠️ [startGoalsGeneration] Native generation failed, falling back to JavaScript API");
-        console.warn("⚠️ [startGoalsGeneration] Error: ", nativeResult.error);
-      }
-      
-      // Fallback to JavaScript API if native fails
       try {
-        console.log("🔵 [startGoalsGeneration] Calling generateGoalsViaApi()...");
-        const apiGoals = await generateGoalsViaApi();
+        // Try native first (bypasses CORS)
+        console.log("🔵 [startGoalsGeneration] Attempting to generate goals via native...");
+        const nativeResult = await tryGenerateGoalsViaNative();
+        
+        if (nativeResult.success) {
+          console.log("✅ [startGoalsGeneration] Goals generated successfully via native");
+          const apiGoals = nativeResult.goals;
+          
+          // Map API response to the UI's expected keys
+          const g = apiGoals || {};
+          const m = g.macros || {};
 
-        // Map API response to the UI's expected keys
-        const g = apiGoals || {};
-        const m = g.macros || {};
+          state.generatedGoals = {
+            calories: Math.round(Number(g.daily_calories || g.calories || 0)),
+            proteinG: Math.round(Number(m.protein_g || g.proteinG || 0)),
+            carbsG: Math.round(Number(m.carbs_g || g.carbsG || 0)),
+            fatG: Math.round(Number(m.fat_g || g.fatG || 0)),
 
-        state.generatedGoals = {
-          calories: Math.round(Number(g.daily_calories) || 0),
-          proteinG: Math.round(Number(m.protein_g) || 0),
-          carbsG: Math.round(Number(m.carbs_g) || 0),
-          fatG: Math.round(Number(m.fat_g) || 0),
+            // Keep extra fields
+            fiberG: Number(m.fiber_g || g.fiberG) ?? null,
+            bmi: g.bmi ?? null,
+            bmr: g.bmr ?? null,
+            tdee: g.tdee ?? null,
+            calorie_adjustment: g.calorie_adjustment ?? null,
+            time_to_goal_weeks: g.time_to_goal_weeks ?? null,
+            notes: g.notes ?? null,
+            _raw: g._raw ?? null,
+          };
 
-          // Keep extra fields (not shown in UI but useful for app logic)
-          fiberG: Number(m.fiber_g) ?? null,
-          bmi: g.bmi ?? null,
-          bmr: g.bmr ?? null,
-          tdee: g.tdee ?? null,
-          calorie_adjustment: g.calorie_adjustment ?? null,
-          time_to_goal_weeks: g.time_to_goal_weeks ?? null,
-          notes: g.notes ?? null,
-          _raw: g._raw ?? null,
-        };
+          // Keep normalized (metric) values for convenience
+          const hw = state.answers["height_weight"] || {};
+          const heightVal = hw.height ?? 170;
+          const heightUnit = hw["height__unit"] || "cm";
+          const weightVal = hw.weight ?? 70;
+          const weightUnit = hw["weight__unit"] || "kg";
 
-        // Keep normalized (metric) values for convenience
-        const hw = state.answers["height_weight"] || {};
-        const heightVal = hw.height ?? 170;
-        const heightUnit = hw["height__unit"] || "cm";
-        const weightVal = hw.weight ?? 70;
-        const weightUnit = hw["weight__unit"] || "kg";
+          state.answers._normalized = {
+            height_cm: toCm(heightVal, heightUnit),
+            weight_kg: toKg(weightVal, weightUnit),
+          };
 
-        state.answers._normalized = {
-          height_cm: toCm(heightVal, heightUnit),
-          weight_kg: toKg(weightVal, weightUnit),
-        };
+          clearInterval(msgInterval);
+          showGoalsResults(state.generatedGoals);
 
+          console.log("✅ [Goals API] Goals generated successfully, posting to native");
+          call("goals_generated", { ok: true, goals: state.generatedGoals });
+          return; // Exit early, don't try JavaScript API
+        } else {
+          console.warn("⚠️ [startGoalsGeneration] Native generation failed, falling back to JavaScript API");
+          console.warn("⚠️ [startGoalsGeneration] Error: ", nativeResult.error);
+        }
+        
+        // Fallback to JavaScript API if native fails
+        try {
+          console.log("🔵 [startGoalsGeneration] Calling generateGoalsViaApi()...");
+          const apiGoals = await generateGoalsViaApi();
+
+          // Map API response to the UI's expected keys
+          const g = apiGoals || {};
+          const m = g.macros || {};
+
+          state.generatedGoals = {
+            calories: Math.round(Number(g.daily_calories) || 0),
+            proteinG: Math.round(Number(m.protein_g) || 0),
+            carbsG: Math.round(Number(m.carbs_g) || 0),
+            fatG: Math.round(Number(m.fat_g) || 0),
+
+            // Keep extra fields (not shown in UI but useful for app logic)
+            fiberG: Number(m.fiber_g) ?? null,
+            bmi: g.bmi ?? null,
+            bmr: g.bmr ?? null,
+            tdee: g.tdee ?? null,
+            calorie_adjustment: g.calorie_adjustment ?? null,
+            time_to_goal_weeks: g.time_to_goal_weeks ?? null,
+            notes: g.notes ?? null,
+            _raw: g._raw ?? null,
+          };
+
+          // Keep normalized (metric) values for convenience
+          const hw = state.answers["height_weight"] || {};
+          const heightVal = hw.height ?? 170;
+          const heightUnit = hw["height__unit"] || "cm";
+          const weightVal = hw.weight ?? 70;
+          const weightUnit = hw["weight__unit"] || "kg";
+
+          state.answers._normalized = {
+            height_cm: toCm(heightVal, heightUnit),
+            weight_kg: toKg(weightVal, weightUnit),
+          };
+
+          clearInterval(msgInterval);
+          showGoalsResults(state.generatedGoals);
+
+          call("goals_generated", { ok: true, goals: state.generatedGoals });
+        } catch (err) {
+          clearInterval(msgInterval);
+          const msg = (err && err.name === "AbortError")
+            ? "Request timed out. Please try again."
+            : (err && err.message) ? err.message : "Something went wrong.";
+          console.warn("[Goals API error]", err);
+          call("goals_generated", { ok: false, error: msg });
+          showGoalsError(msg, `${getApiBaseUrl()}/calories/goals`);
+        }
+      } catch (unexpectedError) {
+        // Safety net: clear interval on any unexpected error
         clearInterval(msgInterval);
-        showGoalsResults(state.generatedGoals);
-
-        postToNative("goals_generated", { ok: true, goals: state.generatedGoals });
-      } catch (err) {
-        clearInterval(msgInterval);
-        const msg = (err && err.name === "AbortError")
-          ? "Request timed out. Please try again."
-          : (err && err.message) ? err.message : "Something went wrong.";
-        console.warn("[Goals API error]", err);
-        postToNative("goals_generated", { ok: false, error: msg });
+        console.error("❌ [startGoalsGeneration] Unexpected error:", unexpectedError);
+        const msg = unexpectedError.message || "An unexpected error occurred";
+        call("goals_generated", { ok: false, error: msg });
         showGoalsError(msg, `${getApiBaseUrl()}/calories/goals`);
       }
     })();
@@ -1982,8 +2286,17 @@ function showGoalsError(message, apiUrl) {
     const step = byId.get(stepId);
     if (!step) return;
     state.currentId = stepId;
+    
+    // Mark onboarding as completed when reaching the generating/paywall step
+    // This means user has answered all questions
+    if (stepId === "generating") {
+      setOnboardingCompleted();
+      saveAnswersToStorage();
+    }
+    
     render();
-    postToNative("step_view", { stepId });
+    call("step_view", { stepId });
+    sendPostRequest("step_" + stepId, '', false);
   }
 
   function goNext() {
@@ -2142,7 +2455,10 @@ function showGoalsError(message, apiUrl) {
       completedAt: new Date().toISOString(),
     };
 
-    postToNative("complete", payload);
+    call("complete", payload);
+    sendPostRequest("onboarding_complete", '', true, JSON.stringify(payload), () => {
+      callAction({ action: "dismiss" });
+    });
 
     content.innerHTML = `
       <div class="fadeIn goalsGenWrap">
@@ -2159,23 +2475,92 @@ function showGoalsError(message, apiUrl) {
   }
 
   // ---- Topbar events ----
-  backBtn.addEventListener("click", goBack);
-  skipBtn.addEventListener("click", () => {
-    const step = byId.get(state.currentId);
-    if (step && step.optional) {
-      delete state.answers[step.id];
-      goNext();
-    }
-  });
+  // Event listeners will be set up in initializeOnboarding() after DOM is ready
 
-  // ---- Init ----
-  render();
-  postToNative("ready", { firstStepId: state.currentId });
-
+  // ============================================================================
+  // PUBLIC API - Expose functions globally
+  // ============================================================================
+  
   window.OnboardingWeb = {
     getState: () => JSON.parse(JSON.stringify(state)),
     setAnswers: (answersObj) => { state.answers = answersObj || {}; render(); },
     goTo: (stepId) => goTo(stepId),
     finish: () => finish(),
+    start: (installTime = '') => {
+      if (installTime !== '') {
+        INSTALL_TIME = installTime;
+      }
+      // Check if user has completed onboarding before
+      const alreadyCompleted = hasCompletedOnboarding();
+      sendPostRequest("onboarding_check", '', false, alreadyCompleted ? "returning_user" : "first_time_user");
+      
+      if (alreadyCompleted) {
+        // Returning user - skip directly to paywall/generating
+        skipToPaywall();
+      } else {
+        // First time user - show full onboarding
+        render();
+        call("ready", { firstStepId: state.currentId });
+      }
+      
+      // Track time spent
+      setInterval(() => {
+        SECONDS++;
+      }, 1000);
+    },
+    resetOnboarding: () => {
+      try {
+        localStorage.removeItem(ONBOARDING_COMPLETED_KEY);
+        localStorage.removeItem('caloriecount_onboarding_answers');
+        sendPostRequest("onboarding_reset", '', false);
+      } catch (e) {}
+    }
   };
+  
+  // Expose bridge functions for debugging
+  window.OnboardingBridge = {
+    call,
+    callAsync,
+    callAction,
+    callActionAsync,
+    __handleEvent__,
+  };
+
+  // ============================================================================
+  // INIT - Auto-start if DOM is ready
+  // ============================================================================
+  
+  function initializeOnboarding() {
+    // Re-get DOM elements to ensure they exist
+    const backBtnEl = document.getElementById("backBtn");
+    const skipBtnEl = document.getElementById("skipBtn");
+    
+    // Set up event listeners if elements exist
+    if (backBtnEl) {
+      backBtnEl.addEventListener("click", goBack);
+    }
+    
+    if (skipBtnEl) {
+      skipBtnEl.addEventListener("click", () => {
+        const step = byId.get(state.currentId);
+        if (step && step.optional) {
+          delete state.answers[step.id];
+          goNext();
+        }
+      });
+    }
+    
+    // Render the initial step
+    render();
+    call("ready", { firstStepId: state.currentId });
+    sendPostRequest("JSLoaded", "", false);
+    sendPostRequest("initAppReady", "", false);
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeOnboarding);
+  } else {
+    // DOM is already ready
+    initializeOnboarding();
+  }
 })();

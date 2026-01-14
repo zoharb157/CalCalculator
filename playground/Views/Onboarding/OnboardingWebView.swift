@@ -35,6 +35,13 @@ struct OnboardingResult {
     }
 }
 
+/// Custom WKWebView that hides the keyboard accessory bar (arrows and checkmark)
+class NoAccessoryWebView: WKWebView {
+    override var inputAccessoryView: UIView? {
+        return nil
+    }
+}
+
 /// UIViewRepresentable wrapper for WKWebView
 struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
     let onComplete: (OnboardingResult) -> Void
@@ -60,7 +67,8 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
         // Configure preferences
         config.preferences.javaScriptEnabled = true
 
-        let webView = WKWebView(frame: .zero, configuration: config)
+        // Use custom WKWebView subclass that hides keyboard accessory bar
+        let webView = NoAccessoryWebView(frame: .zero, configuration: config)
         webView.isOpaque = false
         webView.backgroundColor = .clear
         webView.scrollView.backgroundColor = .clear
@@ -161,31 +169,374 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
         ) {
             guard message.name == "onboarding" else { return }
             guard let body = message.body as? [String: Any] else { return }
-            guard let type = body["type"] as? String else { return }
+            
+            // Support both new company pattern (id, action, params) and legacy format (type, payload)
+            let action: String?
+            let params: [String: Any]
+            let replyRequired: Bool
+            
+            if let newAction = body["action"] as? String {
+                // New company pattern: { id, action, params, replyRequierd }
+                action = newAction
+                params = body["params"] as? [String: Any] ?? [:]
+                replyRequired = body["replyRequierd"] as? Bool ?? false
+                
+                // Handle async responses via __handleEvent__
+                if replyRequired, let id = body["id"] as? String {
+                    // Store the request ID for async response
+                    // The response will be sent via __handleEvent__ which calls handleEvent
+                    handleEvent(id: id, action: newAction, params: params)
+                    return
+                }
+            } else if let legacyType = body["type"] as? String {
+                // Legacy format: { type, payload }
+                action = legacyType
+                params = body["payload"] as? [String: Any] ?? [:]
+                replyRequired = false
+            } else {
+                print("⚠️ [OnboardingWebView] Message missing both 'action' and 'type' fields")
+                return
+            }
+            
+            guard let action = action else { return }
 
-            let payload = body["payload"] as? [String: Any] ?? [:]
-
-            switch type {
+            switch action {
             case "ready":
                 print(
-                    "📱 [OnboardingWebView] Onboarding ready, first step: \(payload["firstStepId"] ?? "unknown")"
+                    "📱 [OnboardingWebView] Onboarding ready, first step: \(params["firstStepId"] ?? "unknown")"
                 )
 
             case "step_view":
-                print("📱 [OnboardingWebView] Viewing step: \(payload["stepId"] ?? "unknown")")
+                print("📱 [OnboardingWebView] Viewing step: \(params["stepId"] ?? "unknown")")
 
             case "generate_goals_via_native":
                 print("📱 [OnboardingWebView] Generate goals via native requested")
-                handleGenerateGoalsViaNative(payload: payload)
+                handleGenerateGoalsViaNative(payload: params)
 
             case "complete":
-                handleComplete(payload: payload)
+                handleComplete(payload: params)
                 
             case "permission_request":
-                handlePermissionRequest(payload: payload)
+                handlePermissionRequest(payload: params)
+                
+            case "goals_generated":
+                // Handle goals_generated event (fire and forget)
+                if let ok = params["ok"] as? Bool, ok {
+                    print("✅ [OnboardingWebView] Goals generated successfully")
+                } else if let error = params["error"] as? String {
+                    print("❌ [OnboardingWebView] Goals generation failed: \(error)")
+                }
 
             default:
-                print("📱 [OnboardingWebView] Unknown message type: \(type)")
+                print("📱 [OnboardingWebView] Unknown message action: \(action)")
+            }
+        }
+        
+        /// Handle async events via __handleEvent__ pattern
+        private func handleEvent(id: String, action: String, params: [String: Any]) {
+            DispatchQueue.main.async { [weak self] in
+                guard self?.webView != nil else { return }
+                
+                switch action {
+                case "generate_goals_via_native":
+                    print("📱 [OnboardingWebView] Generate goals via native (async) requested")
+                    self?.handleGenerateGoalsViaNativeAsync(id: id, payload: params)
+                    
+                case "permission_request":
+                    print("📱 [OnboardingWebView] Permission request (async) - id: \(id)")
+                    self?.handlePermissionRequestAsync(id: id, payload: params)
+                    
+                case "getIsSubscribed", "appsFlyerEvent", "log", "dismiss":
+                    // These actions don't need special handling, just acknowledge
+                    // The actual implementation would be in the respective handlers
+                    print("📱 [OnboardingWebView] Received action: \(action) (id: \(id))")
+                    
+                default:
+                    print("📱 [OnboardingWebView] Unhandled async action: \(action) (id: \(id))")
+                }
+            }
+        }
+        
+        /// Post response back to JS via __handleEvent__
+        private func postEventToJS(id: String, payload: Any?, error: String? = nil) {
+            DispatchQueue.main.async { [weak self] in
+                guard let webView = self?.webView else { return }
+                
+                // Serialize payload to JSON string
+                var payloadJsonString = "undefined"
+                if let payload = payload {
+                    if let jsonData = try? JSONSerialization.data(withJSONObject: payload, options: []),
+                       let jsonString = String(data: jsonData, encoding: .utf8) {
+                        // Escape for JavaScript - need to escape backslashes, quotes, and newlines
+                        let escaped = jsonString
+                            .replacingOccurrences(of: "\\", with: "\\\\")
+                            .replacingOccurrences(of: "'", with: "\\'")
+                            .replacingOccurrences(of: "\n", with: "\\n")
+                            .replacingOccurrences(of: "\r", with: "\\r")
+                        payloadJsonString = "'\(escaped)'"
+                    }
+                }
+                
+                // Escape error string
+                let errorJsonString: String
+                if let error = error {
+                    let escaped = error
+                        .replacingOccurrences(of: "\\", with: "\\\\")
+                        .replacingOccurrences(of: "'", with: "\\'")
+                        .replacingOccurrences(of: "\n", with: "\\n")
+                        .replacingOccurrences(of: "\r", with: "\\r")
+                    errorJsonString = "'\(escaped)'"
+                } else {
+                    errorJsonString = "undefined"
+                }
+                
+                // Build JavaScript code - use string concatenation to avoid interpolation issues
+                let payloadCode: String
+                if payloadJsonString != "undefined" {
+                    // payloadJsonString already contains the escaped JSON string in quotes
+                    payloadCode = "JSON.parse(" + payloadJsonString + ")"
+                } else {
+                    payloadCode = "undefined"
+                }
+                
+                // Build the complete JavaScript string using string interpolation for simple values
+                let js = """
+                    (function() {
+                        try {
+                            if (window.__handleEvent__) {
+                                var payload = \(payloadCode);
+                                window.__handleEvent__('\(id)', payload, \(errorJsonString));
+                            } else {
+                                console.error('__handleEvent__ not found');
+                            }
+                        } catch (e) {
+                            console.error('Failed to call __handleEvent__:', e);
+                        }
+                    })();
+                """
+                
+                webView.evaluateJavaScript(js) { _, err in
+                    if let err = err {
+                        print("❌ [OnboardingWebView] Failed to post event to JS: \(err.localizedDescription)")
+                    }
+                }
+            }
+        }
+        
+        /// Handle generate_goals_via_native as async call
+        private func handleGenerateGoalsViaNativeAsync(id: String, payload: [String: Any]) {
+            guard let answers = payload["answers"] as? [String: Any] else {
+                let response: [String: Any] = [
+                    "ok": false,
+                    "error": "Missing answers data"
+                ]
+                postEventToJS(id: id, payload: response)
+                return
+            }
+            
+            Task {
+                do {
+                    print("🔵 [OnboardingWebView] Calling GoalsGenerationService (async)...")
+                    let goals = try await GoalsGenerationService.shared.generateGoals(from: answers)
+                    
+                    print("✅ [OnboardingWebView] Goals generated successfully via native (async)")
+                    print("   - Calories: \(goals.calories)")
+                    print("   - Protein: \(goals.proteinG)g")
+                    print("   - Carbs: \(goals.carbsG)g")
+                    print("   - Fat: \(goals.fatG)g")
+                    
+                    let goalsData: [String: Any] = [
+                        "calories": goals.calories,
+                        "proteinG": goals.proteinG,
+                        "carbsG": goals.carbsG,
+                        "fatG": goals.fatG
+                    ]
+                    
+                    let response: [String: Any] = [
+                        "ok": true,
+                        "goals": goalsData
+                    ]
+                    
+                    postEventToJS(id: id, payload: response)
+                } catch {
+                    print("❌ [OnboardingWebView] Failed to generate goals via native (async): \(error)")
+                    let errorMsg = (error as? GoalsGenerationError)?.errorDescription ?? error.localizedDescription
+                    let response: [String: Any] = [
+                        "ok": false,
+                        "error": errorMsg
+                    ]
+                    postEventToJS(id: id, payload: response)
+                }
+            }
+        }
+        
+        /// Handle async permission request via __handleEvent__ pattern
+        private func handlePermissionRequestAsync(id: String, payload: [String: Any]) {
+            let requestId = payload["requestId"] as? String ?? id
+            
+            // JS might send "permissionType" (v2) or "type" (older code)
+            let permissionType =
+                (payload["permissionType"] as? String) ??
+                (payload["type"] as? String) ??
+                ""
+            
+            let action = (payload["action"] as? String) ?? "request"
+            
+            print("📱 [OnboardingWebView] Permission request async - type: \(permissionType), action: \(action)")
+            
+            switch action {
+            case "open_settings":
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                }
+                let response: [String: Any] = [
+                    "ok": true,
+                    "requestId": requestId,
+                    "permissionType": permissionType,
+                    "status": "opened_settings"
+                ]
+                postEventToJS(id: id, payload: response)
+                
+            case "decline":
+                let response: [String: Any] = [
+                    "ok": true,
+                    "requestId": requestId,
+                    "permissionType": permissionType,
+                    "status": "declined"
+                ]
+                postEventToJS(id: id, payload: response)
+                
+            case "status":
+                checkPermissionStatusAsync(id: id, requestId: requestId, permissionType: permissionType)
+                
+            case "request", "request_native":
+                requestPermissionAsync(id: id, requestId: requestId, permissionType: permissionType)
+                
+            default:
+                let response: [String: Any] = [
+                    "ok": false,
+                    "requestId": requestId,
+                    "permissionType": permissionType,
+                    "status": "unknown",
+                    "error": "Unknown action: \(action)"
+                ]
+                postEventToJS(id: id, payload: response)
+            }
+        }
+        
+        /// Check permission status and respond via __handleEvent__
+        private func checkPermissionStatusAsync(id: String, requestId: String, permissionType: String) {
+            switch permissionType {
+            case "tracking":
+                let status = mapTrackingStatus(ATTrackingManager.trackingAuthorizationStatus)
+                let response: [String: Any] = [
+                    "ok": true,
+                    "requestId": requestId,
+                    "permissionType": permissionType,
+                    "status": status
+                ]
+                postEventToJS(id: id, payload: response)
+                
+            case "notifications":
+                UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
+                    let status = self?.mapNotificationStatus(settings.authorizationStatus) ?? "unknown"
+                    let response: [String: Any] = [
+                        "ok": true,
+                        "requestId": requestId,
+                        "permissionType": permissionType,
+                        "status": status
+                    ]
+                    self?.postEventToJS(id: id, payload: response)
+                }
+                
+            default:
+                let response: [String: Any] = [
+                    "ok": false,
+                    "requestId": requestId,
+                    "permissionType": permissionType,
+                    "status": "unknown",
+                    "error": "Unsupported permissionType: \(permissionType)"
+                ]
+                postEventToJS(id: id, payload: response)
+            }
+        }
+        
+        /// Request permission and respond via __handleEvent__
+        private func requestPermissionAsync(id: String, requestId: String, permissionType: String) {
+            switch permissionType {
+            case "tracking":
+                let current = ATTrackingManager.trackingAuthorizationStatus
+                guard current == .notDetermined else {
+                    let status = mapTrackingStatus(current)
+                    let response: [String: Any] = [
+                        "ok": true,
+                        "requestId": requestId,
+                        "permissionType": permissionType,
+                        "status": status
+                    ]
+                    postEventToJS(id: id, payload: response)
+                    return
+                }
+                
+                ATTrackingManager.requestTrackingAuthorization { [weak self] newStatus in
+                    let status = self?.mapTrackingStatus(newStatus) ?? "unknown"
+                    let response: [String: Any] = [
+                        "ok": true,
+                        "requestId": requestId,
+                        "permissionType": permissionType,
+                        "status": status
+                    ]
+                    self?.postEventToJS(id: id, payload: response)
+                }
+                
+            case "notifications":
+                let center = UNUserNotificationCenter.current()
+                center.getNotificationSettings { [weak self] settings in
+                    switch settings.authorizationStatus {
+                    case .notDetermined:
+                        center.requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
+                            if granted {
+                                DispatchQueue.main.async {
+                                    UIApplication.shared.registerForRemoteNotifications()
+                                }
+                            }
+                            // Re-check actual status
+                            center.getNotificationSettings { updated in
+                                let status = self?.mapNotificationStatus(updated.authorizationStatus) ?? "unknown"
+                                var response: [String: Any] = [
+                                    "ok": error == nil,
+                                    "requestId": requestId,
+                                    "permissionType": permissionType,
+                                    "status": status
+                                ]
+                                if let error = error {
+                                    response["error"] = error.localizedDescription
+                                }
+                                self?.postEventToJS(id: id, payload: response)
+                            }
+                        }
+                        
+                    default:
+                        let status = self?.mapNotificationStatus(settings.authorizationStatus) ?? "unknown"
+                        let response: [String: Any] = [
+                            "ok": true,
+                            "requestId": requestId,
+                            "permissionType": permissionType,
+                            "status": status
+                        ]
+                        self?.postEventToJS(id: id, payload: response)
+                    }
+                }
+                
+            default:
+                let response: [String: Any] = [
+                    "ok": false,
+                    "requestId": requestId,
+                    "permissionType": permissionType,
+                    "status": "unknown",
+                    "error": "Unsupported permissionType: \(permissionType)"
+                ]
+                postEventToJS(id: id, payload: response)
             }
         }
 
