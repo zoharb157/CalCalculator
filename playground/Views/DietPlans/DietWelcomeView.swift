@@ -118,17 +118,17 @@ struct DietWelcomeView: View {
                 .fontWeight(.bold)
             
             VStack(alignment: .leading, spacing: 16) {
-                FeatureRow(
+                DietFeatureRow(
                     icon: "clock.fill",
                     text: "Get notified when it's time to eat"
                 )
                 
-                FeatureRow(
+                DietFeatureRow(
                     icon: "checkmark.circle.fill",
                     text: "Track which meals you completed"
                 )
                 
-                FeatureRow(
+                DietFeatureRow(
                     icon: "chart.bar.fill",
                     text: "See your adherence progress"
                 )
@@ -193,7 +193,7 @@ struct DietWelcomeView: View {
     }
 }
 
-struct FeatureRow: View {
+struct DietFeatureRow: View {
     let icon: String
     let text: String
     

@@ -3,10 +3,13 @@
 //  playground
 //
 //  WKWebView-based onboarding flow with integrated goals generation
+//  Uses company standard pattern for JavaScript-to-Swift communication
 //
 
 import SwiftUI
 import WebKit
+
+// MARK: - OnboardingWebView
 
 /// A SwiftUI wrapper for the HTML-based onboarding flow
 struct OnboardingWebView: View {
@@ -17,6 +20,8 @@ struct OnboardingWebView: View {
             .ignoresSafeArea()
     }
 }
+
+// MARK: - OnboardingResult
 
 /// Result from the onboarding flow
 struct OnboardingResult {
@@ -32,6 +37,8 @@ struct OnboardingResult {
     }
 }
 
+// MARK: - OnboardingWebViewRepresentable
+
 /// UIViewRepresentable wrapper for WKWebView
 struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
     let onComplete: (OnboardingResult) -> Void
@@ -44,17 +51,15 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
         return true
     }
 
+    // MARK: - UIViewRepresentable Implementation
+    
     func makeCoordinator() -> Coordinator {
         Coordinator(onComplete: onComplete)
     }
 
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
-
-        // Add message handler for communication from JS
         config.userContentController.add(context.coordinator, name: "onboarding")
-
-        // Configure preferences
         config.preferences.javaScriptEnabled = true
 
         let webView = WKWebView(frame: .zero, configuration: config)
@@ -63,39 +68,31 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
         webView.scrollView.backgroundColor = .clear
         webView.scrollView.bounces = false
         webView.scrollView.contentInsetAdjustmentBehavior = .never
-        
-        // Set navigation delegate to coordinator to avoid multiple updates per frame
         webView.navigationDelegate = context.coordinator
 
-        // Allow inspection in Safari for debugging (iOS 16.4+)
         if #available(iOS 16.4, *) {
             webView.isInspectable = true
         }
 
-        // Load the HTML with injected JS
         loadOnboardingContent(into: webView)
-
         context.coordinator.webView = webView
 
         return webView
     }
 
     func updateUIView(_ uiView: WKWebView, context: Context) {
-        // CRITICAL: WKWebView doesn't need updates on every SwiftUI render cycle
-        // SwiftUI calls this method whenever the parent view's body recomputes
-        // Since we conform to Equatable and always return true, SwiftUI should skip this
-        // But if it's still called, we do nothing to prevent NavigationRequestObserver warnings
-        // The webView is configured once in makeUIView and doesn't need reconfiguration
+        // No-op: WebView is configured once in makeUIView
+        // Equatable conformance prevents unnecessary updates
     }
     
     static func dismantleUIView(_ uiView: WKWebView, coordinator: Coordinator) {
-        // Clean up when view is removed from hierarchy
-        // This prevents warnings from stale WKWebView instances
         uiView.navigationDelegate = nil
         uiView.configuration.userContentController.removeScriptMessageHandler(forName: "onboarding")
         uiView.stopLoading()
     }
 
+    // MARK: - Private Helpers
+    
     /// Loads the onboarding HTML template and injects the JS content
     private func loadOnboardingContent(into webView: WKWebView) {
         // Load HTML template
@@ -124,17 +121,22 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
         webView.loadHTMLString(htmlContent, baseURL: baseURL)
     }
 
+    // MARK: - Coordinator
+    
     /// Coordinator to handle JS message callbacks and navigation
     class Coordinator: NSObject, WKScriptMessageHandler, WKNavigationDelegate {
+        // MARK: - Properties
+        
         weak var webView: WKWebView?
         let onComplete: (OnboardingResult) -> Void
 
+        // MARK: - Initialization
+        
         init(onComplete: @escaping (OnboardingResult) -> Void) {
             self.onComplete = onComplete
         }
         
         deinit {
-            // Clean up message handler to prevent memory leaks and warnings
             webView?.configuration.userContentController.removeScriptMessageHandler(forName: "onboarding")
             webView?.navigationDelegate = nil
         }
@@ -150,64 +152,227 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
         
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             // Navigation finished - no action needed
-            // This delegate method is called but doesn't need to do anything
         }
 
+        // MARK: - WKScriptMessageHandler
+        
         func userContentController(
             _ userContentController: WKUserContentController, didReceive message: WKScriptMessage
         ) {
             guard message.name == "onboarding" else { return }
             guard let body = message.body as? [String: Any] else { return }
-            guard let type = body["type"] as? String else { return }
-
-            let payload = body["payload"] as? [String: Any] ?? [:]
-
-            switch type {
-            case "ready":
-                print(
-                    "📱 [OnboardingWebView] Onboarding ready, first step: \(payload["firstStepId"] ?? "unknown")"
-                )
-
-            case "step_view":
-                print("📱 [OnboardingWebView] Viewing step: \(payload["stepId"] ?? "unknown")")
-
-            case "generate_goals_via_native":
-                print("📱 [OnboardingWebView] Generate goals via native requested")
-                handleGenerateGoalsViaNative(payload: payload)
-
-            case "complete":
-                handleComplete(payload: payload)
-
-            default:
-                print("📱 [OnboardingWebView] Unknown message type: \(type)")
-            }
-        }
-
-        private func handleGenerateGoalsViaNative(payload: [String: Any]) {
-            print("📱 [OnboardingWebView] ===== Generate Goals Via Native Handler ======")
-            print("📱 [OnboardingWebView] Full payload: \(payload)")
-            print("📱 [OnboardingWebView] Payload keys: \(payload.keys)")
             
-            guard let answers = payload["answers"] as? [String: Any] else {
-                print("❌ [OnboardingWebView] Missing answers in payload")
-                print("❌ [OnboardingWebView] Payload content: \(payload)")
-                postGoalsGeneratedToJS(ok: false, error: "Missing answers data")
+            // Security: Validate payload size (max 1MB to prevent memory exhaustion)
+            if let jsonData = try? JSONSerialization.data(withJSONObject: body, options: []),
+               jsonData.count > 1_048_576 { // 1MB limit
+                #if DEBUG
+                print("⚠️ [OnboardingWebView] Payload too large: \(jsonData.count) bytes")
+                #endif
                 return
             }
             
-            print("📱 [OnboardingWebView] Answers extracted: \(answers)")
-            print("📱 [OnboardingWebView] Answers keys: \(answers.keys)")
+            // New company pattern: { id, action, params, replyRequierd }
+            let id = body["id"] as? String ?? ""
+            let action = body["action"] as? String ?? ""
+            let params = body["params"] as? [String: Any] ?? [:]
+            let replyRequired = body["replyRequierd"] as? Bool ?? false
+            
+            // Legacy support: { type, payload }
+            if action.isEmpty, let type = body["type"] as? String {
+                let payload = body["payload"] as? [String: Any] ?? [:]
+                handleLegacyMessage(type: type, payload: payload)
+                return
+            }
+            
+            switch action {
+            case "ready":
+                #if DEBUG
+                let firstStepId = params["firstStepId"] as? String ?? "unknown"
+                print("📱 [OnboardingWebView] Onboarding ready, first step: \(firstStepId)")
+                #endif
+                if replyRequired {
+                    handleEvent(id: id, payload: ["status": "ready"], error: nil)
+                }
+
+            case "step_view":
+                #if DEBUG
+                let stepId = params["stepId"] as? String ?? "unknown"
+                print("📱 [OnboardingWebView] Viewing step: \(stepId)")
+                #endif
+                if replyRequired {
+                    handleEvent(id: id, payload: ["status": "viewed"], error: nil)
+                }
+
+            case "generate_goals_via_native":
+                // Validate params structure for this action
+                guard params["answers"] is [String: Any] else {
+                    #if DEBUG
+                    print("⚠️ [OnboardingWebView] Invalid params structure for generate_goals_via_native")
+                    #endif
+                    if replyRequired {
+                        handleEvent(id: id, payload: nil, error: "Invalid params structure")
+                    }
+                    return
+                }
+                handleGenerateGoalsViaNative(params: params, requestId: replyRequired ? id : nil)
+
+            case "goals_generated":
+                // Notification only, no response needed
+                break
+
+            case "complete":
+                handleComplete(params: params)
+
+            default:
+                #if DEBUG
+                print("⚠️ [OnboardingWebView] Unknown action: \(action)")
+                #endif
+                if replyRequired {
+                    handleEvent(id: id, payload: nil, error: "Unknown action: \(action)")
+                }
+            }
+        }
+        
+        // MARK: - Message Handlers
+        
+        /// Legacy message handler for backward compatibility
+        private func handleLegacyMessage(type: String, payload: [String: Any]) {
+            #if DEBUG
+            print("📱 [OnboardingWebView] Legacy message: \(type)")
+            #endif
+            switch type {
+            case "ready", "step_view":
+                break
+            case "generate_goals_via_native":
+                handleGenerateGoalsViaNative(params: payload, requestId: nil)
+            case "complete":
+                handleComplete(params: payload)
+            default:
+                #if DEBUG
+                print("⚠️ [OnboardingWebView] Unknown legacy message type: \(type)")
+                #endif
+            }
+        }
+        
+        /// Handle event response using company pattern (__handleEvent__)
+        private func handleEvent(id: String, payload: Any?, error: String?) {
+            DispatchQueue.main.async { [weak self] in
+                guard let webView = self?.webView else { return }
+                
+                // Validate ID is not empty (ultra-deep safety - ID should always be valid UUID)
+                guard !id.isEmpty else {
+                    #if DEBUG
+                    print("⚠️ [OnboardingWebView] Empty ID provided to handleEvent")
+                    #endif
+                    return
+                }
+                
+                // Serialize payload to JSON string for safe transmission
+                var payloadJson = "undefined"
+                if let payload = payload {
+                    if let jsonData = try? JSONSerialization.data(withJSONObject: payload, options: []),
+                       let jsonString = String(data: jsonData, encoding: .utf8) {
+                        // Escape for JavaScript string literal (single quotes)
+                        // JSON already has escaped quotes (\"), we just need to escape single quotes
+                        let escaped = jsonString
+                            .replacingOccurrences(of: "\\", with: "\\\\")  // Escape backslashes first
+                            .replacingOccurrences(of: "'", with: "\\'")     // Escape single quotes
+                            .replacingOccurrences(of: "\n", with: "\\n")    // Escape newlines
+                            .replacingOccurrences(of: "\r", with: "\\r")    // Escape carriage returns
+                        payloadJson = "'\(escaped)'"
+                    }
+                }
+                
+                // Escape error string if present (ultra-deep safety)
+                var errorJson = "undefined"
+                if let error = error {
+                    // Escape for JavaScript string literal
+                    let escaped = error
+                        .replacingOccurrences(of: "\\", with: "\\\\")
+                        .replacingOccurrences(of: "'", with: "\\'")
+                        .replacingOccurrences(of: "\n", with: "\\n")
+                        .replacingOccurrences(of: "\r", with: "\\r")
+                    errorJson = "'\(escaped)'"
+                }
+                
+                // Escape ID for JavaScript string (ultra-deep safety - though ID should be safe)
+                let escapedId = id
+                    .replacingOccurrences(of: "\\", with: "\\\\")
+                    .replacingOccurrences(of: "'", with: "\\'")
+                    .replacingOccurrences(of: "\n", with: "\\n")
+                    .replacingOccurrences(of: "\r", with: "\\r")
+                
+                // Call __handleEvent__ with id, payload, and optional error
+                // Parse payload JSON if it's a string, otherwise pass directly
+                let message: String
+                if payloadJson != "undefined" {
+                    message = """
+                        (function() {
+                            try {
+                                var payload = JSON.parse(\(payloadJson));
+                                var error = \(errorJson);
+                                if (typeof __handleEvent__ === 'function') {
+                                    __handleEvent__('\(escapedId)', payload, error);
+                                } else {
+                                    console.error('__handleEvent__ is not defined');
+                                }
+                            } catch (e) {
+                                console.error('Failed to handle event:', e);
+                            }
+                        })();
+                    """
+                } else {
+                    message = """
+                        (function() {
+                            try {
+                                var error = \(errorJson);
+                                if (typeof __handleEvent__ === 'function') {
+                                    __handleEvent__('\(escapedId)', undefined, error);
+                                } else {
+                                    console.error('__handleEvent__ is not defined');
+                                }
+                            } catch (e) {
+                                console.error('Failed to handle event:', e);
+                            }
+                        })();
+                    """
+                }
+                
+                webView.evaluateJavaScript(message) { result, error in
+                    #if DEBUG
+                    if let error = error {
+                        print("❌ [OnboardingWebView] Failed to handle event: \(error.localizedDescription)")
+                    }
+                    #endif
+                }
+            }
+        }
+        
+        /// Handle goals generation request via native Swift service
+        private func handleGenerateGoalsViaNative(params: [String: Any], requestId: String?) {
+            #if DEBUG
+            print("📱 [OnboardingWebView] Generate goals via native requested")
+            #endif
+            
+            guard let answers = params["answers"] as? [String: Any] else {
+                #if DEBUG
+                print("❌ [OnboardingWebView] Missing answers in params")
+                #endif
+                if let requestId = requestId {
+                    handleEvent(id: requestId, payload: nil, error: "Missing answers data")
+                } else {
+                    postGoalsGeneratedToJS(ok: false, error: "Missing answers data")
+                }
+                return
+            }
             
             Task {
                 do {
-                    print("🔵 [OnboardingWebView] Calling GoalsGenerationService...")
                     let goals = try await GoalsGenerationService.shared.generateGoals(from: answers)
                     
-                    print("✅ [OnboardingWebView] Goals generated successfully via native")
-                    print("   - Calories: \(goals.calories)")
-                    print("   - Protein: \(goals.proteinG)g")
-                    print("   - Carbs: \(goals.carbsG)g")
-                    print("   - Fat: \(goals.fatG)g")
+                    #if DEBUG
+                    print("✅ [OnboardingWebView] Goals generated: \(goals.calories) cal")
+                    #endif
                     
                     // Send success response back to JavaScript
                     let goalsData: [String: Any] = [
@@ -217,26 +382,42 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
                         "fatG": goals.fatG
                     ]
                     
-                    postGoalsGeneratedToJS(ok: true, goals: goalsData)
-                } catch {
-                    print("❌ [OnboardingWebView] Failed to generate goals via native: \(error)")
-                    print("❌ [OnboardingWebView] Error type: \(type(of: error))")
-                    print("❌ [OnboardingWebView] Error description: \(error.localizedDescription)")
-                    if let nsError = error as NSError? {
-                        print("❌ [OnboardingWebView] NSError domain: \(nsError.domain)")
-                        print("❌ [OnboardingWebView] NSError code: \(nsError.code)")
-                        print("❌ [OnboardingWebView] NSError userInfo: \(nsError.userInfo)")
+                    let response: [String: Any] = [
+                        "ok": true,
+                        "goals": goalsData
+                    ]
+                    
+                    if let requestId = requestId {
+                        // New company pattern: use __handleEvent__
+                        handleEvent(id: requestId, payload: response, error: nil)
+                    } else {
+                        // Legacy fallback: use CustomEvent
+                        postGoalsGeneratedToJS(ok: true, goals: goalsData)
                     }
+                } catch {
+                    #if DEBUG
+                    print("❌ [OnboardingWebView] Failed to generate goals: \(error.localizedDescription)")
+                    #endif
                     let errorMsg = (error as? GoalsGenerationError)?.errorDescription ?? error.localizedDescription
-                    postGoalsGeneratedToJS(ok: false, error: errorMsg)
+                    
+                    if let requestId = requestId {
+                        // New company pattern: use __handleEvent__
+                        handleEvent(id: requestId, payload: nil, error: errorMsg)
+                    } else {
+                        // Legacy fallback: use CustomEvent
+                        postGoalsGeneratedToJS(ok: false, error: errorMsg)
+                    }
                 }
             }
         }
         
+        /// Legacy method: Post goals to JavaScript using CustomEvent (for backward compatibility)
         private func postGoalsGeneratedToJS(ok: Bool, goals: [String: Any]? = nil, error: String? = nil) {
             DispatchQueue.main.async { [weak self] in
                 guard let webView = self?.webView else {
+                    #if DEBUG
                     print("⚠️ [OnboardingWebView] WebView is nil, cannot post goals to JS")
+                    #endif
                     return
                 }
                 
@@ -251,7 +432,9 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
                 // Serialize to JSON and encode as base64 for safe transmission
                 guard let jsonData = try? JSONSerialization.data(withJSONObject: payload, options: []),
                       let jsonString = String(data: jsonData, encoding: .utf8) else {
+                    #if DEBUG
                     print("❌ [OnboardingWebView] Failed to serialize payload to JSON")
+                    #endif
                     return
                 }
                 
@@ -271,35 +454,19 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
                 """
                 
                 webView.evaluateJavaScript(message) { result, error in
+                    #if DEBUG
                     if let error = error {
                         print("❌ [OnboardingWebView] Failed to post goals to JS: \(error.localizedDescription)")
-                    } else {
-                        print("✅ [OnboardingWebView] Posted goals to JS successfully")
                     }
+                    #endif
                 }
             }
         }
         
-        private func handleComplete(payload: [String: Any]) {
-            print("📱 [OnboardingWebView] Onboarding complete!")
-
-            // Extract answers
+        /// Handle onboarding completion
+        private func handleComplete(params: [String: Any]) {
+            let payload = params
             let answers = payload["answers"] as? [String: Any] ?? [:]
-            
-            // CRITICAL: Log the answers structure to debug gender extraction
-            print("📱 [OnboardingWebView] ===== ONBOARDING ANSWERS =====")
-            print("📱 [OnboardingWebView] Answer keys: \(answers.keys)")
-            if let genderData = answers["gender"] {
-                print("📱 [OnboardingWebView] Gender data type: \(type(of: genderData))")
-                print("📱 [OnboardingWebView] Gender data value: \(genderData)")
-                if let genderDict = genderData as? [String: Any] {
-                    print("📱 [OnboardingWebView] Gender dict keys: \(genderDict.keys)")
-                    print("📱 [OnboardingWebView] Gender dict: \(genderDict)")
-                }
-            } else {
-                print("⚠️ [OnboardingWebView] No 'gender' key found in answers")
-            }
-            print("📱 [OnboardingWebView] Full answers JSON: \(answers)")
 
             // Extract generated goals
             let goalsData = payload["goals"] as? [String: Any] ?? [:]

@@ -7,14 +7,12 @@
 
 import SwiftUI
 import SwiftData
-import SDK
 
 struct DietPlansListView: View {
     @Query(sort: \DietPlan.createdAt, order: .reverse) private var allPlans: [DietPlan]
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isSubscribed) private var isSubscribed
-    @Environment(TheSDK.self) private var sdk
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @State private var showingQuickSetup = false
@@ -24,7 +22,6 @@ struct DietPlansListView: View {
     @State private var showingDeleteConfirmation = false
     @State private var planToDelete: DietPlan?
     @State private var showingPaywall = false
-    @State private var showDeclineConfirmation = false
     @State private var navigationPath = NavigationPath()
     
     private var dietPlanRepository: DietPlanRepository {
@@ -162,13 +159,7 @@ struct DietPlansListView: View {
             } message: {
                 Text(localizationManager.localizedString(for: AppStrings.DietPlan.deleteConfirmation))
             }
-            .fullScreenCover(isPresented: $showingPaywall) {
-                paywallView
-            }
-            .paywallDismissalOverlay(
-                showPaywall: $showingPaywall,
-                showDeclineConfirmation: $showDeclineConfirmation
-            )
+            .compliantPaywall(isPresented: $showingPaywall)
         }
     }
     
@@ -482,21 +473,6 @@ struct DietPlansListView: View {
         }
     }
     
-    // MARK: - Paywall View
-    
-    private var paywallView: some View {
-        SDKView(
-            model: sdk,
-            page: .splash,
-            show: paywallBinding(
-                showPaywall: $showingPaywall,
-                sdk: sdk,
-                showDeclineConfirmation: $showDeclineConfirmation
-            ),
-            backgroundColor: .white,
-            ignoreSafeArea: true
-        )
-    }
 }
 
 // MARK: - Diet Plan List Card

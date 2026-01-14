@@ -136,16 +136,7 @@ struct QuickLogView: View {
             } message: {
                 Text(errorMessage)
             }
-            .fullScreenCover(isPresented: $showPaywall) {
-                SDKView(
-                    model: sdk,
-                    page: .splash,
-                    show: paywallBinding(showPaywall: $showPaywall, sdk: sdk, showDeclineConfirmation: $showDeclineConfirmation),
-                    backgroundColor: .white,
-                    ignoreSafeArea: true
-                )
-            }
-            .paywallDismissalOverlay(showPaywall: $showPaywall, showDeclineConfirmation: $showDeclineConfirmation)
+            .compliantPaywall(isPresented: $showPaywall)
         }
     }
 

@@ -7,7 +7,6 @@
 
 import SwiftUI
 import PhotosUI
-import SDK
 
 struct ScanView: View {
     @Bindable var viewModel: ScanViewModel
@@ -15,10 +14,8 @@ struct ScanView: View {
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @Environment(\.isSubscribed) private var isSubscribed
-    @Environment(TheSDK.self) private var sdk
     
     @State private var showPaywall = false
-    @State private var showDeclineConfirmation = false
     @State private var previousViewState: ViewState? // Store previous view state before opening settings
     
     enum ViewState {
@@ -67,16 +64,7 @@ struct ScanView: View {
                 } message: {
                     errorAlertMessage
                 }
-                .fullScreenCover(isPresented: $showPaywall) {
-                    SDKView(
-                        model: sdk,
-                        page: .splash,
-                        show: paywallBinding(showPaywall: $showPaywall, sdk: sdk, showDeclineConfirmation: $showDeclineConfirmation),
-                        backgroundColor: .white,
-                        ignoreSafeArea: true
-                    )
-                }
-                .paywallDismissalOverlay(showPaywall: $showPaywall, showDeclineConfirmation: $showDeclineConfirmation)
+                .compliantPaywall(isPresented: $showPaywall)
         }
     }
     

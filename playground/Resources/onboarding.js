@@ -1,7 +1,18 @@
 // @ts-check
+/**
+ * Onboarding Flow - JavaScript Implementation
+ * 
+ * Follows company standard pattern for events and macros:
+ * - Uses call/callAsync for native communication
+ * - Implements __handleEvent__ pattern for Swift-to-JS communication
+ * - Uses eventById map for async callback tracking
+ */
 
 (() => {
-  // ---- Data (your onboarding steps) ----
+  // ============================================================================
+  // DATA
+  // ============================================================================
+  
   const STEPS = [
     {
       id: "gender",
@@ -115,7 +126,10 @@
     },
   ];
 
-  // ---- State ----
+  // ============================================================================
+  // STATE
+  // ============================================================================
+  
   const byId = new Map(STEPS.map((s) => [s.id, s]));
   const order = STEPS.map((s) => s.id);
   const state = {
@@ -125,19 +139,149 @@
     generatedGoals: null,
   };
 
-  // ---- Native bridge helper (iOS WKWebView) ----
-  function postToNative(type, payload) {
+  // ============================================================================
+  // NATIVE BRIDGE - Company Standard Pattern
+  // ============================================================================
+  
+  /** @type {string} */
+  const swiftEndPoint = "onboarding";
+  
+  /** @type {Object.<string, Callback>} */
+  const eventById = {};
+  
+  /** @typedef {{( data: any | undefined, error: string | undefined): void}} Callback */
+  
+  /**
+   * @param {string} id
+   * @param {any} [payload]
+   * @param {string} [error]
+   * @description To be called by Swift only
+   */
+  const __handleEvent__ = (id, payload, error = undefined) => {
     try {
-      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.onboarding) {
-        window.webkit.messageHandlers.onboarding.postMessage({ type, payload });
-        return true;
+      document.dispatchEvent(new CustomEvent(id, { detail: payload }));
+      if (eventById[id]) {
+        eventById[id](payload, error);
+        delete eventById[id];
       }
-    } catch (_) {}
-    window.dispatchEvent(new CustomEvent("onboarding", { detail: { type, payload } }));
-    return false;
+    } catch (err) {
+      console.error("[onboarding] __handleEvent__ error:", err);
+    }
+  };
+  
+  // Expose __handleEvent__ globally so Swift can call it
+  window.__handleEvent__ = __handleEvent__;
+  
+  /**
+   * @param {string} id
+   * @param {string} action
+   * @param {Object.<string, any> | undefined} [params={}]
+   * @param {boolean} [replyRequierd=true]
+   */
+  const sendMessage = (id, action, params, replyRequierd) => {
+    try {
+      // Security: Validate payload size (max 1MB to prevent memory exhaustion)
+      const messageSize = JSON.stringify({ id, action, params, replyRequierd }).length;
+      if (messageSize > 1_048_576) { // 1MB limit
+        console.error("[onboarding] sendMessage error: Payload too large:", messageSize, "bytes");
+        return;
+      }
+      
+      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers[swiftEndPoint]) {
+        window.webkit.messageHandlers[swiftEndPoint].postMessage({
+          id,
+          action,
+          params,
+          replyRequierd,
+        });
+      } else {
+        // Fallback for testing
+        window.dispatchEvent(new CustomEvent("onboarding", { detail: { id, action, params, replyRequierd } }));
+      }
+    } catch (err) {
+      console.error("[onboarding] sendMessage error:", err);
+    }
+  };
+  
+  /** @returns {string} */
+  const uuid = () => {
+    // Add timestamp to reduce collision risk (ultra-deep safety)
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(16).slice(2);
+    return `${timestamp}_${random}`;
+  };
+  
+  /**
+   * Fire and forget - no response expected
+   * @param {string} action
+   * @param {Object.<string, any> | undefined} [params={}]
+   */
+  const call = (action, params = {}) => {
+    sendMessage(uuid(), action, params, false);
+  };
+  
+  /**
+   * Fire and forget with action object
+   * @param {{action: string, properties?: Object.<string, any>}} actionObj
+   */
+  const callAction = (actionObj) => {
+    sendMessage(uuid(), actionObj.action, actionObj.properties || {}, false);
+  };
+  
+  /**
+   * Async call with Promise - expects response
+   * @param {string} action
+   * @param {Object.<string, any> | undefined} [params={}]
+   * @param {number} [timeoutInSeconds]
+   * @returns {Promise<any>}
+   */
+  const callAsync = async (action, params = {}, timeoutInSeconds = undefined) => {
+    return new Promise((resolve, reject) => {
+      /** @type {Callback} */
+      const callback = (payload, error) => {
+        if (error) {
+          reject(new Error(error));
+        } else {
+          resolve(payload);
+        }
+      };
+      
+      /** @type {string} */
+      const id = uuid();
+      eventById[id] = callback;
+      
+      if (timeoutInSeconds) {
+        setTimeout(() => {
+          if (eventById[id]) {
+            delete eventById[id];
+            reject(new Error(`Timeout error, call exceeded ${timeoutInSeconds} seconds`));
+          }
+        }, timeoutInSeconds * 1000);
+      }
+      
+      sendMessage(id, action, params, true);
+    });
+  };
+  
+  /**
+   * Async call with action object
+   * @param {{action: string, properties?: Object.<string, any>}} actionObj
+   * @param {number} [timeoutInSeconds]
+   * @returns {Promise<any>}
+   */
+  const callActionAsync = async (actionObj, timeoutInSeconds = undefined) => {
+    return callAsync(actionObj.action, actionObj.properties || {}, timeoutInSeconds);
+  };
+  
+  // Legacy function for backward compatibility - maps to new pattern
+  function postToNative(type, payload) {
+    call(type, { payload });
+    return true;
   }
 
-  // ---- Utilities ----
+  // ============================================================================
+  // UTILITIES
+  // ============================================================================
   function clamp(n, min, max) { return Math.min(max, Math.max(min, n)); }
   function fmtNumber(n, step) {
     const decimals = (String(step).split(".")[1] || "").length;
@@ -160,27 +304,30 @@
   }
   
   // Try to generate goals via native Swift code (bypasses CORS)
-  function tryGenerateGoalsViaNative() {
-    return new Promise((resolve) => {
+  // Uses new company pattern with callAsync for async communication
+  async function tryGenerateGoalsViaNative() {
+    try {
       console.log("🔵 [tryGenerateGoalsViaNative] Requesting goals generation via native...");
       
-      const timeout = setTimeout(() => {
-        window.removeEventListener("goals_generated_native", handler);
-        console.warn("⚠️ [tryGenerateGoalsViaNative] Timeout waiting for native response");
-        resolve({ success: false, error: "Timeout waiting for native response" });
-      }, 25000);
+      // callAsync returns the payload directly from __handleEvent__
+      const response = await callAsync("generate_goals_via_native", { answers: state.answers }, 25);
       
-      const handler = (event) => {
-        clearTimeout(timeout);
-        window.removeEventListener("goals_generated_native", handler);
+      console.log("🔵 [tryGenerateGoalsViaNative] Received native response:", response);
+      
+      // Response structure: { ok: true, goals: {...} } or { ok: false, error: "..." }
+      // Deep validation: ensure response structure is correct
+      if (response && typeof response === 'object' && response.ok === true && response.goals) {
+        const goals = response.goals;
         
-        const detail = event.detail || {};
-        console.log("🔵 [tryGenerateGoalsViaNative] Received native response:", detail);
-        
-        if (detail.ok === true && detail.goals) {
+        // Deep validation: ensure goals structure is valid
+        if (typeof goals === 'object' && 
+            typeof goals.calories === 'number' && 
+            typeof goals.proteinG === 'number' && 
+            typeof goals.carbsG === 'number' && 
+            typeof goals.fatG === 'number' &&
+            goals.calories > 0 && goals.proteinG >= 0 && goals.carbsG >= 0 && goals.fatG >= 0) {
           console.log("✅ [tryGenerateGoalsViaNative] Native generation successful");
-          const goals = detail.goals;
-          resolve({
+          return {
             success: true,
             goals: {
               daily_calories: goals.calories,
@@ -191,20 +338,20 @@
                 fiber_g: goals.fiberG || null
               }
             }
-          });
+          };
         } else {
-          const error = detail.error || "Unknown error from native";
-          console.error("❌ [tryGenerateGoalsViaNative] Native generation failed:", error);
-          resolve({ success: false, error: error });
+          console.error("❌ [tryGenerateGoalsViaNative] Invalid goals structure:", goals);
+          return { success: false, error: "Invalid goals data structure received" };
         }
-      };
-      
-      window.addEventListener("goals_generated_native", handler);
-      
-      // Request native generation
-      console.log("🔵 [tryGenerateGoalsViaNative] Posting request to native...");
-      postToNative("generate_goals_via_native", { answers: state.answers });
-    });
+      } else {
+        const error = (response && response.error) || "Unknown error from native";
+        console.error("❌ [tryGenerateGoalsViaNative] Native generation failed:", error);
+        return { success: false, error: error };
+      }
+    } catch (error) {
+      console.error("❌ [tryGenerateGoalsViaNative] Error:", error);
+      return { success: false, error: error.message || "Failed to generate goals" };
+    }
   }
 
   function calculateAge(birthdate) {
@@ -216,7 +363,9 @@
     return age;
   }
 
-  // ---- Goals Generation (API) ----
+  // ============================================================================
+  // GOALS GENERATION (API)
+  // ============================================================================
 // Uses:
 //   POST /calories/goals  (Authorization: Bearer <JWT_TOKEN>)
 // Contract: see CALORIES_GOALS_API.md
@@ -482,20 +631,24 @@ async function generateGoalsViaApi() {
   }
 }
 
-  // ---- DOM ----
+  // ============================================================================
+  // DOM ELEMENTS
+  // ============================================================================
+  
   const content = document.getElementById("content");
   const footer = document.getElementById("footer");
   const backBtn = document.getElementById("backBtn");
   const skipBtn = document.getElementById("skipBtn");
   const topbar = document.getElementById("topbar");
   const progressWrap = document.getElementById("progressWrap");
-
   const progressFill = document.getElementById("progressFill");
   const progressText = document.getElementById("progressText");
   const progressSteps = document.getElementById("progressSteps");
   const stepMeta = document.getElementById("stepMeta");
 
-  // ---- Rendering ----
+  // ============================================================================
+  // RENDERING
+  // ============================================================================
   function render() {
     const step = byId.get(state.currentId);
     if (!step) return;
@@ -1035,108 +1188,118 @@ async function generateGoalsViaApi() {
       if (msgIndex < messages.length && statusEl) statusEl.textContent = messages[msgIndex];
     }, 650);
 
+    // Ensure interval is always cleared, even on unexpected errors
     (async () => {
-      // Try native first (bypasses CORS)
-      console.log("🔵 [startGoalsGeneration] Attempting to generate goals via native...");
-      const nativeResult = await tryGenerateGoalsViaNative();
-      
-      if (nativeResult.success) {
-        console.log("✅ [startGoalsGeneration] Goals generated successfully via native");
-        const apiGoals = nativeResult.goals;
-        
-        // Map API response to the UI's expected keys
-        const g = apiGoals || {};
-        const m = g.macros || {};
-
-        state.generatedGoals = {
-          calories: Math.round(Number(g.daily_calories || g.calories || 0)),
-          proteinG: Math.round(Number(m.protein_g || g.proteinG || 0)),
-          carbsG: Math.round(Number(m.carbs_g || g.carbsG || 0)),
-          fatG: Math.round(Number(m.fat_g || g.fatG || 0)),
-
-          // Keep extra fields
-          fiberG: Number(m.fiber_g || g.fiberG) ?? null,
-          bmi: g.bmi ?? null,
-          bmr: g.bmr ?? null,
-          tdee: g.tdee ?? null,
-          calorie_adjustment: g.calorie_adjustment ?? null,
-          time_to_goal_weeks: g.time_to_goal_weeks ?? null,
-          notes: g.notes ?? null,
-          _raw: g._raw ?? null,
-        };
-
-        // Keep normalized (metric) values for convenience
-        const hw = state.answers["height_weight"] || {};
-        const heightVal = hw.height ?? 170;
-        const heightUnit = hw["height__unit"] || "cm";
-        const weightVal = hw.weight ?? 70;
-        const weightUnit = hw["weight__unit"] || "kg";
-
-        state.answers._normalized = {
-          height_cm: toCm(heightVal, heightUnit),
-          weight_kg: toKg(weightVal, weightUnit),
-        };
-
-        clearInterval(msgInterval);
-        showGoalsResults(state.generatedGoals);
-
-        console.log("✅ [Goals API] Goals generated successfully, posting to native");
-        postToNative("goals_generated", { ok: true, goals: state.generatedGoals });
-        return; // Exit early, don't try JavaScript API
-      } else {
-        console.warn("⚠️ [startGoalsGeneration] Native generation failed, falling back to JavaScript API");
-        console.warn("⚠️ [startGoalsGeneration] Error: ", nativeResult.error);
-      }
-      
-      // Fallback to JavaScript API if native fails
       try {
-        console.log("🔵 [startGoalsGeneration] Calling generateGoalsViaApi()...");
-        const apiGoals = await generateGoalsViaApi();
+        // Try native first (bypasses CORS)
+        console.log("🔵 [startGoalsGeneration] Attempting to generate goals via native...");
+        const nativeResult = await tryGenerateGoalsViaNative();
+        
+        if (nativeResult.success) {
+          console.log("✅ [startGoalsGeneration] Goals generated successfully via native");
+          const apiGoals = nativeResult.goals;
+          
+          // Map API response to the UI's expected keys
+          const g = apiGoals || {};
+          const m = g.macros || {};
 
-        // Map API response to the UI's expected keys
-        const g = apiGoals || {};
-        const m = g.macros || {};
+          state.generatedGoals = {
+            calories: Math.round(Number(g.daily_calories || g.calories || 0)),
+            proteinG: Math.round(Number(m.protein_g || g.proteinG || 0)),
+            carbsG: Math.round(Number(m.carbs_g || g.carbsG || 0)),
+            fatG: Math.round(Number(m.fat_g || g.fatG || 0)),
 
-        state.generatedGoals = {
-          calories: Math.round(Number(g.daily_calories) || 0),
-          proteinG: Math.round(Number(m.protein_g) || 0),
-          carbsG: Math.round(Number(m.carbs_g) || 0),
-          fatG: Math.round(Number(m.fat_g) || 0),
+            // Keep extra fields
+            fiberG: Number(m.fiber_g || g.fiberG) ?? null,
+            bmi: g.bmi ?? null,
+            bmr: g.bmr ?? null,
+            tdee: g.tdee ?? null,
+            calorie_adjustment: g.calorie_adjustment ?? null,
+            time_to_goal_weeks: g.time_to_goal_weeks ?? null,
+            notes: g.notes ?? null,
+            _raw: g._raw ?? null,
+          };
 
-          // Keep extra fields (not shown in UI but useful for app logic)
-          fiberG: Number(m.fiber_g) ?? null,
-          bmi: g.bmi ?? null,
-          bmr: g.bmr ?? null,
-          tdee: g.tdee ?? null,
-          calorie_adjustment: g.calorie_adjustment ?? null,
-          time_to_goal_weeks: g.time_to_goal_weeks ?? null,
-          notes: g.notes ?? null,
-          _raw: g._raw ?? null,
-        };
+          // Keep normalized (metric) values for convenience
+          const hw = state.answers["height_weight"] || {};
+          const heightVal = hw.height ?? 170;
+          const heightUnit = hw["height__unit"] || "cm";
+          const weightVal = hw.weight ?? 70;
+          const weightUnit = hw["weight__unit"] || "kg";
 
-        // Keep normalized (metric) values for convenience
-        const hw = state.answers["height_weight"] || {};
-        const heightVal = hw.height ?? 170;
-        const heightUnit = hw["height__unit"] || "cm";
-        const weightVal = hw.weight ?? 70;
-        const weightUnit = hw["weight__unit"] || "kg";
+          state.answers._normalized = {
+            height_cm: toCm(heightVal, heightUnit),
+            weight_kg: toKg(weightVal, weightUnit),
+          };
 
-        state.answers._normalized = {
-          height_cm: toCm(heightVal, heightUnit),
-          weight_kg: toKg(weightVal, weightUnit),
-        };
+          clearInterval(msgInterval);
+          showGoalsResults(state.generatedGoals);
 
+          console.log("✅ [Goals API] Goals generated successfully, posting to native");
+          call("goals_generated", { ok: true, goals: state.generatedGoals });
+          return; // Exit early, don't try JavaScript API
+        } else {
+          console.warn("⚠️ [startGoalsGeneration] Native generation failed, falling back to JavaScript API");
+          console.warn("⚠️ [startGoalsGeneration] Error: ", nativeResult.error);
+        }
+        
+        // Fallback to JavaScript API if native fails
+        try {
+          console.log("🔵 [startGoalsGeneration] Calling generateGoalsViaApi()...");
+          const apiGoals = await generateGoalsViaApi();
+
+          // Map API response to the UI's expected keys
+          const g = apiGoals || {};
+          const m = g.macros || {};
+
+          state.generatedGoals = {
+            calories: Math.round(Number(g.daily_calories) || 0),
+            proteinG: Math.round(Number(m.protein_g) || 0),
+            carbsG: Math.round(Number(m.carbs_g) || 0),
+            fatG: Math.round(Number(m.fat_g) || 0),
+
+            // Keep extra fields (not shown in UI but useful for app logic)
+            fiberG: Number(m.fiber_g) ?? null,
+            bmi: g.bmi ?? null,
+            bmr: g.bmr ?? null,
+            tdee: g.tdee ?? null,
+            calorie_adjustment: g.calorie_adjustment ?? null,
+            time_to_goal_weeks: g.time_to_goal_weeks ?? null,
+            notes: g.notes ?? null,
+            _raw: g._raw ?? null,
+          };
+
+          // Keep normalized (metric) values for convenience
+          const hw = state.answers["height_weight"] || {};
+          const heightVal = hw.height ?? 170;
+          const heightUnit = hw["height__unit"] || "cm";
+          const weightVal = hw.weight ?? 70;
+          const weightUnit = hw["weight__unit"] || "kg";
+
+          state.answers._normalized = {
+            height_cm: toCm(heightVal, heightUnit),
+            weight_kg: toKg(weightVal, weightUnit),
+          };
+
+          clearInterval(msgInterval);
+          showGoalsResults(state.generatedGoals);
+
+          call("goals_generated", { ok: true, goals: state.generatedGoals });
+        } catch (err) {
+          clearInterval(msgInterval);
+          const msg = (err && err.name === "AbortError")
+            ? "Request timed out. Please try again."
+            : (err && err.message) ? err.message : "Something went wrong.";
+          console.warn("[Goals API error]", err);
+          call("goals_generated", { ok: false, error: msg });
+          showGoalsError(msg, `${getApiBaseUrl()}/calories/goals`);
+        }
+      } catch (unexpectedError) {
+        // Safety net: clear interval on any unexpected error
         clearInterval(msgInterval);
-        showGoalsResults(state.generatedGoals);
-
-        postToNative("goals_generated", { ok: true, goals: state.generatedGoals });
-      } catch (err) {
-        clearInterval(msgInterval);
-        const msg = (err && err.name === "AbortError")
-          ? "Request timed out. Please try again."
-          : (err && err.message) ? err.message : "Something went wrong.";
-        console.warn("[Goals API error]", err);
-        postToNative("goals_generated", { ok: false, error: msg });
+        console.error("❌ [startGoalsGeneration] Unexpected error:", unexpectedError);
+        const msg = unexpectedError.message || "An unexpected error occurred";
+        call("goals_generated", { ok: false, error: msg });
         showGoalsError(msg, `${getApiBaseUrl()}/calories/goals`);
       }
     })();
@@ -1329,7 +1492,7 @@ function showGoalsError(message, apiUrl) {
     if (!step) return;
     state.currentId = stepId;
     render();
-    postToNative("step_view", { stepId });
+    call("step_view", { stepId });
   }
 
   function goNext() {
@@ -1468,7 +1631,7 @@ function showGoalsError(message, apiUrl) {
       completedAt: new Date().toISOString(),
     };
 
-    postToNative("complete", payload);
+    call("complete", payload);
 
     content.innerHTML = `
       <div class="fadeIn goalsGenWrap">
@@ -1484,7 +1647,10 @@ function showGoalsError(message, apiUrl) {
     console.log("[Onboarding complete]", payload);
   }
 
-  // ---- Topbar events ----
+  // ============================================================================
+  // EVENT LISTENERS
+  // ============================================================================
+  
   backBtn.addEventListener("click", goBack);
   skipBtn.addEventListener("click", () => {
     const step = byId.get(state.currentId);
@@ -1494,14 +1660,30 @@ function showGoalsError(message, apiUrl) {
     }
   });
 
-  // ---- Init ----
+  // ============================================================================
+  // INITIALIZATION
+  // ============================================================================
+  
   render();
-  postToNative("ready", { firstStepId: state.currentId });
+  call("ready", { firstStepId: state.currentId });
 
+  // ============================================================================
+  // PUBLIC API
+  // ============================================================================
+  
   window.OnboardingWeb = {
     getState: () => JSON.parse(JSON.stringify(state)),
     setAnswers: (answersObj) => { state.answers = answersObj || {}; render(); },
     goTo: (stepId) => goTo(stepId),
     finish: () => finish(),
+  };
+  
+  // Expose bridge functions for debugging (optional)
+  window.OnboardingBridge = {
+    call,
+    callAsync,
+    callAction,
+    callActionAsync,
+    __handleEvent__,
   };
 })();

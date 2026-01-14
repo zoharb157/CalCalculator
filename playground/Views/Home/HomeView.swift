@@ -5,7 +5,6 @@
 //  CalAI Clone - Main home screen
 //
 
-import SDK
 import SwiftUI
 import SwiftData
 import UserNotifications
@@ -18,7 +17,6 @@ struct HomeView: View {
     var onMealSaved: () -> Void
 
     @Environment(\.isSubscribed) private var isSubscribed
-    @Environment(TheSDK.self) private var sdk
     @Environment(\.locale) private var locale
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
@@ -35,7 +33,6 @@ struct HomeView: View {
     @State private var showBadgeAlert = false
     @State private var showingCreateDiet = false
     @State private var showingPaywall = false
-    @State private var showDeclineConfirmation = false
     @State private var showingDietWelcome = false
     @Environment(\.modelContext) private var modelContext
     @Query(filter: #Predicate<DietPlan> { $0.isActive == true }) private var activeDietPlans: [DietPlan]
@@ -94,18 +91,14 @@ struct HomeView: View {
                 // Only requests if authorization status is .notDetermined (first time user sees homepage)
                 await requestNotificationPermissionIfNeeded()
                 
-                // QA: Check real subscription status from SDK for monitoring purposes
+                // QA: Check real subscription status from SubscriptionManager for monitoring purposes
                 // This is only active in non-DEBUG builds (TestFlight/App Store)
                 #if !DEBUG
                 Task { @MainActor in
-                    do {
-                        _ = try await sdk.updateIsSubscribed()
-                        let realStatus = sdk.isSubscribed
-                        print("🔍 [QA] Real SDK subscription status: \(realStatus ? "Subscribed" : "Not Subscribed")")
-                        // Note: We don't update the debug override - this is just for QA monitoring
-                    } catch {
-                        print("⚠️ [QA] Failed to check real SDK subscription status: \(error)")
-                    }
+                    await SubscriptionManager.shared.checkSubscriptionStatus()
+                    let realStatus = SubscriptionManager.shared.subscriptionStatus
+                    print("🔍 [QA] Real StoreKit subscription status: \(realStatus ? "Subscribed" : "Not Subscribed")")
+                    // Note: We don't update the debug override - this is just for QA monitoring
                 }
                 #endif
             }
@@ -234,15 +227,7 @@ struct HomeView: View {
                     DietPlansListView()
                 }
             }
-            .fullScreenCover(isPresented: $showingPaywall) {
-                SDKView(
-                    model: sdk,
-                    page: .splash,
-                    show: paywallBinding(showPaywall: $showingPaywall, sdk: sdk, showDeclineConfirmation: $showDeclineConfirmation),
-                    backgroundColor: .white,
-                    ignoreSafeArea: true
-                )
-            }
+            .compliantPaywall(isPresented: $showingPaywall)
         
         let withOverlays = withSheets
             .onChange(of: localizationManager.currentLanguage) { oldValue, newValue in
@@ -260,7 +245,7 @@ struct HomeView: View {
                     }
                 }
             }
-            .paywallDismissalOverlay(showPaywall: $showingPaywall, showDeclineConfirmation: $showDeclineConfirmation)
+            .compliantPaywall(isPresented: $showingPaywall)
             .overlay {
                 if badgeManager.showBadgeAlert, let badge = badgeManager.newlyEarnedBadge {
                     BadgeAlertView(badge: badge) {
@@ -766,13 +751,21 @@ struct ListScrollTracker: UIViewRepresentable {
                 }
                 
                 // Add observer to track contentOffset
-                let observer = ScrollObserver { [weak self, weak scrollView] in
-                    guard let self = self, let scrollView = scrollView else { return }
+                // Note: ListScrollTracker is a struct, so we can't use [weak self]
+                // Instead, we create a helper class to hold the binding
+                let bindingHolder = BindingHolder(binding: self.$isAtTop)
+                let observer = ScrollObserver { [weak scrollView, weak bindingHolder] in
+                    guard let scrollView = scrollView, let bindingHolder = bindingHolder else { return }
                     let offset = scrollView.contentOffset.y
                     // Consider at top if offset is within 50 points (accounts for List padding and safe area)
-                    self.isAtTop = offset <= 50
+                    Task { @MainActor in
+                        bindingHolder.binding.wrappedValue = offset <= 50
+                    }
                 }
                 observer.scrollView = scrollView
+                
+                // Store bindingHolder with observer to keep it alive
+                objc_setAssociatedObject(observer, "bindingHolder", bindingHolder, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
                 
                 scrollView.addObserver(observer, forKeyPath: "contentOffset", options: [.new], context: nil)
                 objc_setAssociatedObject(scrollView, "scrollObserver", observer, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
@@ -809,6 +802,14 @@ struct ListScrollTracker: UIViewRepresentable {
         }
         
         return nil
+    }
+}
+
+/// Helper class to hold a binding (since we can't use weak on structs)
+private final class BindingHolder {
+    let binding: Binding<Bool>
+    init(binding: Binding<Bool>) {
+        self.binding = binding
     }
 }
 

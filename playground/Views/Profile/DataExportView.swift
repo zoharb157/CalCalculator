@@ -170,16 +170,7 @@ struct DataExportView: View {
                     ShareSheet(items: [url])
                 }
             }
-            .fullScreenCover(isPresented: $showingPaywall) {
-                SDKView(
-                    model: sdk,
-                    page: .splash,
-                    show: paywallBinding(showPaywall: $showingPaywall, sdk: sdk, showDeclineConfirmation: $showDeclineConfirmation),
-                    backgroundColor: .white,
-                    ignoreSafeArea: true
-                )
-                .paywallDismissalOverlay(showPaywall: $showingPaywall, showDeclineConfirmation: $showDeclineConfirmation)
-            }
+            .compliantPaywall(isPresented: $showingPaywall)
         }
     }
     

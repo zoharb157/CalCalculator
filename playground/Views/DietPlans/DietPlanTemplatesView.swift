@@ -7,7 +7,6 @@
 
 import SwiftUI
 import SwiftData
-import SDK
 
 struct DietPlanTemplatesView: View {
     @Environment(\.dismiss) private var dismiss
@@ -113,12 +112,10 @@ struct TemplatePreviewView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.isSubscribed) private var isSubscribed
-    @Environment(TheSDK.self) private var sdk
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @State private var customizing = false
     @State private var showingPaywall = false
-    @State private var showDeclineConfirmation = false
     @State private var isSaving = false
     
     private var dietPlanRepository: DietPlanRepository {
@@ -192,28 +189,9 @@ struct TemplatePreviewView: View {
                 }
             }
         }
-        .fullScreenCover(isPresented: $showingPaywall) {
-            paywallView
-        }
-        .paywallDismissalOverlay(
-            showPaywall: $showingPaywall,
-            showDeclineConfirmation: $showDeclineConfirmation
-        )
+        .compliantPaywall(isPresented: $showingPaywall)
     }
     
-    private var paywallView: some View {
-        SDKView(
-            model: sdk,
-            page: .splash,
-            show: paywallBinding(
-                showPaywall: $showingPaywall,
-                sdk: sdk,
-                showDeclineConfirmation: $showDeclineConfirmation
-            ),
-            backgroundColor: .white,
-            ignoreSafeArea: true
-        )
-    }
     
     private func useTemplate() async {
         // Prevent double-taps from triggering multiple saves

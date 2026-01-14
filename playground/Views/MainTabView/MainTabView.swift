@@ -7,7 +7,6 @@
 
 import SwiftUI
 import SwiftData
-import SDK
 import UIKit
 import ObjectiveC
 
@@ -43,8 +42,6 @@ struct MainTabView: View {
     // Diet creation state (for History tab's create diet prompt)
     @State private var showingCreateDiet = false
     @State private var showingPaywall = false
-    @State private var showDeclineConfirmation = false
-    @Environment(TheSDK.self) private var sdk
 
     @State var homeViewModel: HomeViewModel
     @State var scanViewModel: ScanViewModel
@@ -372,11 +369,10 @@ struct MainTabView: View {
             
             // CRITICAL: Update delegate's hasActiveDiet when it changes
             // This ensures tab index mapping is correct
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-                guard let self = self else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                    let window = windowScene.windows.first(where: { $0.isKeyWindow }) ?? windowScene.windows.first,
-                   let tabBarController = self.findTabBarController(in: window.rootViewController),
+                   let tabBarController = findTabBarController(in: window.rootViewController),
                    let delegate = objc_getAssociatedObject(tabBarController, "mainTabBarDelegate") as? MainTabBarDelegate {
                     delegate.hasActiveDiet = newValue
                 }
@@ -389,13 +385,7 @@ struct MainTabView: View {
         .sheet(isPresented: $showingCreateDiet) {
             DietPlansListView()
         }
-        .fullScreenCover(isPresented: $showingPaywall) {
-            paywallView
-        }
-        .paywallDismissalOverlay(
-            showPaywall: $showingPaywall,
-            showDeclineConfirmation: $showDeclineConfirmation
-        )
+        .compliantPaywall(isPresented: $showingPaywall)
         // No need for onChange - SwiftUI automatically re-evaluates views when
         // @ObservedObject properties change. Since localizationManager.currentLanguage
         // is @Published, all views using localizationManager will update automatically.
@@ -409,26 +399,12 @@ struct MainTabView: View {
     }
     
     // MARK: - Paywall View
-    
-    private var paywallView: some View {
-        SDKView(
-            model: sdk,
-            page: .splash,
-            show: paywallBinding(
-                showPaywall: $showingPaywall,
-                sdk: sdk,
-                showDeclineConfirmation: $showDeclineConfirmation
-            ),
-            backgroundColor: .white,
-            ignoreSafeArea: true
-        )
-    }
+    // Removed - now using .compliantPaywall() modifier for App Store compliance
     // MARK: - Tab Bar Tap Detection
     private func setupTabBarTapDetection() {
         // Find the tab bar controller and set up delegate
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-            guard let self = self else { return }
-            self.findAndSetupTabBarController()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            findAndSetupTabBarController()
         }
     }
     
@@ -436,19 +412,17 @@ struct MainTabView: View {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = windowScene.windows.first(where: { $0.isKeyWindow }) ?? windowScene.windows.first else {
             // Retry after delay
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                guard let self = self else { return }
-                self.findAndSetupTabBarController()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                findAndSetupTabBarController()
             }
             return
         }
         
         // Find UITabBarController
-        guard let tabBarController = self.findTabBarController(in: window.rootViewController) else {
+        guard let tabBarController = findTabBarController(in: window.rootViewController) else {
             // Retry after delay if not found
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                guard let self = self else { return }
-                self.findAndSetupTabBarController()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                findAndSetupTabBarController()
             }
             return
         }
