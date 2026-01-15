@@ -60,7 +60,11 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.userContentController.add(context.coordinator, name: "onboarding")
-        config.preferences.javaScriptEnabled = true
+        
+        // Use modern API for enabling JavaScript
+        let pagePrefs = WKWebpagePreferences()
+        pagePrefs.allowsContentJavaScript = true
+        config.defaultWebpagePreferences = pagePrefs
 
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.isOpaque = false
@@ -137,13 +141,18 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
         }
         
         deinit {
-            webView?.configuration.userContentController.removeScriptMessageHandler(forName: "onboarding")
-            webView?.navigationDelegate = nil
+            // Use Task to access main actor isolated properties from deinit
+            let webViewRef = webView
+            Task { @MainActor in
+                webViewRef?.configuration.userContentController.removeScriptMessageHandler(forName: "onboarding")
+                webViewRef?.navigationDelegate = nil
+            }
         }
         
         // MARK: - WKNavigationDelegate
         
-        func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        @MainActor
+        func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping @MainActor (WKNavigationActionPolicy) -> Void) {
             // CRITICAL: decisionHandler MUST be called synchronously, not asynchronously
             // Calling it asynchronously causes navigation failures and the "Update NavigationRequestObserver" warning
             // Allow all navigation within the onboarding flow
