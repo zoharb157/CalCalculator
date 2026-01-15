@@ -81,9 +81,36 @@ final class SubscriptionManager: ObservableObject {
         do {
             print("📦 [SubscriptionManager] Loading products for IDs: \(productIDs)")
             print("📦 [SubscriptionManager] Bundle ID: \(Bundle.main.bundleIdentifier ?? "unknown")")
+            
+            // Sync with App Store first (important for TestFlight/Production)
+            print("📦 [SubscriptionManager] Syncing with App Store...")
+            do {
+                try await AppStore.sync()
+                print("📦 [SubscriptionManager] App Store sync completed")
+            } catch {
+                print("⚠️ [SubscriptionManager] App Store sync failed (continuing anyway): \(error)")
+            }
+            
             print("📦 [SubscriptionManager] Requesting products from StoreKit...")
             
-            let storeProducts = try await Product.products(for: productIDs)
+            // Try loading all products at once
+            var storeProducts = try await Product.products(for: productIDs)
+            
+            // If no products, try loading each individually to debug
+            if storeProducts.isEmpty {
+                print("⚠️ [SubscriptionManager] Batch request returned 0 products, trying individually...")
+                var individualProducts: [Product] = []
+                for productID in productIDs {
+                    do {
+                        let products = try await Product.products(for: [productID])
+                        print("   📦 Product '\(productID)': \(products.count > 0 ? "FOUND" : "NOT FOUND")")
+                        individualProducts.append(contentsOf: products)
+                    } catch {
+                        print("   ❌ Product '\(productID)': ERROR - \(error.localizedDescription)")
+                    }
+                }
+                storeProducts = individualProducts
+            }
             
             print("📦 [SubscriptionManager] StoreKit returned \(storeProducts.count) products")
             
