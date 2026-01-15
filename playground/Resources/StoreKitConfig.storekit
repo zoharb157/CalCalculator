@@ -73,7 +73,7 @@
   },
   "subscriptionGroups" : [
     {
-      "id" : "21599832",
+      "id" : "21871386",
       "localizations" : [
 
       ],
@@ -101,7 +101,7 @@
           "productID" : "calCalculator.weekly.premium",
           "recurringSubscriptionPeriod" : "P1W",
           "referenceName" : "weekly premium",
-          "subscriptionGroupID" : "21599832",
+          "subscriptionGroupID" : "21871386",
           "type" : "RecurringSubscription",
           "winbackOffers" : [
 
@@ -129,7 +129,7 @@
           "productID" : "calCalculator.monthly.premium",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "monthly premium",
-          "subscriptionGroupID" : "21599832",
+          "subscriptionGroupID" : "21871386",
           "type" : "RecurringSubscription",
           "winbackOffers" : [
 
@@ -157,7 +157,7 @@
           "productID" : "calCalculator.yearly.premium",
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "yearly premium",
-          "subscriptionGroupID" : "21599832",
+          "subscriptionGroupID" : "21871386",
           "type" : "RecurringSubscription",
           "winbackOffers" : [
 
