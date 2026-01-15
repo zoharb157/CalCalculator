@@ -8,11 +8,13 @@
 import SwiftUI
 import SwiftData
 import PDFKit
+import SDK
 
 struct DataExportView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.isSubscribed) private var isSubscribed
+    @Environment(TheSDK.self) private var sdk
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     // User settings for weight units
@@ -35,6 +37,7 @@ struct DataExportView: View {
     @State private var shareSheetURL: URL?
     @State private var showShareSheet = false
     @State private var showingPaywall = false
+    @State private var showDeclineConfirmation = false
     
     var body: some View {
         // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
@@ -168,7 +171,14 @@ struct DataExportView: View {
                 }
             }
             .fullScreenCover(isPresented: $showingPaywall) {
-                SubscriptionPaywallView()
+                SDKView(
+                    model: sdk,
+                    page: .splash,
+                    show: paywallBinding(showPaywall: $showingPaywall, sdk: sdk, showDeclineConfirmation: $showDeclineConfirmation),
+                    backgroundColor: .white,
+                    ignoreSafeArea: true
+                )
+                .paywallDismissalOverlay(showPaywall: $showingPaywall, showDeclineConfirmation: $showDeclineConfirmation)
             }
         }
     }

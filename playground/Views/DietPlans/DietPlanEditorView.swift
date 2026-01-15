@@ -6,6 +6,7 @@
 
 import SwiftUI
 import SwiftData
+import SDK
 
 /// Lightweight struct to hold meal data without SwiftData auto-insertion
 struct ScheduledMealData: Identifiable {
@@ -47,6 +48,7 @@ struct DietPlanEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.isSubscribed) private var isSubscribed
+    @Environment(TheSDK.self) private var sdk
     @Query(sort: \DietPlan.createdAt) private var allDietPlans: [DietPlan]
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
@@ -65,6 +67,7 @@ struct DietPlanEditorView: View {
     @State private var showDeleteMealConfirmation = false
     @State private var mealDataToDelete: ScheduledMealData?
     @State private var showingPaywall = false
+    @State private var showDeclineConfirmation = false
     @State private var isSaving = false
     @FocusState private var isNameFocused: Bool
     @FocusState private var isCalorieGoalFocused: Bool
@@ -170,8 +173,12 @@ struct DietPlanEditorView: View {
             )
         }
         .fullScreenCover(isPresented: $showingPaywall) {
-            SubscriptionPaywallView()
+            paywallView
         }
+        .paywallDismissalOverlay(
+            showPaywall: $showingPaywall,
+            showDeclineConfirmation: $showDeclineConfirmation
+        )
         .alert(localizationManager.localizedString(for: AppStrings.DietPlan.mealsRequired), isPresented: $showNoMealsAlert) {
             Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) {}
         } message: {
@@ -552,6 +559,19 @@ struct DietPlanEditorView: View {
     
     // MARK: - Paywall View
     
+    private var paywallView: some View {
+        SDKView(
+            model: sdk,
+            page: .splash,
+            show: paywallBinding(
+                showPaywall: $showingPaywall,
+                sdk: sdk,
+                showDeclineConfirmation: $showDeclineConfirmation
+            ),
+            backgroundColor: .white,
+            ignoreSafeArea: true
+        )
+    }
 }
 
 // MARK: - Enhanced Scheduled Meal Data Row (works with ScheduledMealData struct)

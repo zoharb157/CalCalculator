@@ -5,6 +5,7 @@
 //  CalAI Clone - Main home screen
 //
 
+import SDK
 import SwiftUI
 import SwiftData
 import UserNotifications
@@ -17,6 +18,7 @@ struct HomeView: View {
     var onMealSaved: () -> Void
 
     @Environment(\.isSubscribed) private var isSubscribed
+    @Environment(TheSDK.self) private var sdk
     @Environment(\.locale) private var locale
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
@@ -33,6 +35,7 @@ struct HomeView: View {
     @State private var showBadgeAlert = false
     @State private var showingCreateDiet = false
     @State private var showingPaywall = false
+    @State private var showDeclineConfirmation = false
     @State private var showingDietWelcome = false
     @Environment(\.modelContext) private var modelContext
     @Query(filter: #Predicate<DietPlan> { $0.isActive == true }) private var activeDietPlans: [DietPlan]
@@ -91,13 +94,18 @@ struct HomeView: View {
                 // Only requests if authorization status is .notDetermined (first time user sees homepage)
                 await requestNotificationPermissionIfNeeded()
                 
-                // QA: Check real subscription status for monitoring purposes
+                // QA: Check real subscription status from SDK for monitoring purposes
                 // This is only active in non-DEBUG builds (TestFlight/App Store)
                 #if !DEBUG
                 Task { @MainActor in
-                    await SubscriptionManager.shared.updateSubscriptionStatus()
-                    let realStatus = SubscriptionManager.shared.isSubscribed
-                    print("🔍 [QA] Real subscription status: \(realStatus ? "Subscribed" : "Not Subscribed")")
+                    do {
+                        _ = try await sdk.updateIsSubscribed()
+                        let realStatus = sdk.isSubscribed
+                        print("🔍 [QA] Real SDK subscription status: \(realStatus ? "Subscribed" : "Not Subscribed")")
+                        // Note: We don't update the debug override - this is just for QA monitoring
+                    } catch {
+                        print("⚠️ [QA] Failed to check real SDK subscription status: \(error)")
+                    }
                 }
                 #endif
             }
@@ -227,7 +235,13 @@ struct HomeView: View {
                 }
             }
             .fullScreenCover(isPresented: $showingPaywall) {
-                SubscriptionPaywallView()
+                SDKView(
+                    model: sdk,
+                    page: .splash,
+                    show: paywallBinding(showPaywall: $showingPaywall, sdk: sdk, showDeclineConfirmation: $showDeclineConfirmation),
+                    backgroundColor: .white,
+                    ignoreSafeArea: true
+                )
             }
         
         let withOverlays = withSheets
@@ -246,6 +260,7 @@ struct HomeView: View {
                     }
                 }
             }
+            .paywallDismissalOverlay(showPaywall: $showingPaywall, showDeclineConfirmation: $showDeclineConfirmation)
             .overlay {
                 if badgeManager.showBadgeAlert, let badge = badgeManager.newlyEarnedBadge {
                     BadgeAlertView(badge: badge) {

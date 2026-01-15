@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Charts
+import SDK
 
 struct ProgressDashboardView: View {
     // CRITICAL: We need @Bindable for bindings ($viewModel.showWeightProgressSheet, etc.)
@@ -15,6 +16,7 @@ struct ProgressDashboardView: View {
     
     @Environment(\.isSubscribed) private var isSubscribed
     @Environment(\.modelContext) private var modelContext
+    @Environment(TheSDK.self) private var sdk
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     // CRITICAL: Don't observe UserSettings directly - access it directly instead
@@ -24,6 +26,7 @@ struct ProgressDashboardView: View {
     
     @State private var showWeightInput = false
     @State private var showPaywall = false
+    @State private var showDeclineConfirmation = false
     
     var body: some View {
         // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
@@ -257,8 +260,15 @@ struct ProgressDashboardView: View {
                 )
             }
             .fullScreenCover(isPresented: $showPaywall) {
-                SubscriptionPaywallView()
+                SDKView(
+                    model: sdk,
+                    page: .splash,
+                    show: paywallBinding(showPaywall: $showPaywall, sdk: sdk, showDeclineConfirmation: $showDeclineConfirmation),
+                    backgroundColor: .white,
+                    ignoreSafeArea: true
+                )
             }
+            .paywallDismissalOverlay(showPaywall: $showPaywall, showDeclineConfirmation: $showDeclineConfirmation)
         }
     }
     

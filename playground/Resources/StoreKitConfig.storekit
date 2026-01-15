@@ -90,10 +90,15 @@
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "6738996074",
-          "introductoryOffer" : null,
+          "introductoryOffer" : {
+            "internalID" : "14DBB19F",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P3D"
+          },
           "localizations" : [
             {
-              "description" : "Weekly premium subscription",
+              "description" : "Weekly premium subscription with 3-day free trial",
               "displayName" : "Weekly Premium",
               "locale" : "en_US"
             }
@@ -118,10 +123,15 @@
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "6738996075",
-          "introductoryOffer" : null,
+          "introductoryOffer" : {
+            "internalID" : "14DBB1A0",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P7D"
+          },
           "localizations" : [
             {
-              "description" : "Monthly premium subscription",
+              "description" : "Monthly premium subscription with 7-day free trial",
               "displayName" : "Monthly Premium",
               "locale" : "en_US"
             }

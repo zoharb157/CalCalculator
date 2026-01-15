@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SDK
 
 struct ProfileView: View {
     
@@ -13,6 +14,7 @@ struct ProfileView: View {
     
     // Use @State with @Observable - SwiftUI will automatically track changes to viewModel properties
     @State private var viewModel = ProfileViewModel()
+    @Environment(TheSDK.self) private var sdk
     @Environment(\.localization) private var localization
     @ObservedObject private var localizationManager = LocalizationManager.shared
     // Observe UserSettings directly for reactive updates

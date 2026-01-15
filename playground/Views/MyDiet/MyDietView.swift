@@ -10,6 +10,7 @@
 import Charts
 import SwiftUI
 import SwiftData
+import SDK
 
 // MARK: - MyDietView
 
@@ -23,6 +24,7 @@ struct MyDietView: View {
     
     @Environment(\.modelContext) private var modelContext
     @Environment(\.isSubscribed) private var isSubscribed
+    @Environment(TheSDK.self) private var sdk
     
     // MARK: - State
     
@@ -34,6 +36,7 @@ struct MyDietView: View {
     @State private var showingPlansList = false
     @State private var showingPlanSwitcher = false
     @State private var showingPaywall = false
+    @State private var showDeclineConfirmation = false
     @State private var selectedMealForAction: ScheduledMeal?
     
     @ObservedObject private var localizationManager = LocalizationManager.shared
@@ -137,8 +140,12 @@ struct MyDietView: View {
             }
         }
         .fullScreenCover(isPresented: $showingPaywall) {
-            SubscriptionPaywallView()
+            paywallView
         }
+        .paywallDismissalOverlay(
+            showPaywall: $showingPaywall,
+            showDeclineConfirmation: $showDeclineConfirmation
+        )
         .onChange(of: viewModel.selectedDate) { _, _ in
             Task {
                 await viewModel.loadAdherenceData()
@@ -868,6 +875,19 @@ struct MyDietView: View {
     
     // MARK: - Paywall View
     
+    private var paywallView: some View {
+        SDKView(
+            model: sdk,
+            page: .splash,
+            show: paywallBinding(
+                showPaywall: $showingPaywall,
+                sdk: sdk,
+                showDeclineConfirmation: $showDeclineConfirmation
+            ),
+            backgroundColor: .white,
+            ignoreSafeArea: true
+        )
+    }
 }
 
 // MARK: - Empty State Supporting Views

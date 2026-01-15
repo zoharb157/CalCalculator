@@ -6,11 +6,13 @@
 
 import SwiftUI
 import SwiftData
+import SDK
 
 struct DietQuickSetupView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.isSubscribed) private var isSubscribed
+    @Environment(TheSDK.self) private var sdk
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @State private var currentStep = 0
@@ -20,6 +22,7 @@ struct DietQuickSetupView: View {
     @State private var showingMealEditor = false
     @State private var editingMealData: ScheduledMealData?
     @State private var showingPaywall = false
+    @State private var showDeclineConfirmation = false
     @State private var isSaving = false
     
     private var dietPlanRepository: DietPlanRepository {
@@ -98,8 +101,12 @@ struct DietQuickSetupView: View {
                 )
             }
             .fullScreenCover(isPresented: $showingPaywall) {
-                SubscriptionPaywallView()
+                paywallView
             }
+            .paywallDismissalOverlay(
+                showPaywall: $showingPaywall,
+                showDeclineConfirmation: $showDeclineConfirmation
+            )
         }
     }
     
@@ -620,6 +627,21 @@ struct DietQuickSetupView: View {
         }
     }
     
+    // MARK: - Paywall View
+    
+    private var paywallView: some View {
+        SDKView(
+            model: sdk,
+            page: .splash,
+            show: paywallBinding(
+                showPaywall: $showingPaywall,
+                sdk: sdk,
+                showDeclineConfirmation: $showDeclineConfirmation
+            ),
+            backgroundColor: .white,
+            ignoreSafeArea: true
+        )
+    }
 }
 
 // MARK: - Supporting Types
