@@ -301,7 +301,7 @@ final class SubscriptionManager: ObservableObject {
 
 // MARK: - Timeout Helper
 
-private func withTimeout<T>(seconds: Double, operation: @escaping () async throws -> T) async throws -> T {
+private func withTimeout<T: Sendable>(seconds: Double, operation: @Sendable @escaping () async throws -> T) async throws -> T {
     try await withThrowingTaskGroup(of: T.self) { group in
         group.addTask {
             try await operation()
@@ -318,6 +318,6 @@ private func withTimeout<T>(seconds: Double, operation: @escaping () async throw
     }
 }
 
-private struct TimeoutError: Error {
-    var localizedDescription: String { "Operation timed out" }
+private struct TimeoutError: Error, LocalizedError {
+    var errorDescription: String? { "Operation timed out" }
 }
