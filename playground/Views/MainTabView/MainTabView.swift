@@ -7,7 +7,6 @@
 
 import SwiftUI
 import SwiftData
-import SDK
 import UIKit
 import ObjectiveC
 
@@ -43,8 +42,6 @@ struct MainTabView: View {
     // Diet creation state (for History tab's create diet prompt)
     @State private var showingCreateDiet = false
     @State private var showingPaywall = false
-    @State private var showDeclineConfirmation = false
-    @Environment(TheSDK.self) private var sdk
 
     @State var homeViewModel: HomeViewModel
     @State var scanViewModel: ScanViewModel
@@ -387,12 +384,8 @@ struct MainTabView: View {
             DietPlansListView()
         }
         .fullScreenCover(isPresented: $showingPaywall) {
-            paywallView
+            SubscriptionPaywallView()
         }
-        .paywallDismissalOverlay(
-            showPaywall: $showingPaywall,
-            showDeclineConfirmation: $showDeclineConfirmation
-        )
         // No need for onChange - SwiftUI automatically re-evaluates views when
         // @ObservedObject properties change. Since localizationManager.currentLanguage
         // is @Published, all views using localizationManager will update automatically.
@@ -405,21 +398,6 @@ struct MainTabView: View {
         showingCreateDiet = true
     }
     
-    // MARK: - Paywall View
-    
-    private var paywallView: some View {
-        SDKView(
-            model: sdk,
-            page: .splash,
-            show: paywallBinding(
-                showPaywall: $showingPaywall,
-                sdk: sdk,
-                showDeclineConfirmation: $showDeclineConfirmation
-            ),
-            backgroundColor: .white,
-            ignoreSafeArea: true
-        )
-    }
     // MARK: - Tab Bar Tap Detection
     private func setupTabBarTapDetection() {
         // Find the tab bar controller and set up delegate

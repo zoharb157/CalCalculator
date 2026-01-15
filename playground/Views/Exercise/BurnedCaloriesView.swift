@@ -6,7 +6,6 @@
 
 import SwiftUI
 import SwiftData
-import SDK
 
 struct BurnedCaloriesView: View {
     let calories: Int
@@ -24,8 +23,6 @@ struct BurnedCaloriesView: View {
     @State private var errorMessage = ""
     @State private var isLoadingCalories = true // Track if we're loading calories from API
     @State private var showPaywall = false
-    @State private var showDeclineConfirmation = false
-    @Environment(TheSDK.self) private var sdk
     @ObservedObject private var localizationManager = LocalizationManager.shared
     private let userSettings = UserSettings.shared
     
@@ -212,15 +209,8 @@ struct BurnedCaloriesView: View {
                         Text(errorMessage)
                     }
                     .fullScreenCover(isPresented: $showPaywall) {
-                        SDKView(
-                            model: sdk,
-                            page: .splash,
-                            show: paywallBinding(showPaywall: $showPaywall, sdk: sdk, showDeclineConfirmation: $showDeclineConfirmation),
-                            backgroundColor: .white,
-                            ignoreSafeArea: true
-                        )
+                        SubscriptionPaywallView()
                     }
-                    .paywallDismissalOverlay(showPaywall: $showPaywall, showDeclineConfirmation: $showDeclineConfirmation)
                 }
                 .padding()
             }

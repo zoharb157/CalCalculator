@@ -7,7 +7,6 @@
 
 import SwiftUI
 import SwiftData
-import SDK
 
 enum QuickLogType: String, CaseIterable {
     case food = "food"
@@ -39,14 +38,12 @@ struct QuickLogView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.isSubscribed) private var isSubscribed
-    @Environment(TheSDK.self) private var sdk
     @ObservedObject private var localizationManager = LocalizationManager.shared
 
     @State private var selectedType: QuickLogType = .food
     @State private var viewModel: LogExperienceViewModel
     @State private var repository: MealRepository
     @State private var showPaywall = false
-    @State private var showDeclineConfirmation = false
 
     // Food quick log state
     @State private var foodDescription: String = ""
@@ -137,15 +134,8 @@ struct QuickLogView: View {
                 Text(errorMessage)
             }
             .fullScreenCover(isPresented: $showPaywall) {
-                SDKView(
-                    model: sdk,
-                    page: .splash,
-                    show: paywallBinding(showPaywall: $showPaywall, sdk: sdk, showDeclineConfirmation: $showDeclineConfirmation),
-                    backgroundColor: .white,
-                    ignoreSafeArea: true
-                )
+                SubscriptionPaywallView()
             }
-            .paywallDismissalOverlay(showPaywall: $showPaywall, showDeclineConfirmation: $showDeclineConfirmation)
         }
     }
 

@@ -6,11 +6,9 @@
 //
 
 import SwiftUI
-import SDK
 
 struct LockedFeatureOverlay: View {
     @Environment(\.isSubscribed) private var isSubscribed
-    @Environment(TheSDK.self) private var sdk
     @ObservedObject private var localizationManager = LocalizationManager.shared
     @State private var showPaywall = false
     
@@ -66,13 +64,7 @@ struct LockedFeatureOverlay: View {
             }
         }
         .fullScreenCover(isPresented: $showPaywall) {
-            SDKView(
-                model: sdk,
-                page: .splash,
-                show: $showPaywall,
-                backgroundColor: .white,
-                ignoreSafeArea: true
-            )
+            SubscriptionPaywallView()
         }
     }
 }
@@ -81,9 +73,7 @@ struct LockedFeatureOverlay: View {
 /// For Progress page: uses reduced blur to show data behind
 struct PremiumLockedContent<Content: View>: View {
     @Environment(\.isSubscribed) private var isSubscribed
-    @Environment(TheSDK.self) private var sdk
     @State private var showPaywall = false
-    @State private var showDeclineConfirmation = false
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     let content: Content
@@ -152,21 +142,13 @@ struct PremiumLockedContent<Content: View>: View {
             }
         }
         .fullScreenCover(isPresented: $showPaywall) {
-            SDKView(
-                model: sdk,
-                page: .splash,
-                show: paywallBinding(showPaywall: $showPaywall, sdk: sdk, showDeclineConfirmation: $showDeclineConfirmation),
-                backgroundColor: .white,
-                ignoreSafeArea: true
-            )
+            SubscriptionPaywallView()
         }
-        .paywallDismissalOverlay(showPaywall: $showPaywall, showDeclineConfirmation: $showDeclineConfirmation)
     }
 }
 
 struct LockedButton: View {
     @Environment(\.isSubscribed) private var isSubscribed
-    @Environment(TheSDK.self) private var sdk
     @State private var showPaywall = false
     
     let action: () -> Void
@@ -199,13 +181,7 @@ struct LockedButton: View {
             }
         }
         .fullScreenCover(isPresented: $showPaywall) {
-            SDKView(
-                model: sdk,
-                page: .splash,
-                show: $showPaywall,
-                backgroundColor: .white,
-                ignoreSafeArea: true
-            )
+            SubscriptionPaywallView()
         }
     }
 }
