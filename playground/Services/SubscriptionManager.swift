@@ -20,24 +20,31 @@ final class SubscriptionManager: ObservableObject {
     @Published var products: [Product] = []
     @Published var isLoading: Bool = false
     @Published var loadError: String? = nil
+    @Published var hasAttemptedLoad: Bool = false
     
-    // Product IDs from StoreKitConfig.storekit
-    private let productIDs = [
+    // Product IDs - must match App Store Connect exactly
+    private let productIDs: Set<String> = [
         "calCalculator.weekly.premium",
         "calCalculator.monthly.premium",
         "calCalculator.yearly.premium"
     ]
     
+    // Retry configuration
+    private let maxRetries = 3
+    private var currentRetryCount = 0
+    
     private var updateListenerTask: Task<Void, Error>?
     private var cancellables = Set<AnyCancellable>()
     
     private init() {
+        print("🚀 [SubscriptionManager] Initializing...")
+        
         // Start listening for transaction updates
         updateListenerTask = listenForTransactions()
         
         // Load products and check subscription status
         Task {
-            await loadProducts()
+            await loadProductsWithRetry()
             await checkSubscriptionStatus()
         }
     }
@@ -46,7 +53,26 @@ final class SubscriptionManager: ObservableObject {
         updateListenerTask?.cancel()
     }
     
-    // MARK: - Product Loading
+    // MARK: - Product Loading with Retry
+    
+    func loadProductsWithRetry() async {
+        currentRetryCount = 0
+        await loadProducts()
+        
+        // Retry if failed and haven't exceeded max retries
+        while products.isEmpty && currentRetryCount < maxRetries {
+            currentRetryCount += 1
+            print("🔄 [SubscriptionManager] Retry attempt \(currentRetryCount)/\(maxRetries)...")
+            
+            // Wait before retrying (exponential backoff)
+            let delay = UInt64(pow(2.0, Double(currentRetryCount))) * 1_000_000_000 // 2, 4, 8 seconds
+            try? await Task.sleep(nanoseconds: delay)
+            
+            await loadProducts()
+        }
+        
+        hasAttemptedLoad = true
+    }
     
     func loadProducts() async {
         isLoading = true
@@ -54,6 +80,7 @@ final class SubscriptionManager: ObservableObject {
         
         do {
             print("📦 [SubscriptionManager] Loading products for IDs: \(productIDs)")
+            print("📦 [SubscriptionManager] Bundle ID: \(Bundle.main.bundleIdentifier ?? "unknown")")
             print("📦 [SubscriptionManager] Requesting products from StoreKit...")
             
             let storeProducts = try await Product.products(for: productIDs)
@@ -62,61 +89,71 @@ final class SubscriptionManager: ObservableObject {
             
             // Check if no products returned (configuration issue)
             if storeProducts.isEmpty {
-                print("⚠️ [SubscriptionManager] No products returned! Check App Store Connect configuration:")
-                print("   - Product IDs must match exactly")
-                print("   - Products must be in 'Ready to Submit' status")
-                print("   - Paid Apps Agreement must be signed")
+                print("⚠️ [SubscriptionManager] No products returned!")
+                print("   ℹ️ This usually means:")
+                print("   - Product IDs don't match App Store Connect")
+                print("   - Products not in 'Ready to Submit' status")
+                print("   - Paid Apps Agreement not signed")
+                print("   - App not properly signed with App Store certificate")
+                print("   - Running in simulator without StoreKit config")
                 
-                await MainActor.run {
-                    self.loadError = "Subscription plans are currently unavailable. Please try again later."
-                    self.isLoading = false
-                }
+                loadError = "Subscription plans are currently unavailable. Please try again later."
+                isLoading = false
                 return
             }
             
-            await MainActor.run {
-                self.products = storeProducts.sorted { product1, product2 in
-                    // Sort by price: weekly, monthly, yearly
-                    let order1 = productIDs.firstIndex(of: product1.id) ?? Int.max
-                    let order2 = productIDs.firstIndex(of: product2.id) ?? Int.max
-                    return order1 < order2
-                }
-                self.loadError = nil
-                self.isLoading = false
+            // Sort products by duration (weekly, monthly, yearly)
+            let sortOrder = ["weekly": 0, "monthly": 1, "yearly": 2]
+            products = storeProducts.sorted { p1, p2 in
+                let order1 = sortOrder.first { p1.id.contains($0.key) }?.value ?? 99
+                let order2 = sortOrder.first { p2.id.contains($0.key) }?.value ?? 99
+                return order1 < order2
             }
+            
+            loadError = nil
+            isLoading = false
+            
             print("✅ [SubscriptionManager] Loaded \(storeProducts.count) products successfully")
             
             // Log each product for debugging
-            for product in storeProducts {
-                print("   📱 Product: \(product.id) - \(product.displayName) - \(product.displayPrice)")
+            for product in products {
+                print("   📱 Product: \(product.id)")
+                print("      - Name: \(product.displayName)")
+                print("      - Price: \(product.displayPrice)")
+                if let subscription = product.subscription {
+                    print("      - Period: \(subscription.subscriptionPeriod.unit) x \(subscription.subscriptionPeriod.value)")
+                }
             }
         } catch {
-            print("❌ [SubscriptionManager] Failed to load products: \(error)")
-            print("❌ [SubscriptionManager] Error details: \(error.localizedDescription)")
+            print("❌ [SubscriptionManager] Failed to load products!")
+            print("   Error type: \(type(of: error))")
+            print("   Error: \(error)")
+            print("   Localized: \(error.localizedDescription)")
             
             // Provide more specific error message
             let errorMessage: String
             if let storeKitError = error as? StoreKitError {
+                print("   StoreKit Error: \(storeKitError)")
                 switch storeKitError {
-                case .networkError:
+                case .networkError(let underlyingError):
+                    print("   Network underlying error: \(underlyingError)")
                     errorMessage = "Network error. Please check your internet connection."
-                case .systemError:
+                case .systemError(let underlyingError):
+                    print("   System underlying error: \(underlyingError)")
                     errorMessage = "System error. Please restart the app."
                 case .userCancelled:
                     errorMessage = "Request cancelled."
                 case .notAvailableInStorefront:
                     errorMessage = "Subscriptions not available in your region."
-                default:
+                @unknown default:
                     errorMessage = "Unable to load subscription plans. Please try again."
                 }
             } else {
                 errorMessage = "Unable to load subscription plans. Please check your internet connection."
             }
             
-            await MainActor.run {
-                self.loadError = errorMessage
-                self.isLoading = false
-            }
+            loadError = errorMessage
+            isLoading = false
         }
     }
     

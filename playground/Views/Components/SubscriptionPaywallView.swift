@@ -19,7 +19,6 @@ struct SubscriptionPaywallView: View {
     @State private var purchaseError: String?
     @State private var showError = false
     @State private var showRestoreAlert = false
-    @State private var hasLoadedProducts = false
     
     var body: some View {
         NavigationStack {
@@ -70,30 +69,23 @@ struct SubscriptionPaywallView: View {
             }
         }
         .task {
-            // Only load once per view appearance
-            guard !hasLoadedProducts else { return }
-            hasLoadedProducts = true
-            
-            // Load products
-            await subscriptionManager.loadProducts()
+            // Load products with retry if not already loaded
+            if subscriptionManager.products.isEmpty && !subscriptionManager.isLoading {
+                await subscriptionManager.loadProductsWithRetry()
+            }
             
             // Auto-select monthly subscription if available
-            if selectedProduct == nil {
-                if let monthly = subscriptionManager.products.first(where: { $0.id.contains("monthly") }) {
-                    selectedProduct = monthly
-                } else if let first = subscriptionManager.products.first {
-                    selectedProduct = first
-                }
-            }
+            selectDefaultProduct()
         }
         .onAppear {
+            print("📱 [SubscriptionPaywallView] onAppear - products count: \(subscriptionManager.products.count)")
             // If products were already loaded but we're reappearing, update selection
-            if !subscriptionManager.products.isEmpty && selectedProduct == nil {
-                if let monthly = subscriptionManager.products.first(where: { $0.id.contains("monthly") }) {
-                    selectedProduct = monthly
-                } else if let first = subscriptionManager.products.first {
-                    selectedProduct = first
-                }
+            selectDefaultProduct()
+        }
+        .onChange(of: subscriptionManager.products) { oldValue, newValue in
+            // When products load, auto-select if nothing selected
+            if !newValue.isEmpty && selectedProduct == nil {
+                selectDefaultProduct()
             }
         }
     }
@@ -210,16 +202,8 @@ struct SubscriptionPaywallView: View {
             
             Button {
                 Task {
-                    hasLoadedProducts = false
-                    await subscriptionManager.loadProducts()
-                    // Auto-select after retry
-                    if selectedProduct == nil {
-                        if let monthly = subscriptionManager.products.first(where: { $0.id.contains("monthly") }) {
-                            selectedProduct = monthly
-                        } else if let first = subscriptionManager.products.first {
-                            selectedProduct = first
-                        }
-                    }
+                    await subscriptionManager.loadProductsWithRetry()
+                    selectDefaultProduct()
                 }
             } label: {
                 HStack {
@@ -230,6 +214,7 @@ struct SubscriptionPaywallView: View {
                 .padding(.vertical, 12)
             }
             .buttonStyle(.borderedProminent)
+            .disabled(subscriptionManager.isLoading)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 40)
@@ -340,6 +325,18 @@ struct SubscriptionPaywallView: View {
             Text("\(label):")
                 .fontWeight(.medium)
             Text(value)
+        }
+    }
+    
+    // MARK: - Helpers
+    
+    private func selectDefaultProduct() {
+        guard selectedProduct == nil, !subscriptionManager.products.isEmpty else { return }
+        
+        if let monthly = subscriptionManager.products.first(where: { $0.id.contains("monthly") }) {
+            selectedProduct = monthly
+        } else if let first = subscriptionManager.products.first {
+            selectedProduct = first
         }
     }
     
