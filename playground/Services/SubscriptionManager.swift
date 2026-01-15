@@ -19,6 +19,7 @@ final class SubscriptionManager: ObservableObject {
     @Published var subscriptionStatus: Bool = false
     @Published var products: [Product] = []
     @Published var isLoading: Bool = false
+    @Published var loadError: String? = nil
     
     // Product IDs from StoreKitConfig.storekit
     private let productIDs = [
@@ -49,10 +50,12 @@ final class SubscriptionManager: ObservableObject {
     
     func loadProducts() async {
         isLoading = true
-        defer { isLoading = false }
+        loadError = nil
         
         do {
+            print("📦 [SubscriptionManager] Loading products for IDs: \(productIDs)")
             let storeProducts = try await Product.products(for: productIDs)
+            
             await MainActor.run {
                 self.products = storeProducts.sorted { product1, product2 in
                     // Sort by price: weekly, monthly, yearly
@@ -60,10 +63,21 @@ final class SubscriptionManager: ObservableObject {
                     let order2 = productIDs.firstIndex(of: product2.id) ?? Int.max
                     return order1 < order2
                 }
+                self.loadError = nil
+                self.isLoading = false
             }
             print("✅ [SubscriptionManager] Loaded \(storeProducts.count) products")
+            
+            // Log each product for debugging
+            for product in storeProducts {
+                print("   📱 Product: \(product.id) - \(product.displayName) - \(product.displayPrice)")
+            }
         } catch {
-            print("❌ [SubscriptionManager] Failed to load products: \(error)")
+            print("❌ [SubscriptionManager] Failed to load products: \(error.localizedDescription)")
+            await MainActor.run {
+                self.loadError = "Unable to load subscription plans. Please check your internet connection and try again."
+                self.isLoading = false
+            }
         }
     }
     

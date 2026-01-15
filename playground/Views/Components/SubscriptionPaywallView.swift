@@ -11,13 +11,15 @@ import StoreKit
 /// Unified subscription paywall view following Apple's SwiftUI design guidelines
 /// Combines subscription info and purchase flow in a single, polished view
 struct SubscriptionPaywallView: View {
-    @StateObject private var subscriptionManager = SubscriptionManager.shared
+    @ObservedObject private var subscriptionManager = SubscriptionManager.shared
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var selectedProduct: Product?
     @State private var isPurchasing = false
     @State private var purchaseError: String?
     @State private var showError = false
     @State private var showRestoreAlert = false
+    @State private var hasLoadedProducts = false
     
     var body: some View {
         NavigationStack {
@@ -68,11 +70,30 @@ struct SubscriptionPaywallView: View {
             }
         }
         .task {
+            // Only load once per view appearance
+            guard !hasLoadedProducts else { return }
+            hasLoadedProducts = true
+            
+            // Load products
             await subscriptionManager.loadProducts()
+            
             // Auto-select monthly subscription if available
-            if selectedProduct == nil,
-               let monthly = subscriptionManager.products.first(where: { $0.id.contains("monthly") }) {
-                selectedProduct = monthly
+            if selectedProduct == nil {
+                if let monthly = subscriptionManager.products.first(where: { $0.id.contains("monthly") }) {
+                    selectedProduct = monthly
+                } else if let first = subscriptionManager.products.first {
+                    selectedProduct = first
+                }
+            }
+        }
+        .onAppear {
+            // If products were already loaded but we're reappearing, update selection
+            if !subscriptionManager.products.isEmpty && selectedProduct == nil {
+                if let monthly = subscriptionManager.products.first(where: { $0.id.contains("monthly") }) {
+                    selectedProduct = monthly
+                } else if let first = subscriptionManager.products.first {
+                    selectedProduct = first
+                }
             }
         }
     }
@@ -135,16 +156,24 @@ struct SubscriptionPaywallView: View {
                 .padding(.horizontal)
             
             if subscriptionManager.isLoading {
-                HStack {
-                    Spacer()
+                VStack(spacing: 16) {
                     ProgressView()
-                        .padding()
-                    Spacer()
+                        .scaleEffect(1.2)
+                    Text("Loading subscription plans...")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                 }
-            } else if subscriptionManager.products.isEmpty {
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 40)
+            } else if subscriptionManager.products.isEmpty || subscriptionManager.loadError != nil {
                 errorStateView
             } else {
-                VStack(spacing: 12) {
+                // Adapt layout for iPad
+                let columns = horizontalSizeClass == .regular ? 
+                    [GridItem(.flexible()), GridItem(.flexible())] : 
+                    [GridItem(.flexible())]
+                
+                LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(subscriptionManager.products, id: \.id) { product in
                         SubscriptionPlanCard(
                             product: product,
@@ -164,30 +193,47 @@ struct SubscriptionPaywallView: View {
     }
     
     private var errorStateView: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 40))
+        VStack(spacing: 16) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 50))
                 .foregroundStyle(.orange)
             
             Text("Unable to Load Plans")
-                .font(.headline)
+                .font(.title3)
+                .fontWeight(.semibold)
             
-            Text("Please check your internet connection and try again.")
+            Text(subscriptionManager.loadError ?? "Please check your internet connection and try again.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
+                .padding(.horizontal)
             
             Button {
                 Task {
+                    hasLoadedProducts = false
                     await subscriptionManager.loadProducts()
+                    // Auto-select after retry
+                    if selectedProduct == nil {
+                        if let monthly = subscriptionManager.products.first(where: { $0.id.contains("monthly") }) {
+                            selectedProduct = monthly
+                        } else if let first = subscriptionManager.products.first {
+                            selectedProduct = first
+                        }
+                    }
                 }
             } label: {
-                Text("Retry")
-                    .font(.subheadline)
+                HStack {
+                    Image(systemName: "arrow.clockwise")
+                    Text("Retry")
+                }
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.borderedProminent)
         }
-        .padding()
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
+        .padding(.horizontal)
     }
     
     // MARK: - Purchase Button Section
