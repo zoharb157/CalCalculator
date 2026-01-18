@@ -14,9 +14,9 @@ struct WeightChartCard: View {
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     private var displayWeights: [WeightDataPoint] {
-        let convertedHistory: [WeightDataPoint] = useMetricUnits ? weightHistory : weightHistory.map { point in
-            WeightDataPoint(date: point.date, weight: point.weight * 2.20462, note: point.note)
-        }
+        // NOTE: weightHistory is already converted to display units (kg or lbs) by ProgressViewModel.loadWeightHistory()
+        // Do NOT convert again here - that would cause double conversion for imperial users
+        let convertedHistory = weightHistory
         
         guard !convertedHistory.isEmpty else { return [] }
         
