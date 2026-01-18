@@ -694,8 +694,8 @@ struct ScheduledMealCard: View {
                             .foregroundColor(.blue)
                     }
                 } else if isMissed {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.red)
+                    Image(systemName: "plus")
+                        .foregroundColor(.black)
                 } else {
                     // Show tap indicator for incomplete meals
                     Image(systemName: "circle")

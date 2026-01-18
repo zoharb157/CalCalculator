@@ -335,18 +335,18 @@ struct HealthKitCard: View {
                     Circle()
                         .fill(
                             LinearGradient(
-                                colors: [.orange.opacity(0.2), .yellow.opacity(0.2)],
+                                colors: [.red.opacity(0.2), .pink.opacity(0.2)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )
                         .frame(width: 60, height: 60)
                     
-                    Image(systemName: "gearshape.fill")
+                    Image(systemName: "heart.fill")
                         .font(.title2)
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [.orange, .yellow],
+                                colors: [.red, .pink],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -359,7 +359,8 @@ struct HealthKitCard: View {
                         .font(.headline)
                         .foregroundColor(.primary)
                     
-                    Text(localizationManager.localizedString(for: AppStrings.Progress.goToSettings))
+                    // Updated text to clarify Health app is needed
+                    Text("Open Health app > Sharing > Apps to enable permissions")
                         
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -373,9 +374,9 @@ struct HealthKitCard: View {
                 openHealthSettings()
             } label: {
                 HStack {
-                    Image(systemName: "gearshape.fill")
+                    Image(systemName: "heart.fill")
                         .font(.subheadline)
-                    Text(localizationManager.localizedString(for: AppStrings.Progress.openSettings))
+                    Text("Open Health App")
                         
                         .font(.subheadline)
                         .fontWeight(.semibold)
@@ -385,7 +386,7 @@ struct HealthKitCard: View {
                 .padding(.vertical, 12)
                 .background(
                     LinearGradient(
-                        colors: [.orange, .yellow.opacity(0.8)],
+                        colors: [.red, .pink],
                         startPoint: .leading,
                         endPoint: .trailing
                     )
@@ -398,22 +399,47 @@ struct HealthKitCard: View {
     // MARK: - Actions
     
     private func openHealthSettings() {
-        // Direct approach: Open Settings app to the app's settings page
-        // User can then navigate to: Privacy & Security > Health > CalorieVisionAI
+        // HealthKit permissions are managed in the Health app, NOT in the app's settings
+        // We need to open the Health app directly using the x-apple-health URL scheme
+        // Path: Health App > Sharing tab > Apps > CalorieVisionAI
+        
+        // Try to open Health app's sharing/sources section
+        let healthAppURL = URL(string: "x-apple-health://")
+        
+        if let url = healthAppURL, UIApplication.shared.canOpenURL(url) {
+            AppLogger.forClass("HealthKitCard").info("Opening Health app")
+            UIApplication.shared.open(url) { success in
+                if success {
+                    AppLogger.forClass("HealthKitCard").success("Successfully opened Health app")
+                } else {
+                    AppLogger.forClass("HealthKitCard").error("Failed to open Health app")
+                    // Fallback to app settings
+                    self.openAppSettings()
+                }
+            }
+        } else {
+            // Fallback: Open app settings with instructions
+            AppLogger.forClass("HealthKitCard").warning("Cannot open Health app URL, falling back to app settings")
+            openAppSettings()
+        }
+    }
+    
+    private func openAppSettings() {
+        // Fallback: Open the app's settings page
+        // Note: HealthKit permissions won't be here, but we provide instructions
         guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else {
             AppLogger.forClass("HealthKitCard").error("Failed to create settings URL")
             return
         }
         
-        AppLogger.forClass("HealthKitCard").info("Opening settings: \(settingsURL.absoluteString)")
+        AppLogger.forClass("HealthKitCard").info("Opening app settings: \(settingsURL.absoluteString)")
         
-        // Use the synchronous open method with completion handler for better reliability
         if UIApplication.shared.canOpenURL(settingsURL) {
             UIApplication.shared.open(settingsURL) { success in
                 if success {
-                    AppLogger.forClass("HealthKitCard").success("Successfully opened settings")
+                    AppLogger.forClass("HealthKitCard").success("Successfully opened app settings")
                 } else {
-                    AppLogger.forClass("HealthKitCard").error("Failed to open settings")
+                    AppLogger.forClass("HealthKitCard").error("Failed to open app settings")
                 }
             }
         } else {

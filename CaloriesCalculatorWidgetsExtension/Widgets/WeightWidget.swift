@@ -43,6 +43,15 @@ struct WeightWidgetView: View {
     @Environment(\.widgetFamily) var widgetFamily
     let entry: WeightEntry
     
+    /// URL scheme for deep linking - opens paywall if not subscribed, otherwise opens main app
+    private var widgetDeepLinkURL: URL {
+        if entry.isSubscribed {
+            return URL(string: "calcalculator://weight")!
+        } else {
+            return URL(string: "calcalculator://paywall")!
+        }
+    }
+    
     var body: some View {
         VStack(spacing: 12) {
             // Header
@@ -139,6 +148,7 @@ struct WeightWidgetView: View {
             Spacer()
         }
         .padding()
+        .widgetURL(widgetDeepLinkURL)
     }
     
     private func formatDate(_ date: Date) -> String {

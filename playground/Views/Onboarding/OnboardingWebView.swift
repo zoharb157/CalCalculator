@@ -35,10 +35,35 @@ struct OnboardingResult {
     }
 }
 
-/// Custom WKWebView that hides the keyboard accessory bar (arrows and checkmark)
-class NoAccessoryWebView: WKWebView {
+/// Custom WKWebView that shows a Done button to dismiss the keyboard
+class OnboardingWebViewWithDoneButton: WKWebView {
+    
+    /// Custom toolbar with Done button for dismissing keyboard
+    private lazy var doneToolbar: UIToolbar = {
+        let toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 44))
+        toolbar.barStyle = .default
+        toolbar.isTranslucent = true
+        toolbar.sizeToFit()
+        
+        let flexSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        let doneButton = UIBarButtonItem(
+            title: LocalizationManager.shared.localizedString(for: AppStrings.Common.done),
+            style: .done,
+            target: self,
+            action: #selector(dismissKeyboard)
+        )
+        doneButton.tintColor = .systemBlue
+        
+        toolbar.items = [flexSpace, doneButton]
+        return toolbar
+    }()
+    
     override var inputAccessoryView: UIView? {
-        return nil
+        return doneToolbar
+    }
+    
+    @objc private func dismissKeyboard() {
+        self.endEditing(true)
     }
 }
 
@@ -67,8 +92,8 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
         // Configure preferences
         config.defaultWebpagePreferences.allowsContentJavaScript = true
 
-        // Use custom WKWebView subclass that hides keyboard accessory bar
-        let webView = NoAccessoryWebView(frame: .zero, configuration: config)
+        // Use custom WKWebView subclass that shows Done button to dismiss keyboard
+        let webView = OnboardingWebViewWithDoneButton(frame: .zero, configuration: config)
         webView.isOpaque = false
         webView.backgroundColor = .clear
         webView.scrollView.backgroundColor = .clear

@@ -14,6 +14,15 @@ struct WidgetRootView: View {
     
     let entry: CaloriesEntry
     
+    /// URL scheme for deep linking - opens paywall if not subscribed, otherwise opens main app
+    private var widgetDeepLinkURL: URL {
+        if entry.isSubscribed {
+            return URL(string: "calcalculator://home")!
+        } else {
+            return URL(string: "calcalculator://paywall")!
+        }
+    }
+    
     var body: some View {
         Group {
             switch widgetFamily {
@@ -58,6 +67,7 @@ struct WidgetRootView: View {
                 }
             }
         }
+        .widgetURL(widgetDeepLinkURL)
         .containerBackground(for: .widget) {
             WidgetBackgroundView(style: .subtle)
         }

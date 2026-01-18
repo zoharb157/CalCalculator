@@ -719,18 +719,42 @@ final class LogExperienceViewModel {
         saveToFavorites(entry)
     }
     
-    /// Get all quick add foods (common + saved, without duplicates)
-    /// Returns the last 2 saved foods (most recent) + common foods
+    /// Add a custom quick add food directly (without logging it)
+    /// Creates a FoodLogEntry from the parameters and saves it to quick add
+    func addCustomQuickAddFood(name: String, emoji: String, calories: Int, proteinG: Double, carbsG: Double, fatG: Double) {
+        let entry = FoodLogEntry(
+            name: name,
+            calories: calories,
+            proteinG: proteinG,
+            carbsG: carbsG,
+            fatG: fatG,
+            source: .quickAdd
+        )
+        saveToFavorites(entry)
+    }
+    
+    /// Remove a saved quick add food
+    func removeFromQuickAdd(_ food: QuickAddFood) {
+        savedFoods.removeAll { $0.name.lowercased() == food.name.lowercased() }
+        saveSavedFoods()
+    }
+    
+    /// Check if a quick add food is a custom (saved) food
+    func isCustomQuickAddFood(_ food: QuickAddFood) -> Bool {
+        savedFoods.contains { $0.name.lowercased() == food.name.lowercased() }
+    }
+    
+    /// Get all quick add foods (saved foods first, then common foods, without duplicates)
+    /// Shows ALL saved foods at the top, followed by common foods
     var allQuickAddFoods: [QuickAddFood] {
         var foods: [QuickAddFood] = []
         
-        // Add saved foods (converted to QuickAddFood) - last 2 without duplicates
+        // Add ALL saved foods (converted to QuickAddFood) without duplicates
         let uniqueSavedFoods = Array(Set(savedFoods.map { $0.name.lowercased() }))
             .compactMap { name -> FoodLogEntry? in
                 savedFoods.first { $0.name.lowercased() == name }
             }
-            .suffix(2)
-            .reversed()
+            .reversed() // Most recent first
         
         for savedFood in uniqueSavedFoods {
             foods.append(QuickAddFood(

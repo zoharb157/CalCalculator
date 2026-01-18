@@ -153,6 +153,30 @@ struct ContentView: View {
             .ignoresSafeArea()
             .id(page.id)
         }
+        .onOpenURL { url in
+            handleDeepLink(url)
+        }
+    }
+    
+    // MARK: - Deep Link Handling
+    
+    /// Handle deep links from widgets and other sources
+    private func handleDeepLink(_ url: URL) {
+        guard url.scheme == "calcalculator" else { return }
+        
+        switch url.host {
+        case "paywall":
+            // Show paywall when widget is tapped and user is not subscribed
+            paywallItem = PaywallItem(page: .splash)
+        case "home":
+            // Just open the app - no action needed
+            break
+        case "weight":
+            // Navigate to weight/progress - handled by ProgressView
+            break
+        default:
+            break
+        }
     }
     
     // MARK: - Save Onboarding Data
