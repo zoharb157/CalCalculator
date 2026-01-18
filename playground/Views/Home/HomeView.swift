@@ -16,6 +16,7 @@ struct HomeView: View {
     @Bindable var scanViewModel: ScanViewModel
     let scrollToTopTrigger: UUID
     var onMealSaved: () -> Void
+    var onSwitchToMyDiet: () -> Void
 
     @Environment(\.isSubscribed) private var isSubscribed
     @Environment(TheSDK.self) private var sdk
@@ -37,6 +38,7 @@ struct HomeView: View {
     @State private var showingPaywall = false
     @State private var showDeclineConfirmation = false
     @State private var showingDietWelcome = false
+    @State private var showDietPlansSheet = false
     @Environment(\.modelContext) private var modelContext
     @Query(filter: #Predicate<DietPlan> { $0.isActive == true }) private var activeDietPlans: [DietPlan]
     
@@ -45,7 +47,8 @@ struct HomeView: View {
         repository: MealRepository,
         scanViewModel: ScanViewModel,
         scrollToTopTrigger: UUID = UUID(),
-        onMealSaved: @escaping () -> Void
+        onMealSaved: @escaping () -> Void,
+        onSwitchToMyDiet: @escaping () -> Void
     ) {
         let timestamp = Date()
         AppLogger.forClass("HomeView").info("🔍 [init] HomeView initialized at \(timestamp)")
@@ -55,6 +58,7 @@ struct HomeView: View {
         self.scanViewModel = scanViewModel
         self.scrollToTopTrigger = scrollToTopTrigger
         self.onMealSaved = onMealSaved
+        self.onSwitchToMyDiet = onSwitchToMyDiet
     }
     
     var body: some View {
@@ -451,7 +455,6 @@ struct HomeView: View {
         return nil
     }
 
-    @State private var showDietSummarySheet = false
     @State private var showingEditDietPlan = false
     @State private var selectedDietPlan: DietPlan?
     
@@ -485,7 +488,13 @@ struct HomeView: View {
             },
             onViewDiet: {
                 if isSubscribed {
-                    showDietSummarySheet = true
+                    if activeDietPlans.isEmpty {
+                        // No active plan - show create plan screen
+                        showDietPlansSheet = true
+                    } else {
+                        // Active plan exists - switch to MyDiet tab
+                        onSwitchToMyDiet()
+                    }
                 } else {
                     showingPaywall = true
                 }
@@ -497,16 +506,10 @@ struct HomeView: View {
         .sheet(isPresented: $showLogHistorySheet) {
             LogHistoryView(repository: repository)
         }
-        .sheet(isPresented: $showDietSummarySheet) {
+        .sheet(isPresented: $showDietPlansSheet) {
             NavigationStack {
-                if activeDietPlans.isEmpty {
-                    // No active plan - show create plan screen
-                    DietPlansListView()
-                        .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.myDiet))
-                } else {
-                    // Active plan exists - show diet summary
-                    EnhancedDietSummaryView()
-                }
+                DietPlansListView()
+                    .navigationTitle(localizationManager.localizedString(for: AppStrings.DietPlan.myDiet))
             }
         }
         .sheet(isPresented: $showingEditDietPlan) {
@@ -609,7 +612,17 @@ struct HomeView: View {
             .contentShape(Rectangle())
             .onTapGesture {
                 HapticManager.shared.impact(.light)
-                showDietSummarySheet = true
+                if isSubscribed {
+                    if activeDietPlans.isEmpty {
+                        // No active plan - show create plan screen
+                        showDietPlansSheet = true
+                    } else {
+                        // Active plan exists - switch to MyDiet tab
+                        onSwitchToMyDiet()
+                    }
+                } else {
+                    showingPaywall = true
+                }
             }
             .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
             .listRowSeparator(.hidden)
@@ -853,6 +866,7 @@ class ScrollObserver: NSObject {
         viewModel: viewModel,
         repository: repository,
         scanViewModel: scanViewModel,
-        onMealSaved: {}
+        onMealSaved: {},
+        onSwitchToMyDiet: {}
     )
 }

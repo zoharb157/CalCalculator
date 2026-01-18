@@ -616,7 +616,15 @@ private struct StableTabViewWrapper: View {
                 repository: repository,
                 scanViewModel: scanViewModel,
                 scrollToTopTrigger: scrollHomeToTopTrigger.wrappedValue,
-                onMealSaved: onMealSaved
+                onMealSaved: onMealSaved,
+                onSwitchToMyDiet: {
+                    if hasActiveDiet {
+                        selectedTabRaw = MainTab.myDiet.rawValue
+                        storedTab = MainTab.myDiet.rawValue
+                        UserDefaults.standard.set(MainTab.myDiet.rawValue, forKey: "selectedMainTab")
+                        UserDefaults.standard.synchronize()
+                    }
+                }
             )
             .tabItem {
                 Label(localizationManager.localizedString(for: AppStrings.Home.title), systemImage: "house.fill")
