@@ -325,16 +325,11 @@ final class HomeViewModel {
                 let targetDate = calendar.startOfDay(for: self.selectedDate)
                 let isToday = calendar.isDateInToday(targetDate)
                 
-                async let summaryTask = isToday 
+                let summary = isToday
                     ? try repository.fetchTodaySummary()
                     : try repository.fetchDaySummary(for: targetDate)
-                async let mealsTask = try repository.fetchMeals(for: targetDate)
-                async let exercisesTask = try repository.fetchExercises(for: targetDate)
-                
-                // Wait for all parallel tasks to complete
-                let summary = try await summaryTask
-                let meals = try await mealsTask
-                let exercises = try await exercisesTask
+                let meals = try repository.fetchMeals(for: targetDate)
+                let exercises = try repository.fetchExercises(for: targetDate)
                 
                 // Calculate burned calories and count for selected date
                 let burned = exercises.reduce(0) { $0 + $1.calories }
@@ -381,29 +376,27 @@ final class HomeViewModel {
             guard let self = self else { return }
             
             do {
-                // Fetch week summaries, today's exercises, and yesterday's exercises in parallel
+                // Fetch week summaries, today's exercises, and yesterday's exercises
                 // Fetch 3 weeks of data for scrollable week days header
                 let calendar = Calendar.current
                 let today = calendar.startOfDay(for: Date())
                 let yesterday = calendar.date(byAdding: .day, value: -1, to: today)
                 
-                async let weekSummariesTask = try repository.fetchWeekSummaries()
-                async let exercisesTask = try repository.fetchTodaysExercises()
-                // Fetch yesterday's exercises in parallel for rollover calculation optimization
-                let yesterdayExercisesTask: Task<[Exercise], Error> = Task {
-                    guard let yesterday = yesterday else { return [] }
+                let weekSummaries = try repository.fetchWeekSummaries()
+                let exercises = try repository.fetchTodaysExercises()
+                
+                let yesterdayExercises: [Exercise]
+                if let yesterday = yesterday {
                     do {
-                        return try repository.fetchExercises(for: yesterday)
+                        yesterdayExercises = try repository.fetchExercises(for: yesterday)
                     } catch {
-                        AppLogger.forClass("HomeViewModel").warning("Failed to fetch yesterday's exercises in parallel: \(error.localizedDescription)")
-                        return []
+                        AppLogger.forClass("HomeViewModel").warning("Failed to fetch yesterday's exercises: \(error.localizedDescription)")
+                        yesterdayExercises = []
                     }
+                } else {
+                    yesterdayExercises = []
                 }
                 
-                // Wait for all parallel tasks to complete
-                let weekSummaries = try await weekSummariesTask
-                let exercises = try await exercisesTask
-                let yesterdayExercises = try await yesterdayExercisesTask.value
                 let burned = exercises.reduce(0) { $0 + $1.calories }
                 let yesterdayBurned = yesterdayExercises.reduce(0) { $0 + $1.calories }
                 
@@ -905,15 +898,29 @@ final class HomeViewModel {
     }
     
     /// Calorie progress ratio (0.0 to 1.0+, can exceed 1.0 if over goal)
-    /// Uses BASE goal (not effective goal) to show progress against the original target
-    /// This ensures the progress circle shows how much of the base goal has been consumed
+    /// Uses EFFECTIVE goal (base + burned + rollover) to match remaining calories calculation
+    /// This ensures the progress percentage is consistent with the "calories left" value
     /// Uses the selected date's summary (not always today's)
     var calorieProgress: Double {
-        let goal = Double(baseCalorieGoal)
-        // todaysSummary is updated when selectedDate changes via loadDataForSelectedDate()
-        let consumed = Double(todaysSummary?.totalCalories ?? 0)
+        let goal = Double(effectiveCalorieGoal)
         guard goal > 0 else { return 0 }
-        return consumed / goal
+        
+        // Use the same calculation as remainingCalories to ensure consistency
+        let calendar = Calendar.current
+        let isToday = calendar.isDateInToday(selectedDate)
+        let consumed = Double(todaysSummary?.totalCalories ?? 0)
+        let burned = isToday ? Double(todaysBurnedCalories) : Double(selectedDateBurnedCalories)
+        let baseGoal = Double(baseCalorieGoal)
+        
+        // Calculate available calories the same way as remainingCalories
+        var availableCalories = baseGoal + burned
+        if isToday {
+            availableCalories += Double(rolloverCaloriesFromYesterday)
+        }
+        
+        // Progress = consumed / availableCalories (which equals effectiveCalorieGoal)
+        // This ensures perfect consistency with remainingCalories calculation
+        return consumed / availableCalories
     }
     
     /// Whether burned calories are being added to the calorie goal

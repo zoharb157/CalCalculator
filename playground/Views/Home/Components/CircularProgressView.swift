@@ -41,12 +41,12 @@ struct CircularProgressView: View {
             
             // Percentage text
             VStack(spacing: 2) {
-                Text("\(Int(min(progress, 1.0) * 100))%")
+                Text("\(Int(round(min(progress, 1.0) * 100)))%")
                     .font(.system(size: 20, weight: .bold, design: .rounded))
                     .foregroundStyle(.primary) // White in dark mode, black in light mode
                 
                 if progress > 1.0 {
-                    Text("+\(Int((progress - 1.0) * 100))%")
+                    Text("+\(Int(round((progress - 1.0) * 100)))%")
                         .font(.system(size: 10, weight: .medium, design: .rounded))
                         .foregroundColor(.red)
                 }

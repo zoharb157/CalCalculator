@@ -260,7 +260,6 @@
 			mainGroup = A314330C2EF0897D00EFE039;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				6AB94DA94C5042569CD5B911 /* XCRemoteSwiftPackageReference "Ios-Bundle" */,
 				FF3456789012CDEF01234567 /* XCRemoteSwiftPackageReference "apps-sdk-V2" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -748,14 +747,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		6AB94DA94C5042569CD5B911 /* XCRemoteSwiftPackageReference "Ios-Bundle" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://git-codecommit.us-east-1.amazonaws.com/v1/repos/Ios-Bundle";
-			requirement = {
-				branch = master;
-				kind = branch;
-			};
-		};
 		FF3456789012CDEF01234567 /* XCRemoteSwiftPackageReference "apps-sdk-V2" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://git-codecommit.us-east-1.amazonaws.com/v1/repos/apps-sdk-V2";

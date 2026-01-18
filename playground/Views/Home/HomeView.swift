@@ -768,8 +768,8 @@ struct ListScrollTracker: UIViewRepresentable {
             // SwiftUI List uses UICollectionView which contains a UIScrollView
             if let scrollView = self.findScrollViewInWindow(window) {
                 // Check if we already have an observer for this scrollView
-                if let existingObserver = objc_getAssociatedObject(scrollView, "scrollObserver") as? ScrollObserver {
-                    // Update the binding if observer already exists
+                if objc_getAssociatedObject(scrollView, "scrollObserver") as? ScrollObserver != nil {
+                    // Observer already exists
                     return
                 }
                 

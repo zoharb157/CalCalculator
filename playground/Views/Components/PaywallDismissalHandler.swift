@@ -34,6 +34,14 @@ struct PaywallDismissalHandlerModifier: ViewModifier {
 /// This wrapper creates a binding that can never be deallocated, even if SDK sets its reference to nil
 @MainActor
 private final class SafeBindingWrapper {
+    private final class BindingBox {
+        var binding: Binding<Bool>
+
+        init(_ binding: Binding<Bool>) {
+            self.binding = binding
+        }
+    }
+
     private let originalBinding: Binding<Bool>
     nonisolated(unsafe) private let sdk: TheSDK
     private let showDeclineConfirmation: Binding<Bool>
@@ -60,25 +68,25 @@ private final class SafeBindingWrapper {
         // Capture all needed values by value (not reference) to avoid any deallocation issues
         
         // Capture the original binding by value - this is safe because Binding is a struct
-        let originalBinding = self.originalBinding
+        let bindingBox = BindingBox(self.originalBinding)
         let wrapperId = self.wrapperId
         
         // Create getter that doesn't capture self
         let getValue: () -> Bool = {
             // Direct access to captured binding - no self reference
-            originalBinding.wrappedValue
+            bindingBox.binding.wrappedValue
         }
         
         // Create setter that doesn't capture self
         let setValue: (Bool) -> Void = { newValue in
             // Direct access to captured binding - no self reference
-            let wasShowing = originalBinding.wrappedValue
+            let wasShowing = bindingBox.binding.wrappedValue
             let isDismissing = !newValue && wasShowing
             
             // CRITICAL: Set value IMMEDIATELY and SYNCHRONOUSLY - no delays
             // This allows SwiftUI to dismiss the fullScreenCover immediately when user clicks X
             // The dismissal happens synchronously, so the HTML can close right away
-            originalBinding.wrappedValue = newValue
+            bindingBox.binding.wrappedValue = newValue
             
             // Handle post-dismissal logic asynchronously (subscription check, etc.)
             // This doesn't block the dismissal - it happens in the background

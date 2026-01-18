@@ -26,41 +26,26 @@ final class HapticManager {
         // Skip haptics on simulator to avoid errors
         guard isPhysicalDevice else { return }
         
-        do {
-            let generator = UIImpactFeedbackGenerator(style: style)
-            generator.prepare()
-            generator.impactOccurred()
-        } catch {
-            // Silently fail - haptics are optional
-            // This prevents console spam on simulator
-        }
+        let generator = UIImpactFeedbackGenerator(style: style)
+        generator.prepare()
+        generator.impactOccurred()
     }
     
     func notification(_ type: UINotificationFeedbackGenerator.FeedbackType) {
         // Skip haptics on simulator to avoid errors
         guard isPhysicalDevice else { return }
         
-        do {
-            let generator = UINotificationFeedbackGenerator()
-            generator.prepare()
-            generator.notificationOccurred(type)
-        } catch {
-            // Silently fail - haptics are optional
-            // This prevents console spam on simulator
-        }
+        let generator = UINotificationFeedbackGenerator()
+        generator.prepare()
+        generator.notificationOccurred(type)
     }
     
     func selection() {
         // Skip haptics on simulator to avoid errors
         guard isPhysicalDevice else { return }
         
-        do {
-            let generator = UISelectionFeedbackGenerator()
-            generator.prepare()
-            generator.selectionChanged()
-        } catch {
-            // Silently fail - haptics are optional
-            // This prevents console spam on simulator
-        }
+        let generator = UISelectionFeedbackGenerator()
+        generator.prepare()
+        generator.selectionChanged()
     }
 }

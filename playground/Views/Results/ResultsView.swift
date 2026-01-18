@@ -277,7 +277,7 @@ struct ResultsView: View {
             if success {
                 // Record meal save for non-subscribed users
                 if !isSubscribed {
-                    limitManager.recordMealSave()
+                    _ = limitManager.recordMealSave()
                 }
                 onMealSaved?()
                 dismiss()
