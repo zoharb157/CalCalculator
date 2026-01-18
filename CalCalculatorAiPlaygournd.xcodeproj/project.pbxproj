@@ -53,6 +53,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A31433182EF0897D00EFE040 /* Exceptions for "playground" folder in "playground" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = A31433142EF0897D00EFE039 /* playground */;
+		};
 		CEB315182F01500700986732 /* Exceptions for "CaloriesCalculatorWidgetsExtension" folder in "CaloriesCalculatorWidgetsExtensionExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -65,6 +72,9 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A31433172EF0897D00EFE039 /* playground */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A31433182EF0897D00EFE040 /* Exceptions for "playground" folder in "playground" target */,
+			);
 			path = playground;
 			sourceTree = "<group>";
 		};
@@ -506,7 +516,8 @@
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 5NS9ZUMYCS;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = playground/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = CalorieVisionAI;
 				INFOPLIST_KEY_CFBundleName = CalorieVisionAI;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs camera access to take photos of your meals for calorie tracking.";
@@ -555,7 +566,8 @@
 				DEVELOPMENT_TEAM = 5NS9ZUMYCS;
 				DWARF_DSYM_FILE_SHOULD_ACCOMPANY_PRODUCT = YES;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = playground/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = CalorieVisionAI;
 				INFOPLIST_KEY_CFBundleName = CalorieVisionAI;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs camera access to take photos of your meals for calorie tracking.";

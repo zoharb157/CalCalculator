@@ -74,7 +74,13 @@ struct MyDietView: View {
                         planSwitcherCard
                     }
                     
-                    if activePlan != nil {
+                    if let plan = activePlan {
+                        // Diet Plan Summary Card - shows today's nutritional breakdown
+                        DietPlanSummaryCard(
+                            plan: plan,
+                            adherenceData: viewModel.adherenceData
+                        )
+                        
                         // Time Range Selector
                         timeRangeSelector
                         
@@ -975,6 +981,175 @@ private struct SavedPlanPreviewRow: View {
         }
         .padding(12)
         .background(Color(UIColor.secondarySystemGroupedBackground))
+        .cornerRadius(12)
+    }
+}
+
+// MARK: - Diet Plan Summary Card
+
+struct DietPlanSummaryCard: View {
+    let plan: DietPlan
+    let adherenceData: DietAdherenceData?
+    
+    @ObservedObject private var localizationManager = LocalizationManager.shared
+    
+    // MARK: - Computed Properties
+    
+    /// Calculate total calories from today's scheduled meals with templates
+    private var totalCalories: Int {
+        // If plan has explicit daily calorie goal, use it
+        if let goal = plan.dailyCalorieGoal, goal > 0 {
+            return goal
+        }
+        
+        // Otherwise, calculate from scheduled meals for today
+        guard let data = adherenceData else { return 0 }
+        
+        return data.scheduledMeals.reduce(0) { total, meal in
+            total + (meal.mealTemplate?.expectedCalories ?? 0)
+        }
+    }
+    
+    /// Calculate macros from total calories or from meal templates
+    private var macros: (protein: Double, carbs: Double, fat: Double) {
+        guard let data = adherenceData else {
+            // Fall back to standard calculation from calories
+            let calculated = DietPlanCalculator.calculateMacros(from: totalCalories)
+            return (calculated.proteinG, calculated.carbsG, calculated.fatG)
+        }
+        
+        // Calculate from scheduled meal templates if available
+        var protein: Double = 0
+        var carbs: Double = 0
+        var fat: Double = 0
+        var hasTemplateData = false
+        
+        for meal in data.scheduledMeals {
+            if let template = meal.mealTemplate {
+                for item in template.templateItems {
+                    protein += item.proteinG
+                    carbs += item.carbsG
+                    fat += item.fatG
+                    hasTemplateData = true
+                }
+            }
+        }
+        
+        // If we have template data, use it; otherwise calculate from calories
+        if hasTemplateData {
+            return (protein, carbs, fat)
+        } else {
+            let calculated = DietPlanCalculator.calculateMacros(from: totalCalories)
+            return (calculated.proteinG, calculated.carbsG, calculated.fatG)
+        }
+    }
+    
+    /// Number of meals scheduled for today
+    private var mealsToday: Int {
+        adherenceData?.scheduledMeals.count ?? 0
+    }
+    
+    /// Number of completed meals today
+    private var completedMeals: Int {
+        adherenceData?.completedMeals.count ?? 0
+    }
+    
+    /// Progress percentage (completed / total meals)
+    private var progress: Double {
+        guard mealsToday > 0 else { return 0 }
+        return Double(completedMeals) / Double(mealsToday)
+    }
+    
+    // MARK: - Body
+    
+    var body: some View {
+        let _ = localizationManager.currentLanguage
+        
+        VStack(spacing: 16) {
+            // Header Row: Title + Circular Progress
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(localizationManager.localizedString(for: AppStrings.DietPlan.todaySchedule))
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    
+                    if totalCalories > 0 {
+                        Text("\(totalCalories) kcal")
+                            .font(.system(size: 32, weight: .bold, design: .rounded))
+                            .foregroundColor(.primary)
+                    } else {
+                        Text("--")
+                            .font(.system(size: 32, weight: .bold, design: .rounded))
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Text("\(completedMeals)/\(mealsToday) \(localizationManager.localizedString(for: AppStrings.History.completed).lowercased())")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                // Circular Progress
+                CircularProgressView(progress: progress)
+                    .frame(width: 70, height: 70)
+            }
+            
+            // Macro Pills Row
+            HStack(spacing: 12) {
+                MacroSummaryPill(
+                    icon: "p.circle.fill",
+                    value: "\(Int(macros.protein))g",
+                    label: localizationManager.localizedString(for: AppStrings.Home.proteinShort),
+                    color: .proteinColor
+                )
+                
+                MacroSummaryPill(
+                    icon: "c.circle.fill",
+                    value: "\(Int(macros.carbs))g",
+                    label: localizationManager.localizedString(for: AppStrings.Home.carbsShort),
+                    color: .carbsColor
+                )
+                
+                MacroSummaryPill(
+                    icon: "f.circle.fill",
+                    value: "\(Int(macros.fat))g",
+                    label: localizationManager.localizedString(for: AppStrings.Home.fatShort),
+                    color: .fatColor
+                )
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(16)
+    }
+}
+
+// MARK: - Macro Summary Pill
+
+private struct MacroSummaryPill: View {
+    let icon: String
+    let value: String
+    let label: String
+    let color: Color
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundColor(color)
+            
+            Text(value)
+                .font(.system(.headline, design: .rounded))
+                .fontWeight(.semibold)
+            
+            Text(label)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
+        .background(color.opacity(0.1))
         .cornerRadius(12)
     }
 }

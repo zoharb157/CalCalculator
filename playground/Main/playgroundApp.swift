@@ -254,6 +254,9 @@ struct playgroundApp: App {
                     // Debug: Log diet plans on app startup
                     await logDietPlansOnStartup()
                     
+                    // Initialize RateUsManager to listen for successful actions
+                    _ = RateUsManager.shared
+                    
                     // QA Version: In Release builds, automatically enable subscription override
                     #if !DEBUG
                     let settings = UserSettings.shared

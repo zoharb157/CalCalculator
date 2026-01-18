@@ -16,6 +16,7 @@ struct LogFoodView: View {
     @State private var showingManualEntry = false
     @State private var showingAnalyzedResults = false
     @State private var showingVoiceLog = false
+    @State private var showingAddQuickAdd = false
     @FocusState private var isSearchFocused: Bool
 
     init(initialCategory: MealCategory? = nil) {
@@ -73,6 +74,9 @@ struct LogFoodView: View {
             }
             .sheet(isPresented: $showingVoiceLog) {
                 VoiceLogView()
+            }
+            .sheet(isPresented: $showingAddQuickAdd) {
+                AddQuickAddFoodView(viewModel: viewModel)
             }
             .sheet(isPresented: $showingAnalyzedResults) {
                 AnalyzedFoodsResultView(viewModel: viewModel) {
@@ -263,7 +267,7 @@ struct LogFoodView: View {
 
     private var quickAddSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Section header with manual add button
+            // Section header with add quick add button
             HStack {
                 Text(localizationManager.localizedString(for: AppStrings.Food.quickAdd))
                     .id("quick-add-\(localizationManager.currentLanguage)")
@@ -272,7 +276,7 @@ struct LogFoodView: View {
                 Spacer()
                 
                 Button {
-                    showingManualEntry = true
+                    showingAddQuickAdd = true
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "plus")
@@ -337,7 +341,7 @@ struct LogFoodView: View {
                 Spacer()
                 
                 Button {
-                    showingManualEntry = true
+                    showingAddQuickAdd = true
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "plus")
@@ -1164,6 +1168,159 @@ struct AnalyzedFoodRow: View {
             }
         }
         .padding(.vertical, 4)
+    }
+}
+
+// MARK: - Add Quick Add Food View
+
+struct AddQuickAddFoodView: View {
+    @Bindable var viewModel: LogExperienceViewModel
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var localizationManager = LocalizationManager.shared
+    @FocusState private var focusedField: QuickAddField?
+    
+    @State private var foodName: String = ""
+    @State private var emoji: String = "⭐"
+    @State private var calories: String = ""
+    @State private var protein: String = ""
+    @State private var carbs: String = ""
+    @State private var fat: String = ""
+    
+    enum QuickAddField {
+        case name, emoji, calories, protein, carbs, fat
+    }
+    
+    private var isFormValid: Bool {
+        !foodName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        Int(calories) != nil &&
+        Int(calories)! > 0
+    }
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section(localizationManager.localizedString(for: AppStrings.Food.foodDetails)) {
+                    TextField("Food name", text: $foodName)
+                        .focused($focusedField, equals: .name)
+                    
+                    HStack {
+                        Text("Emoji")
+                        Spacer()
+                        TextField("⭐", text: $emoji)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 60)
+                            .focused($focusedField, equals: .emoji)
+                    }
+                }
+                
+                Section(localizationManager.localizedString(for: AppStrings.Food.nutrition)) {
+                    HStack {
+                        Label(localizationManager.localizedString(for: AppStrings.Home.calories), systemImage: "flame.fill")
+                            .id("qa-calories-label-\(localizationManager.currentLanguage)")
+                            .foregroundColor(.orange)
+                        Spacer()
+                        TextField("0", text: $calories)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 80)
+                            .focused($focusedField, equals: .calories)
+                        Text(localizationManager.localizedString(for: AppStrings.Food.kcal))
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    HStack {
+                        Label(localizationManager.localizedString(for: AppStrings.Home.protein), systemImage: "p.circle.fill")
+                            .id("qa-protein-label-\(localizationManager.currentLanguage)")
+                            .foregroundColor(.blue)
+                        Spacer()
+                        TextField("0", text: $protein)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 80)
+                            .focused($focusedField, equals: .protein)
+                        Text(localizationManager.localizedString(for: AppStrings.Food.gram))
+                            .id("qa-protein-unit-\(localizationManager.currentLanguage)")
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    HStack {
+                        Label(localizationManager.localizedString(for: AppStrings.Home.carbs), systemImage: "c.circle.fill")
+                            .id("qa-carbs-label-\(localizationManager.currentLanguage)")
+                            .foregroundColor(.green)
+                        Spacer()
+                        TextField("0", text: $carbs)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 80)
+                            .focused($focusedField, equals: .carbs)
+                        Text(localizationManager.localizedString(for: AppStrings.Food.gram))
+                            .id("qa-carbs-unit-\(localizationManager.currentLanguage)")
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    HStack {
+                        Label(localizationManager.localizedString(for: AppStrings.Home.fat), systemImage: "f.circle.fill")
+                            .id("qa-fat-label-\(localizationManager.currentLanguage)")
+                            .foregroundColor(.purple)
+                        Spacer()
+                        TextField("0", text: $fat)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 80)
+                            .focused($focusedField, equals: .fat)
+                        Text(localizationManager.localizedString(for: AppStrings.Food.gram))
+                            .id("qa-fat-unit-\(localizationManager.currentLanguage)")
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .id("qa-nutrition-section-\(localizationManager.currentLanguage)")
+            }
+            .navigationTitle(localizationManager.localizedString(for: AppStrings.Food.saveToQuickAdd))
+            .id("add-quick-add-title-\(localizationManager.currentLanguage)")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(localizationManager.localizedString(for: AppStrings.Common.save)) {
+                        saveQuickAddFood()
+                    }
+                    .fontWeight(.semibold)
+                    .disabled(!isFormValid)
+                }
+                
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button(localizationManager.localizedString(for: AppStrings.Common.done)) {
+                        focusedField = nil
+                    }
+                }
+            }
+        }
+    }
+    
+    private func saveQuickAddFood() {
+        let trimmedName = foodName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let finalEmoji = emoji.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "⭐" : emoji.trimmingCharacters(in: .whitespacesAndNewlines)
+        let caloriesInt = Int(calories) ?? 0
+        let proteinDouble = Double(protein) ?? 0
+        let carbsDouble = Double(carbs) ?? 0
+        let fatDouble = Double(fat) ?? 0
+        
+        viewModel.addCustomQuickAddFood(
+            name: "\(finalEmoji) \(trimmedName)",
+            emoji: finalEmoji,
+            calories: caloriesInt,
+            proteinG: proteinDouble,
+            carbsG: carbsDouble,
+            fatG: fatDouble
+        )
+        
+        dismiss()
     }
 }
 

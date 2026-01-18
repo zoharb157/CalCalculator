@@ -70,11 +70,12 @@ struct ProgressDashboardView: View {
                                 .id("current-weight-\(UserSettings.shared.displayWeight)-\(viewModel.weightHistory.count)")
                                 
                                 // Weight Chart Card
+                                // Use hash of all weight values to ensure chart updates when any weight changes
                                 WeightChartCard(
                                     weightHistory: viewModel.weightHistory,
                                     useMetricUnits: viewModel.useMetricUnits
                                 )
-                                .id("weight-chart-\(viewModel.weightHistory.count)-\(viewModel.weightHistory.last?.weight ?? 0)-\(viewModel.weightHistory.last?.date.timeIntervalSince1970 ?? 0)")
+                                .id("weight-chart-\(viewModel.weightHistory.map { "\($0.weight)-\($0.date.timeIntervalSince1970)" }.joined(separator: ","))")
                                 
                                 // Weight Changes Chart Card
                                 WeightChangesChartCard(
@@ -82,7 +83,7 @@ struct ProgressDashboardView: View {
                                     currentWeight: viewModel.mostRecentWeight,
                                     useMetricUnits: viewModel.useMetricUnits
                                 )
-                                .id("weight-changes-\(viewModel.weightHistory.count)-\(viewModel.mostRecentWeight)-\(viewModel.weightHistory.last?.date.timeIntervalSince1970 ?? 0)")
+                                .id("weight-changes-\(viewModel.weightHistory.map { "\($0.weight)-\($0.date.timeIntervalSince1970)" }.joined(separator: ","))-\(viewModel.mostRecentWeight)")
                             }
                             
                             // MARK: - Nutrition Section
