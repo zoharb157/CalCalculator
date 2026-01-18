@@ -453,8 +453,9 @@ class CameraController: NSObject, ObservableObject {
         previewLayer != nil
     }
     
-    // Simple completion handler - accessed only on main actor
+    // Simple completion handlers - accessed only on main actor
     private var photoCaptureCompletion: ((UIImage?) -> Void)?
+    private var setupCompletion: (() -> Void)?
     private let sessionQueue = DispatchQueue(label: "camera.session.queue")
     
     override init() {
@@ -473,12 +474,14 @@ class CameraController: NSObject, ObservableObject {
             completion?()
             return
         }
-        
+        setupCompletion = completion
+
         sessionQueue.async { [weak self] in
             self?.configureSession()
             DispatchQueue.main.async { [weak self] in
                 self?.isSessionConfigured = true
-                completion?()
+                self?.setupCompletion?()
+                self?.setupCompletion = nil
             }
         }
     }

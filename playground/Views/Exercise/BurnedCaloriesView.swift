@@ -631,7 +631,7 @@ struct BurnedCaloriesView: View {
             
             // Record exercise save for non-subscribed users
             if !isSubscribed {
-                limitManager.recordExerciseSave()
+                _ = limitManager.recordExerciseSave()
             }
             
             // Sync widget data after saving exercise

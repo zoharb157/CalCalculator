@@ -17,19 +17,19 @@
   const VERSION = "1.0.0";
   
   /** @type {string} */
-  let CID = "";
+  let CID = typeof window !== "undefined" && window.CID ? String(window.CID) : "";
   
   /** @type {string} */
-  let SESSION_ID = "";
+  let SESSION_ID = typeof window !== "undefined" && window.SESSION_ID ? String(window.SESSION_ID) : "";
   
   /** @type {boolean} */
   let ISSUBSCRIBESERVER = false;
   
   /** @type {string} */
-  let USERID = "";
+  let USERID = typeof window !== "undefined" && window.USERID ? String(window.USERID) : "";
   
   /** @type {string} */
-  let APP_VERSION = "1.0";
+  let APP_VERSION = typeof window !== "undefined" && window.APP_VERSION ? String(window.APP_VERSION) : "1.0";
   
   /** @type {string} */
   let INSTALL_TIME = "";
@@ -2516,6 +2516,14 @@ function showGoalsError(message, apiUrl) {
       } catch (e) {}
     }
   };
+
+  // Legacy global exports to support older native bridge calls
+  // Some native code still calls start(...) directly or reads SESSION_ID globally.
+  window.start = window.OnboardingWeb.start;
+  window.SESSION_ID = SESSION_ID;
+  window.USERID = USERID;
+  window.CID = CID;
+  window.APP_VERSION = APP_VERSION;
   
   // Expose bridge functions for debugging
   window.OnboardingBridge = {
@@ -2525,6 +2533,15 @@ function showGoalsError(message, apiUrl) {
     callActionAsync,
     __handleEvent__,
   };
+
+  // If native called start() before onboarding.js loaded, replay it now
+  if (window.__pendingOnboardingStartArgs) {
+    try {
+      window.OnboardingWeb.start.apply(null, window.__pendingOnboardingStartArgs);
+    } finally {
+      window.__pendingOnboardingStartArgs = null;
+    }
+  }
 
   // ============================================================================
   // INIT - Auto-start if DOM is ready

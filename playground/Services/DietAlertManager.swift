@@ -57,7 +57,6 @@ final class DietAlertManager {
     /// Evaluate nutrition statuses and return alerts that should be shown
     func evaluateAlerts(for statuses: [NutritionStatus]) -> [NutritionAlert] {
         let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
         
         // Reset shown alerts if it's a new day
         if let lastReset = UserDefaults.standard.object(forKey: "DietAlertManager.lastReset") as? Date,

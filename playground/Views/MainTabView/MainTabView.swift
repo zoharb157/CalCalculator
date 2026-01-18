@@ -174,7 +174,6 @@ struct MainTabView: View {
         // CRITICAL: Use $selectedTabRaw directly - simpler and more reliable
         // TabView will update selectedTabRaw directly, and onChange will handle persistence
         // The key is to ensure TabView doesn't get recreated, which we do with .id()
-        let currentStoredValue = UserDefaults.standard.string(forKey: "selectedMainTab") ?? MainTab.home.rawValue
         
         return ZStack(alignment: .top) {
             // CRITICAL: Use StableTabViewWrapper to isolate TabView from body recomputations
@@ -716,9 +715,6 @@ class MainTabBarDelegate: NSObject, UITabBarControllerDelegate {
     
     // Map tab indices to MainTab raw values based on actual tab order
     private func tabRawValue(for index: Int) -> String {
-        let tabCount = 5 // home, progress, myDiet (conditional), history, profile
-        let visibleTabs = hasActiveDiet ? 5 : 4
-        
         // Map based on actual visible tabs
         if hasActiveDiet {
             switch index {
@@ -762,7 +758,6 @@ class MainTabBarDelegate: NSObject, UITabBarControllerDelegate {
             
             // Try to get the actual tag from the view controller
             if newIndex < viewControllers.count {
-                let vc = viewControllers[newIndex]
                 // The tabBarItem.tag is set by SwiftUI based on our .tag() modifier
                 // However, SwiftUI uses the string hash for tags, so we need to map back
                 // Instead, we'll use the actual visible tab count to determine the correct mapping

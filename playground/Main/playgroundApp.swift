@@ -179,6 +179,8 @@ struct playgroundApp: App {
                     case .didFailToRegisterForNotifications(let error):
                         // Registration failure (handled in AppDelegate)
                         print("❌ [SDK] Failed to register for notifications: \(error)")
+                    case .didRegisterForNotifications(let token):
+                        print("✅ [SDK] Registered for notifications: \(token)")
                         
                     @unknown default:
                         // Handle any other APNS events

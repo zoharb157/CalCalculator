@@ -508,7 +508,7 @@ struct QuickLogView: View {
                 
                 // Record exercise save for non-subscribed users
                 if !isSubscribed {
-                    limitManager.recordExerciseSave()
+                    _ = limitManager.recordExerciseSave()
                 }
                 
                 // Also save to HealthKit if available and authorized

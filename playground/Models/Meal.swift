@@ -116,10 +116,4 @@ final class Meal: Identifiable {
     }
 }
 
-// MARK: - Sendable Conformance
-// Note: SwiftData's @Model macro adds Sendable conformance, but explicit extension is needed
-// for Swift 6.0 strict concurrency when returning from main actor-isolated methods.
-// The redundant conformance warning from the macro can be safely ignored.
-extension Meal: @unchecked Sendable {}
-
 // Note: MealAnalysisResponse moved to FoodAnalysisService.swift for API integration

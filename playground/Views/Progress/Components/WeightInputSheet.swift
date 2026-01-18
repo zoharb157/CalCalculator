@@ -133,6 +133,6 @@ struct WeightInputSheet: View {
     WeightInputSheet(
         currentWeight: 75.5,
         unit: "kg",
-        onSave: { _ in await Task {} }
+        onSave: { _ in }
     )
 }

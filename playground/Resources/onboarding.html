@@ -1072,6 +1072,20 @@
     </svg>
 
     <!-- JS injected exactly like splash_blue.html -->
+    <script>
+      // Legacy globals and start stub to avoid race before onboarding.js loads
+      (function () {
+        window.SESSION_ID = window.SESSION_ID || "";
+        window.CID = window.CID || "";
+        window.USERID = window.USERID || "";
+        window.APP_VERSION = window.APP_VERSION || "";
+        if (typeof window.start !== "function") {
+          window.start = function () {
+            window.__pendingOnboardingStartArgs = arguments;
+          };
+        }
+      })();
+    </script>
     <script>#SPLASH_JS#</script>
   </body>
 </html>

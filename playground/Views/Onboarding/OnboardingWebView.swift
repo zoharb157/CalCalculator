@@ -8,7 +8,7 @@
 import SwiftUI
 import WebKit
 import UIKit
-import UserNotifications
+@preconcurrency import UserNotifications
 import AppTrackingTransparency
 
 /// A SwiftUI wrapper for the HTML-based onboarding flow
@@ -65,7 +65,7 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
         config.userContentController.add(context.coordinator, name: "onboarding")
 
         // Configure preferences
-        config.preferences.javaScriptEnabled = true
+        config.defaultWebpagePreferences.allowsContentJavaScript = true
 
         // Use custom WKWebView subclass that hides keyboard accessory bar
         let webView = NoAccessoryWebView(frame: .zero, configuration: config)
@@ -102,9 +102,11 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
     static func dismantleUIView(_ uiView: WKWebView, coordinator: Coordinator) {
         // Clean up when view is removed from hierarchy
         // This prevents warnings from stale WKWebView instances
+        Task { @MainActor in
         uiView.navigationDelegate = nil
         uiView.configuration.userContentController.removeScriptMessageHandler(forName: "onboarding")
         uiView.stopLoading()
+        }
     }
 
     /// Loads the onboarding HTML template and injects the JS content
@@ -146,20 +148,22 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
         
         deinit {
             // Clean up message handler to prevent memory leaks and warnings
+            Task { @MainActor [weak webView] in
             webView?.configuration.userContentController.removeScriptMessageHandler(forName: "onboarding")
             webView?.navigationDelegate = nil
+            }
         }
         
         // MARK: - WKNavigationDelegate
         
-        func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        nonisolated func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
             // CRITICAL: decisionHandler MUST be called synchronously, not asynchronously
             // Calling it asynchronously causes navigation failures and the "Update NavigationRequestObserver" warning
             // Allow all navigation within the onboarding flow
             decisionHandler(.allow)
         }
         
-        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        nonisolated func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             // Navigation finished - no action needed
             // This delegate method is called but doesn't need to do anything
         }
@@ -411,7 +415,7 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
                 
             case "request", "request_native":
                 requestPermissionAsync(id: id, requestId: requestId, permissionType: permissionType)
-                
+
             default:
                 let response: [String: Any] = [
                     "ok": false,
@@ -439,16 +443,19 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
                 
             case "notifications":
                 UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
-                    let status = self?.mapNotificationStatus(settings.authorizationStatus) ?? "unknown"
-                    let response: [String: Any] = [
-                        "ok": true,
-                        "requestId": requestId,
-                        "permissionType": permissionType,
-                        "status": status
-                    ]
-                    self?.postEventToJS(id: id, payload: response)
+                    Task { @MainActor in
+                        guard let self else { return }
+                        let status = self.mapNotificationStatus(settings.authorizationStatus)
+                        let response: [String: Any] = [
+                            "ok": true,
+                            "requestId": requestId,
+                            "permissionType": permissionType,
+                            "status": status
+                        ]
+                        self.postEventToJS(id: id, payload: response)
+                    }
                 }
-                
+
             default:
                 let response: [String: Any] = [
                     "ok": false,
@@ -479,14 +486,17 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
                 }
                 
                 ATTrackingManager.requestTrackingAuthorization { [weak self] newStatus in
-                    let status = self?.mapTrackingStatus(newStatus) ?? "unknown"
-                    let response: [String: Any] = [
-                        "ok": true,
-                        "requestId": requestId,
-                        "permissionType": permissionType,
-                        "status": status
-                    ]
-                    self?.postEventToJS(id: id, payload: response)
+                    Task { @MainActor in
+                        guard let self else { return }
+                        let status = self.mapTrackingStatus(newStatus)
+                        let response: [String: Any] = [
+                            "ok": true,
+                            "requestId": requestId,
+                            "permissionType": permissionType,
+                            "status": status
+                        ]
+                        self.postEventToJS(id: id, payload: response)
+                    }
                 }
                 
             case "notifications":
@@ -502,32 +512,38 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
                             }
                             // Re-check actual status
                             center.getNotificationSettings { updated in
-                                let status = self?.mapNotificationStatus(updated.authorizationStatus) ?? "unknown"
-                                var response: [String: Any] = [
-                                    "ok": error == nil,
-                                    "requestId": requestId,
-                                    "permissionType": permissionType,
-                                    "status": status
-                                ]
-                                if let error = error {
-                                    response["error"] = error.localizedDescription
+                                Task { @MainActor in
+                                    guard let self else { return }
+                                    let status = self.mapNotificationStatus(updated.authorizationStatus)
+                                    var response: [String: Any] = [
+                                        "ok": error == nil,
+                                        "requestId": requestId,
+                                        "permissionType": permissionType,
+                                        "status": status
+                                    ]
+                                    if let error = error {
+                                        response["error"] = error.localizedDescription
+                                    }
+                                    self.postEventToJS(id: id, payload: response)
                                 }
-                                self?.postEventToJS(id: id, payload: response)
                             }
                         }
                         
                     default:
-                        let status = self?.mapNotificationStatus(settings.authorizationStatus) ?? "unknown"
-                        let response: [String: Any] = [
-                            "ok": true,
-                            "requestId": requestId,
-                            "permissionType": permissionType,
-                            "status": status
-                        ]
-                        self?.postEventToJS(id: id, payload: response)
+                        Task { @MainActor in
+                            guard let self else { return }
+                            let status = self.mapNotificationStatus(settings.authorizationStatus)
+                            let response: [String: Any] = [
+                                "ok": true,
+                                "requestId": requestId,
+                                "permissionType": permissionType,
+                                "status": status
+                            ]
+                            self.postEventToJS(id: id, payload: response)
+                        }
                     }
                 }
-                
+
             default:
                 let response: [String: Any] = [
                     "ok": false,
@@ -598,14 +614,17 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
                 postPermissionResultToJS(ok: true, requestId: requestId, permissionType: permissionType, status: status)
 
             case "notifications":
-                UNUserNotificationCenter.current().getNotificationSettings { settings in
-                    let status = self.mapNotificationStatus(settings.authorizationStatus)
-                    self.postPermissionResultToJS(
-                        ok: true,
-                        requestId: requestId,
-                        permissionType: permissionType,
-                        status: status
-                    )
+                UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
+                    Task { @MainActor in
+                        guard let self else { return }
+                        let status = self.mapNotificationStatus(settings.authorizationStatus)
+                        self.postPermissionResultToJS(
+                            ok: true,
+                            requestId: requestId,
+                            permissionType: permissionType,
+                            status: status
+                        )
+                    }
                 }
 
             default:
@@ -623,7 +642,7 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
             switch permissionType {
             case "tracking":
                 // Only shows the prompt if notDetermined.
-                DispatchQueue.main.async {
+                Task { @MainActor in
                     let current = ATTrackingManager.trackingAuthorizationStatus
                     guard current == .notDetermined else {
                         let status = self.mapTrackingStatus(current)
@@ -631,20 +650,19 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
                         return
                     }
 
-                    ATTrackingManager.requestTrackingAuthorization { newStatus in
-                        let status = self.mapTrackingStatus(newStatus)
-                        self.postPermissionResultToJS(
-                            ok: true,
-                            requestId: requestId,
-                            permissionType: permissionType,
-                            status: status
-                        )
-                    }
+                    let newStatus = await requestTrackingAuthorizationCompat()
+                    let status = self.mapTrackingStatus(newStatus)
+                    self.postPermissionResultToJS(
+                        ok: true,
+                        requestId: requestId,
+                        permissionType: permissionType,
+                        status: status
+                    )
                 }
 
             case "notifications":
                 let center = UNUserNotificationCenter.current()
-                center.getNotificationSettings { settings in
+                center.getNotificationSettings { [weak self] settings in
                     switch settings.authorizationStatus {
                     case .notDetermined:
                         center.requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
@@ -655,20 +673,26 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
                             }
                             // Re-check actual status
                             center.getNotificationSettings { updated in
-                                let status = self.mapNotificationStatus(updated.authorizationStatus)
-                                self.postPermissionResultToJS(
-                                    ok: (error == nil),
-                                    requestId: requestId,
-                                    permissionType: permissionType,
-                                    status: status,
-                                    error: error?.localizedDescription
-                                )
+                                Task { @MainActor in
+                                    guard let self else { return }
+                                    let status = self.mapNotificationStatus(updated.authorizationStatus)
+                                    self.postPermissionResultToJS(
+                                        ok: (error == nil),
+                                        requestId: requestId,
+                                        permissionType: permissionType,
+                                        status: status,
+                                        error: error?.localizedDescription
+                                    )
+                                }
                             }
                         }
 
                     default:
-                        let status = self.mapNotificationStatus(settings.authorizationStatus)
-                        self.postPermissionResultToJS(ok: true, requestId: requestId, permissionType: permissionType, status: status)
+                        Task { @MainActor in
+                            guard let self else { return }
+                            let status = self.mapNotificationStatus(settings.authorizationStatus)
+                            self.postPermissionResultToJS(ok: true, requestId: requestId, permissionType: permissionType, status: status)
+                        }
                     }
                 }
 
@@ -690,6 +714,19 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
             case .denied:        return "denied"
             case .authorized:    return "authorized"
             @unknown default:    return "unknown"
+            }
+        }
+
+        @MainActor
+        private func requestTrackingAuthorizationCompat() async -> ATTrackingManager.AuthorizationStatus {
+            if #available(iOS 17, *) {
+                return await ATTrackingManager.requestTrackingAuthorization()
+            }
+
+            return await withCheckedContinuation { continuation in
+                ATTrackingManager.requestTrackingAuthorization { status in
+                    continuation.resume(returning: status)
+                }
             }
         }
 
@@ -821,8 +858,7 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
                 }
                 
                 // Serialize to JSON and encode as base64 for safe transmission
-                guard let jsonData = try? JSONSerialization.data(withJSONObject: payload, options: []),
-                      let jsonString = String(data: jsonData, encoding: .utf8) else {
+                guard let jsonData = try? JSONSerialization.data(withJSONObject: payload, options: []) else {
                     print("❌ [OnboardingWebView] Failed to serialize payload to JSON")
                     return
                 }
