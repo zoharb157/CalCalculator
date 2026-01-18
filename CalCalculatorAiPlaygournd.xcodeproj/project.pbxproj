@@ -260,7 +260,7 @@
 			mainGroup = A314330C2EF0897D00EFE039;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				FF3456789012CDEF01234567 /* XCLocalSwiftPackageReference "apps-sdk-V2" */,
+				FF3456789012CDEF01234567 /* XCRemoteSwiftPackageReference "apps-sdk-V2" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A31433162EF0897D00EFE039 /* Products */;
@@ -747,19 +747,20 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCLocalSwiftPackageReference section */
-		FF3456789012CDEF01234567 /* XCLocalSwiftPackageReference "apps-sdk-V2" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = packages/apps-sdk-V2;
+		FF3456789012CDEF01234567 /* XCRemoteSwiftPackageReference "apps-sdk-V2" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://git-codecommit.us-east-1.amazonaws.com/v1/repos/apps-sdk-V2";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
 		};
-/* End XCLocalSwiftPackageReference section */
+/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		FF8901234567123456789012 /* SDK */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FF3456789012CDEF01234567 /* XCLocalSwiftPackageReference "apps-sdk-V2" */;
+			package = FF3456789012CDEF01234567 /* XCRemoteSwiftPackageReference "apps-sdk-V2" */;
 			productName = SDK;
 		};
 /* End XCSwiftPackageProductDependency section */
