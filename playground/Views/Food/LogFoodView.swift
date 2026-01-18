@@ -223,8 +223,6 @@ struct LogFoodView: View {
                         recentFoodsFullSection
                     case .savedFoods:
                         savedFoodsSection
-                    default:
-                        quickAddSection
                     }
                 }
                 .padding()
@@ -307,7 +305,7 @@ struct LogFoodView: View {
             } else {
                 // Show horizontal scroll when not searching
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
+                    HStack(spacing: 10) {
                         ForEach(viewModel.allQuickAddFoods.prefix(12)) { food in
                             EnhancedQuickAddFoodButton(food: food) {
                                 Task {
@@ -319,8 +317,11 @@ struct LogFoodView: View {
                             }
                         }
                     }
-                    .padding(.horizontal, 4)
+                    .padding(.vertical, 4)
                 }
+                .contentMargins(.horizontal, 16, for: .scrollContent)
+                .scrollClipDisabled()
+                .padding(.horizontal, -16)
             }
         }
     }
@@ -421,7 +422,11 @@ struct LogFoodView: View {
                                     }
                                 }
                             }
+                            .padding(.vertical, 4)
                         }
+                        .contentMargins(.horizontal, 16, for: .scrollContent)
+                        .scrollClipDisabled()
+                        .padding(.horizontal, -16)
                     }
                 }
             }
@@ -656,8 +661,6 @@ struct LogFoodView: View {
 enum FoodTab {
     case all
     case quickAdd
-    case myFoods
-    case myMeals
     case savedFoods
     case recent
 }
@@ -686,68 +689,38 @@ struct FoodTabButton: View {
     }
 }
 
-// MARK: - Quick Add Food Button (Legacy)
+// MARK: - Enhanced Quick Add Food Button
 
-struct QuickAddFoodButton: View {
+struct EnhancedQuickAddFoodButton: View {
     let food: QuickAddFood
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             VStack(spacing: 8) {
-                Text(food.emoji)
-                    .font(.title)
-
-                Text(food.name)
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .lineLimit(1)
-
-                Text("\(food.calories) cal")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .background(Color(.systemGray6))
-            .cornerRadius(12)
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-// MARK: - Enhanced Quick Add Food Button
-
-struct EnhancedQuickAddFoodButton: View {
-    let food: QuickAddFood
-    let action: () -> Void
-    @State private var isPressed = false
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 6) {
                 // Emoji with background circle
                 ZStack {
                     Circle()
                         .fill(Color(.systemGray5))
-                        .frame(width: 50, height: 50)
+                        .frame(width: 48, height: 48)
                     
                     Text(food.emoji)
-                        .font(.system(size: 26))
+                        .font(.system(size: 24))
                 }
                 
                 // Food name
                 Text(food.name)
                     .font(.caption)
                     .fontWeight(.medium)
-                    .lineLimit(2, reservesSpace: true)
+                    .lineLimit(2)
                     .multilineTextAlignment(.center)
                     .foregroundColor(.primary)
+                    .frame(height: 32)
                 
                 // Calories with icon
                 HStack(spacing: 2) {
                     Image(systemName: "flame.fill")
-                        .font(.system(size: 8))
+                        .font(.system(size: 9))
                         .foregroundColor(.orange)
                     Text("\(food.calories)")
                         .font(.caption2)
@@ -755,50 +728,20 @@ struct EnhancedQuickAddFoodButton: View {
                         .foregroundColor(.secondary)
                 }
             }
-            .frame(width: 90, height: 110)
+            .padding(.vertical, 10)
+            .padding(.horizontal, 6)
+            .frame(width: 85)
             .background(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: 14)
                     .fill(Color(.systemBackground))
-                    .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 2)
+                    .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 2)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color(.systemGray5), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(Color(.systemGray5), lineWidth: 0.5)
             )
-            .scaleEffect(isPressed ? 0.95 : 1.0)
         }
-        .buttonStyle(.plain)
-        .pressEvents {
-            withAnimation(.easeInOut(duration: 0.1)) {
-                isPressed = true
-            }
-        } onRelease: {
-            withAnimation(.easeInOut(duration: 0.1)) {
-                isPressed = false
-            }
-        }
-    }
-}
-
-// MARK: - Press Events Modifier
-
-struct PressEventsModifier: ViewModifier {
-    var onPress: () -> Void
-    var onRelease: () -> Void
-    
-    func body(content: Content) -> some View {
-        content
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { _ in onPress() }
-                    .onEnded { _ in onRelease() }
-            )
-    }
-}
-
-extension View {
-    func pressEvents(onPress: @escaping () -> Void, onRelease: @escaping () -> Void) -> some View {
-        modifier(PressEventsModifier(onPress: onPress, onRelease: onRelease))
+        .buttonStyle(ScaleButtonStyle())
     }
 }
 
