@@ -130,15 +130,11 @@ final class RateUsManager {
         }
     }
     
-    /// Checks subscription status from UserSettings
+    /// Checks subscription status
+    /// TEMPORARY: Always returns true - all features are free (no paywall)
     private func checkSubscriptionStatus() -> Bool {
-        // Check debug override first
-        let settings = UserSettings.shared
-        if settings.debugOverrideSubscription {
-            return settings.debugIsSubscribed
-        }
-        // Fall back to stored subscription status
-        return UserDefaults.standard.bool(forKey: "subscriptionStatus")
+        // TEMPORARY: All features are free - always subscribed
+        return true
     }
     
     /// Shows the App Store review popup

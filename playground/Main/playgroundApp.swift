@@ -20,9 +20,8 @@ struct playgroundApp: App {
     let modelContainer: ModelContainer
     @State private var appearanceMode: AppearanceMode
     @State var sdk: TheSDK
-    // CRITICAL: Initialize subscriptionStatus from UserDefaults to prevent false->true change
-    // This ensures isSubscribed is correct from the start, preventing unnecessary body recomputations
-    @State private var subscriptionStatus: Bool = UserDefaults.standard.bool(forKey: "subscriptionStatus")
+    // TEMPORARY: All features are free - always subscribed (no paywall)
+    @State private var subscriptionStatus: Bool = true
     @State private var previousSubscriptionStatus: Bool = false
     @State private var currentLocale: Locale = LocalizationManager.shared.currentLocale
     @State private var currentLayoutDirection: LayoutDirection = LocalizationManager.shared.layoutDirection
@@ -339,26 +338,17 @@ struct playgroundApp: App {
         }
     }
 
-    /// Update reactive subscription status based on debug override or SDK value
+    /// Update reactive subscription status
+    /// TEMPORARY: Always returns true - all features are free (no paywall)
     /// Also syncs the subscription status to the widget via shared UserDefaults
-    /// Stores the value in UserDefaults so it persists across app launches
     private func updateSubscriptionStatus() {
-        let settings = UserSettings.shared
-        let newStatus: Bool
-        
-        if settings.debugOverrideSubscription {
-            // Debug override takes priority - use debug flag value
-            newStatus = settings.debugIsSubscribed
-        } else {
-            // Use SDK value (only updated when paywall closes)
-            newStatus = sdk.isSubscribed
-        }
+        // TEMPORARY: All features are free - always subscribed
+        let newStatus = true
         
         // Update state
         subscriptionStatus = newStatus
         
         // Store in UserDefaults so it persists and can be read on app launch
-        // This ensures the value is only changed by debug flag or SDK
         UserDefaults.standard.set(newStatus, forKey: "subscriptionStatus")
 
         // Sync subscription status to widget via shared UserDefaults
