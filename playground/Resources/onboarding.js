@@ -1741,7 +1741,8 @@ async function generateGoalsViaApi() {
 
         // If the user granted permission, keep the flow snappy and continue automatically.
         if (isPermissionGranted(status)) {
-          setTimeout(() => goNext(), 420);
+          // DISABLED AUTO-ADVANCE: User should manually click Continue after permission is granted
+          // setTimeout(() => goNext(), 420);
         }
       };
 
@@ -1768,7 +1769,8 @@ async function generateGoalsViaApi() {
         
         // If the user granted permission, keep the flow snappy and continue automatically.
         if (isPermissionGranted(finalStatus)) {
-          setTimeout(() => goNext(), 420);
+          // DISABLED AUTO-ADVANCE: User should manually click Continue after permission is granted
+          // setTimeout(() => goNext(), 420);
         }
       } else {
         setButtonsForStatus(status);
