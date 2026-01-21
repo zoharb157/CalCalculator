@@ -10,6 +10,7 @@ struct FloatingMenuButton: View {
     let icon: String
     let title: String
     let color: Color
+    var isPremium: Bool = false
     let action: () -> Void
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
@@ -23,6 +24,13 @@ struct FloatingMenuButton: View {
                     Circle()
                         .fill(color)
                         .frame(width: 44, height: 44)
+                    
+                    if isPremium {
+                        Image(systemName: "crown.fill")
+                            .foregroundColor(.yellow)
+                            .font(.caption)
+                            .offset(x: 16, y: -16)
+                    }
                     
                     Image(systemName: icon)
                         .foregroundColor(.white)
@@ -45,7 +53,7 @@ struct FloatingMenuButton: View {
 
 #Preview {
     VStack {
-        FloatingMenuButton(icon: "camera.fill", title: LocalizationManager.shared.localizedString(for: AppStrings.Home.scanFood), color: .purple) {}
+        FloatingMenuButton(icon: "camera.fill", title: LocalizationManager.shared.localizedString(for: AppStrings.Home.scanFood), color: .purple, isPremium: true) {}
         FloatingMenuButton(icon: "dumbbell.fill", title: LocalizationManager.shared.localizedString(for: AppStrings.Home.saveExercise), color: .blue) {}
     }
 }

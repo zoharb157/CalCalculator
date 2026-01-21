@@ -46,6 +46,30 @@ struct CameraPermissionErrorView: View {
             .padding(.top, 8)
             
             Spacer()
+            
+            // Bottom bar
+            HStack {
+                Text(localizationManager.localizedString(for: AppStrings.Scanning.freeScansLeft))
+                    .foregroundColor(.white)
+                
+                Spacer()
+                
+                Button {
+                    // Show premium
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "crown.fill")
+                            .foregroundColor(.yellow)
+                        Text(localizationManager.localizedString(for: AppStrings.Premium.premium))
+                            .foregroundColor(.white)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(Color.yellow.opacity(0.2))
+                    .cornerRadius(20)
+                }
+            }
+            .padding()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.black)
