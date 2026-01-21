@@ -45,17 +45,12 @@ struct ProgressDashboardView: View {
                                     startWeight: viewModel.weightHistory.first?.weight ?? (viewModel.useMetricUnits ? UserSettings.shared.currentWeight : UserSettings.shared.currentWeight * 2.20462),
                                     goalWeight: viewModel.displayTargetWeight,
                                     daysUntilCheck: viewModel.daysUntilNextWeightCheck,
-                                    isSubscribed: true,
                                     onWeightSave: { newWeight in
                                         Task {
                                             await viewModel.updateWeight(newWeight)
                                         }
                                     },
-                                    onShowPaywall: {
-                                        // All features are free
-                                    },
                                     onViewProgress: {
-                                        // All features are free
                                         viewModel.showWeightProgressSheet = true
                                     }
                                 )
@@ -85,9 +80,7 @@ struct ProgressDashboardView: View {
                                     DailyCaloriesCard(
                                         averageCalories: viewModel.averageCalories,
                                         calorieGoal: UserSettings.shared.calorieGoal,
-                                        isSubscribed: true,
                                         onViewDetails: {
-                                            // All features are free
                                             viewModel.showCaloriesSheet = true
                                         }
                                     )
@@ -96,7 +89,7 @@ struct ProgressDashboardView: View {
                                 // BMI Card
                                 if let bmi = viewModel.bmi, let category = viewModel.bmiCategory {
                                     PremiumLockedContent(isProgressPage: true) {
-                                        BMICard(bmi: bmi, category: category, isSubscribed: true)
+                                        BMICard(bmi: bmi, category: category)
                                     }
                                 }
                             }
@@ -112,8 +105,7 @@ struct ProgressDashboardView: View {
                                         exerciseMinutes: viewModel.exerciseMinutes,
                                         heartRate: viewModel.heartRate,
                                         distance: viewModel.distance,
-                                        sleepHours: viewModel.sleepHours,
-                                        isSubscribed: true
+                                        sleepHours: viewModel.sleepHours
                                     )
                                 }
                             }
@@ -278,9 +270,7 @@ struct CurrentWeightCard: View {
     let startWeight: Double
     let goalWeight: Double
     let daysUntilCheck: Int
-    let isSubscribed: Bool
     let onWeightSave: (Double) -> Void
-    let onShowPaywall: () -> Void
     let onViewProgress: () -> Void
     
     @State private var currentWeight: Double
@@ -326,15 +316,13 @@ struct CurrentWeightCard: View {
         }
     }
     
-    init(weight: Double, unit: String, startWeight: Double, goalWeight: Double, daysUntilCheck: Int, isSubscribed: Bool, onWeightSave: @escaping (Double) -> Void, onShowPaywall: @escaping () -> Void, onViewProgress: @escaping () -> Void) {
+    init(weight: Double, unit: String, startWeight: Double, goalWeight: Double, daysUntilCheck: Int, onWeightSave: @escaping (Double) -> Void, onViewProgress: @escaping () -> Void) {
         self.weight = weight
         self.unit = unit
         self.startWeight = startWeight
         self.goalWeight = goalWeight
         self.daysUntilCheck = daysUntilCheck
-        self.isSubscribed = isSubscribed
         self.onWeightSave = onWeightSave
-        self.onShowPaywall = onShowPaywall
         self.onViewProgress = onViewProgress
         _currentWeight = State(initialValue: weight)
     }
@@ -375,30 +363,22 @@ struct CurrentWeightCard: View {
                             .frame(width: 40, height: 40)
                             .background(
                                 Circle()
-                                    .fill(isSubscribed ? Color.blue : Color.gray.opacity(0.5))
+                                    .fill(Color.blue)
                             )
                     }
-                    .disabled(!isSubscribed)
-                    .simultaneousGesture(TapGesture().onEnded {
-                        if !isSubscribed { onShowPaywall() }
-                    })
                     
                     Button {
                         adjustWeight(-step)
                     } label: {
                         Image(systemName: "minus")
                             .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(isSubscribed ? .blue : .gray)
+                            .foregroundColor(.blue)
                             .frame(width: 40, height: 40)
                             .background(
                                 Circle()
-                                    .stroke(isSubscribed ? Color.blue : Color.gray.opacity(0.5), lineWidth: 2)
+                                    .stroke(Color.blue, lineWidth: 2)
                             )
                     }
-                    .disabled(!isSubscribed)
-                    .simultaneousGesture(TapGesture().onEnded {
-                        if !isSubscribed { onShowPaywall() }
-                    })
                 }
             }
             .padding(.horizontal, 20)
@@ -500,10 +480,6 @@ struct CurrentWeightCard: View {
     }
     
     private func adjustWeight(_ delta: Double) {
-        guard isSubscribed else {
-            onShowPaywall()
-            return
-        }
         
         let newWeight = max(minWeight, min(maxWeight, currentWeight + delta))
         let roundedWeight = round(newWeight / step) * step
