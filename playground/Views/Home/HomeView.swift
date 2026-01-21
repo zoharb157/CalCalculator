@@ -93,9 +93,6 @@ struct HomeView: View {
                 // Only requests if authorization status is .notDetermined (first time user sees homepage)
                 await requestNotificationPermissionIfNeeded()
                 
-                // NOTE: QA subscription check removed due to Swift 6 concurrency requirements
-                // The SDK's updateIsSubscribed is @concurrent and causes data race warnings
-                // when called from @MainActor context with @Environment SDK reference
             }
             .onDisappear {
                 AppLogger.forClass("HomeView").warning("HomeView disappeared!")
@@ -604,10 +601,8 @@ struct HomeView: View {
     }
 
     private var badgesSection: some View {
-        PremiumLockedContent {
-            BadgesCard {
-                showBadgesSheet = true
-            }
+        BadgesCard {
+            showBadgesSheet = true
         }
         .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
         .listRowSeparator(.hidden)
@@ -621,12 +616,10 @@ struct HomeView: View {
                 .foregroundColor(.primary)
                 .padding(.horizontal, 4)
             
-            PremiumLockedContent {
-        MacroCardsSection(
-            summary: viewModel.todaysSummary,
-            goals: settings.macroGoals
-        )
-            }
+            MacroCardsSection(
+                summary: viewModel.todaysSummary,
+                goals: settings.macroGoals
+            )
         }
         .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
         .listRowSeparator(.hidden)

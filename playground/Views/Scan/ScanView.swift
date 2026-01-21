@@ -159,8 +159,6 @@ struct ScanView: View {
                     return
                 }
                 
-                // Photo taking is FREE - no subscription check needed
-                // Only analysis requires subscription (handled in analyzeImage)
                 await viewModel.handleCaptureResult(result, hint: hint)
             }
         }
@@ -223,7 +221,6 @@ struct ScanView: View {
             if let newValue,
                let data = try? await newValue.loadTransferable(type: Data.self),
                let image = UIImage(data: data) {
-                // Allow selecting photo - check subscription when analyzing/sending
                 viewModel.handleSelectedImage(image)
             }
         }

@@ -2,7 +2,7 @@
 //  MealSaveLimitManager.swift
 //  playground
 //
-//  Manages free meal save limit for non-subscribed users
+//  Manages meal save tracking
 //
 
 import Foundation
@@ -40,7 +40,7 @@ final class MealSaveLimitManager {
         return true
     }
     
-    /// Reset meal save count (for testing or subscription upgrade)
+    /// Reset meal save count (for testing)
     func resetMealSaveCount() {
         userDefaults.removeObject(forKey: mealSaveCountKey)
         // Note: UserDefaults auto-syncs, synchronize() is deprecated and not needed

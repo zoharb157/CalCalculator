@@ -75,22 +75,18 @@ struct ProgressDashboardView: View {
                             
                             // MARK: - Nutrition Section
                             VStack(spacing: 16) {
-                                // Daily Average Calories Card - Locked with blur + Premium button
-                                PremiumLockedContent(isProgressPage: true) {
-                                    DailyCaloriesCard(
-                                        averageCalories: viewModel.averageCalories,
-                                        calorieGoal: UserSettings.shared.calorieGoal,
-                                        onViewDetails: {
-                                            viewModel.showCaloriesSheet = true
-                                        }
-                                    )
-                                }
+                                // Daily Average Calories Card
+                                DailyCaloriesCard(
+                                    averageCalories: viewModel.averageCalories,
+                                    calorieGoal: UserSettings.shared.calorieGoal,
+                                    onViewDetails: {
+                                        viewModel.showCaloriesSheet = true
+                                    }
+                                )
                                 
                                 // BMI Card
                                 if let bmi = viewModel.bmi, let category = viewModel.bmiCategory {
-                                    PremiumLockedContent(isProgressPage: true) {
-                                        BMICard(bmi: bmi, category: category)
-                                    }
+                                    BMICard(bmi: bmi, category: category)
                                 }
                             }
                             

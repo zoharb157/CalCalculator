@@ -100,7 +100,7 @@ struct LogExperienceCard: View {
 
             // Quick Actions
             HStack(spacing: isSmallScreen ? 4 : 8) {
-                // Diet Plan Button - always show (premium feature)
+                // Diet Plan Button
                 if let onViewDiet = onViewDiet {
                     QuickLogButton(
                         icon: "calendar.badge.clock",

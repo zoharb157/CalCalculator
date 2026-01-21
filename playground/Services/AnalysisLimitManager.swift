@@ -2,7 +2,7 @@
 //  AnalysisLimitManager.swift
 //  playground
 //
-//  Manages free analysis limit for non-subscribed users
+//  Manages analysis tracking
 //
 
 import Foundation
@@ -40,7 +40,7 @@ final class AnalysisLimitManager {
         return true
     }
     
-    /// Reset analysis count (for testing or subscription upgrade)
+    /// Reset analysis count (for testing)
     func resetAnalysisCount() {
         userDefaults.removeObject(forKey: analysisCountKey)
         // Note: UserDefaults auto-syncs, synchronize() is deprecated and not needed

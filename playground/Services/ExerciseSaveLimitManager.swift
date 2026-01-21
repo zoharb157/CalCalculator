@@ -2,7 +2,7 @@
 //  ExerciseSaveLimitManager.swift
 //  playground
 //
-//  Manages free exercise save limit for non-subscribed users
+//  Manages exercise save tracking
 //
 
 import Foundation
@@ -40,7 +40,7 @@ final class ExerciseSaveLimitManager {
         return true
     }
     
-    /// Reset exercise save count (for testing or subscription upgrade)
+    /// Reset exercise save count (for testing)
     func resetExerciseSaveCount() {
         userDefaults.removeObject(forKey: exerciseSaveCountKey)
         // Note: UserDefaults auto-syncs, synchronize() is deprecated and not needed
