@@ -23,12 +23,9 @@ final class AnalysisLimitManager {
         userDefaults.integer(forKey: analysisCountKey)
     }
     
-    /// Check if user can perform analysis (subscribed or has free analysis left)
-    func canPerformAnalysis(isSubscribed: Bool) -> Bool {
-        if isSubscribed {
-            return true
-        }
-        return currentAnalysisCount < freeAnalysisLimit
+    /// Check if user can perform analysis - always true (app is free)
+    func canPerformAnalysis() -> Bool {
+        return true
     }
     
     /// Record that an analysis was performed
@@ -49,12 +46,9 @@ final class AnalysisLimitManager {
         // Note: UserDefaults auto-syncs, synchronize() is deprecated and not needed
     }
     
-    /// Get remaining free analyses
-    func remainingFreeAnalyses(isSubscribed: Bool) -> Int {
-        if isSubscribed {
-            return Int.max // Unlimited for subscribers
-        }
-        return max(0, freeAnalysisLimit - currentAnalysisCount)
+    /// Get remaining free analyses - unlimited (app is free)
+    func remainingFreeAnalyses() -> Int {
+        return Int.max
     }
 }
 

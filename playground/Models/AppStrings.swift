@@ -571,14 +571,6 @@ struct AppStrings {
         static let ios = "iOS"
         static let iosVersion = "iOS Version"
         static let device = "Device"
-        static let debug = "Debug"
-        static let overrideSubscription = "Override Subscription"
-        static let manuallyControlSubscription = "Manually control subscription status for testing"
-        static let debugIsSubscribed = "Debug: Is Subscribed"
-        static let overrideSubscriptionStatus = "Override subscription status"
-        static let debugStatus = "Debug Status"
-        static let sdkStatus = "SDK Status"
-        static let premium = "Premium"
         static let free = "Free"
         static let shareEarnRewards = "Share & earn rewards"
         static let downloadDataAsPDF = "Download your data as PDF"
@@ -717,20 +709,6 @@ struct AppStrings {
         static let goalWeight = "Goal Weight"
         static let lastLogged = "Last"
         static let noWeightLogged = "No weight logged"
-    }
-    
-    // MARK: - Premium
-    struct Premium {
-        static let premiumRequired = "Premium Required"
-        static let upgradeToUnlock = "Upgrade to unlock"
-        static let areYouSure = "Are you sure you want to skip the free trial?"
-        static let claimFreeTrial = "Claim your free trial now without paying"
-        static let startFreeTrial = "Start Free Trial"
-        static let skipFreeTrial = "Skip free trial"
-        static let notNow = "Not now"
-        static let premiumFeature = "Premium feature"
-        static let premium = "Premium"
-        static let upgradeToPremium = "Upgrade to Premium"
     }
     
     // MARK: - History

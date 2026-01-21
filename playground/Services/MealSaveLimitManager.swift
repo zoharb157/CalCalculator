@@ -23,12 +23,9 @@ final class MealSaveLimitManager {
         userDefaults.integer(forKey: mealSaveCountKey)
     }
     
-    /// Check if user can save a meal (subscribed or has free save left)
-    func canSaveMeal(isSubscribed: Bool) -> Bool {
-        if isSubscribed {
-            return true
-        }
-        return currentMealSaveCount < freeMealSaveLimit
+    /// Check if user can save a meal - always true (app is free)
+    func canSaveMeal() -> Bool {
+        return true
     }
     
     /// Record that a meal was saved
@@ -49,11 +46,8 @@ final class MealSaveLimitManager {
         // Note: UserDefaults auto-syncs, synchronize() is deprecated and not needed
     }
     
-    /// Get remaining free meal saves
-    func remainingFreeMealSaves(isSubscribed: Bool) -> Int {
-        if isSubscribed {
-            return Int.max // Unlimited for subscribers
-        }
-        return max(0, freeMealSaveLimit - currentMealSaveCount)
+    /// Get remaining free meal saves - unlimited (app is free)
+    func remainingFreeMealSaves() -> Int {
+        return Int.max
     }
 }

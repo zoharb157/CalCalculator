@@ -2,7 +2,7 @@
 //  RateUsManager.swift
 //  playground
 //
-//  Manages the "Rate Us" popup for premium users after their first successful action.
+//  Manages the "Rate Us" popup after user's first successful action.
 //  Only shows the popup once per user.
 //
 
@@ -10,7 +10,7 @@ import Foundation
 import StoreKit
 import UIKit
 
-/// Manages when to show the rate/review popup for premium users
+/// Manages when to show the rate/review popup
 /// Shows the popup only once, after the first successful action
 @MainActor
 final class RateUsManager {
@@ -22,7 +22,7 @@ final class RateUsManager {
     // MARK: - UserDefaults Keys
     
     private let hasShownRatePopupKey = "hasShownRatePopup"
-    private let premiumSuccessfulActionsCountKey = "premiumSuccessfulActionsCount"
+    private let successfulActionsCountKey = "successfulActionsCount"
     
     // MARK: - Properties
     
@@ -34,10 +34,10 @@ final class RateUsManager {
         set { UserDefaults.standard.set(newValue, forKey: hasShownRatePopupKey) }
     }
     
-    /// Count of successful actions performed while premium (for debugging/analytics)
-    private(set) var premiumSuccessfulActionsCount: Int {
-        get { UserDefaults.standard.integer(forKey: premiumSuccessfulActionsCountKey) }
-        set { UserDefaults.standard.set(newValue, forKey: premiumSuccessfulActionsCountKey) }
+    /// Count of successful actions performed (for debugging/analytics)
+    private(set) var successfulActionsCount: Int {
+        get { UserDefaults.standard.integer(forKey: successfulActionsCountKey) }
+        set { UserDefaults.standard.set(newValue, forKey: successfulActionsCountKey) }
     }
     
     // MARK: - Initialization
@@ -99,42 +99,29 @@ final class RateUsManager {
     // MARK: - Public Methods
     
     /// Call this when a successful action occurs (can be called manually if needed)
-    /// - Parameter isSubscribed: Whether the user is currently a premium subscriber
-    func recordSuccessfulAction(isSubscribed: Bool) {
-        guard isSubscribed else { return }
-        handleSuccessfulAction(isSubscribed: isSubscribed)
+    func recordSuccessfulAction() {
+        handleSuccessfulAction()
     }
     
     /// Resets the rate popup state (useful for testing)
     func resetRatePopupState() {
         hasShownRatePopup = false
-        premiumSuccessfulActionsCount = 0
+        successfulActionsCount = 0
     }
     
     // MARK: - Private Methods
     
     /// Handles a successful action - checks if we should show the rate popup
-    private func handleSuccessfulAction(isSubscribed: Bool? = nil) {
-        // Check subscription status
-        let subscribed = isSubscribed ?? checkSubscriptionStatus()
-        
-        guard subscribed else { return }
+    private func handleSuccessfulAction() {
         guard !hasShownRatePopup else { return }
         
         // Increment counter
-        premiumSuccessfulActionsCount += 1
+        successfulActionsCount += 1
         
         // Show rate popup on first successful action
-        if premiumSuccessfulActionsCount == 1 {
+        if successfulActionsCount == 1 {
             showRatePopup()
         }
-    }
-    
-    /// Checks subscription status
-    /// TEMPORARY: Always returns true - all features are free (no paywall)
-    private func checkSubscriptionStatus() -> Bool {
-        // TEMPORARY: All features are free - always subscribed
-        return true
     }
     
     /// Shows the App Store review popup
@@ -149,6 +136,6 @@ final class RateUsManager {
             }
         }
         
-        print("⭐ [RateUsManager] Showing rate popup after first successful premium action")
+        print("⭐ [RateUsManager] Showing rate popup after first successful action")
     }
 }

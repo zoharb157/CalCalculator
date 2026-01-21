@@ -23,12 +23,9 @@ final class ExerciseSaveLimitManager {
         userDefaults.integer(forKey: exerciseSaveCountKey)
     }
     
-    /// Check if user can save an exercise (subscribed or has free save left)
-    func canSaveExercise(isSubscribed: Bool) -> Bool {
-        if isSubscribed {
-            return true
-        }
-        return currentExerciseSaveCount < freeExerciseSaveLimit
+    /// Check if user can save an exercise - always true (app is free)
+    func canSaveExercise() -> Bool {
+        return true
     }
     
     /// Record that an exercise was saved
@@ -49,11 +46,8 @@ final class ExerciseSaveLimitManager {
         // Note: UserDefaults auto-syncs, synchronize() is deprecated and not needed
     }
     
-    /// Get remaining free exercise saves
-    func remainingFreeExerciseSaves(isSubscribed: Bool) -> Int {
-        if isSubscribed {
-            return Int.max // Unlimited for subscribers
-        }
-        return max(0, freeExerciseSaveLimit - currentExerciseSaveCount)
+    /// Get remaining free exercise saves - unlimited (app is free)
+    func remainingFreeExerciseSaves() -> Int {
+        return Int.max
     }
 }
