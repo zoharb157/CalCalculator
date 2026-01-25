@@ -6,6 +6,7 @@
 
 import SwiftUI
 import SwiftData
+// import SDK  // Commented out - using native StoreKit 2 paywall
 
 struct BurnedCaloriesView: View {
     let calories: Int
@@ -22,6 +23,9 @@ struct BurnedCaloriesView: View {
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var isLoadingCalories = true // Track if we're loading calories from API
+    @State private var showPaywall = false
+    @State private var showDeclineConfirmation = false
+    // @Environment(TheSDK.self) private var sdk  // Commented out - using native StoreKit 2 paywall
     @ObservedObject private var localizationManager = LocalizationManager.shared
     private let userSettings = UserSettings.shared
     
@@ -207,6 +211,22 @@ struct BurnedCaloriesView: View {
                     } message: {
                         Text(errorMessage)
                     }
+                    .fullScreenCover(isPresented: $showPaywall) {
+                        // Native StoreKit 2 paywall - replacing SDK paywall
+                        NativePaywallView { subscribed in
+                            showPaywall = false
+                            if subscribed {
+                                // User subscribed - reset limits
+                                AnalysisLimitManager.shared.resetAnalysisCount()
+                                MealSaveLimitManager.shared.resetMealSaveCount()
+                                ExerciseSaveLimitManager.shared.resetExerciseSaveCount()
+                                NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
+                            } else {
+                                showDeclineConfirmation = true
+                            }
+                        }
+                    }
+                    .paywallDismissalOverlay(showPaywall: $showPaywall, showDeclineConfirmation: $showDeclineConfirmation)
                 }
                 .padding()
             }
@@ -514,8 +534,17 @@ struct BurnedCaloriesView: View {
     private func saveExercise() async {
         guard !isSaving else { return }
         
-        // All features are free - no limit check needed
+        // Check free exercise save limit for non-subscribed users
         let limitManager = ExerciseSaveLimitManager.shared
+        
+        if !isSubscribed {
+            // Check if user can save an exercise
+            guard limitManager.canSaveExercise(isSubscribed: false) else {
+                // No free exercise saves left - show paywall
+                showPaywall = true
+                return
+            }
+        }
         
         isSaving = true
         defer { isSaving = false }

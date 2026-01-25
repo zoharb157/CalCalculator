@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Charts
+// import SDK  // Commented out - using native StoreKit 2 paywall
 
 struct ProgressDashboardView: View {
     // CRITICAL: We need @Bindable for bindings ($viewModel.showWeightProgressSheet, etc.)
@@ -15,6 +16,7 @@ struct ProgressDashboardView: View {
     
     @Environment(\.isSubscribed) private var isSubscribed
     @Environment(\.modelContext) private var modelContext
+    // @Environment(TheSDK.self) private var sdk  // Commented out - using native StoreKit 2 paywall
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     // CRITICAL: Don't observe UserSettings directly - access it directly instead
@@ -23,6 +25,8 @@ struct ProgressDashboardView: View {
     // Access UserSettings.shared directly in the view body instead
     
     @State private var showWeightInput = false
+    @State private var showPaywall = false
+    @State private var showDeclineConfirmation = false
     
     var body: some View {
         // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
@@ -53,11 +57,14 @@ struct ProgressDashboardView: View {
                                         }
                                     },
                                     onShowPaywall: {
-                                        // All features are free
+                                        showPaywall = true
                                     },
                                     onViewProgress: {
-                                        // All features are free
-                                        viewModel.showWeightProgressSheet = true
+                                        if isSubscribed {
+                                            viewModel.showWeightProgressSheet = true
+                                        } else {
+                                            showPaywall = true
+                                        }
                                     }
                                 )
                                 .id("current-weight-\(UserSettings.shared.displayWeight)-\(viewModel.weightHistory.count)")
@@ -88,8 +95,11 @@ struct ProgressDashboardView: View {
                                         calorieGoal: UserSettings.shared.calorieGoal,
                                         isSubscribed: isSubscribed,
                                         onViewDetails: {
-                                            // All features are free
-                                            viewModel.showCaloriesSheet = true
+                                            if isSubscribed {
+                                                viewModel.showCaloriesSheet = true
+                                            } else {
+                                                showPaywall = true
+                                            }
                                         }
                                     )
                                 }
@@ -162,8 +172,12 @@ struct ProgressDashboardView: View {
                    sharedDefaults.bool(forKey: "openWeightInput") {
                     // Clear the flag
                     sharedDefaults.set(false, forKey: "openWeightInput")
-                    // All features are free
-                    showWeightInput = true
+                    // Show weight input if subscribed
+                    if isSubscribed {
+                        showWeightInput = true
+                    } else {
+                        showPaywall = true
+                    }
                 }
                 
                 // Show weight prompt immediately if needed
@@ -207,8 +221,12 @@ struct ProgressDashboardView: View {
                 .presentationDetents([.medium])
             }
             .onReceive(NotificationCenter.default.publisher(for: .weightReminderAction)) { notification in
-                // All features are free
-                showWeightInput = true
+                // Show weight input when notification is tapped
+                if isSubscribed {
+                    showWeightInput = true
+                } else {
+                    showPaywall = true
+                }
             }
             .onReceive(NotificationCenter.default.publisher(for: .widgetWeightUpdated)) { _ in
                 // Handle weight update from widget (notification from app become active)
@@ -242,6 +260,22 @@ struct ProgressDashboardView: View {
                     }
                 )
             }
+            .fullScreenCover(isPresented: $showPaywall) {
+                // Native StoreKit 2 paywall - replacing SDK paywall
+                NativePaywallView { subscribed in
+                    showPaywall = false
+                    if subscribed {
+                        // User subscribed - reset limits
+                        AnalysisLimitManager.shared.resetAnalysisCount()
+                        MealSaveLimitManager.shared.resetMealSaveCount()
+                        ExerciseSaveLimitManager.shared.resetExerciseSaveCount()
+                        NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
+                    } else {
+                        showDeclineConfirmation = true
+                    }
+                }
+            }
+            .paywallDismissalOverlay(showPaywall: $showPaywall, showDeclineConfirmation: $showDeclineConfirmation)
         }
     }
     
@@ -271,8 +305,12 @@ struct ProgressDashboardView: View {
         if sharedDefaults.bool(forKey: "openWeightInput") {
             // Clear the flag
             sharedDefaults.set(false, forKey: "openWeightInput")
-            // All features are free
-            showWeightInput = true
+            // Show weight input if subscribed
+            if isSubscribed {
+                showWeightInput = true
+            } else {
+                showPaywall = true
+            }
         }
     }
 }

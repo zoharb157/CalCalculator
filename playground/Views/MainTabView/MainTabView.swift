@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+// import SDK  // Commented out - using native StoreKit 2 paywall
 import UIKit
 import ObjectiveC
 
@@ -41,6 +42,10 @@ struct MainTabView: View {
     
     // Diet creation state (for History tab's create diet prompt)
     @State private var showingCreateDiet = false
+    @State private var showingPaywall = false
+    @State private var showDeclineConfirmation = false
+    // SDK environment removed - using native StoreKit 2 paywall
+    // @Environment(TheSDK.self) private var sdk
 
     @State var homeViewModel: HomeViewModel
     @State var scanViewModel: ScanViewModel
@@ -381,6 +386,17 @@ struct MainTabView: View {
         .sheet(isPresented: $showingCreateDiet) {
             DietPlansListView()
         }
+        .fullScreenCover(isPresented: $showingPaywall) {
+            paywallView
+        }
+//        .fullScreenCover(isPresented: $showDeclineConfirmation) {
+//            // Native decline confirmation - no longer uses SDK
+//            PaywallDeclineConfirmationView(
+//                isPresented: $showDeclineConfirmation,
+//                showPaywall: $showingPaywall
+//            )
+//            .interactiveDismissDisabled()
+//        }
         // No need for onChange - SwiftUI automatically re-evaluates views when
         // @ObservedObject properties change. Since localizationManager.currentLanguage
         // is @Published, all views using localizationManager will update automatically.
@@ -389,10 +405,29 @@ struct MainTabView: View {
     // MARK: - Actions
     
     private func handleCreateDiet() {
-        // Allow all users to access diet creation
+        // Allow all users to access diet creation - paywall will appear only when saving
         showingCreateDiet = true
     }
     
+    // MARK: - Paywall View
+    
+    private var paywallView: some View {
+        // Native StoreKit 2 paywall - replacing SDK paywall
+        NativePaywallView { subscribed in
+            showingPaywall = false
+            if subscribed {
+                // User subscribed - reset analysis, meal save, and exercise save counts
+                AnalysisLimitManager.shared.resetAnalysisCount()
+                MealSaveLimitManager.shared.resetMealSaveCount()
+                ExerciseSaveLimitManager.shared.resetExerciseSaveCount()
+                // Update subscription status notification
+                NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
+            } else {
+                // User dismissed without subscribing - show decline confirmation
+                showDeclineConfirmation = true
+            }
+        }
+    }
     // MARK: - Tab Bar Tap Detection
     private func setupTabBarTapDetection() {
         // Find the tab bar controller and set up delegate

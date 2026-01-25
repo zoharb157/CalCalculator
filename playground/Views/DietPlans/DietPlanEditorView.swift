@@ -6,6 +6,7 @@
 
 import SwiftUI
 import SwiftData
+// import SDK  // Commented out - using native StoreKit 2 paywall
 
 /// Lightweight struct to hold meal data without SwiftData auto-insertion
 struct ScheduledMealData: Identifiable {
@@ -47,6 +48,7 @@ struct DietPlanEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.isSubscribed) private var isSubscribed
+    // @Environment(TheSDK.self) private var sdk  // Commented out - using native StoreKit 2 paywall
     @Query(sort: \DietPlan.createdAt) private var allDietPlans: [DietPlan]
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
@@ -64,6 +66,8 @@ struct DietPlanEditorView: View {
     @State private var showNoMealsAlert = false
     @State private var showDeleteMealConfirmation = false
     @State private var mealDataToDelete: ScheduledMealData?
+    @State private var showingPaywall = false
+    @State private var showDeclineConfirmation = false
     @State private var isSaving = false
     @FocusState private var isNameFocused: Bool
     @FocusState private var isCalorieGoalFocused: Bool
@@ -168,6 +172,25 @@ struct DietPlanEditorView: View {
                 }
             )
         }
+        .fullScreenCover(isPresented: $showingPaywall) {
+            // Native StoreKit 2 paywall - replacing SDK paywall
+            NativePaywallView { subscribed in
+                showingPaywall = false
+                if subscribed {
+                    // User subscribed - reset limits
+                    AnalysisLimitManager.shared.resetAnalysisCount()
+                    MealSaveLimitManager.shared.resetMealSaveCount()
+                    ExerciseSaveLimitManager.shared.resetExerciseSaveCount()
+                    NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
+                } else {
+                    showDeclineConfirmation = true
+                }
+            }
+        }
+        .paywallDismissalOverlay(
+            showPaywall: $showingPaywall,
+            showDeclineConfirmation: $showDeclineConfirmation
+        )
         .alert(localizationManager.localizedString(for: AppStrings.DietPlan.mealsRequired), isPresented: $showNoMealsAlert) {
             Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) {}
         } message: {
@@ -471,7 +494,13 @@ struct DietPlanEditorView: View {
             return
         }
         
-        // All features are free
+        // Check premium subscription before saving
+        guard isSubscribed else {
+            showingPaywall = true
+            HapticManager.shared.notification(.warning)
+            return
+        }
+        
         isSaving = true
         defer { isSaving = false }
         

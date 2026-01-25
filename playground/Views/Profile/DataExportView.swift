@@ -8,11 +8,13 @@
 import SwiftUI
 import SwiftData
 import PDFKit
+// import SDK  // Commented out - using native StoreKit 2 paywall
 
 struct DataExportView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.isSubscribed) private var isSubscribed
+    // @Environment(TheSDK.self) private var sdk  // Commented out - using native StoreKit 2 paywall
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     // User settings for weight units
@@ -34,6 +36,8 @@ struct DataExportView: View {
     @State private var exportError: String?
     @State private var shareSheetURL: URL?
     @State private var showShareSheet = false
+    @State private var showingPaywall = false
+    @State private var showDeclineConfirmation = false
     
     var body: some View {
         // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
@@ -50,8 +54,11 @@ struct DataExportView: View {
                         subtitle: "\(weightEntries.count) entries",
                         isDisabled: weightEntries.isEmpty
                     ) {
-                        // All features are free
-                        exportWeightDataPDF()
+                        if isSubscribed {
+                            exportWeightDataPDF()
+                        } else {
+                            showingPaywall = true
+                        }
                     }
                 } header: {
                     Text(localizationManager.localizedString(for: AppStrings.Profile.weightData))
@@ -68,8 +75,11 @@ struct DataExportView: View {
                         subtitle: "\(meals.count) meals logged",
                         isDisabled: meals.isEmpty
                     ) {
-                        // All features are free
-                        exportMealDataPDF()
+                        if isSubscribed {
+                            exportMealDataPDF()
+                        } else {
+                            showingPaywall = true
+                        }
                     }
                     
                     ExportOptionRow(
@@ -79,8 +89,11 @@ struct DataExportView: View {
                         subtitle: localizationManager.localizedString(for: AppStrings.Profile.aggregatedDailyTotals),
                         isDisabled: meals.isEmpty
                     ) {
-                        // All features are free
-                        exportDailyNutritionSummaryPDF()
+                        if isSubscribed {
+                            exportDailyNutritionSummaryPDF()
+                        } else {
+                            showingPaywall = true
+                        }
                     }
                 } header: {
                     Text(localizationManager.localizedString(for: AppStrings.Profile.nutritionData))
@@ -97,8 +110,11 @@ struct DataExportView: View {
                         subtitle: localizationManager.localizedString(for: AppStrings.Profile.completeDataBackup),
                         isDisabled: weightEntries.isEmpty && meals.isEmpty
                     ) {
-                        // All features are free
-                        exportAllDataPDF()
+                        if isSubscribed {
+                            exportAllDataPDF()
+                        } else {
+                            showingPaywall = true
+                        }
                     }
                 } footer: {
                     Text(localizationManager.localizedString(for: AppStrings.Profile.exportAllDescription))
@@ -152,6 +168,21 @@ struct DataExportView: View {
             .sheet(isPresented: $showShareSheet) {
                 if let url = shareSheetURL {
                     ShareSheet(items: [url])
+                }
+            }
+            .fullScreenCover(isPresented: $showingPaywall) {
+                // Native StoreKit 2 paywall - replacing SDK paywall
+                NativePaywallView { subscribed in
+                    showingPaywall = false
+                    if subscribed {
+                        // User subscribed - reset limits
+                        AnalysisLimitManager.shared.resetAnalysisCount()
+                        MealSaveLimitManager.shared.resetMealSaveCount()
+                        ExerciseSaveLimitManager.shared.resetExerciseSaveCount()
+                        NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
+                    } else {
+                        showDeclineConfirmation = true
+                    }
                 }
             }
         }

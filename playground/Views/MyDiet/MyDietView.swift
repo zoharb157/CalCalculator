@@ -10,6 +10,7 @@
 import Charts
 import SwiftUI
 import SwiftData
+// import SDK  // Commented out - using native StoreKit 2 paywall
 
 // MARK: - MyDietView
 
@@ -23,6 +24,7 @@ struct MyDietView: View {
     
     @Environment(\.modelContext) private var modelContext
     @Environment(\.isSubscribed) private var isSubscribed
+    // @Environment(TheSDK.self) private var sdk  // Commented out - using native StoreKit 2 paywall
     
     // MARK: - State
     
@@ -33,6 +35,8 @@ struct MyDietView: View {
     @State private var showingInsights = false
     @State private var showingPlansList = false
     @State private var showingPlanSwitcher = false
+    @State private var showingPaywall = false
+    @State private var showDeclineConfirmation = false
     @State private var selectedMealForAction: ScheduledMeal?
     
     @ObservedObject private var localizationManager = LocalizationManager.shared
@@ -141,6 +145,25 @@ struct MyDietView: View {
                 }
             }
         }
+        .fullScreenCover(isPresented: $showingPaywall) {
+            // Native StoreKit 2 paywall - replacing SDK paywall
+            NativePaywallView { subscribed in
+                showingPaywall = false
+                if subscribed {
+                    // User subscribed - reset limits
+                    AnalysisLimitManager.shared.resetAnalysisCount()
+                    MealSaveLimitManager.shared.resetMealSaveCount()
+                    ExerciseSaveLimitManager.shared.resetExerciseSaveCount()
+                    NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
+                } else {
+                    showDeclineConfirmation = true
+                }
+            }
+        }
+        .paywallDismissalOverlay(
+            showPaywall: $showingPaywall,
+            showDeclineConfirmation: $showDeclineConfirmation
+        )
         .onChange(of: viewModel.selectedDate) { _, _ in
             Task {
                 await viewModel.loadAdherenceData()
@@ -292,7 +315,12 @@ struct MyDietView: View {
     // MARK: - Activate Plan
     
     private func activatePlan(_ plan: DietPlan) {
-        // All features are free
+        guard isSubscribed else {
+            showingPaywall = true
+            HapticManager.shared.notification(.warning)
+            return
+        }
+        
         do {
             // Use repository to activate plan (handles deactivating others)
             try dietPlanRepository.activatePlan(plan)
@@ -862,6 +890,22 @@ struct MyDietView: View {
             .cornerRadius(12)
         }
     }
+    
+    // MARK: - Paywall View (Commented out - using NativePaywallView inline)
+    
+    // private var paywallView: some View {
+    //     SDKView(
+    //         model: sdk,
+    //         page: .splash,
+    //         show: paywallBinding(
+    //             showPaywall: $showingPaywall,
+    //             sdk: sdk,
+    //             showDeclineConfirmation: $showDeclineConfirmation
+    //         ),
+    //         backgroundColor: .white,
+    //         ignoreSafeArea: true
+    //     )
+    // }
 }
 
 // MARK: - Empty State Supporting Views

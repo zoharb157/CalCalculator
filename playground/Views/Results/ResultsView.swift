@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+// import SDK  // Commented out - using native StoreKit 2 paywall
 
 struct ResultsView: View {
     @Bindable var viewModel: ScanViewModel
@@ -14,8 +15,11 @@ struct ResultsView: View {
     @State private var mealNameText: String
     @State private var showingFixResult = false
     @State private var foodHintText = ""
+    @State private var showPaywall = false
+    @State private var showDeclineConfirmation = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isSubscribed) private var isSubscribed
+    // @Environment(TheSDK.self) private var sdk  // Commented out - using native StoreKit 2 paywall
     @ObservedObject private var localizationManager = LocalizationManager.shared
 
     /// Callback to notify parent when meal is saved
@@ -56,6 +60,22 @@ struct ResultsView: View {
                 .sheet(isPresented: $showingFixResult) {
                     fixResultSheet
                 }
+                .fullScreenCover(isPresented: $showPaywall) {
+                    // Native StoreKit 2 paywall - replacing SDK paywall
+                    NativePaywallView { subscribed in
+                        showPaywall = false
+                        if subscribed {
+                            // User subscribed - reset limits
+                            AnalysisLimitManager.shared.resetAnalysisCount()
+                            MealSaveLimitManager.shared.resetMealSaveCount()
+                            ExerciseSaveLimitManager.shared.resetExerciseSaveCount()
+                            NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
+                        } else {
+                            showDeclineConfirmation = true
+                        }
+                    }
+                }
+                .paywallDismissalOverlay(showPaywall: $showPaywall, showDeclineConfirmation: $showDeclineConfirmation)
         }
     }
 
@@ -243,8 +263,17 @@ struct ResultsView: View {
     // MARK: - Private Functions
 
     private func saveMeal() {
-        // All features are free - no limit check needed
+        // Check free meal save limit for non-subscribed users
         let limitManager = MealSaveLimitManager.shared
+        
+        if !isSubscribed {
+            // Check if user can save a meal
+            guard limitManager.canSaveMeal(isSubscribed: false) else {
+                // No free meal saves left - show paywall
+                showPaywall = true
+                return
+            }
+        }
         
         resultsVM.updateMealName(mealNameText)
         viewModel.pendingMeal = resultsVM.meal

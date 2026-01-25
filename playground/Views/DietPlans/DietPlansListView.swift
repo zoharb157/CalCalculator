@@ -7,12 +7,14 @@
 
 import SwiftUI
 import SwiftData
+// import SDK  // Commented out - using native StoreKit 2 paywall
 
 struct DietPlansListView: View {
     @Query(sort: \DietPlan.createdAt, order: .reverse) private var allPlans: [DietPlan]
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isSubscribed) private var isSubscribed
+    // @Environment(TheSDK.self) private var sdk  // Commented out - using native StoreKit 2 paywall
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @State private var showingQuickSetup = false
@@ -21,6 +23,8 @@ struct DietPlansListView: View {
     @State private var selectedPlanForEdit: DietPlan?
     @State private var showingDeleteConfirmation = false
     @State private var planToDelete: DietPlan?
+    @State private var showingPaywall = false
+    @State private var showDeclineConfirmation = false
     @State private var navigationPath = NavigationPath()
     
     private var dietPlanRepository: DietPlanRepository {
@@ -158,6 +162,25 @@ struct DietPlansListView: View {
             } message: {
                 Text(localizationManager.localizedString(for: AppStrings.DietPlan.deleteConfirmation))
             }
+            .fullScreenCover(isPresented: $showingPaywall) {
+                // Native StoreKit 2 paywall - replacing SDK paywall
+                NativePaywallView { subscribed in
+                    showingPaywall = false
+                    if subscribed {
+                        // User subscribed - reset limits
+                        AnalysisLimitManager.shared.resetAnalysisCount()
+                        MealSaveLimitManager.shared.resetMealSaveCount()
+                        ExerciseSaveLimitManager.shared.resetExerciseSaveCount()
+                        NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
+                    } else {
+                        showDeclineConfirmation = true
+                    }
+                }
+            }
+            .paywallDismissalOverlay(
+                showPaywall: $showingPaywall,
+                showDeclineConfirmation: $showDeclineConfirmation
+            )
         }
     }
     
@@ -410,7 +433,12 @@ struct DietPlansListView: View {
     // MARK: - Actions
     
     private func activatePlan(_ plan: DietPlan) {
-        // All features are free
+        guard isSubscribed else {
+            showingPaywall = true
+            HapticManager.shared.notification(.warning)
+            return
+        }
+        
         do {
             // Use repository to activate plan (handles deactivating others)
             try dietPlanRepository.activatePlan(plan)
@@ -465,6 +493,23 @@ struct DietPlansListView: View {
             HapticManager.shared.notification(.error)
         }
     }
+    
+    // MARK: - Paywall View
+    // Commented out - using native StoreKit 2 paywall
+    //
+    // private var paywallView: some View {
+    //     SDKView(
+    //         model: sdk,
+    //         page: .splash,
+    //         show: paywallBinding(
+    //             showPaywall: $showingPaywall,
+    //             sdk: sdk,
+    //             showDeclineConfirmation: $showDeclineConfirmation
+    //         ),
+    //         backgroundColor: .white,
+    //         ignoreSafeArea: true
+    //     )
+    // }
 }
 
 // MARK: - Diet Plan List Card

@@ -5,6 +5,7 @@
 //  CalAI Clone - Main home screen
 //
 
+// import SDK  // Commented out - using native StoreKit 2 paywall
 import SwiftUI
 import SwiftData
 import UserNotifications
@@ -18,6 +19,7 @@ struct HomeView: View {
     var onSwitchToMyDiet: () -> Void
 
     @Environment(\.isSubscribed) private var isSubscribed
+    // @Environment(TheSDK.self) private var sdk  // Commented out - using native StoreKit 2 paywall
     @Environment(\.locale) private var locale
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
@@ -33,6 +35,8 @@ struct HomeView: View {
     @State private var confettiCounter = 0
     @State private var showBadgeAlert = false
     @State private var showingCreateDiet = false
+    @State private var showingPaywall = false
+    @State private var showDeclineConfirmation = false
     @State private var showingDietWelcome = false
     @State private var showDietPlansSheet = false
     @Environment(\.modelContext) private var modelContext
@@ -94,9 +98,20 @@ struct HomeView: View {
                 // Only requests if authorization status is .notDetermined (first time user sees homepage)
                 await requestNotificationPermissionIfNeeded()
                 
-                // NOTE: QA subscription check removed due to Swift 6 concurrency requirements
-                // The SDK's updateIsSubscribed is @concurrent and causes data race warnings
-                // when called from @MainActor context with @Environment SDK reference
+                // QA: Check real subscription status from SDK for monitoring purposes
+                // This is only active in non-DEBUG builds (TestFlight/App Store)
+                #if !DEBUG
+                Task { @MainActor in
+                    do {
+                        _ = try await sdk.updateIsSubscribed()
+                        let realStatus = sdk.isSubscribed
+                        print("🔍 [QA] Real SDK subscription status: \(realStatus ? "Subscribed" : "Not Subscribed")")
+                        // Note: We don't update the debug override - this is just for QA monitoring
+                    } catch {
+                        print("⚠️ [QA] Failed to check real SDK subscription status: \(error)")
+                    }
+                }
+                #endif
             }
             .onDisappear {
                 AppLogger.forClass("HomeView").warning("HomeView disappeared!")
@@ -223,6 +238,21 @@ struct HomeView: View {
                     DietPlansListView()
                 }
             }
+            .fullScreenCover(isPresented: $showingPaywall) {
+                // Native StoreKit 2 paywall - replacing SDK paywall
+                NativePaywallView { subscribed in
+                    showingPaywall = false
+                    if subscribed {
+                        // User subscribed - reset limits
+                        AnalysisLimitManager.shared.resetAnalysisCount()
+                        MealSaveLimitManager.shared.resetMealSaveCount()
+                        ExerciseSaveLimitManager.shared.resetExerciseSaveCount()
+                        NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
+                    } else {
+                        showDeclineConfirmation = true
+                    }
+                }
+            }
         
         let withOverlays = withSheets
             .onChange(of: localizationManager.currentLanguage) { oldValue, newValue in
@@ -240,6 +270,7 @@ struct HomeView: View {
                     }
                 }
             }
+            .paywallDismissalOverlay(showPaywall: $showingPaywall, showDeclineConfirmation: $showDeclineConfirmation)
             .overlay {
                 if badgeManager.showBadgeAlert, let badge = badgeManager.newlyEarnedBadge {
                     BadgeAlertView(badge: badge) {
@@ -470,6 +501,8 @@ struct HomeView: View {
                         // Active plan exists - switch to MyDiet tab
                         onSwitchToMyDiet()
                     }
+                } else {
+                    showingPaywall = true
                 }
             }
         )
@@ -593,6 +626,8 @@ struct HomeView: View {
                         // Active plan exists - switch to MyDiet tab
                         onSwitchToMyDiet()
                     }
+                } else {
+                    showingPaywall = true
                 }
             }
             .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
@@ -604,12 +639,20 @@ struct HomeView: View {
                     showingEditDietPlan = true
                 }
             }
+            .onReceive(NotificationCenter.default.publisher(for: .showPaywall)) { _ in
+                showingPaywall = true
+            }
     }
 
     private var badgesSection: some View {
         PremiumLockedContent {
             BadgesCard {
-                showBadgesSheet = true
+                if isSubscribed {
+                    showBadgesSheet = true
+
+                } else {
+                    showingPaywall = true
+                }
             }
         }
         .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))

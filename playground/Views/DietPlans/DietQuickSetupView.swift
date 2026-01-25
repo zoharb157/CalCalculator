@@ -6,11 +6,13 @@
 
 import SwiftUI
 import SwiftData
+// import SDK  // Commented out - using native StoreKit 2 paywall
 
 struct DietQuickSetupView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.isSubscribed) private var isSubscribed
+    // @Environment(TheSDK.self) private var sdk  // Commented out - using native StoreKit 2 paywall
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @State private var currentStep = 0
@@ -19,6 +21,8 @@ struct DietQuickSetupView: View {
     @State private var mealsData: [ScheduledMealData] = [] // Use data struct instead of @Model
     @State private var showingMealEditor = false
     @State private var editingMealData: ScheduledMealData?
+    @State private var showingPaywall = false
+    @State private var showDeclineConfirmation = false
     @State private var isSaving = false
     
     private var dietPlanRepository: DietPlanRepository {
@@ -96,6 +100,25 @@ struct DietQuickSetupView: View {
                     }
                 )
             }
+            .fullScreenCover(isPresented: $showingPaywall) {
+                // Native StoreKit 2 paywall - replacing SDK paywall
+                NativePaywallView { subscribed in
+                    showingPaywall = false
+                    if subscribed {
+                        // User subscribed - reset limits
+                        AnalysisLimitManager.shared.resetAnalysisCount()
+                        MealSaveLimitManager.shared.resetMealSaveCount()
+                        ExerciseSaveLimitManager.shared.resetExerciseSaveCount()
+                        NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
+                    } else {
+                        showDeclineConfirmation = true
+                    }
+                }
+            }
+            .paywallDismissalOverlay(
+                showPaywall: $showingPaywall,
+                showDeclineConfirmation: $showDeclineConfirmation
+            )
         }
     }
     
@@ -571,7 +594,13 @@ struct DietQuickSetupView: View {
         // Prevent double-taps from triggering multiple saves
         guard !isSaving else { return }
         
-        // All features are free
+        // Check premium subscription before saving
+        guard isSubscribed else {
+            showingPaywall = true
+            HapticManager.shared.notification(.warning)
+            return
+        }
+        
         isSaving = true
         defer { isSaving = false }
         
@@ -609,6 +638,22 @@ struct DietQuickSetupView: View {
             HapticManager.shared.notification(.error)
         }
     }
+    
+    // MARK: - Paywall View (Commented out - using NativePaywallView inline)
+    
+    // private var paywallView: some View {
+    //     SDKView(
+    //         model: sdk,
+    //         page: .splash,
+    //         show: paywallBinding(
+    //             showPaywall: $showingPaywall,
+    //             sdk: sdk,
+    //             showDeclineConfirmation: $showDeclineConfirmation
+    //         ),
+    //         backgroundColor: .white,
+    //         ignoreSafeArea: true
+    //     )
+    // }
 }
 
 // MARK: - Supporting Types
