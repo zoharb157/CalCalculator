@@ -17,6 +17,7 @@ struct HealthKitCard: View {
     @State private var healthKitManager = HealthKitManager.shared
     @State private var isLoading = true
     @State private var animateRings = false
+    @State private var showingPermissionSheet = false
     
     private var showEnableInSettings: Bool {
         healthKitManager.authorizationDenied && !isLoading
@@ -72,6 +73,35 @@ struct HealthKitCard: View {
                     }
                 }
             }
+        }
+        .sheet(isPresented: $showingPermissionSheet) {
+            HealthKitPermissionSheet(
+                onSyncHealthData: {
+                    // Dismiss the sheet first, then request permission after a small delay
+                    // This ensures the sheet is fully dismissed before the system dialog appears
+                    showingPermissionSheet = false
+                    
+                    Task {
+                        // Small delay to ensure sheet dismissal animation completes
+                        try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
+                        
+                        // Request authorization - this shows the system Health permission dialog
+                        await healthKitManager.requestAndVerifyAuthorization()
+                        
+                        // Trigger animation if authorized
+                        if healthKitManager.isAuthorized {
+                            withAnimation(.easeOut(duration: 1.0)) {
+                                animateRings = true
+                            }
+                        }
+                    }
+                },
+                onSkip: {
+                    // User chose to skip - do nothing, they can enable later
+                }
+            )
+            .presentationDetents([.large])
+            .presentationDragIndicator(.hidden)
         }
     }
     
@@ -290,17 +320,8 @@ struct HealthKitCard: View {
             }
             
             Button {
-                Task {
-                    // Request authorization - this shows the system Health permission dialog
-                    await healthKitManager.requestAndVerifyAuthorization()
-                    
-                    // Trigger animation if authorized
-                    if healthKitManager.isAuthorized {
-                        withAnimation(.easeOut(duration: 1.0)) {
-                            animateRings = true
-                        }
-                    }
-                }
+                // Show the pre-permission sheet explaining why we need HealthKit access
+                showingPermissionSheet = true
             } label: {
                 HStack {
                     Image(systemName: "heart.fill")

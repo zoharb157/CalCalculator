@@ -27,6 +27,7 @@ struct ProgressDashboardView: View {
     @State private var showWeightInput = false
     @State private var showPaywall = false
     @State private var showDeclineConfirmation = false
+    @State private var showHealthKitPermissionSheet = false
     
     var body: some View {
         // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
@@ -116,6 +117,12 @@ struct ProgressDashboardView: View {
                             VStack(spacing: 16) {
                                 if viewModel.healthKitAuthorizationDenied {
                                     HealthKitSettingsPromptCard()
+                                } else if viewModel.healthKitAuthorizationNotRequested {
+                                    HealthKitRequestPermissionCard(
+                                        onRequestPermission: {
+                                            showHealthKitPermissionSheet = true
+                                        }
+                                    )
                                 } else {
                                     HealthDataSection(
                                         steps: viewModel.steps,
@@ -276,6 +283,31 @@ struct ProgressDashboardView: View {
                 }
             }
             .paywallDismissalOverlay(showPaywall: $showPaywall, showDeclineConfirmation: $showDeclineConfirmation)
+            .sheet(isPresented: $showHealthKitPermissionSheet) {
+                HealthKitPermissionSheet(
+                    onSyncHealthData: {
+                        // Dismiss the sheet first, then request permission after a small delay
+                        // This ensures the sheet is fully dismissed before the system dialog appears
+                        showHealthKitPermissionSheet = false
+                        
+                        Task {
+                            // Small delay to ensure sheet dismissal animation completes
+                            try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
+                            
+                            // Request authorization - this shows the system Health permission dialog
+                            await HealthKitManager.shared.requestAndVerifyAuthorization()
+                            
+                            // Reload HealthKit data to update the view
+                            await viewModel.loadHealthKitData()
+                        }
+                    },
+                    onSkip: {
+                        // User chose to skip - do nothing, they can enable later
+                    }
+                )
+                .presentationDetents([.large])
+                .presentationDragIndicator(.hidden)
+            }
         }
     }
     
@@ -1067,6 +1099,86 @@ struct HealthKitSettingsPromptCard: View {
                     Image(systemName: "gearshape.fill")
                         .font(.subheadline)
                     Text(localizationManager.localizedString(for: AppStrings.Progress.openSettings))
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(
+                    LinearGradient(
+                        colors: [.red, .pink],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+        }
+        .padding(20)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
+    }
+}
+
+// MARK: - HealthKit Request Permission Card
+
+/// Card shown when HealthKit authorization has not been requested yet
+/// Prompts the user to connect Apple Health with an explanation of benefits
+struct HealthKitRequestPermissionCard: View {
+    @ObservedObject private var localizationManager = LocalizationManager.shared
+    
+    /// Callback when user taps the button to request permission
+    var onRequestPermission: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            HStack(spacing: 16) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [.red.opacity(0.15), .pink.opacity(0.15)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 56, height: 56)
+                    
+                    Image(systemName: "heart.fill")
+                        .font(.title2)
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.red, .pink],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                }
+                
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(localizationManager.localizedString(for: AppStrings.Home.connectHealth))
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                    
+                    Text(localizationManager.localizedString(for: AppStrings.Home.viewDailyActivity))
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .lineLimit(3)
+                }
+                
+                Spacer()
+            }
+            
+            Button {
+                onRequestPermission()
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "heart.fill")
+                        .font(.subheadline)
+                    Text(localizationManager.localizedString(for: AppStrings.Home.enableHealthAccess))
                         .font(.subheadline)
                         .fontWeight(.semibold)
                 }

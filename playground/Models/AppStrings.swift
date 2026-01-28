@@ -90,7 +90,7 @@ struct AppStrings {
         static let healthDataNotAvailable = "Health data is not available on this device"
         static let connectHealth = "Connect Health"
         static let viewDailyActivity = "View your daily activity and exercise data"
-        static let enableHealthAccess = "Enable Health Access"
+        static let enableHealthAccess = "Continue"
         static let protein = "Protein"
         static let calories = "Calories"
         static let carbs = "Carbs"

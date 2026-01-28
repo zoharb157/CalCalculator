@@ -34,6 +34,11 @@ struct ProfileView: View {
     @State private var showingBadges = false
     @State private var showingRateUs = false
     @State private var showingSendFeedback = false
+    @State private var showingHealthInfoSources = false
+    @State private var showingSubscription = false
+    
+    // Subscription status
+    @Environment(\.isSubscribed) private var isSubscribed
     
     // MARK: - Body
     
@@ -101,6 +106,14 @@ struct ProfileView: View {
         .sheet(isPresented: $showingSendFeedback) {
             SendFeedbackView()
         }
+        .sheet(isPresented: $showingHealthInfoSources) {
+            HealthInfoSourcesView()
+        }
+        .fullScreenCover(isPresented: $showingSubscription) {
+            NativePaywallView { subscribed in
+                showingSubscription = false
+            }
+        }
     }
     
     // MARK: - Profile Info Section
@@ -136,6 +149,26 @@ struct ProfileView: View {
                     title: localizationManager.localizedString(for: AppStrings.Profile.language),
                     subtitle: getLocalizedLanguageName(from: viewModel.selectedLanguage),
                     action: { showingLanguageSelection = true }
+                )
+                
+                SettingsDivider()
+                
+                // Subscription management row - makes in-app purchases easy to find
+                SettingsRow(
+                    icon: "crown.fill",
+                    iconColor: isSubscribed ? .yellow : .orange,
+                    title: isSubscribed ? "Manage Subscription" : "Upgrade to Premium",
+                    subtitle: isSubscribed ? "You have an active subscription" : "Unlock all premium features",
+                    action: { 
+                        if isSubscribed {
+                            // Open App Store subscription management
+                            if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
+                                UIApplication.shared.open(url)
+                            }
+                        } else {
+                            showingSubscription = true
+                        }
+                    }
                 )
             }
         }
@@ -286,6 +319,15 @@ struct ProfileView: View {
                     iconColor: .green,
                     title: localizationManager.localizedString(for: AppStrings.Profile.sendFeedback),
                     action: { showingSendFeedback = true }
+                )
+                
+                SettingsDivider()
+                
+                SettingsRow(
+                    icon: "book.closed.fill",
+                    iconColor: .purple,
+                    title: "Health Information Sources",
+                    action: { showingHealthInfoSources = true }
                 )
                 
                 SettingsDivider()

@@ -546,11 +546,27 @@ final class UserSettings {
 
 // MARK: - BMI Category
 
+/// BMI (Body Mass Index) categories based on World Health Organization (WHO) classification.
+///
+/// Reference: World Health Organization. "Body mass index - BMI."
+/// https://www.who.int/europe/news-room/fact-sheets/item/a-healthy-lifestyle---who-recommendations
+///
+/// BMI Categories (WHO International Classification):
+/// - Underweight: < 18.5
+/// - Normal weight: 18.5 - 24.9
+/// - Overweight: 25.0 - 29.9
+/// - Obese: ≥ 30.0
+///
+/// Note: BMI is a screening tool and not a diagnostic measure. Individual health assessments
+/// should be conducted by qualified healthcare professionals.
 enum BMICategory: String, CaseIterable {
     case underweight = "Underweight"
     case normal = "Normal"
     case overweight = "Overweight"
     case obese = "Obese"
+    
+    /// Reference URL for BMI category information
+    static let referenceURL = "https://www.who.int/europe/news-room/fact-sheets/item/a-healthy-lifestyle---who-recommendations"
     
     static func category(for bmi: Double) -> BMICategory {
         switch bmi {
