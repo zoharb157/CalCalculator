@@ -28,6 +28,7 @@ struct ProgressDashboardView: View {
     @State private var showPaywall = false
     @State private var showDeclineConfirmation = false
     @State private var showHealthKitPermissionSheet = false
+    @State private var shouldRequestHealthKitPermission = false
     
     var body: some View {
         // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
@@ -283,26 +284,36 @@ struct ProgressDashboardView: View {
                 }
             }
             .paywallDismissalOverlay(showPaywall: $showPaywall, showDeclineConfirmation: $showDeclineConfirmation)
-            .sheet(isPresented: $showHealthKitPermissionSheet) {
+            .sheet(isPresented: $showHealthKitPermissionSheet, onDismiss: {
+                // Only request HealthKit permission if the user tapped "Sync Health Data"
+                // This ensures the sheet is fully dismissed before the system dialog appears
+                if shouldRequestHealthKitPermission {
+                    shouldRequestHealthKitPermission = false
+                    
+                    Task {
+                        // Additional delay to ensure sheet dismissal animation is fully complete
+                        // This prevents the HealthKit permission dialog from not appearing
+                        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+                        
+                        // Request authorization - this shows the system Health permission dialog
+                        await HealthKitManager.shared.requestAndVerifyAuthorization()
+                        
+                        // Reload HealthKit data to update the view
+                        await viewModel.loadHealthKitData()
+                    }
+                }
+            }) {
                 HealthKitPermissionSheet(
                     onSyncHealthData: {
-                        // Dismiss the sheet first, then request permission after a small delay
-                        // This ensures the sheet is fully dismissed before the system dialog appears
+                        // Set flag to request permission after sheet is dismissed
+                        // The actual permission request happens in onDismiss to ensure
+                        // the sheet is fully dismissed before showing the system dialog
+                        shouldRequestHealthKitPermission = true
                         showHealthKitPermissionSheet = false
-                        
-                        Task {
-                            // Small delay to ensure sheet dismissal animation completes
-                            try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
-                            
-                            // Request authorization - this shows the system Health permission dialog
-                            await HealthKitManager.shared.requestAndVerifyAuthorization()
-                            
-                            // Reload HealthKit data to update the view
-                            await viewModel.loadHealthKitData()
-                        }
                     },
                     onSkip: {
                         // User chose to skip - do nothing, they can enable later
+                        shouldRequestHealthKitPermission = false
                     }
                 )
                 .presentationDetents([.large])
