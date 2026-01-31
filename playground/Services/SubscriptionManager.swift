@@ -67,6 +67,10 @@ final class SubscriptionManager {
     /// Loading state
     var isLoading: Bool = false
     
+    /// Whether the initial subscription check has completed
+    /// This is true only after the first updateSubscriptionStatus() call completes
+    var hasCompletedInitialCheck: Bool = false
+    
     /// Error message if any
     var errorMessage: String?
     
@@ -239,11 +243,17 @@ final class SubscriptionManager {
         purchasedSubscription = foundSubscription
         isSubscribed = hasActiveSubscription
         
+        // Mark that we've completed the initial check
+        hasCompletedInitialCheck = true
+        
         // Store in UserDefaults for persistence
         UserDefaults.standard.set(isSubscribed, forKey: "subscriptionStatus")
         
         // Sync to widgets
         syncSubscriptionStatusToWidget(isSubscribed)
+        
+        // Notify observers that subscription status has been determined
+        NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
         
         AppLogger.forClass("SubscriptionManager").info("Subscription status updated: \(isSubscribed)")
     }

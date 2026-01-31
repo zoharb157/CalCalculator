@@ -262,19 +262,14 @@ struct playgroundApp: App {
                             settings.debugIsSubscribed = true
                             print("🔧 [QA] Auto-subscribe enabled: User starts as Pro (env: \(EnvironmentConfig.shared.environment))")
                         }
-                    } else {
-                        // Production: Ensure we're NOT using debug override
-                        // Clear any leftover debug state from previous QA builds
-                        let settings = UserSettings.shared
-                        if settings.debugOverrideSubscription {
-                            settings.debugOverrideSubscription = false
-                            settings.debugIsSubscribed = false
-                            print("🔧 [PROD] Cleared debug subscription override - using real StoreKit status")
-                        }
                     }
+                    // NOTE: In Prod mode (isAutoSubscribeEnabled = false), we do NOT clear the override.
+                    // The updateSubscriptionStatus() function handles this correctly:
+                    // - If debugOverrideSubscription is false, it uses SubscriptionManager.isSubscribed (StoreKit)
+                    // - If debugOverrideSubscription is true (from a previous QA build), the user can toggle it off
+                    //   in the debug menu, or we rely on the actual value they set
                     
-                    // Initialize subscription status on app launch (respects debug override)
-                    // This ensures debug flag works immediately
+                    // Initialize subscription status on app launch
                     updateSubscriptionStatus()
                 }
                 // NOTE: Subscription status is ONLY updated when HTML paywall closes
@@ -356,7 +351,20 @@ struct playgroundApp: App {
             newStatus = settings.debugIsSubscribed
         } else {
             // Use native StoreKit SubscriptionManager value
-            newStatus = subscriptionManager.isSubscribed
+            // BUT: If SubscriptionManager hasn't finished its initial check yet,
+            // trust the cached UserDefaults value to prevent false->true flicker
+            let storeKitStatus = subscriptionManager.isSubscribed
+            let cachedStatus = UserDefaults.standard.bool(forKey: "subscriptionStatus")
+            
+            if !subscriptionManager.hasCompletedInitialCheck && cachedStatus {
+                // StoreKit hasn't finished checking yet, but cache says subscribed
+                // Keep cached value to prevent flicker - StoreKit will notify when ready
+                print("📱 [Subscription] Waiting for StoreKit, using cached status: \(cachedStatus)")
+                newStatus = cachedStatus
+            } else {
+                // StoreKit has finished checking - trust its answer
+                newStatus = storeKitStatus
+            }
         }
         
         // Update state
