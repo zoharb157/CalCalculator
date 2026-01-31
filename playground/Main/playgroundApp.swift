@@ -251,16 +251,27 @@ struct playgroundApp: App {
                     // Initialize RateUsManager to listen for successful actions
                     _ = RateUsManager.shared
                     
-                    // QA Version: In Release builds, automatically enable subscription override
-                    #if !DEBUG
-                    let settings = UserSettings.shared
-                    if !settings.debugOverrideSubscription {
-                        // First time in Release - enable override and set as subscribed
-                        settings.debugOverrideSubscription = true
-                        settings.debugIsSubscribed = true
-                        print("🔧 [QA] Release build: Auto-enabled subscription override (user starts as Pro)")
+                    // QA/Testing: Auto-subscribe users ONLY if ENABLE_AUTO_SUBSCRIBE is YES in xcconfig
+                    // - Debug/Release builds: Auto-subscribe for QA testing
+                    // - Prod builds: Real StoreKit verification only (no auto-subscribe)
+                    if EnvironmentConfig.shared.isAutoSubscribeEnabled {
+                        let settings = UserSettings.shared
+                        if !settings.debugOverrideSubscription {
+                            // First time - enable override and set as subscribed for QA testing
+                            settings.debugOverrideSubscription = true
+                            settings.debugIsSubscribed = true
+                            print("🔧 [QA] Auto-subscribe enabled: User starts as Pro (env: \(EnvironmentConfig.shared.environment))")
+                        }
+                    } else {
+                        // Production: Ensure we're NOT using debug override
+                        // Clear any leftover debug state from previous QA builds
+                        let settings = UserSettings.shared
+                        if settings.debugOverrideSubscription {
+                            settings.debugOverrideSubscription = false
+                            settings.debugIsSubscribed = false
+                            print("🔧 [PROD] Cleared debug subscription override - using real StoreKit status")
+                        }
                     }
-                    #endif
                     
                     // Initialize subscription status on app launch (respects debug override)
                     // This ensures debug flag works immediately
