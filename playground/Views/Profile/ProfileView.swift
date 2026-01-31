@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-// import SDK  // Commented out - using native StoreKit 2 paywall
+import SDK
 
 struct ProfileView: View {
     
@@ -14,8 +14,7 @@ struct ProfileView: View {
     
     // Use @State with @Observable - SwiftUI will automatically track changes to viewModel properties
     @State private var viewModel = ProfileViewModel()
-    // SDK environment removed - using native StoreKit 2 paywall
-    // @Environment(TheSDK.self) private var sdk
+    @Environment(TheSDK.self) private var sdk
     @Environment(\.localization) private var localization
     @ObservedObject private var localizationManager = LocalizationManager.shared
     // Observe UserSettings directly for reactive updates
@@ -110,9 +109,13 @@ struct ProfileView: View {
             HealthInfoSourcesView()
         }
         .fullScreenCover(isPresented: $showingSubscription) {
-            NativePaywallView { subscribed in
-                showingSubscription = false
-            }
+            SDKView(
+                model: sdk,
+                page: .splash,
+                show: paywallBinding(showPaywall: $showingSubscription, sdk: sdk),
+                backgroundColor: .white,
+                ignoreSafeArea: true
+            )
         }
     }
     
@@ -429,10 +432,10 @@ struct ProfileView: View {
                             .font(.body)
                             .foregroundColor(.primary)
                         Spacer()
-                        // Updated to use native SubscriptionManager instead of SDK
-                        Text(SubscriptionManager.shared.isSubscribed ? localizationManager.localizedString(for: AppStrings.Profile.premium) : localizationManager.localizedString(for: AppStrings.Profile.free))
+                        // SDK subscription status
+                        Text(sdk.isSubscribed ? localizationManager.localizedString(for: AppStrings.Profile.premium) : localizationManager.localizedString(for: AppStrings.Profile.free))
                             .font(.body)
-                            .foregroundColor(SubscriptionManager.shared.isSubscribed ? .green : .gray)
+                            .foregroundColor(sdk.isSubscribed ? .green : .gray)
                     }
                     .padding(.vertical, 12)
                     .padding(.horizontal, 16)

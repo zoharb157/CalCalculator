@@ -5,7 +5,7 @@
 //  CalAI Clone - Main home screen
 //
 
-// import SDK  // Commented out - using native StoreKit 2 paywall
+import SDK
 import SwiftUI
 import SwiftData
 import UserNotifications
@@ -19,7 +19,7 @@ struct HomeView: View {
     var onSwitchToMyDiet: () -> Void
 
     @Environment(\.isSubscribed) private var isSubscribed
-    // @Environment(TheSDK.self) private var sdk  // Commented out - using native StoreKit 2 paywall
+    @Environment(TheSDK.self) private var sdk
     @Environment(\.locale) private var locale
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
@@ -36,7 +36,6 @@ struct HomeView: View {
     @State private var showBadgeAlert = false
     @State private var showingCreateDiet = false
     @State private var showingPaywall = false
-    @State private var showDeclineConfirmation = false
     @State private var showingDietWelcome = false
     @State private var showDietPlansSheet = false
     @Environment(\.modelContext) private var modelContext
@@ -239,19 +238,13 @@ struct HomeView: View {
                 }
             }
             .fullScreenCover(isPresented: $showingPaywall) {
-                // Native StoreKit 2 paywall - replacing SDK paywall
-                NativePaywallView { subscribed in
-                    showingPaywall = false
-                    if subscribed {
-                        // User subscribed - reset limits
-                        AnalysisLimitManager.shared.resetAnalysisCount()
-                        MealSaveLimitManager.shared.resetMealSaveCount()
-                        ExerciseSaveLimitManager.shared.resetExerciseSaveCount()
-                        NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
-                    } else {
-                        showDeclineConfirmation = true
-                    }
-                }
+                SDKView(
+                    model: sdk,
+                    page: .splash,
+                    show: paywallBinding(showPaywall: $showingPaywall, sdk: sdk),
+                    backgroundColor: .white,
+                    ignoreSafeArea: true
+                )
             }
         
         let withOverlays = withSheets
@@ -270,7 +263,6 @@ struct HomeView: View {
                     }
                 }
             }
-            .paywallDismissalOverlay(showPaywall: $showingPaywall, showDeclineConfirmation: $showDeclineConfirmation)
             .overlay {
                 if badgeManager.showBadgeAlert, let badge = badgeManager.newlyEarnedBadge {
                     BadgeAlertView(badge: badge) {

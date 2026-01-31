@@ -6,13 +6,12 @@
 //
 
 import Combine
-// import SDK  // Commented out - using native StoreKit 2 paywall
+import SDK
 import SwiftData
 import SwiftUI
 import UIKit
 import WidgetKit
 import OSLog
-import StoreKit
 
 @main
 struct playgroundApp: App {
@@ -20,9 +19,7 @@ struct playgroundApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     let modelContainer: ModelContainer
     @State private var appearanceMode: AppearanceMode
-    // SDK commented out - using native StoreKit 2 paywall
-    // @State var sdk: TheSDK
-    @State private var subscriptionManager = SubscriptionManager.shared
+    @State var sdk: TheSDK
     // CRITICAL: Initialize subscriptionStatus from UserDefaults to prevent false->true change
     // This ensures isSubscribed is correct from the start, preventing unnecessary body recomputations
     @State private var subscriptionStatus: Bool = UserDefaults.standard.bool(forKey: "subscriptionStatus")
@@ -156,34 +153,44 @@ struct playgroundApp: App {
 
         // UserDefaults read is fast, so this is fine to do synchronously
         _appearanceMode = State(initialValue: UserProfileRepository.shared.getAppearanceMode())
-        
-        // SDK initialization commented out - using native StoreKit 2 paywall
-        // sdk = .init(
-        //     config: .init(
-        //         baseURL: Config.baseURL,
-        //         logOptions: .all,
-        //         apnsHandler: { event in
-        //             switch event {
-        //             case .didReceive(let notification, let details):
-        //                 print("📬 [SDK] Received remote notification: \(notification)")
-        //                 if details == .appOpened {
-        //                     if let urlString = notification["webviewUrl"] as? String,
-        //                         let url = URL(string: urlString)
-        //                     {
-        //                         print("📱 [SDK] Deep link received: \(url)")
-        //                     }
-        //                 }
-        //             case .didFailToRegisterForNotifications(let error):
-        //                 print("❌ [SDK] Failed to register for notifications: \(error)")
-        //             case .didRegisterForNotifications(let token):
-        //                 print("✅ [SDK] Registered for notifications: \(token)")
-        //             @unknown default:
-        //                 print("📱 [SDK] APNS event: \(event)")
-        //                 break
-        //             }
-        //         }))
+        sdk = .init(
+            config: .init(
+                baseURL: Config.baseURL,
+                logOptions: .all,
+                apnsHandler: { event in
+                    switch event {
+                    case .didReceive(let notification, let details):
+                        // Handle remote notification received
+                        print("📬 [SDK] Received remote notification: \(notification)")
+                        
+                        // Handle deep links when app is opened from notification
+                        if details == .appOpened {
+                            if let urlString = notification["webviewUrl"] as? String,
+                                let url = URL(string: urlString)
+                            {
+                                print("📱 [SDK] Deep link received: \(url)")
+                                // TODO: Navigate to deep link URL
+                            }
+                        }
+                        
+                        // Handle other notification payloads
+                        // Example: Update app state, refresh data, etc.
+                        
+                    case .didFailToRegisterForNotifications(let error):
+                        // Registration failure (handled in AppDelegate)
+                        print("❌ [SDK] Failed to register for notifications: \(error)")
+                    case .didRegisterForNotifications(let token):
+                        print("✅ [SDK] Registered for notifications: \(token)")
+                        
+                    @unknown default:
+                        // Handle any other APNS events
+                        print("📱 [SDK] APNS event: \(event)")
+                        break
+                    }
+                }))
         
         // Suppress known system-level warnings that are harmless but noisy
+        // These warnings come from iOS frameworks (WKWebView, Network) and third-party SDKs
         suppressSystemWarnings()
     }
     
@@ -202,8 +209,7 @@ struct playgroundApp: App {
         WindowGroup {
             ContentView()
                 .modelContainer(modelContainer)
-                // SDK environment removed - using native StoreKit 2 paywall
-                // .environment(sdk)
+                .environment(sdk)  // Inject SDK using @Observable
                 .preferredColorScheme(appearanceMode.colorScheme)
                 .environment(\.localization, LocalizationManager.shared)
                 .environment(\.layoutDirection, currentLayoutDirection)
@@ -333,7 +339,7 @@ struct playgroundApp: App {
         }
     }
 
-    /// Update reactive subscription status based on debug override or SubscriptionManager value
+    /// Update reactive subscription status based on debug override or SDK value
     /// Also syncs the subscription status to the widget via shared UserDefaults
     /// Stores the value in UserDefaults so it persists across app launches
     private func updateSubscriptionStatus() {
@@ -344,15 +350,15 @@ struct playgroundApp: App {
             // Debug override takes priority - use debug flag value
             newStatus = settings.debugIsSubscribed
         } else {
-            // Use native StoreKit SubscriptionManager value
-            newStatus = subscriptionManager.isSubscribed
+            // Use SDK value (only updated when paywall closes)
+            newStatus = sdk.isSubscribed
         }
         
         // Update state
         subscriptionStatus = newStatus
         
         // Store in UserDefaults so it persists and can be read on app launch
-        // This ensures the value is only changed by debug flag or SubscriptionManager
+        // This ensures the value is only changed by debug flag or SDK
         UserDefaults.standard.set(newStatus, forKey: "subscriptionStatus")
 
         // Sync subscription status to widget via shared UserDefaults

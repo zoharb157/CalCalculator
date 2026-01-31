@@ -5,19 +5,18 @@
 //  Created by Tareq Khalili on 15/12/2025.
 //
 
-// import SDK  // Commented out - using native StoreKit 2 paywall
+import SDK
 import SwiftData
 import SwiftUI
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    // SDK environment removed - using native StoreKit 2 paywall
-    // @Environment(TheSDK.self) private var sdk
+    @Environment(TheSDK.self) private var sdk
     
     @State private var repository: MealRepository?
     @State private var authState: AuthState = .welcome
     @State private var onboardingResult: [String: Any] = [:]
-    @State private var showPaywall: Bool = false
+    @State private var paywallItem: PaywallItem?
     // CRITICAL: Store a stable ID for MainTabView to prevent recreation
     // This ID is created once and never changes, so SwiftUI will reuse the same MainTabView instance
     @State private var mainTabViewID = UUID()
@@ -25,6 +24,24 @@ struct ContentView: View {
     // CRITICAL: Don't observe UserSettings here - it causes ContentView to update
     // and recreate MainTabView when UserSettings changes (like after saving weight)
     // Access UserSettings.shared directly in methods instead
+    
+    struct PaywallItem: Equatable, Identifiable {
+        let page: Page
+        var callback: (() -> Void)?
+        
+        init(page: Page, callback: (() -> Void)? = nil) {
+            self.page = page
+            self.callback = callback
+        }
+        
+        static func == (lhs: Self, rhs: Self) -> Bool {
+            lhs.page == rhs.page
+        }
+        
+        var id: String {
+            page.id
+        }
+    }
     
     enum AuthState {
         case welcome
@@ -115,14 +132,26 @@ struct ContentView: View {
                     }
             }
         }
-        // Native paywall fullScreenCover - using NativePaywallView instead of SDKView
-        .fullScreenCover(isPresented: $showPaywall) {
-            NativePaywallView { subscribed in
-                if subscribed {
-                    // User subscribed - update subscription status
-                    NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
+        .fullScreenCover(item: $paywallItem) { page in
+            let show: Binding<Bool> = .init(
+                get: {
+                    true
+                },
+                set: { _ in
+                    page.callback?()
+                    paywallItem = nil
                 }
-            }
+            )
+            
+            SDKView(
+                model: sdk,
+                page: page.page,
+                show: show,
+                backgroundColor: .white,
+                ignoreSafeArea: true
+            )
+            .ignoresSafeArea()
+            .id(page.id)
         }
         .onOpenURL { url in
             handleDeepLink(url)
@@ -137,8 +166,8 @@ struct ContentView: View {
         
         switch url.host {
         case "paywall":
-            // Show native paywall when widget is tapped and user is not subscribed
-            showPaywall = true
+            // Show paywall when widget is tapped and user is not subscribed
+            paywallItem = PaywallItem(page: .splash)
         case "home":
             // Just open the app - no action needed
             break

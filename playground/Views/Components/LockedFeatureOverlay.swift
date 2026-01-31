@@ -3,19 +3,16 @@
 //  playground
 //
 //  Reusable lock overlay for premium features
-//  Updated to use native StoreKit 2 paywall
 //
 
 import SwiftUI
-// import SDK  // Commented out - using native StoreKit 2 paywall
+import SDK
 
 struct LockedFeatureOverlay: View {
     @Environment(\.isSubscribed) private var isSubscribed
-    // SDK environment removed - using native StoreKit 2 paywall
-    // @Environment(TheSDK.self) private var sdk
+    @Environment(TheSDK.self) private var sdk
     @ObservedObject private var localizationManager = LocalizationManager.shared
     @State private var showPaywall = false
-    @State private var showDeclineConfirmation = false
     
     let message: String?
     
@@ -69,26 +66,13 @@ struct LockedFeatureOverlay: View {
             }
         }
         .fullScreenCover(isPresented: $showPaywall) {
-            // Native StoreKit 2 paywall - replacing SDK paywall
-            NativePaywallView { subscribed in
-                showPaywall = false
-                if subscribed {
-                    // User subscribed - reset limits
-                    AnalysisLimitManager.shared.resetAnalysisCount()
-                    MealSaveLimitManager.shared.resetMealSaveCount()
-                    ExerciseSaveLimitManager.shared.resetExerciseSaveCount()
-                    NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
-                } else {
-//                    showDeclineConfirmation = true
-                }
-            }
-        }
-        .fullScreenCover(isPresented: $showDeclineConfirmation) {
-            PaywallDeclineConfirmationView(
-                isPresented: $showDeclineConfirmation,
-                showPaywall: $showPaywall
+            SDKView(
+                model: sdk,
+                page: .splash,
+                show: $showPaywall,
+                backgroundColor: .white,
+                ignoreSafeArea: true
             )
-            .interactiveDismissDisabled()
         }
     }
 }
@@ -97,10 +81,8 @@ struct LockedFeatureOverlay: View {
 /// For Progress page: uses reduced blur to show data behind
 struct PremiumLockedContent<Content: View>: View {
     @Environment(\.isSubscribed) private var isSubscribed
-    // SDK environment removed - using native StoreKit 2 paywall
-    // @Environment(TheSDK.self) private var sdk
+    @Environment(TheSDK.self) private var sdk
     @State private var showPaywall = false
-    @State private var showDeclineConfirmation = false
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     let content: Content
@@ -169,36 +151,21 @@ struct PremiumLockedContent<Content: View>: View {
             }
         }
         .fullScreenCover(isPresented: $showPaywall) {
-            // Native StoreKit 2 paywall - replacing SDK paywall
-            NativePaywallView { subscribed in
-                showPaywall = false
-                if subscribed {
-                    // User subscribed - reset limits
-                    AnalysisLimitManager.shared.resetAnalysisCount()
-                    MealSaveLimitManager.shared.resetMealSaveCount()
-                    ExerciseSaveLimitManager.shared.resetExerciseSaveCount()
-                    NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
-                } else {
-//                    showDeclineConfirmation = true
-                }
-            }
-        }
-        .fullScreenCover(isPresented: $showDeclineConfirmation) {
-            PaywallDeclineConfirmationView(
-                isPresented: $showDeclineConfirmation,
-                showPaywall: $showPaywall
+            SDKView(
+                model: sdk,
+                page: .splash,
+                show: paywallBinding(showPaywall: $showPaywall, sdk: sdk),
+                backgroundColor: .white,
+                ignoreSafeArea: true
             )
-            .interactiveDismissDisabled()
         }
     }
 }
 
 struct LockedButton: View {
     @Environment(\.isSubscribed) private var isSubscribed
-    // SDK environment removed - using native StoreKit 2 paywall
-    // @Environment(TheSDK.self) private var sdk
+    @Environment(TheSDK.self) private var sdk
     @State private var showPaywall = false
-    @State private var showDeclineConfirmation = false
     
     let action: () -> Void
     let label: () -> AnyView
@@ -230,26 +197,13 @@ struct LockedButton: View {
             }
         }
         .fullScreenCover(isPresented: $showPaywall) {
-            // Native StoreKit 2 paywall - replacing SDK paywall
-            NativePaywallView { subscribed in
-                showPaywall = false
-                if subscribed {
-                    // User subscribed - reset limits
-                    AnalysisLimitManager.shared.resetAnalysisCount()
-                    MealSaveLimitManager.shared.resetMealSaveCount()
-                    ExerciseSaveLimitManager.shared.resetExerciseSaveCount()
-                    NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
-                } else {
-//                    showDeclineConfirmation = true
-                }
-            }
-        }
-        .fullScreenCover(isPresented: $showDeclineConfirmation) {
-            PaywallDeclineConfirmationView(
-                isPresented: $showDeclineConfirmation,
-                showPaywall: $showPaywall
+            SDKView(
+                model: sdk,
+                page: .splash,
+                show: $showPaywall,
+                backgroundColor: .white,
+                ignoreSafeArea: true
             )
-            .interactiveDismissDisabled()
         }
     }
 }

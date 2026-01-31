@@ -7,7 +7,7 @@
 
 import SwiftUI
 import Charts
-// import SDK  // Commented out - using native StoreKit 2 paywall
+import SDK
 
 struct ProgressDashboardView: View {
     // CRITICAL: We need @Bindable for bindings ($viewModel.showWeightProgressSheet, etc.)
@@ -16,7 +16,7 @@ struct ProgressDashboardView: View {
     
     @Environment(\.isSubscribed) private var isSubscribed
     @Environment(\.modelContext) private var modelContext
-    // @Environment(TheSDK.self) private var sdk  // Commented out - using native StoreKit 2 paywall
+    @Environment(TheSDK.self) private var sdk
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     // CRITICAL: Don't observe UserSettings directly - access it directly instead
@@ -26,7 +26,6 @@ struct ProgressDashboardView: View {
     
     @State private var showWeightInput = false
     @State private var showPaywall = false
-    @State private var showDeclineConfirmation = false
     @State private var showHealthKitPermissionSheet = false
     @State private var shouldRequestHealthKitPermission = false
     
@@ -269,21 +268,14 @@ struct ProgressDashboardView: View {
                 )
             }
             .fullScreenCover(isPresented: $showPaywall) {
-                // Native StoreKit 2 paywall - replacing SDK paywall
-                NativePaywallView { subscribed in
-                    showPaywall = false
-                    if subscribed {
-                        // User subscribed - reset limits
-                        AnalysisLimitManager.shared.resetAnalysisCount()
-                        MealSaveLimitManager.shared.resetMealSaveCount()
-                        ExerciseSaveLimitManager.shared.resetExerciseSaveCount()
-                        NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
-                    } else {
-                        showDeclineConfirmation = true
-                    }
-                }
+                SDKView(
+                    model: sdk,
+                    page: .splash,
+                    show: paywallBinding(showPaywall: $showPaywall, sdk: sdk),
+                    backgroundColor: .white,
+                    ignoreSafeArea: true
+                )
             }
-            .paywallDismissalOverlay(showPaywall: $showPaywall, showDeclineConfirmation: $showDeclineConfirmation)
             .sheet(isPresented: $showHealthKitPermissionSheet, onDismiss: {
                 // Only request HealthKit permission if the user tapped "Sync Health Data"
                 // This ensures the sheet is fully dismissed before the system dialog appears

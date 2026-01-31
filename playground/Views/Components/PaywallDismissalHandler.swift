@@ -2,46 +2,21 @@
 //  PaywallDismissalHandler.swift
 //  playground
 //
-//  Generic reusable modifier for handling paywall dismissal and showing decline confirmation
-//  Updated to use native StoreKit 2 - SDK dependencies commented out
+//  Handles paywall dismissal and subscription status updates
 //
 
 import SwiftUI
-// import SDK  // Commented out - using native StoreKit 2 paywall
+import SDK
 
-/// View modifier that handles paywall dismissal and shows decline confirmation popup
-/// Updated to work with native StoreKit 2 paywall instead of SDK
-struct PaywallDismissalHandlerModifier: ViewModifier {
-    @Binding var showPaywall: Bool
-    @Binding var showDeclineConfirmation: Bool
-    // SDK environment removed - using native StoreKit 2 paywall
-    // @Environment(TheSDK.self) private var sdk
-    
-    func body(content: Content) -> some View {
-        content
-//            .fullScreenCover(isPresented: $showDeclineConfirmation) {
-//                // Full screen cover ensures it covers the ENTIRE app screen, not just the calling view
-//                PaywallDeclineConfirmationView(
-//                    isPresented: $showDeclineConfirmation,
-//                    showPaywall: $showPaywall
-//                )
-//                .interactiveDismissDisabled() // Prevent swipe to dismiss - user must choose an option
-//            }
-    }
-}
-
-// MARK: - SDK-specific code commented out
-// The following code was used for SDK paywall binding management.
-// With native StoreKit 2, the NativePaywallView handles all subscription logic internally.
-
-/*
 /// Wrapper class to hold a strong reference to the binding and prevent crashes
 /// The SDK tries to set showSDK = nil which crashes, so we maintain a strong reference
 /// This wrapper creates a binding that can never be deallocated, even if SDK sets its reference to nil
 @MainActor
 private final class SafeBindingWrapper {
     private final class BindingBox {
-        var binding: Binding<Bool>
+        // Mark as nonisolated(unsafe) because Binding access is safe in our MainActor context
+        // and we need to access it from @Sendable closures
+        nonisolated(unsafe) var binding: Binding<Bool>
 
         init(_ binding: Binding<Bool>) {
             self.binding = binding
@@ -50,7 +25,6 @@ private final class SafeBindingWrapper {
 
     private let originalBinding: Binding<Bool>
     nonisolated(unsafe) private let sdk: TheSDK
-    private let showDeclineConfirmation: Binding<Bool>
     
     // The actual binding we return to SDK - this is stored to keep it alive
     private var cachedBinding: Binding<Bool>?
@@ -58,10 +32,9 @@ private final class SafeBindingWrapper {
     // Unique ID for this wrapper instance - exposed for storage
     let wrapperId: UUID
     
-    init(originalBinding: Binding<Bool>, sdk: TheSDK, showDeclineConfirmation: Binding<Bool>) {
+    init(originalBinding: Binding<Bool>, sdk: TheSDK) {
         self.originalBinding = originalBinding
         self.sdk = sdk
-        self.showDeclineConfirmation = showDeclineConfirmation
         self.wrapperId = UUID()
         
         // Create and cache the binding to keep it alive
@@ -78,13 +51,15 @@ private final class SafeBindingWrapper {
         let wrapperId = self.wrapperId
         
         // Create getter that doesn't capture self
-        let getValue: () -> Bool = {
+        // Mark as @Sendable to satisfy Binding requirements (safe because we're on MainActor)
+        let getValue: @Sendable () -> Bool = {
             // Direct access to captured binding - no self reference
             bindingBox.binding.wrappedValue
         }
         
         // Create setter that doesn't capture self
-        let setValue: (Bool) -> Void = { newValue in
+        // Mark as @Sendable to satisfy Binding requirements (safe because we're on MainActor)
+        let setValue: @Sendable (Bool) -> Void = { newValue in
             // Direct access to captured binding - no self reference
             let wasShowing = bindingBox.binding.wrappedValue
             let isDismissing = !newValue && wasShowing
@@ -127,9 +102,7 @@ private final class SafeBindingWrapper {
         
         // Update subscription status from SDK
         // Since we're already on MainActor, we can access SDK directly
-        // Use nonisolated(unsafe) to avoid Sendable requirements for SDK
         let sdk = self.sdk
-        let showDeclineConfirmation = self.showDeclineConfirmation
         
         Task { @MainActor in
             do {
@@ -138,16 +111,11 @@ private final class SafeBindingWrapper {
                 // Update reactive subscription status in app
                 NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
             } catch {
-                print("⚠️ Failed to update subscription status: \(error)")
+                print("Failed to update subscription status: \(error)")
             }
             
-            // Check SDK directly - show decline confirmation if not subscribed
-            // Only show if not already showing (prevent multiple popups)
-            // We're on MainActor, so accessing isSubscribed is safe
-            if !sdk.isSubscribed && !showDeclineConfirmation.wrappedValue {
-                showDeclineConfirmation.wrappedValue = true
-            } else if sdk.isSubscribed {
-                // User subscribed - reset analysis, meal save, and exercise save counts
+            // If user subscribed, reset analysis, meal save, and exercise save counts
+            if sdk.isSubscribed {
                 AnalysisLimitManager.shared.resetAnalysisCount()
                 MealSaveLimitManager.shared.resetMealSaveCount()
                 ExerciseSaveLimitManager.shared.resetExerciseSaveCount()
@@ -165,7 +133,7 @@ private final class SafeBindingWrapper {
     }
 }
 
-/// Global state to prevent multiple decline confirmations from showing simultaneously
+/// Global state to prevent multiple subscription checks from happening simultaneously
 @MainActor
 private final class PaywallDismissalState {
     static let shared = PaywallDismissalState()
@@ -219,14 +187,31 @@ private final class BindingWrapperStorage {
     }
 }
 
-func paywallBinding(showPaywall: Binding<Bool>, sdk: TheSDK, showDeclineConfirmation: Binding<Bool>) -> Binding<Bool> {
+/// Helper function to create a paywall binding with subscription check
+/// 
+/// Usage:
+/// ```swift
+/// @State private var showPaywall = false
+/// @Environment(TheSDK.self) private var sdk
+/// 
+/// YourView()
+///     .fullScreenCover(isPresented: $showPaywall) {
+///         SDKView(
+///             model: sdk,
+///             page: .splash,
+///             show: paywallBinding(showPaywall: $showPaywall, sdk: sdk),
+///             backgroundColor: .white,
+///             ignoreSafeArea: true
+///         )
+///     }
+/// ```
+func paywallBinding(showPaywall: Binding<Bool>, sdk: TheSDK) -> Binding<Bool> {
     // Create a wrapper that maintains a strong reference to prevent crashes
     // The SDK tries to set showSDK = nil which crashes, so we keep a strong reference
     // This is done synchronously with no delays to ensure instant paywall presentation
     let wrapper = SafeBindingWrapper(
         originalBinding: showPaywall,
-        sdk: sdk,
-        showDeclineConfirmation: showDeclineConfirmation
+        sdk: sdk
     )
     
     // Store wrapper in global storage to maintain strong reference (prevents deallocation)
@@ -236,33 +221,4 @@ func paywallBinding(showPaywall: Binding<Bool>, sdk: TheSDK, showDeclineConfirma
     // Return binding immediately - no async operations or delays
     // The binding's setter will immediately update showPaywall, allowing SwiftUI to dismiss
     return wrapper.binding
-}
-*/
-
-extension View {
-    /// Adds paywall dismissal handling with decline confirmation popup overlay
-    /// 
-    /// This modifier adds the decline confirmation popup overlay.
-    /// With native StoreKit 2, use NativePaywallView directly which handles
-    /// all subscription logic internally.
-    /// 
-    /// Usage:
-    /// ```swift
-    /// @State private var showPaywall = false
-    /// @State private var showDeclineConfirmation = false
-    /// 
-    /// YourView()
-    ///     .paywallDismissalOverlay(showPaywall: $showPaywall, showDeclineConfirmation: $showDeclineConfirmation)
-    ///     .fullScreenCover(isPresented: $showPaywall) {
-    ///         NativePaywallView { subscribed in
-    ///             showPaywall = false
-    ///             if !subscribed {
-    ///                 showDeclineConfirmation = true
-    ///             }
-    ///         }
-    ///     }
-    /// ```
-    func paywallDismissalOverlay(showPaywall: Binding<Bool>, showDeclineConfirmation: Binding<Bool>) -> some View {
-        modifier(PaywallDismissalHandlerModifier(showPaywall: showPaywall, showDeclineConfirmation: showDeclineConfirmation))
-    }
 }

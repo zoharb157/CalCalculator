@@ -6,7 +6,7 @@
 
 import SwiftUI
 import SwiftData
-// import SDK  // Commented out - using native StoreKit 2 paywall
+import SDK
 
 struct BurnedCaloriesView: View {
     let calories: Int
@@ -24,8 +24,7 @@ struct BurnedCaloriesView: View {
     @State private var errorMessage = ""
     @State private var isLoadingCalories = true // Track if we're loading calories from API
     @State private var showPaywall = false
-    @State private var showDeclineConfirmation = false
-    // @Environment(TheSDK.self) private var sdk  // Commented out - using native StoreKit 2 paywall
+    @Environment(TheSDK.self) private var sdk
     @ObservedObject private var localizationManager = LocalizationManager.shared
     private let userSettings = UserSettings.shared
     
@@ -212,21 +211,14 @@ struct BurnedCaloriesView: View {
                         Text(errorMessage)
                     }
                     .fullScreenCover(isPresented: $showPaywall) {
-                        // Native StoreKit 2 paywall - replacing SDK paywall
-                        NativePaywallView { subscribed in
-                            showPaywall = false
-                            if subscribed {
-                                // User subscribed - reset limits
-                                AnalysisLimitManager.shared.resetAnalysisCount()
-                                MealSaveLimitManager.shared.resetMealSaveCount()
-                                ExerciseSaveLimitManager.shared.resetExerciseSaveCount()
-                                NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
-                            } else {
-                                showDeclineConfirmation = true
-                            }
-                        }
+                        SDKView(
+                            model: sdk,
+                            page: .splash,
+                            show: paywallBinding(showPaywall: $showPaywall, sdk: sdk),
+                            backgroundColor: .white,
+                            ignoreSafeArea: true
+                        )
                     }
-                    .paywallDismissalOverlay(showPaywall: $showPaywall, showDeclineConfirmation: $showDeclineConfirmation)
                 }
                 .padding()
             }

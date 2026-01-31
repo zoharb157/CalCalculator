@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-// import SDK  // Commented out - using native StoreKit 2 paywall
+import SDK
 
 struct ResultsView: View {
     @Bindable var viewModel: ScanViewModel
@@ -16,10 +16,9 @@ struct ResultsView: View {
     @State private var showingFixResult = false
     @State private var foodHintText = ""
     @State private var showPaywall = false
-    @State private var showDeclineConfirmation = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isSubscribed) private var isSubscribed
-    // @Environment(TheSDK.self) private var sdk  // Commented out - using native StoreKit 2 paywall
+    @Environment(TheSDK.self) private var sdk
     @ObservedObject private var localizationManager = LocalizationManager.shared
 
     /// Callback to notify parent when meal is saved
@@ -61,21 +60,14 @@ struct ResultsView: View {
                     fixResultSheet
                 }
                 .fullScreenCover(isPresented: $showPaywall) {
-                    // Native StoreKit 2 paywall - replacing SDK paywall
-                    NativePaywallView { subscribed in
-                        showPaywall = false
-                        if subscribed {
-                            // User subscribed - reset limits
-                            AnalysisLimitManager.shared.resetAnalysisCount()
-                            MealSaveLimitManager.shared.resetMealSaveCount()
-                            ExerciseSaveLimitManager.shared.resetExerciseSaveCount()
-                            NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
-                        } else {
-                            showDeclineConfirmation = true
-                        }
-                    }
+                    SDKView(
+                        model: sdk,
+                        page: .splash,
+                        show: paywallBinding(showPaywall: $showPaywall, sdk: sdk),
+                        backgroundColor: .white,
+                        ignoreSafeArea: true
+                    )
                 }
-                .paywallDismissalOverlay(showPaywall: $showPaywall, showDeclineConfirmation: $showDeclineConfirmation)
         }
     }
 

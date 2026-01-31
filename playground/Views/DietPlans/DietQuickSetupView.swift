@@ -6,13 +6,13 @@
 
 import SwiftUI
 import SwiftData
-// import SDK  // Commented out - using native StoreKit 2 paywall
+import SDK
 
 struct DietQuickSetupView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.isSubscribed) private var isSubscribed
-    // @Environment(TheSDK.self) private var sdk  // Commented out - using native StoreKit 2 paywall
+    @Environment(TheSDK.self) private var sdk
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     @State private var currentStep = 0
@@ -22,7 +22,6 @@ struct DietQuickSetupView: View {
     @State private var showingMealEditor = false
     @State private var editingMealData: ScheduledMealData?
     @State private var showingPaywall = false
-    @State private var showDeclineConfirmation = false
     @State private var isSaving = false
     
     private var dietPlanRepository: DietPlanRepository {
@@ -101,24 +100,14 @@ struct DietQuickSetupView: View {
                 )
             }
             .fullScreenCover(isPresented: $showingPaywall) {
-                // Native StoreKit 2 paywall - replacing SDK paywall
-                NativePaywallView { subscribed in
-                    showingPaywall = false
-                    if subscribed {
-                        // User subscribed - reset limits
-                        AnalysisLimitManager.shared.resetAnalysisCount()
-                        MealSaveLimitManager.shared.resetMealSaveCount()
-                        ExerciseSaveLimitManager.shared.resetExerciseSaveCount()
-                        NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
-                    } else {
-                        showDeclineConfirmation = true
-                    }
-                }
+                SDKView(
+                    model: sdk,
+                    page: .splash,
+                    show: paywallBinding(showPaywall: $showingPaywall, sdk: sdk),
+                    backgroundColor: .white,
+                    ignoreSafeArea: true
+                )
             }
-            .paywallDismissalOverlay(
-                showPaywall: $showingPaywall,
-                showDeclineConfirmation: $showDeclineConfirmation
-            )
         }
     }
     
@@ -639,21 +628,17 @@ struct DietQuickSetupView: View {
         }
     }
     
-    // MARK: - Paywall View (Commented out - using NativePaywallView inline)
+    // MARK: - Paywall View
     
-    // private var paywallView: some View {
-    //     SDKView(
-    //         model: sdk,
-    //         page: .splash,
-    //         show: paywallBinding(
-    //             showPaywall: $showingPaywall,
-    //             sdk: sdk,
-    //             showDeclineConfirmation: $showDeclineConfirmation
-    //         ),
-    //         backgroundColor: .white,
-    //         ignoreSafeArea: true
-    //     )
-    // }
+    private var paywallView: some View {
+        SDKView(
+            model: sdk,
+            page: .splash,
+            show: paywallBinding(showPaywall: $showingPaywall, sdk: sdk),
+            backgroundColor: .white,
+            ignoreSafeArea: true
+        )
+    }
 }
 
 // MARK: - Supporting Types

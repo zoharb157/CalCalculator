@@ -10,6 +10,7 @@
 		CEB315012F01500600986732 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEB315002F01500600986732 /* WidgetKit.framework */; };
 		CEB315032F01500600986732 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEB315022F01500600986732 /* SwiftUI.framework */; };
 		CEB315142F01500700986732 /* CaloriesCalculatorWidgetsExtensionExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CEB314FE2F01500600986732 /* CaloriesCalculatorWidgetsExtensionExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		FF8901234567123456789013 /* SDK in Frameworks */ = {isa = PBXBuildFile; productRef = FF8901234567123456789012 /* SDK */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -97,6 +98,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FF8901234567123456789013 /* SDK in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -171,6 +173,9 @@
 				A31433172EF0897D00EFE039 /* playground */,
 			);
 			name = playground;
+			packageProductDependencies = (
+				FF8901234567123456789012 /* SDK */,
+			);
 			productName = playground;
 			productReference = A31433152EF0897D00EFE039 /* CalCalculator.app */;
 			productType = "com.apple.product-type.application";
@@ -264,6 +269,9 @@
 			);
 			mainGroup = A314330C2EF0897D00EFE039;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				FF3456789012CDEF01234567 /* XCRemoteSwiftPackageReference "apps-sdk-V2" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A31433162EF0897D00EFE039 /* Products */;
 			projectDirPath = "";
@@ -749,6 +757,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		FF3456789012CDEF01234567 /* XCRemoteSwiftPackageReference "apps-sdk-V2" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://git-codecommit.us-east-1.amazonaws.com/v1/repos/apps-sdk-V2";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		FF8901234567123456789012 /* SDK */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FF3456789012CDEF01234567 /* XCRemoteSwiftPackageReference "apps-sdk-V2" */;
+			productName = SDK;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A314330D2EF0897D00EFE039 /* Project object */;
 }
