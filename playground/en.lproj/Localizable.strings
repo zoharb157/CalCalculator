@@ -765,3 +765,33 @@
 "Text Log" = "Text Log";
 "Describe meal in words" = "Describe meal in words";
 "Search or create entry" = "Search or create entry";
+
+/* Paywall / Premium */
+"Unlock Premium" = "Unlock Premium";
+"Get unlimited access to all features" = "Get unlimited access to all features";
+"Unlimited Food Scans" = "Unlimited Food Scans";
+"Advanced Progress Tracking" = "Advanced Progress Tracking";
+"Custom Diet Plans" = "Custom Diet Plans";
+"PDF Data Export" = "PDF Data Export";
+"Premium Widgets" = "Premium Widgets";
+"Unable to load plans" = "Unable to load plans";
+"Tap to Retry" = "Tap to Retry";
+"Cancel anytime during free trial" = "Cancel anytime during free trial";
+"Restore Purchases" = "Restore Purchases";
+"Terms of Use" = "Terms of Use";
+"Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Payment will be charged to your Apple ID account." = "Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Payment will be charged to your Apple ID account.";
+"year" = "year";
+"month" = "month";
+"week" = "week";
+"BEST VALUE" = "BEST VALUE";
+"Yearly" = "Yearly";
+"Monthly" = "Monthly";
+"Weekly" = "Weekly";
+"FREE" = "FREE";
+"FREE TRIAL" = "FREE TRIAL";
+"Purchase Error" = "Purchase Error";
+"Please select a subscription plan." = "Please select a subscription plan.";
+"An error occurred. Please try again." = "An error occurred. Please try again.";
+"This subscription is not available in your region." = "This subscription is not available in your region.";
+"Network error. Please check your connection and try again." = "Network error. Please check your connection and try again.";
+"Purchase failed. Please try again." = "Purchase failed. Please try again.";

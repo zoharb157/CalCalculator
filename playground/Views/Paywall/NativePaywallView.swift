@@ -7,6 +7,7 @@
 
 import SwiftUI
 import StoreKit
+import UIKit
 
 /// Native paywall view built with StoreKit 2 following Apple HIG
 struct NativePaywallView: View {
@@ -23,6 +24,8 @@ struct NativePaywallView: View {
     @State private var products: [Product] = []
     @State private var isLoading: Bool = true
     @State private var isPurchasing: Bool = false
+    @State private var errorMessage: String?
+    @State private var showError: Bool = false
     
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
@@ -70,6 +73,11 @@ struct NativePaywallView: View {
                 dismiss()
                 onDismiss?(true)
             }
+        }
+        .alert("Purchase Error".localized, isPresented: $showError) {
+            Button("OK".localized, role: .cancel) { }
+        } message: {
+            Text(errorMessage ?? "An error occurred. Please try again.".localized)
         }
     }
     
@@ -131,12 +139,12 @@ struct NativePaywallView: View {
             .shadow(color: Color.orange.opacity(0.5), radius: 24, x: 0, y: 12)
             
             // Title
-            Text("Unlock Premium")
+            Text("Unlock Premium".localized)
                 .font(.system(size: 34, weight: .bold, design: .rounded))
                 .foregroundColor(.white)
             
             // Subtitle
-            Text("Get unlimited access to all features")
+            Text("Get unlimited access to all features".localized)
                 .font(.system(size: 17, weight: .medium))
                 .foregroundColor(.white.opacity(0.7))
                 .multilineTextAlignment(.center)
@@ -151,31 +159,31 @@ struct NativePaywallView: View {
             PaywallFeatureRow(
                 icon: "camera.viewfinder",
                 iconColor: .blue,
-                title: "Unlimited Food Scans"
+                title: "Unlimited Food Scans".localized
             )
             
             PaywallFeatureRow(
                 icon: "chart.line.uptrend.xyaxis",
                 iconColor: .green,
-                title: "Advanced Progress Tracking"
+                title: "Advanced Progress Tracking".localized
             )
             
             PaywallFeatureRow(
                 icon: "fork.knife.circle.fill",
                 iconColor: .purple,
-                title: "Custom Diet Plans"
+                title: "Custom Diet Plans".localized
             )
             
             PaywallFeatureRow(
                 icon: "doc.text.fill",
                 iconColor: .orange,
-                title: "PDF Data Export"
+                title: "PDF Data Export".localized
             )
             
             PaywallFeatureRow(
                 icon: "square.grid.2x2.fill",
                 iconColor: .pink,
-                title: "Premium Widgets"
+                title: "Premium Widgets".localized
             )
         }
         .padding(.vertical, 16)
@@ -196,7 +204,7 @@ struct NativePaywallView: View {
                     .padding(.vertical, 50)
             } else if products.isEmpty {
                 VStack(spacing: 12) {
-                    Text("Unable to load plans")
+                    Text("Unable to load plans".localized)
                         .font(.system(size: 15, weight: .medium))
                         .foregroundColor(.white.opacity(0.6))
                     
@@ -205,7 +213,7 @@ struct NativePaywallView: View {
                             await loadProductData()
                         }
                     } label: {
-                        Text("Tap to Retry")
+                        Text("Tap to Retry".localized)
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(.orange)
                     }
@@ -267,6 +275,14 @@ struct NativePaywallView: View {
             .scaleEffect(isPurchasing ? 0.98 : 1.0)
             .animation(.easeInOut(duration: 0.15), value: isPurchasing)
             
+            // Cancel anytime notice for free trial
+            if isEligibleForTrial, let product = selectedProduct, product.trialPeriodText != nil {
+                Text("Cancel anytime during free trial".localized)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.green.opacity(0.9))
+                    .multilineTextAlignment(.center)
+            }
+            
             // Price description
             if let product = selectedProduct {
                 Text(priceDescription(for: product))
@@ -287,7 +303,7 @@ struct NativePaywallView: View {
                     await handleRestore()
                 }
             } label: {
-                Text("Restore Purchases")
+                Text("Restore Purchases".localized)
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.white.opacity(0.5))
             }
@@ -297,7 +313,7 @@ struct NativePaywallView: View {
                 Button {
                     openURL("https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")
                 } label: {
-                    Text("Terms of Use")
+                    Text("Terms of Use".localized)
                         .font(.system(size: 12))
                         .foregroundColor(.white.opacity(0.35))
                 }
@@ -305,14 +321,14 @@ struct NativePaywallView: View {
                 Button {
                     openURL("https://www.apple.com/legal/privacy/")
                 } label: {
-                    Text("Privacy Policy")
+                    Text("Privacy Policy".localized)
                         .font(.system(size: 12))
                         .foregroundColor(.white.opacity(0.35))
                 }
             }
             
             // Subscription info
-            Text("Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Payment will be charged to your Apple ID account.")
+            Text("Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Payment will be charged to your Apple ID account.".localized)
                 .font(.system(size: 10))
                 .foregroundColor(.white.opacity(0.25))
                 .multilineTextAlignment(.center)
@@ -325,9 +341,9 @@ struct NativePaywallView: View {
     
     private var buttonTitle: String {
         if isEligibleForTrial, let product = selectedProduct, product.trialPeriodText != nil {
-            return "Start Free Trial"
+            return "Start Free Trial".localized
         }
-        return "Continue"
+        return "Continue".localized
     }
     
     private func priceDescription(for product: Product) -> String {
@@ -362,19 +378,61 @@ struct NativePaywallView: View {
     
     @MainActor
     private func handlePurchase() async {
-        guard let product = selectedProduct else { return }
+        guard let product = selectedProduct else {
+            errorMessage = "Please select a subscription plan.".localized
+            showError = true
+            return
+        }
         
         isPurchasing = true
+        errorMessage = nil
         
         let manager = SubscriptionManager.shared
         
-        // Attempt purchase - no error popup on cancel/failure
-        let _ = try? await manager.purchase(product)
-        
-        isPurchasing = false
-        
-        if manager.isSubscribed {
-            purchaseCompleted = true
+        do {
+            // Attempt purchase
+            let transaction = try await manager.purchase(product)
+            
+            isPurchasing = false
+            
+            // Check if purchase was successful
+            if transaction != nil {
+                // Purchase completed successfully
+                purchaseCompleted = true
+            } else if manager.isSubscribed {
+                // User already subscribed (restored)
+                purchaseCompleted = true
+            }
+            // If transaction is nil and not subscribed, user likely cancelled - no error needed
+        } catch {
+            isPurchasing = false
+            
+            // Show error to user (unless it's a cancellation)
+            let nsError = error as NSError
+            // StoreKit error domain for user cancelled is SKErrorDomain with code 2
+            if nsError.domain == "SKErrorDomain" && nsError.code == 2 {
+                // User cancelled - don't show error
+                return
+            }
+            
+            // Check if it's a StoreKit.StoreKitError
+            if let storeKitError = error as? StoreKitError {
+                switch storeKitError {
+                case .userCancelled:
+                    // User cancelled - don't show error
+                    return
+                case .notAvailableInStorefront:
+                    errorMessage = "This subscription is not available in your region.".localized
+                case .networkError:
+                    errorMessage = "Network error. Please check your connection and try again.".localized
+                default:
+                    errorMessage = "Purchase failed. Please try again.".localized
+                }
+            } else {
+                errorMessage = "Purchase failed: \(error.localizedDescription)"
+            }
+            
+            showError = true
         }
     }
     
@@ -448,18 +506,18 @@ struct SubscriptionPlanCard: View {
     
     private var periodLabel: String {
         if isYearly {
-            return "year"
+            return "year".localized
         } else if isMonthly {
-            return "month"
+            return "month".localized
         } else {
-            return "week"
+            return "week".localized
         }
     }
     
     private var savingsText: String? {
         // Show savings percentage for yearly plan
         if isBestValue {
-            return "BEST VALUE"
+            return "BEST VALUE".localized
         }
         return nil
     }
@@ -565,11 +623,11 @@ struct SubscriptionPlanCard: View {
     
     private var planTitle: String {
         if isYearly {
-            return "Yearly"
+            return "Yearly".localized
         } else if isMonthly {
-            return "Monthly"
+            return "Monthly".localized
         } else {
-            return "Weekly"
+            return "Weekly".localized
         }
     }
     
@@ -581,7 +639,7 @@ struct SubscriptionPlanCard: View {
         formatter.numberStyle = .currency
         formatter.locale = product.priceFormatStyle.locale
         if let formatted = formatter.string(from: weeklyEquivalent as NSNumber) {
-            return "\(formatted)/week"
+            return "\(formatted)/" + "week".localized
         }
         return ""
     }
@@ -590,9 +648,9 @@ struct SubscriptionPlanCard: View {
         // Convert "3-day free trial" to "3 DAYS FREE"
         let components = text.lowercased().components(separatedBy: " ")
         if let duration = components.first {
-            return duration.uppercased() + " FREE"
+            return duration.uppercased() + " " + "FREE".localized
         }
-        return "FREE TRIAL"
+        return "FREE TRIAL".localized
     }
 }
 

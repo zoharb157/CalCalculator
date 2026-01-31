@@ -743,3 +743,33 @@
 
 "Finish" = "Завершить";
 "Locked" = "Заблокировано";
+
+/* Paywall / Premium */
+"Unlock Premium" = "Разблокировать Премиум";
+"Get unlimited access to all features" = "Получите неограниченный доступ ко всем функциям";
+"Unlimited Food Scans" = "Неограниченное сканирование еды";
+"Advanced Progress Tracking" = "Расширенное отслеживание прогресса";
+"Custom Diet Plans" = "Индивидуальные планы питания";
+"PDF Data Export" = "Экспорт данных в PDF";
+"Premium Widgets" = "Премиум виджеты";
+"Unable to load plans" = "Не удалось загрузить планы";
+"Tap to Retry" = "Нажмите для повтора";
+"Cancel anytime during free trial" = "Отмените в любое время во время пробного периода";
+"Restore Purchases" = "Восстановить покупки";
+"Terms of Use" = "Условия использования";
+"Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Payment will be charged to your Apple ID account." = "Подписка автоматически продлевается, если не отменить её минимум за 24 часа до окончания текущего периода. Оплата будет списана с вашего аккаунта Apple ID.";
+"year" = "год";
+"month" = "месяц";
+"week" = "неделя";
+"BEST VALUE" = "ЛУЧШАЯ ЦЕНА";
+"Yearly" = "Годовая";
+"Monthly" = "Месячная";
+"Weekly" = "Недельная";
+"FREE" = "БЕСПЛАТНО";
+"FREE TRIAL" = "БЕСПЛАТНАЯ ПРОБНАЯ";
+"Purchase Error" = "Ошибка покупки";
+"Please select a subscription plan." = "Пожалуйста, выберите план подписки.";
+"An error occurred. Please try again." = "Произошла ошибка. Пожалуйста, попробуйте снова.";
+"This subscription is not available in your region." = "Эта подписка недоступна в вашем регионе.";
+"Network error. Please check your connection and try again." = "Ошибка сети. Пожалуйста, проверьте подключение и попробуйте снова.";
+"Purchase failed. Please try again." = "Покупка не удалась. Пожалуйста, попробуйте снова.";

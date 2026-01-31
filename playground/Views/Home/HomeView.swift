@@ -100,18 +100,18 @@ struct HomeView: View {
                 
                 // QA: Check real subscription status from SDK for monitoring purposes
                 // This is only active in non-DEBUG builds (TestFlight/App Store)
-                #if !DEBUG
-                Task { @MainActor in
-                    do {
-                        _ = try await sdk.updateIsSubscribed()
-                        let realStatus = sdk.isSubscribed
-                        print("🔍 [QA] Real SDK subscription status: \(realStatus ? "Subscribed" : "Not Subscribed")")
-                        // Note: We don't update the debug override - this is just for QA monitoring
-                    } catch {
-                        print("⚠️ [QA] Failed to check real SDK subscription status: \(error)")
-                    }
-                }
-                #endif
+//                #if !DEBUG
+//                Task { @MainActor in
+//                    do {
+//                        _ = try await sdk.updateIsSubscribed()
+//                        let realStatus = sdk.isSubscribed
+//                        print("🔍 [QA] Real SDK subscription status: \(realStatus ? "Subscribed" : "Not Subscribed")")
+//                        // Note: We don't update the debug override - this is just for QA monitoring
+//                    } catch {
+//                        print("⚠️ [QA] Failed to check real SDK subscription status: \(error)")
+//                    }
+//                }
+//                #endif
             }
             .onDisappear {
                 AppLogger.forClass("HomeView").warning("HomeView disappeared!")

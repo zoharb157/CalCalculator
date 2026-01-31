@@ -744,3 +744,33 @@
 
 "Finish" = "完成";
 "Locked" = "已锁定";
+
+/* Paywall / Premium */
+"Unlock Premium" = "解锁高级版";
+"Get unlimited access to all features" = "获得所有功能的无限访问权限";
+"Unlimited Food Scans" = "无限食物扫描";
+"Advanced Progress Tracking" = "高级进度追踪";
+"Custom Diet Plans" = "自定义饮食计划";
+"PDF Data Export" = "PDF数据导出";
+"Premium Widgets" = "高级小组件";
+"Unable to load plans" = "无法加载计划";
+"Tap to Retry" = "点击重试";
+"Cancel anytime during free trial" = "免费试用期内随时取消";
+"Restore Purchases" = "恢复购买";
+"Terms of Use" = "使用条款";
+"Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Payment will be charged to your Apple ID account." = "订阅将自动续订，除非在当前期限结束前至少24小时取消。付款将从您的Apple ID账户中扣除。";
+"year" = "年";
+"month" = "月";
+"week" = "周";
+"BEST VALUE" = "最佳优惠";
+"Yearly" = "年度";
+"Monthly" = "月度";
+"Weekly" = "每周";
+"FREE" = "免费";
+"FREE TRIAL" = "免费试用";
+"Purchase Error" = "购买错误";
+"Please select a subscription plan." = "请选择订阅计划。";
+"An error occurred. Please try again." = "发生错误。请重试。";
+"This subscription is not available in your region." = "此订阅在您的地区不可用。";
+"Network error. Please check your connection and try again." = "网络错误。请检查您的连接并重试。";
+"Purchase failed. Please try again." = "购买失败。请重试。";
