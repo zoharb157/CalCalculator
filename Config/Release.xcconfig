@@ -1,0 +1,45 @@
+// Release.xcconfig
+// Configuration for release builds (TestFlight internal testing, etc.)
+
+#include "Shared.xcconfig"
+
+// ============================================================================
+// ENVIRONMENT SETTINGS
+// ============================================================================
+
+// TODO: Replace with your actual staging/release API URL
+API_BASE_URL = https://api-staging.yourapp.com
+
+// Environment identifier
+APP_ENVIRONMENT = release
+
+// Feature flags for release builds
+ENABLE_DEBUG_MENU = NO
+ENABLE_LOGGING = YES
+ENABLE_MOCK_DATA = NO
+
+// Subscription behavior - auto-subscribe for QA testing in Release/TestFlight internal
+ENABLE_AUTO_SUBSCRIBE = YES
+
+// ============================================================================
+// BUILD SETTINGS - RELEASE
+// ============================================================================
+
+// Optimization
+GCC_OPTIMIZATION_LEVEL = s
+SWIFT_OPTIMIZATION_LEVEL = -O
+SWIFT_COMPILATION_MODE = wholemodule
+
+// Debug information (for crash reports)
+DEBUG_INFORMATION_FORMAT = dwarf-with-dsym
+DWARF_DSYM_FILE_SHOULD_ACCOMPANY_PRODUCT = YES
+
+// Assertions disabled
+ENABLE_NS_ASSERTIONS = NO
+
+// Strip debug symbols
+COPY_PHASE_STRIP = NO
+STRIP_INSTALLED_PRODUCT = YES
+
+// Validate for App Store
+VALIDATE_PRODUCT = YES

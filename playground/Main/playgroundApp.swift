@@ -257,19 +257,25 @@ struct playgroundApp: App {
                     // Initialize RateUsManager to listen for successful actions
                     _ = RateUsManager.shared
                     
-                    // QA Version: In Release builds, automatically enable subscription override
-                    #if !DEBUG
-                    let settings = UserSettings.shared
-                    if !settings.debugOverrideSubscription {
-                        // First time in Release - enable override and set as subscribed
-                        settings.debugOverrideSubscription = true
-                        settings.debugIsSubscribed = true
-                        print("🔧 [QA] Release build: Auto-enabled subscription override (user starts as Pro)")
+                    // QA/Testing: Auto-subscribe users ONLY if ENABLE_AUTO_SUBSCRIBE is YES in xcconfig
+                    // - Debug/Release builds: Auto-subscribe for QA testing
+                    // - Prod builds: Real StoreKit verification only (no auto-subscribe)
+                    if EnvironmentConfig.shared.isAutoSubscribeEnabled {
+                        let settings = UserSettings.shared
+                        if !settings.debugOverrideSubscription {
+                            // First time - enable override and set as subscribed for QA testing
+                            settings.debugOverrideSubscription = true
+                            settings.debugIsSubscribed = true
+                            print("🔧 [QA] Auto-subscribe enabled: User starts as Pro (env: \(EnvironmentConfig.shared.environment))")
+                        }
                     }
-                    #endif
+                    // NOTE: In Prod mode (isAutoSubscribeEnabled = false), we do NOT clear the override.
+                    // The updateSubscriptionStatus() function handles this correctly:
+                    // - If debugOverrideSubscription is false, it uses SubscriptionManager.isSubscribed (StoreKit)
+                    // - If debugOverrideSubscription is true (from a previous QA build), the user can toggle it off
+                    //   in the debug menu, or we rely on the actual value they set
                     
-                    // Initialize subscription status on app launch (respects debug override)
-                    // This ensures debug flag works immediately
+                    // Initialize subscription status on app launch
                     updateSubscriptionStatus()
                 }
                 // NOTE: Subscription status is ONLY updated when HTML paywall closes
@@ -350,7 +356,8 @@ struct playgroundApp: App {
             // Debug override takes priority - use debug flag value
             newStatus = settings.debugIsSubscribed
         } else {
-            // Use SDK value (only updated when paywall closes)
+            // Use SDK value as the primary source (updated when paywall closes)
+            // This integrates with the SDK's subscription management
             newStatus = sdk.isSubscribed
         }
         

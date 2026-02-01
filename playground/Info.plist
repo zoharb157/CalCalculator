@@ -20,6 +20,16 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>API_BASE_URL</key>
+	<string>$(API_BASE_URL)</string>
+	<key>APP_ENVIRONMENT</key>
+	<string>$(APP_ENVIRONMENT)</string>
+	<key>ENABLE_DEBUG_MENU</key>
+	<string>$(ENABLE_DEBUG_MENU)</string>
+	<key>ENABLE_LOGGING</key>
+	<string>$(ENABLE_LOGGING)</string>
+	<key>ENABLE_AUTO_SUBSCRIBE</key>
+	<string>$(ENABLE_AUTO_SUBSCRIBE)</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

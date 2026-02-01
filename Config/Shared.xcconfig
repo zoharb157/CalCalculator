@@ -1,0 +1,17 @@
+// Shared.xcconfig
+// Common settings across all configurations
+// This file is included by Debug, Release, and Prod configs
+
+// ============================================================================
+// SHARED SETTINGS
+// ============================================================================
+
+// Code Signing (inherited from Xcode project settings)
+// CODE_SIGN_STYLE = Automatic
+// DEVELOPMENT_TEAM = 5NS9ZUMYCS
+
+// Deployment Target
+IPHONEOS_DEPLOYMENT_TARGET = 17.0
+
+// Swift Version
+SWIFT_VERSION = 6.0
