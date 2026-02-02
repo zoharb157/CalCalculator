@@ -276,6 +276,7 @@ struct playgroundApp: App {
                     //   in the debug menu, or we rely on the actual value they set
                     
                     // Initialize subscription status on app launch
+                    // Use cached value from UserDefaults first, then SDK will update via notification
                     updateSubscriptionStatus()
                 }
                 // NOTE: Subscription status is ONLY updated when HTML paywall closes
@@ -356,9 +357,20 @@ struct playgroundApp: App {
             // Debug override takes priority - use debug flag value
             newStatus = settings.debugIsSubscribed
         } else {
-            // Use SDK value as the primary source (updated when paywall closes)
-            // This integrates with the SDK's subscription management
-            newStatus = sdk.isSubscribed
+            // Use SDK value as the primary source
+            let sdkStatus = sdk.isSubscribed
+            let cachedStatus = UserDefaults.standard.bool(forKey: "subscriptionStatus")
+            
+            // If SDK says subscribed, trust it
+            // If SDK says not subscribed but cache says subscribed, 
+            // trust SDK (user may have cancelled subscription)
+            // This prevents showing premium when user is no longer subscribed
+            newStatus = sdkStatus
+            
+            // Log if there's a mismatch for debugging
+            if sdkStatus != cachedStatus {
+                print("📱 [Subscription] Status changed: cached=\(cachedStatus), sdk=\(sdkStatus)")
+            }
         }
         
         // Update state
