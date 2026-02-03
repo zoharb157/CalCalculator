@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SDK
 
 struct ProfileView: View {
     
@@ -13,10 +14,9 @@ struct ProfileView: View {
     
     // Use @State with @Observable - SwiftUI will automatically track changes to viewModel properties
     @State private var viewModel = ProfileViewModel()
+    @Environment(TheSDK.self) private var sdk
     @Environment(\.localization) private var localization
     @ObservedObject private var localizationManager = LocalizationManager.shared
-    // Observe UserSettings directly for reactive updates
-    @Bindable private var settings = UserSettings.shared
     
     // Sheet presentation states
     @State private var showingPersonalDetails = false
@@ -31,6 +31,11 @@ struct ProfileView: View {
     @State private var showingBadges = false
     @State private var showingRateUs = false
     @State private var showingSendFeedback = false
+    @State private var showingHealthInfoSources = false
+    @State private var showingSubscription = false
+    
+    // Subscription status
+    @Environment(\.isSubscribed) private var isSubscribed
     
     // MARK: - Body
     
@@ -45,9 +50,6 @@ struct ProfileView: View {
                     accountSection
                     goalsTrackingSection
                     supportSection
-                    if isDebugOrTestFlight {
-                        debugSection
-                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
@@ -98,6 +100,18 @@ struct ProfileView: View {
         .sheet(isPresented: $showingSendFeedback) {
             SendFeedbackView()
         }
+        .sheet(isPresented: $showingHealthInfoSources) {
+            HealthInfoSourcesView()
+        }
+        .fullScreenCover(isPresented: $showingSubscription) {
+            SDKView(
+                model: sdk,
+                page: .splash,
+                show: paywallBinding(showPaywall: $showingSubscription, sdk: sdk),
+                backgroundColor: .white,
+                ignoreSafeArea: true
+            )
+        }
     }
     
     // MARK: - Profile Info Section
@@ -133,6 +147,26 @@ struct ProfileView: View {
                     title: localizationManager.localizedString(for: AppStrings.Profile.language),
                     subtitle: getLocalizedLanguageName(from: viewModel.selectedLanguage),
                     action: { showingLanguageSelection = true }
+                )
+                
+                SettingsDivider()
+                
+                // Subscription management row - makes in-app purchases easy to find
+                SettingsRow(
+                    icon: "crown.fill",
+                    iconColor: isSubscribed ? .yellow : .orange,
+                    title: isSubscribed ? "Manage Subscription" : "Upgrade to Premium",
+                    subtitle: isSubscribed ? "You have an active subscription" : "Unlock all premium features",
+                    action: { 
+                        if isSubscribed {
+                            // Open App Store subscription management
+                            if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
+                                UIApplication.shared.open(url)
+                            }
+                        } else {
+                            showingSubscription = true
+                        }
+                    }
                 )
             }
         }
@@ -288,6 +322,15 @@ struct ProfileView: View {
                 SettingsDivider()
                 
                 SettingsRow(
+                    icon: "book.closed.fill",
+                    iconColor: .purple,
+                    title: "Health Information Sources",
+                    action: { showingHealthInfoSources = true }
+                )
+                
+                SettingsDivider()
+                
+                SettingsRow(
                     icon: "doc.text",
                     iconColor: .gray,
                     title: localizationManager.localizedString(for: AppStrings.Profile.termsOfService),
@@ -313,71 +356,6 @@ struct ProfileView: View {
                 Spacer()
             }
             .padding(.top, 16)
-        }
-    }
-    
-    // MARK: - Debug Section
-    
-    /// Check if we're in DEBUG build or TestFlight
-    private var isDebugOrTestFlight: Bool {
-        #if DEBUG
-        return true
-        #else
-        // Check if running in TestFlight (receipt URL contains sandboxReceipt)
-        if let receiptURL = Bundle.main.appStoreReceiptURL,
-           receiptURL.path.contains("sandboxReceipt") {
-            return true
-        }
-        return false
-        #endif
-    }
-    
-    @ViewBuilder
-    private var debugSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ProfileSectionHeader(title: localizationManager.localizedString(for: AppStrings.Profile.debug))
-            
-            ProfileSectionCard {
-                ToggleSettingRow(
-                    icon: "hammer.fill",
-                    iconColor: .orange,
-                    title: localizationManager.localizedString(for: AppStrings.Profile.overrideSubscription),
-                    description: localizationManager.localizedString(for: AppStrings.Profile.manuallyControlSubscription),
-                    isOn: Binding(
-                        get: { settings.debugOverrideSubscription },
-                        set: { settings.debugOverrideSubscription = $0 }
-                    )
-                )
-                
-                if settings.debugOverrideSubscription {
-                    SettingsDivider()
-                    
-                    ToggleSettingRow(
-                        icon: "checkmark.circle.fill",
-                        iconColor: .green,
-                        title: localizationManager.localizedString(for: AppStrings.Profile.debugIsSubscribed),
-                        description: localizationManager.localizedString(for: AppStrings.Profile.overrideSubscriptionStatus),
-                        isOn: Binding(
-                            get: { settings.debugIsSubscribed },
-                            set: { settings.debugIsSubscribed = $0 }
-                        )
-                    )
-                    
-                    SettingsDivider()
-                    
-                    HStack {
-                        Text(localizationManager.localizedString(for: AppStrings.Profile.debugStatus))
-                            .font(.body)
-                            .foregroundColor(.primary)
-                        Spacer()
-                        Text(settings.debugIsSubscribed ? localizationManager.localizedString(for: AppStrings.Profile.premium) : localizationManager.localizedString(for: AppStrings.Profile.free))
-                            .font(.body)
-                            .foregroundColor(settings.debugIsSubscribed ? .green : .gray)
-                    }
-                    .padding(.vertical, 12)
-                    .padding(.horizontal, 16)
-                }
-            }
         }
     }
     

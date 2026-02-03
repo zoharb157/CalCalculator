@@ -742,3 +742,33 @@
 
 "Finish" = "完了";
 "Locked" = "ロック";
+
+/* Paywall / Premium */
+"Unlock Premium" = "プレミアムを解除";
+"Get unlimited access to all features" = "すべての機能に無制限アクセス";
+"Unlimited Food Scans" = "無制限の食品スキャン";
+"Advanced Progress Tracking" = "高度な進捗追跡";
+"Custom Diet Plans" = "カスタム食事計画";
+"PDF Data Export" = "PDFデータエクスポート";
+"Premium Widgets" = "プレミアムウィジェット";
+"Unable to load plans" = "プランを読み込めません";
+"Tap to Retry" = "タップして再試行";
+"Cancel anytime during free trial" = "無料トライアル中いつでもキャンセル可能";
+"Restore Purchases" = "購入を復元";
+"Terms of Use" = "利用規約";
+"Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Payment will be charged to your Apple ID account." = "サブスクリプションは、現在の期間終了の少なくとも24時間前までにキャンセルしない限り、自動的に更新されます。お支払いはApple IDアカウントに請求されます。";
+"year" = "年";
+"month" = "月";
+"week" = "週";
+"BEST VALUE" = "最もお得";
+"Yearly" = "年額";
+"Monthly" = "月額";
+"Weekly" = "週額";
+"FREE" = "無料";
+"FREE TRIAL" = "無料トライアル";
+"Purchase Error" = "購入エラー";
+"Please select a subscription plan." = "サブスクリプションプランを選択してください。";
+"An error occurred. Please try again." = "エラーが発生しました。もう一度お試しください。";
+"This subscription is not available in your region." = "このサブスクリプションはお住まいの地域ではご利用いただけません。";
+"Network error. Please check your connection and try again." = "ネットワークエラー。接続を確認してもう一度お試しください。";
+"Purchase failed. Please try again." = "購入に失敗しました。もう一度お試しください。";

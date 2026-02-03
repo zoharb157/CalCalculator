@@ -6,6 +6,7 @@
 
 import SwiftUI
 import SwiftData
+import SDK
 
 /// Lightweight struct to hold meal data without SwiftData auto-insertion
 struct ScheduledMealData: Identifiable {
@@ -47,6 +48,7 @@ struct DietPlanEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.isSubscribed) private var isSubscribed
+    @Environment(TheSDK.self) private var sdk
     @Query(sort: \DietPlan.createdAt) private var allDietPlans: [DietPlan]
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
@@ -64,6 +66,7 @@ struct DietPlanEditorView: View {
     @State private var showNoMealsAlert = false
     @State private var showDeleteMealConfirmation = false
     @State private var mealDataToDelete: ScheduledMealData?
+    @State private var showingPaywall = false
     @State private var isSaving = false
     @FocusState private var isNameFocused: Bool
     @FocusState private var isCalorieGoalFocused: Bool
@@ -166,6 +169,15 @@ struct DietPlanEditorView: View {
                         scheduledMealsData[index] = updatedMealData
                     }
                 }
+            )
+        }
+        .fullScreenCover(isPresented: $showingPaywall) {
+            SDKView(
+                model: sdk,
+                page: .splash,
+                show: paywallBinding(showPaywall: $showingPaywall, sdk: sdk),
+                backgroundColor: .white,
+                ignoreSafeArea: true
             )
         }
         .alert(localizationManager.localizedString(for: AppStrings.DietPlan.mealsRequired), isPresented: $showNoMealsAlert) {
@@ -471,7 +483,13 @@ struct DietPlanEditorView: View {
             return
         }
         
-        // All features are free
+        // Check premium subscription before saving
+        guard isSubscribed else {
+            showingPaywall = true
+            HapticManager.shared.notification(.warning)
+            return
+        }
+        
         isSaving = true
         defer { isSaving = false }
         

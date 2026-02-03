@@ -1,0 +1,54 @@
+// Prod.xcconfig
+// Configuration for PRODUCTION builds - App Store / TestFlight (external)
+// This is what Apple reviewers and real users will run!
+
+#include "Shared.xcconfig"
+
+// ============================================================================
+// ENVIRONMENT SETTINGS - PRODUCTION
+// ============================================================================
+
+// TODO: Replace with your ACTUAL production API URL
+API_BASE_URL = https://api.yourapp.com
+
+// Environment identifier
+APP_ENVIRONMENT = prod
+
+// Feature flags for production - ALL DEBUG FEATURES DISABLED
+ENABLE_DEBUG_MENU = NO
+ENABLE_LOGGING = NO
+ENABLE_MOCK_DATA = NO
+
+// Subscription behavior - NO auto-subscribe in production
+// Real users must purchase through StoreKit
+ENABLE_AUTO_SUBSCRIBE = NO
+
+// ============================================================================
+// BUILD SETTINGS - PRODUCTION (identical to Release for optimization)
+// ============================================================================
+
+// Optimization - maximum for App Store
+GCC_OPTIMIZATION_LEVEL = s
+SWIFT_OPTIMIZATION_LEVEL = -O
+SWIFT_COMPILATION_MODE = wholemodule
+
+// Debug information (required for crash symbolication on App Store Connect)
+DEBUG_INFORMATION_FORMAT = dwarf-with-dsym
+DWARF_DSYM_FILE_SHOULD_ACCOMPANY_PRODUCT = YES
+
+// Assertions disabled for production
+ENABLE_NS_ASSERTIONS = NO
+
+// Strip debug symbols
+COPY_PHASE_STRIP = NO
+STRIP_INSTALLED_PRODUCT = YES
+
+// Validate for App Store - CRITICAL
+VALIDATE_PRODUCT = YES
+
+// ============================================================================
+// SECURITY SETTINGS
+// ============================================================================
+
+// Ensure no debug entitlements leak into production
+// (These are typically handled in the entitlements file, but good to note)

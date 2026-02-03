@@ -742,3 +742,33 @@
 
 "Finish" = "완료";
 "Locked" = "잠김";
+
+/* Paywall / Premium */
+"Unlock Premium" = "프리미엄 잠금 해제";
+"Get unlimited access to all features" = "모든 기능에 무제한 액세스";
+"Unlimited Food Scans" = "무제한 음식 스캔";
+"Advanced Progress Tracking" = "고급 진행 추적";
+"Custom Diet Plans" = "맞춤 식단 계획";
+"PDF Data Export" = "PDF 데이터 내보내기";
+"Premium Widgets" = "프리미엄 위젯";
+"Unable to load plans" = "플랜을 불러올 수 없습니다";
+"Tap to Retry" = "탭하여 다시 시도";
+"Cancel anytime during free trial" = "무료 체험 기간 중 언제든지 취소 가능";
+"Restore Purchases" = "구매 복원";
+"Terms of Use" = "이용약관";
+"Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Payment will be charged to your Apple ID account." = "구독은 현재 기간 종료 최소 24시간 전에 취소하지 않으면 자동으로 갱신됩니다. 결제는 Apple ID 계정으로 청구됩니다.";
+"year" = "년";
+"month" = "월";
+"week" = "주";
+"BEST VALUE" = "최고의 가치";
+"Yearly" = "연간";
+"Monthly" = "월간";
+"Weekly" = "주간";
+"FREE" = "무료";
+"FREE TRIAL" = "무료 체험";
+"Purchase Error" = "구매 오류";
+"Please select a subscription plan." = "구독 플랜을 선택해 주세요.";
+"An error occurred. Please try again." = "오류가 발생했습니다. 다시 시도해 주세요.";
+"This subscription is not available in your region." = "이 구독은 해당 지역에서 사용할 수 없습니다.";
+"Network error. Please check your connection and try again." = "네트워크 오류. 연결을 확인하고 다시 시도해 주세요.";
+"Purchase failed. Please try again." = "구매에 실패했습니다. 다시 시도해 주세요.";

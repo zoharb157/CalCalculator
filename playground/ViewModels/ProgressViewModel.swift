@@ -213,6 +213,7 @@ final class ProgressViewModel {
     var distance: Double = 0
     var sleepHours: Double = 0
     var healthKitAuthorizationDenied: Bool = false
+    var healthKitAuthorizationNotRequested: Bool = false
     
     // CRITICAL: Don't store UserSettings reference or use computed properties that depend on it
     // This prevents ProgressViewModel from updating when UserSettings changes (like after saving weight)
@@ -621,6 +622,14 @@ final class ProgressViewModel {
         
         if healthKitManager.authorizationDenied {
             healthKitAuthorizationDenied = true
+            healthKitAuthorizationNotRequested = false
+            return
+        }
+        
+        // Check if authorization has not been requested yet
+        if !healthKitManager.isAuthorized && !healthKitManager.authorizationDenied {
+            healthKitAuthorizationNotRequested = true
+            healthKitAuthorizationDenied = false
             return
         }
         
@@ -629,6 +638,7 @@ final class ProgressViewModel {
             await healthKitManager.fetchTodayData()
             
             healthKitAuthorizationDenied = false
+            healthKitAuthorizationNotRequested = false
             steps = healthKitManager.steps
             activeCalories = healthKitManager.activeCalories
             exerciseMinutes = healthKitManager.exerciseMinutes

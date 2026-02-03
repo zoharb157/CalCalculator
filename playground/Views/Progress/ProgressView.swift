@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Charts
+import SDK
 
 struct ProgressDashboardView: View {
     // CRITICAL: We need @Bindable for bindings ($viewModel.showWeightProgressSheet, etc.)
@@ -15,6 +16,7 @@ struct ProgressDashboardView: View {
     
     @Environment(\.isSubscribed) private var isSubscribed
     @Environment(\.modelContext) private var modelContext
+    @Environment(TheSDK.self) private var sdk
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     // CRITICAL: Don't observe UserSettings directly - access it directly instead
@@ -23,6 +25,9 @@ struct ProgressDashboardView: View {
     // Access UserSettings.shared directly in the view body instead
     
     @State private var showWeightInput = false
+    @State private var showPaywall = false
+    @State private var showHealthKitPermissionSheet = false
+    @State private var shouldRequestHealthKitPermission = false
     
     var body: some View {
         // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
@@ -53,11 +58,14 @@ struct ProgressDashboardView: View {
                                         }
                                     },
                                     onShowPaywall: {
-                                        // All features are free
+                                        showPaywall = true
                                     },
                                     onViewProgress: {
-                                        // All features are free
-                                        viewModel.showWeightProgressSheet = true
+                                        if isSubscribed {
+                                            viewModel.showWeightProgressSheet = true
+                                        } else {
+                                            showPaywall = true
+                                        }
                                     }
                                 )
                                 .id("current-weight-\(UserSettings.shared.displayWeight)-\(viewModel.weightHistory.count)")
@@ -88,8 +96,11 @@ struct ProgressDashboardView: View {
                                         calorieGoal: UserSettings.shared.calorieGoal,
                                         isSubscribed: isSubscribed,
                                         onViewDetails: {
-                                            // All features are free
-                                            viewModel.showCaloriesSheet = true
+                                            if isSubscribed {
+                                                viewModel.showCaloriesSheet = true
+                                            } else {
+                                                showPaywall = true
+                                            }
                                         }
                                     )
                                 }
@@ -106,6 +117,12 @@ struct ProgressDashboardView: View {
                             VStack(spacing: 16) {
                                 if viewModel.healthKitAuthorizationDenied {
                                     HealthKitSettingsPromptCard()
+                                } else if viewModel.healthKitAuthorizationNotRequested {
+                                    HealthKitRequestPermissionCard(
+                                        onRequestPermission: {
+                                            showHealthKitPermissionSheet = true
+                                        }
+                                    )
                                 } else {
                                     HealthDataSection(
                                         steps: viewModel.steps,
@@ -162,8 +179,12 @@ struct ProgressDashboardView: View {
                    sharedDefaults.bool(forKey: "openWeightInput") {
                     // Clear the flag
                     sharedDefaults.set(false, forKey: "openWeightInput")
-                    // All features are free
-                    showWeightInput = true
+                    // Show weight input if subscribed
+                    if isSubscribed {
+                        showWeightInput = true
+                    } else {
+                        showPaywall = true
+                    }
                 }
                 
                 // Show weight prompt immediately if needed
@@ -207,8 +228,12 @@ struct ProgressDashboardView: View {
                 .presentationDetents([.medium])
             }
             .onReceive(NotificationCenter.default.publisher(for: .weightReminderAction)) { notification in
-                // All features are free
-                showWeightInput = true
+                // Show weight input when notification is tapped
+                if isSubscribed {
+                    showWeightInput = true
+                } else {
+                    showPaywall = true
+                }
             }
             .onReceive(NotificationCenter.default.publisher(for: .widgetWeightUpdated)) { _ in
                 // Handle weight update from widget (notification from app become active)
@@ -242,6 +267,50 @@ struct ProgressDashboardView: View {
                     }
                 )
             }
+            .fullScreenCover(isPresented: $showPaywall) {
+                SDKView(
+                    model: sdk,
+                    page: .splash,
+                    show: paywallBinding(showPaywall: $showPaywall, sdk: sdk),
+                    backgroundColor: .white,
+                    ignoreSafeArea: true
+                )
+            }
+            .sheet(isPresented: $showHealthKitPermissionSheet, onDismiss: {
+                // Only request HealthKit permission if the user tapped "Sync Health Data"
+                // This ensures the sheet is fully dismissed before the system dialog appears
+                if shouldRequestHealthKitPermission {
+                    shouldRequestHealthKitPermission = false
+                    
+                    Task {
+                        // Additional delay to ensure sheet dismissal animation is fully complete
+                        // This prevents the HealthKit permission dialog from not appearing
+                        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+                        
+                        // Request authorization - this shows the system Health permission dialog
+                        await HealthKitManager.shared.requestAndVerifyAuthorization()
+                        
+                        // Reload HealthKit data to update the view
+                        await viewModel.loadHealthKitData()
+                    }
+                }
+            }) {
+                HealthKitPermissionSheet(
+                    onSyncHealthData: {
+                        // Set flag to request permission after sheet is dismissed
+                        // The actual permission request happens in onDismiss to ensure
+                        // the sheet is fully dismissed before showing the system dialog
+                        shouldRequestHealthKitPermission = true
+                        showHealthKitPermissionSheet = false
+                    },
+                    onSkip: {
+                        // User chose to skip - do nothing, they can enable later
+                        shouldRequestHealthKitPermission = false
+                    }
+                )
+                .presentationDetents([.large])
+                .presentationDragIndicator(.hidden)
+            }
         }
     }
     
@@ -271,8 +340,12 @@ struct ProgressDashboardView: View {
         if sharedDefaults.bool(forKey: "openWeightInput") {
             // Clear the flag
             sharedDefaults.set(false, forKey: "openWeightInput")
-            // All features are free
-            showWeightInput = true
+            // Show weight input if subscribed
+            if isSubscribed {
+                showWeightInput = true
+            } else {
+                showPaywall = true
+            }
         }
     }
 }
@@ -1029,6 +1102,86 @@ struct HealthKitSettingsPromptCard: View {
                     Image(systemName: "gearshape.fill")
                         .font(.subheadline)
                     Text(localizationManager.localizedString(for: AppStrings.Progress.openSettings))
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(
+                    LinearGradient(
+                        colors: [.red, .pink],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+        }
+        .padding(20)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
+    }
+}
+
+// MARK: - HealthKit Request Permission Card
+
+/// Card shown when HealthKit authorization has not been requested yet
+/// Prompts the user to connect Apple Health with an explanation of benefits
+struct HealthKitRequestPermissionCard: View {
+    @ObservedObject private var localizationManager = LocalizationManager.shared
+    
+    /// Callback when user taps the button to request permission
+    var onRequestPermission: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            HStack(spacing: 16) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [.red.opacity(0.15), .pink.opacity(0.15)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 56, height: 56)
+                    
+                    Image(systemName: "heart.fill")
+                        .font(.title2)
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.red, .pink],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                }
+                
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(localizationManager.localizedString(for: AppStrings.Home.connectHealth))
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                    
+                    Text(localizationManager.localizedString(for: AppStrings.Home.viewDailyActivity))
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .lineLimit(3)
+                }
+                
+                Spacer()
+            }
+            
+            Button {
+                onRequestPermission()
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "heart.fill")
+                        .font(.subheadline)
+                    Text(localizationManager.localizedString(for: AppStrings.Home.enableHealthAccess))
                         .font(.subheadline)
                         .fontWeight(.semibold)
                 }

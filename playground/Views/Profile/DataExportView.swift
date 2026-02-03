@@ -8,11 +8,13 @@
 import SwiftUI
 import SwiftData
 import PDFKit
+import SDK
 
 struct DataExportView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.isSubscribed) private var isSubscribed
+    @Environment(TheSDK.self) private var sdk
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     // User settings for weight units
@@ -34,6 +36,7 @@ struct DataExportView: View {
     @State private var exportError: String?
     @State private var shareSheetURL: URL?
     @State private var showShareSheet = false
+    @State private var showingPaywall = false
     
     var body: some View {
         // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
@@ -50,8 +53,11 @@ struct DataExportView: View {
                         subtitle: "\(weightEntries.count) entries",
                         isDisabled: weightEntries.isEmpty
                     ) {
-                        // All features are free
-                        exportWeightDataPDF()
+                        if isSubscribed {
+                            exportWeightDataPDF()
+                        } else {
+                            showingPaywall = true
+                        }
                     }
                 } header: {
                     Text(localizationManager.localizedString(for: AppStrings.Profile.weightData))
@@ -68,8 +74,11 @@ struct DataExportView: View {
                         subtitle: "\(meals.count) meals logged",
                         isDisabled: meals.isEmpty
                     ) {
-                        // All features are free
-                        exportMealDataPDF()
+                        if isSubscribed {
+                            exportMealDataPDF()
+                        } else {
+                            showingPaywall = true
+                        }
                     }
                     
                     ExportOptionRow(
@@ -79,8 +88,11 @@ struct DataExportView: View {
                         subtitle: localizationManager.localizedString(for: AppStrings.Profile.aggregatedDailyTotals),
                         isDisabled: meals.isEmpty
                     ) {
-                        // All features are free
-                        exportDailyNutritionSummaryPDF()
+                        if isSubscribed {
+                            exportDailyNutritionSummaryPDF()
+                        } else {
+                            showingPaywall = true
+                        }
                     }
                 } header: {
                     Text(localizationManager.localizedString(for: AppStrings.Profile.nutritionData))
@@ -97,8 +109,11 @@ struct DataExportView: View {
                         subtitle: localizationManager.localizedString(for: AppStrings.Profile.completeDataBackup),
                         isDisabled: weightEntries.isEmpty && meals.isEmpty
                     ) {
-                        // All features are free
-                        exportAllDataPDF()
+                        if isSubscribed {
+                            exportAllDataPDF()
+                        } else {
+                            showingPaywall = true
+                        }
                     }
                 } footer: {
                     Text(localizationManager.localizedString(for: AppStrings.Profile.exportAllDescription))
@@ -153,6 +168,15 @@ struct DataExportView: View {
                 if let url = shareSheetURL {
                     ShareSheet(items: [url])
                 }
+            }
+            .fullScreenCover(isPresented: $showingPaywall) {
+                SDKView(
+                    model: sdk,
+                    page: .splash,
+                    show: paywallBinding(showPaywall: $showingPaywall, sdk: sdk),
+                    backgroundColor: .white,
+                    ignoreSafeArea: true
+                )
             }
         }
     }

@@ -90,10 +90,12 @@ final class WidgetDataManager: Sendable {
     }
     
     /// Loads subscription status from shared UserDefaults
-    /// TEMPORARY: Always returns true - all features are free (no paywall)
     func loadIsSubscribed() -> Bool {
-        // TEMPORARY: All features are free - always subscribed
-        return true
+        guard let defaults = sharedDefaults else {
+            debugPrint("WidgetDataManager: Failed to access shared UserDefaults for subscription status")
+            return false
+        }
+        return defaults.bool(forKey: Self.isSubscribedKey)
     }
     
     /// Saves subscription status to shared UserDefaults (called from main app)

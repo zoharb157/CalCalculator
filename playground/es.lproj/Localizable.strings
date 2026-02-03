@@ -741,3 +741,33 @@
 
 "Finish" = "Finalizar";
 "Locked" = "Bloqueado";
+
+/* Paywall / Premium */
+"Unlock Premium" = "Desbloquear Premium";
+"Get unlimited access to all features" = "Obtén acceso ilimitado a todas las funciones";
+"Unlimited Food Scans" = "Escaneos de alimentos ilimitados";
+"Advanced Progress Tracking" = "Seguimiento avanzado del progreso";
+"Custom Diet Plans" = "Planes de dieta personalizados";
+"PDF Data Export" = "Exportación de datos en PDF";
+"Premium Widgets" = "Widgets Premium";
+"Unable to load plans" = "No se pueden cargar los planes";
+"Tap to Retry" = "Toca para reintentar";
+"Cancel anytime during free trial" = "Cancela en cualquier momento durante la prueba gratuita";
+"Restore Purchases" = "Restaurar compras";
+"Terms of Use" = "Términos de uso";
+"Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Payment will be charged to your Apple ID account." = "La suscripción se renueva automáticamente a menos que se cancele al menos 24 horas antes del final del período actual. El pago se cargará a tu cuenta de Apple ID.";
+"year" = "año";
+"month" = "mes";
+"week" = "semana";
+"BEST VALUE" = "MEJOR VALOR";
+"Yearly" = "Anual";
+"Monthly" = "Mensual";
+"Weekly" = "Semanal";
+"FREE" = "GRATIS";
+"FREE TRIAL" = "PRUEBA GRATIS";
+"Purchase Error" = "Error de compra";
+"Please select a subscription plan." = "Por favor selecciona un plan de suscripción.";
+"An error occurred. Please try again." = "Ocurrió un error. Por favor intenta de nuevo.";
+"This subscription is not available in your region." = "Esta suscripción no está disponible en tu región.";
+"Network error. Please check your connection and try again." = "Error de red. Por favor verifica tu conexión e intenta de nuevo.";
+"Purchase failed. Please try again." = "La compra falló. Por favor intenta de nuevo.";

@@ -6,6 +6,7 @@
 
 import SwiftUI
 import SwiftData
+import SDK
 
 struct BurnedCaloriesView: View {
     let calories: Int
@@ -22,6 +23,8 @@ struct BurnedCaloriesView: View {
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var isLoadingCalories = true // Track if we're loading calories from API
+    @State private var showPaywall = false
+    @Environment(TheSDK.self) private var sdk
     @ObservedObject private var localizationManager = LocalizationManager.shared
     private let userSettings = UserSettings.shared
     
@@ -206,6 +209,15 @@ struct BurnedCaloriesView: View {
                         Button(localizationManager.localizedString(for: AppStrings.Common.ok)) { }
                     } message: {
                         Text(errorMessage)
+                    }
+                    .fullScreenCover(isPresented: $showPaywall) {
+                        SDKView(
+                            model: sdk,
+                            page: .splash,
+                            show: paywallBinding(showPaywall: $showPaywall, sdk: sdk),
+                            backgroundColor: .white,
+                            ignoreSafeArea: true
+                        )
                     }
                 }
                 .padding()
@@ -514,8 +526,17 @@ struct BurnedCaloriesView: View {
     private func saveExercise() async {
         guard !isSaving else { return }
         
-        // All features are free - no limit check needed
+        // Check free exercise save limit for non-subscribed users
         let limitManager = ExerciseSaveLimitManager.shared
+        
+        if !isSubscribed {
+            // Check if user can save an exercise
+            guard limitManager.canSaveExercise(isSubscribed: false) else {
+                // No free exercise saves left - show paywall
+                showPaywall = true
+                return
+            }
+        }
         
         isSaving = true
         defer { isSaving = false }

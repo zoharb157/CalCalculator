@@ -742,3 +742,33 @@
 
 "Finish" = "समाप्त करें";
 "Locked" = "लॉक";
+
+/* Paywall / Premium */
+"Unlock Premium" = "प्रीमियम अनलॉक करें";
+"Get unlimited access to all features" = "सभी सुविधाओं तक असीमित पहुंच प्राप्त करें";
+"Unlimited Food Scans" = "असीमित भोजन स्कैन";
+"Advanced Progress Tracking" = "उन्नत प्रगति ट्रैकिंग";
+"Custom Diet Plans" = "कस्टम आहार योजनाएं";
+"PDF Data Export" = "PDF डेटा निर्यात";
+"Premium Widgets" = "प्रीमियम विजेट";
+"Unable to load plans" = "योजनाएं लोड करने में असमर्थ";
+"Tap to Retry" = "पुनः प्रयास के लिए टैप करें";
+"Cancel anytime during free trial" = "नि:शुल्क परीक्षण के दौरान कभी भी रद्द करें";
+"Restore Purchases" = "खरीदारी पुनर्स्थापित करें";
+"Terms of Use" = "उपयोग की शर्तें";
+"Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Payment will be charged to your Apple ID account." = "सदस्यता स्वचालित रूप से नवीनीकृत होती है जब तक कि वर्तमान अवधि समाप्त होने से कम से कम 24 घंटे पहले रद्द न किया जाए। भुगतान आपके Apple ID खाते से लिया जाएगा।";
+"year" = "वर्ष";
+"month" = "महीना";
+"week" = "सप्ताह";
+"BEST VALUE" = "सबसे अच्छा मूल्य";
+"Yearly" = "वार्षिक";
+"Monthly" = "मासिक";
+"Weekly" = "साप्ताहिक";
+"FREE" = "मुफ्त";
+"FREE TRIAL" = "नि:शुल्क परीक्षण";
+"Purchase Error" = "खरीदारी त्रुटि";
+"Please select a subscription plan." = "कृपया एक सदस्यता योजना चुनें।";
+"An error occurred. Please try again." = "एक त्रुटि हुई। कृपया पुनः प्रयास करें।";
+"This subscription is not available in your region." = "यह सदस्यता आपके क्षेत्र में उपलब्ध नहीं है।";
+"Network error. Please check your connection and try again." = "नेटवर्क त्रुटि। कृपया अपना कनेक्शन जांचें और पुनः प्रयास करें।";
+"Purchase failed. Please try again." = "खरीदारी विफल रही। कृपया पुनः प्रयास करें।";

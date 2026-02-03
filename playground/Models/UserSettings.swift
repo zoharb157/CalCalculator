@@ -33,10 +33,8 @@ final class UserSettings {
         static let userName = "userName"
         static let lastWeightDate = "lastWeightDate"
         static let lastWeightPromptDate = "lastWeightPromptDate"
-        static let debugOverrideSubscription = "debugOverrideSubscription"
-        static let debugIsSubscribed = "debugIsSubscribed"
         static let hasSeenDietWelcome = "hasSeenDietWelcome"
-        static let subscriptionStatus = "subscriptionStatus" // Stored subscription status (only changed by debug flag or SDK)
+        static let subscriptionStatus = "subscriptionStatus"
         
         // Goal tracking metadata
         static let goalsLastUpdated = "goalsLastUpdated"
@@ -245,15 +243,6 @@ final class UserSettings {
     var recommendedFatGoal: Double {
         didSet { defaults.set(recommendedFatGoal, forKey: Keys.recommendedFatGoal) }
     }
-    
-    // MARK: - Debug Properties
-    var debugOverrideSubscription: Bool {
-        didSet { defaults.set(debugOverrideSubscription, forKey: Keys.debugOverrideSubscription) }
-    }
-    
-    var debugIsSubscribed: Bool {
-        didSet { defaults.set(debugIsSubscribed, forKey: Keys.debugIsSubscribed) }
-    }
 
     // MARK: - Computed Properties
     var macroGoals: MacroData {
@@ -405,8 +394,6 @@ final class UserSettings {
         }
         self.lastWeightDate = defaults.object(forKey: Keys.lastWeightDate) as? Date
         self.lastWeightPromptDate = defaults.object(forKey: Keys.lastWeightPromptDate) as? Date
-        self.debugOverrideSubscription = defaults.bool(forKey: Keys.debugOverrideSubscription)
-        self.debugIsSubscribed = defaults.bool(forKey: Keys.debugIsSubscribed)
         self.hasSeenDietWelcome = defaults.bool(forKey: Keys.hasSeenDietWelcome)
         
         // Goal tracking metadata
@@ -546,11 +533,27 @@ final class UserSettings {
 
 // MARK: - BMI Category
 
+/// BMI (Body Mass Index) categories based on World Health Organization (WHO) classification.
+///
+/// Reference: World Health Organization. "Body mass index - BMI."
+/// https://www.who.int/europe/news-room/fact-sheets/item/a-healthy-lifestyle---who-recommendations
+///
+/// BMI Categories (WHO International Classification):
+/// - Underweight: < 18.5
+/// - Normal weight: 18.5 - 24.9
+/// - Overweight: 25.0 - 29.9
+/// - Obese: ≥ 30.0
+///
+/// Note: BMI is a screening tool and not a diagnostic measure. Individual health assessments
+/// should be conducted by qualified healthcare professionals.
 enum BMICategory: String, CaseIterable {
     case underweight = "Underweight"
     case normal = "Normal"
     case overweight = "Overweight"
     case obese = "Obese"
+    
+    /// Reference URL for BMI category information
+    static let referenceURL = "https://www.who.int/europe/news-room/fact-sheets/item/a-healthy-lifestyle---who-recommendations"
     
     static func category(for bmi: Double) -> BMICategory {
         switch bmi {

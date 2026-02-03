@@ -130,11 +130,8 @@ final class RateUsManager {
         }
     }
     
-    /// Checks subscription status
-    /// TEMPORARY: Always returns true - all features are free (no paywall)
     private func checkSubscriptionStatus() -> Bool {
-        // TEMPORARY: All features are free - always subscribed
-        return true
+        return UserDefaults.standard.bool(forKey: "subscriptionStatus")
     }
     
     /// Shows the App Store review popup

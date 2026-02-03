@@ -5,18 +5,43 @@
 //  Created by Tareq Khalili on 15/12/2025.
 //
 
+import SDK
 import SwiftData
 import SwiftUI
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(TheSDK.self) private var sdk
     
     @State private var repository: MealRepository?
     @State private var authState: AuthState = .welcome
     @State private var onboardingResult: [String: Any] = [:]
+    @State private var paywallItem: PaywallItem?
     // CRITICAL: Store a stable ID for MainTabView to prevent recreation
     // This ID is created once and never changes, so SwiftUI will reuse the same MainTabView instance
     @State private var mainTabViewID = UUID()
+    
+    // CRITICAL: Don't observe UserSettings here - it causes ContentView to update
+    // and recreate MainTabView when UserSettings changes (like after saving weight)
+    // Access UserSettings.shared directly in methods instead
+    
+    struct PaywallItem: Equatable, Identifiable {
+        let page: Page
+        var callback: (() -> Void)?
+        
+        init(page: Page, callback: (() -> Void)? = nil) {
+            self.page = page
+            self.callback = callback
+        }
+        
+        static func == (lhs: Self, rhs: Self) -> Bool {
+            lhs.page == rhs.page
+        }
+        
+        var id: String {
+            page.id
+        }
+    }
     
     enum AuthState {
         case welcome
@@ -106,6 +131,51 @@ struct ContentView: View {
                         }
                     }
             }
+        }
+        .fullScreenCover(item: $paywallItem) { page in
+            let show: Binding<Bool> = .init(
+                get: {
+                    true
+                },
+                set: { _ in
+                    page.callback?()
+                    paywallItem = nil
+                }
+            )
+            
+            SDKView(
+                model: sdk,
+                page: page.page,
+                show: show,
+                backgroundColor: .white,
+                ignoreSafeArea: true
+            )
+            .ignoresSafeArea()
+            .id(page.id)
+        }
+        .onOpenURL { url in
+            handleDeepLink(url)
+        }
+    }
+    
+    // MARK: - Deep Link Handling
+    
+    /// Handle deep links from widgets and other sources
+    private func handleDeepLink(_ url: URL) {
+        guard url.scheme == "calcalculator" else { return }
+        
+        switch url.host {
+        case "paywall":
+            // Show paywall when widget is tapped and user is not subscribed
+            paywallItem = PaywallItem(page: .splash)
+        case "home":
+            // Just open the app - no action needed
+            break
+        case "weight":
+            // Navigate to weight/progress - handled by ProgressView
+            break
+        default:
+            break
         }
     }
     

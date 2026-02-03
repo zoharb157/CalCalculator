@@ -748,3 +748,33 @@
 "Text Log" = "تسجيل نصي";
 "Describe meal in words" = "صف وجبتك بالكلمات";
 "Search or create entry" = "البحث أو إنشاء إدخال";
+
+/* Paywall / Premium */
+"Unlock Premium" = "فتح بريميوم";
+"Get unlimited access to all features" = "احصل على وصول غير محدود لجميع الميزات";
+"Unlimited Food Scans" = "مسح غير محدود للأطعمة";
+"Advanced Progress Tracking" = "تتبع متقدم للتقدم";
+"Custom Diet Plans" = "خطط غذائية مخصصة";
+"PDF Data Export" = "تصدير البيانات كـ PDF";
+"Premium Widgets" = "ويدجات بريميوم";
+"Unable to load plans" = "تعذر تحميل الخطط";
+"Tap to Retry" = "انقر لإعادة المحاولة";
+"Cancel anytime during free trial" = "إلغاء في أي وقت خلال الفترة التجريبية المجانية";
+"Restore Purchases" = "استعادة المشتريات";
+"Terms of Use" = "شروط الاستخدام";
+"Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Payment will be charged to your Apple ID account." = "يتم تجديد الاشتراك تلقائياً ما لم يتم إلغاؤه قبل 24 ساعة على الأقل من نهاية الفترة الحالية. سيتم خصم المبلغ من حساب Apple ID الخاص بك.";
+"year" = "سنة";
+"month" = "شهر";
+"week" = "أسبوع";
+"BEST VALUE" = "أفضل قيمة";
+"Yearly" = "سنوي";
+"Monthly" = "شهري";
+"Weekly" = "أسبوعي";
+"FREE" = "مجاني";
+"FREE TRIAL" = "تجربة مجانية";
+"Purchase Error" = "خطأ في الشراء";
+"Please select a subscription plan." = "يرجى اختيار خطة اشتراك.";
+"An error occurred. Please try again." = "حدث خطأ. يرجى المحاولة مرة أخرى.";
+"This subscription is not available in your region." = "هذا الاشتراك غير متوفر في منطقتك.";
+"Network error. Please check your connection and try again." = "خطأ في الشبكة. يرجى التحقق من اتصالك والمحاولة مرة أخرى.";
+"Purchase failed. Please try again." = "فشل الشراء. يرجى المحاولة مرة أخرى.";
