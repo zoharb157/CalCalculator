@@ -251,46 +251,11 @@ struct playgroundApp: App {
                 }
                 .environment(\.isSubscribed, subscriptionStatus)  // Inject reactive subscription status
                 .task {
-                    // Debug: Log diet plans on app startup
                     await logDietPlansOnStartup()
                     
-                    // Initialize RateUsManager to listen for successful actions
                     _ = RateUsManager.shared
                     
-                    // QA/Testing: Auto-subscribe users ONLY if ENABLE_AUTO_SUBSCRIBE is YES in xcconfig
-                    // - Debug/Release builds: Auto-subscribe for QA testing
-                    // - Prod builds: Real StoreKit verification only (no auto-subscribe)
-                    if EnvironmentConfig.shared.isAutoSubscribeEnabled {
-                        let settings = UserSettings.shared
-                        if !settings.debugOverrideSubscription {
-                            // First time - enable override and set as subscribed for QA testing
-                            settings.debugOverrideSubscription = true
-                            settings.debugIsSubscribed = true
-                            print("🔧 [QA] Auto-subscribe enabled: User starts as Pro (env: \(EnvironmentConfig.shared.environment))")
-                        }
-                    }
-                    // NOTE: In Prod mode (isAutoSubscribeEnabled = false), we do NOT clear the override.
-                    // The updateSubscriptionStatus() function handles this correctly:
-                    // - If debugOverrideSubscription is false, it uses SubscriptionManager.isSubscribed (StoreKit)
-                    // - If debugOverrideSubscription is true (from a previous QA build), the user can toggle it off
-                    //   in the debug menu, or we rely on the actual value they set
-                    
-                    // Initialize subscription status on app launch
-                    // Use cached value from UserDefaults first, then SDK will update via notification
-                    updateSubscriptionStatus()
-                }
-                // NOTE: Subscription status is ONLY updated when HTML paywall closes
-                // No automatic checks on app launch or onChange listeners
-                .onChange(of: UserSettings.shared.debugOverrideSubscription) { oldValue, newValue in
-                    // Debug override changed - update reactive state (DEVELOPER ONLY)
-                    updateSubscriptionStatus()
-                    print("🔧 Debug override subscription: \(newValue ? "enabled" : "disabled")")
-                }
-                .onChange(of: UserSettings.shared.debugIsSubscribed) { oldValue, newValue in
-                    // Debug subscription value changed - update reactive state (DEVELOPER ONLY)
-                    updateSubscriptionStatus()
-                    previousSubscriptionStatus = newValue
-                    print("🔧 Debug isSubscribed: \(newValue)")
+                    await refreshSubscriptionStatus()
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .subscriptionStatusUpdated)) { _ in
                     // Subscription status updated from paywall dismiss - update reactive state
@@ -332,56 +297,54 @@ struct playgroundApp: App {
                     NotificationCenter.default.publisher(
                         for: UIApplication.didBecomeActiveNotification)
                 ) { _ in
-                    // NOTE: Subscription status is ONLY updated when HTML paywall closes
-                    // No automatic checks when app becomes active
+                    Task {
+                        await refreshSubscriptionStatus()
+                    }
                     
-                    // Check if widget updated weight and notify ProgressView
                     let appGroupIdentifier = "group.CalCalculatorAiPlaygournd.shared"
                     if let sharedDefaults = UserDefaults(suiteName: appGroupIdentifier),
                        sharedDefaults.bool(forKey: "widget.weightUpdatedFromWidget") {
-                        // Post notification so ProgressView can handle it
                         NotificationCenter.default.post(name: .widgetWeightUpdated, object: nil)
                     }
                 }
         }
     }
 
-    /// Update reactive subscription status based on debug override or SDK value
+    /// Update reactive subscription status from SDK value
     /// Also syncs the subscription status to the widget via shared UserDefaults
     /// Stores the value in UserDefaults so it persists across app launches
     private func updateSubscriptionStatus() {
-        let settings = UserSettings.shared
-        let newStatus: Bool
+        // Always use SDK value as the source of truth
+        let sdkStatus = sdk.isSubscribed
+        let cachedStatus = UserDefaults.standard.bool(forKey: "subscriptionStatus")
         
-        if settings.debugOverrideSubscription {
-            // Debug override takes priority - use debug flag value
-            newStatus = settings.debugIsSubscribed
-        } else {
-            // Use SDK value as the primary source
-            let sdkStatus = sdk.isSubscribed
-            let cachedStatus = UserDefaults.standard.bool(forKey: "subscriptionStatus")
-            
-            // If SDK says subscribed, trust it
-            // If SDK says not subscribed but cache says subscribed, 
-            // trust SDK (user may have cancelled subscription)
-            // This prevents showing premium when user is no longer subscribed
-            newStatus = sdkStatus
-            
-            // Log if there's a mismatch for debugging
-            if sdkStatus != cachedStatus {
-                print("📱 [Subscription] Status changed: cached=\(cachedStatus), sdk=\(sdkStatus)")
-            }
+        // Log if there's a mismatch for debugging
+        if sdkStatus != cachedStatus {
+            print("📱 [Subscription] Status changed: cached=\(cachedStatus), sdk=\(sdkStatus)")
         }
         
         // Update state
-        subscriptionStatus = newStatus
+        subscriptionStatus = sdkStatus
         
         // Store in UserDefaults so it persists and can be read on app launch
-        // This ensures the value is only changed by debug flag or SDK
-        UserDefaults.standard.set(newStatus, forKey: "subscriptionStatus")
+        UserDefaults.standard.set(sdkStatus, forKey: "subscriptionStatus")
 
         // Sync subscription status to widget via shared UserDefaults
-        syncSubscriptionStatusToWidget(newStatus)
+        syncSubscriptionStatusToWidget(sdkStatus)
+    }
+    
+    /// Async helper to refresh subscription status from SDK
+    /// Uses nonisolated(unsafe) pattern to avoid data race warnings with external SDK
+    @MainActor
+    private func refreshSubscriptionStatus() async {
+        // Capture sdk to avoid Sendable issues - we're on MainActor so access is safe
+        nonisolated(unsafe) let sdkRef = sdk
+        do {
+            _ = try await sdkRef.updateIsSubscribed()
+        } catch {
+            print("📱 [Subscription] Failed to refresh subscription status: \(error)")
+        }
+        updateSubscriptionStatus()
     }
 
     /// Syncs subscription status to the widget using App Groups shared UserDefaults

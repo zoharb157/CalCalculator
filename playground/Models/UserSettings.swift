@@ -33,10 +33,8 @@ final class UserSettings {
         static let userName = "userName"
         static let lastWeightDate = "lastWeightDate"
         static let lastWeightPromptDate = "lastWeightPromptDate"
-        static let debugOverrideSubscription = "debugOverrideSubscription"
-        static let debugIsSubscribed = "debugIsSubscribed"
         static let hasSeenDietWelcome = "hasSeenDietWelcome"
-        static let subscriptionStatus = "subscriptionStatus" // Stored subscription status (only changed by debug flag or SDK)
+        static let subscriptionStatus = "subscriptionStatus"
         
         // Goal tracking metadata
         static let goalsLastUpdated = "goalsLastUpdated"
@@ -245,15 +243,6 @@ final class UserSettings {
     var recommendedFatGoal: Double {
         didSet { defaults.set(recommendedFatGoal, forKey: Keys.recommendedFatGoal) }
     }
-    
-    // MARK: - Debug Properties
-    var debugOverrideSubscription: Bool {
-        didSet { defaults.set(debugOverrideSubscription, forKey: Keys.debugOverrideSubscription) }
-    }
-    
-    var debugIsSubscribed: Bool {
-        didSet { defaults.set(debugIsSubscribed, forKey: Keys.debugIsSubscribed) }
-    }
 
     // MARK: - Computed Properties
     var macroGoals: MacroData {
@@ -405,8 +394,6 @@ final class UserSettings {
         }
         self.lastWeightDate = defaults.object(forKey: Keys.lastWeightDate) as? Date
         self.lastWeightPromptDate = defaults.object(forKey: Keys.lastWeightPromptDate) as? Date
-        self.debugOverrideSubscription = defaults.bool(forKey: Keys.debugOverrideSubscription)
-        self.debugIsSubscribed = defaults.bool(forKey: Keys.debugIsSubscribed)
         self.hasSeenDietWelcome = defaults.bool(forKey: Keys.hasSeenDietWelcome)
         
         // Goal tracking metadata

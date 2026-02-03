@@ -130,14 +130,7 @@ final class RateUsManager {
         }
     }
     
-    /// Checks subscription status from UserSettings
     private func checkSubscriptionStatus() -> Bool {
-        // Check debug override first
-        let settings = UserSettings.shared
-        if settings.debugOverrideSubscription {
-            return settings.debugIsSubscribed
-        }
-        // Fall back to stored subscription status
         return UserDefaults.standard.bool(forKey: "subscriptionStatus")
     }
     

@@ -17,8 +17,6 @@ struct ProfileView: View {
     @Environment(TheSDK.self) private var sdk
     @Environment(\.localization) private var localization
     @ObservedObject private var localizationManager = LocalizationManager.shared
-    // Observe UserSettings directly for reactive updates
-    @Bindable private var settings = UserSettings.shared
     
     // Sheet presentation states
     @State private var showingPersonalDetails = false
@@ -52,9 +50,6 @@ struct ProfileView: View {
                     accountSection
                     goalsTrackingSection
                     supportSection
-                    if isDebugOrTestFlight {
-                        debugSection
-                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
@@ -361,86 +356,6 @@ struct ProfileView: View {
                 Spacer()
             }
             .padding(.top, 16)
-        }
-    }
-    
-    // MARK: - Debug Section
-    
-    /// Check if we're in DEBUG build or TestFlight
-    private var isDebugOrTestFlight: Bool {
-        #if DEBUG
-        return true
-        #else
-        // Check if running in TestFlight (receipt URL contains sandboxReceipt)
-        if let receiptURL = Bundle.main.appStoreReceiptURL,
-           receiptURL.path.contains("sandboxReceipt") {
-            return true
-        }
-        return false
-        #endif
-    }
-    
-    @ViewBuilder
-    private var debugSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ProfileSectionHeader(title: localizationManager.localizedString(for: AppStrings.Profile.debug))
-            
-            ProfileSectionCard {
-                ToggleSettingRow(
-                    icon: "hammer.fill",
-                    iconColor: .orange,
-                    title: localizationManager.localizedString(for: AppStrings.Profile.overrideSubscription),
-                    description: localizationManager.localizedString(for: AppStrings.Profile.manuallyControlSubscription),
-                    isOn: Binding(
-                        get: { settings.debugOverrideSubscription },
-                        set: { settings.debugOverrideSubscription = $0 }
-                    )
-                )
-                
-                if settings.debugOverrideSubscription {
-                    SettingsDivider()
-                    
-                    ToggleSettingRow(
-                        icon: "checkmark.circle.fill",
-                        iconColor: .green,
-                        title: localizationManager.localizedString(for: AppStrings.Profile.debugIsSubscribed),
-                        description: localizationManager.localizedString(for: AppStrings.Profile.overrideSubscriptionStatus),
-                        isOn: Binding(
-                            get: { settings.debugIsSubscribed },
-                            set: { settings.debugIsSubscribed = $0 }
-                        )
-                    )
-                    
-                    SettingsDivider()
-                    
-                    HStack {
-                        Text(localizationManager.localizedString(for: AppStrings.Profile.debugStatus))
-                            .font(.body)
-                            .foregroundColor(.primary)
-                        Spacer()
-                        Text(settings.debugIsSubscribed ? localizationManager.localizedString(for: AppStrings.Profile.premium) : localizationManager.localizedString(for: AppStrings.Profile.free))
-                            .font(.body)
-                            .foregroundColor(settings.debugIsSubscribed ? .green : .gray)
-                    }
-                    .padding(.vertical, 12)
-                    .padding(.horizontal, 16)
-                    
-                    SettingsDivider()
-                    
-                    HStack {
-                        Text(localizationManager.localizedString(for: AppStrings.Profile.sdkStatus))
-                            .font(.body)
-                            .foregroundColor(.primary)
-                        Spacer()
-                        // SDK subscription status
-                        Text(sdk.isSubscribed ? localizationManager.localizedString(for: AppStrings.Profile.premium) : localizationManager.localizedString(for: AppStrings.Profile.free))
-                            .font(.body)
-                            .foregroundColor(sdk.isSubscribed ? .green : .gray)
-                    }
-                    .padding(.vertical, 12)
-                    .padding(.horizontal, 16)
-                }
-            }
         }
     }
     
