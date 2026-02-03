@@ -2257,6 +2257,8 @@ function showGoalsError(message, apiUrl) {
 }
 
   function renderFooterButtons(step, { showPrimary, primaryTitle } = {}) {
+    footer.innerHTML = "";
+    
     const primary = document.createElement("button");
     primary.className = "btn primary";
     primary.type = "button";
