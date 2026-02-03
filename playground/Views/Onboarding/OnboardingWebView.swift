@@ -513,19 +513,7 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
                     return
                 }
                 
-                ATTrackingManager.requestTrackingAuthorization { [weak self] newStatus in
-                    Task { @MainActor in
-                        guard let self else { return }
-                        let status = self.mapTrackingStatus(newStatus)
-                        let response: [String: Any] = [
-                            "ok": true,
-                            "requestId": requestId,
-                            "permissionType": permissionType,
-                            "status": status
-                        ]
-                        self.postEventToJS(id: id, payload: response)
-                    }
-                }
+                requestTrackingWhenActive(id: id, requestId: requestId, permissionType: permissionType)
                 
             case "notifications":
                 let center = UNUserNotificationCenter.current()
@@ -754,6 +742,43 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
             return await withCheckedContinuation { continuation in
                 ATTrackingManager.requestTrackingAuthorization { status in
                     continuation.resume(returning: status)
+                }
+            }
+        }
+
+        private func requestTrackingWhenActive(id: String, requestId: String, permissionType: String) {
+            let performRequest = { [weak self] in
+                ATTrackingManager.requestTrackingAuthorization { [weak self] newStatus in
+                    Task { @MainActor in
+                        guard let self else { return }
+                        let status = self.mapTrackingStatus(newStatus)
+                        let response: [String: Any] = [
+                            "ok": true,
+                            "requestId": requestId,
+                            "permissionType": permissionType,
+                            "status": status
+                        ]
+                        self.postEventToJS(id: id, payload: response)
+                    }
+                }
+            }
+            
+            if UIApplication.shared.applicationState == .active {
+                performRequest()
+            } else {
+                var observer: NSObjectProtocol?
+                observer = NotificationCenter.default.addObserver(
+                    forName: UIApplication.didBecomeActiveNotification,
+                    object: nil,
+                    queue: .main
+                ) { [weak self] _ in
+                    if let observer = observer {
+                        NotificationCenter.default.removeObserver(observer)
+                    }
+                    guard self != nil else { return }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        performRequest()
+                    }
                 }
             }
         }
