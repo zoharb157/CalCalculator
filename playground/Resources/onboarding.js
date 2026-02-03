@@ -2123,6 +2123,87 @@ function showGoalsResults(goals) {
   renderFooterButtons(step, { showPrimary: true, primaryTitle: "Get Started" });
 }
 
+function calculateDefaultGoals() {
+    const a = state.answers;
+    const gender = (a.gender?.value || "male").toLowerCase();
+    
+    // Get normalized height/weight if available, otherwise calculate
+    let weight = a._normalized?.weight_kg;
+    let height = a._normalized?.height_cm;
+
+    if (!weight || !height) {
+         // Fallback if _normalized is missing
+         const hw = a.height_weight || {};
+         weight = toKg(hw.weight, hw.weight__unit || "kg") || 70;
+         height = toCm(hw.height, hw.height__unit || "cm") || 170;
+    }
+
+    const birthdate = a.birthdate?.birthdate;
+    const age = birthdate ? calculateAge(birthdate) : 30;
+
+    // BMR (Mifflin-St Jeor)
+    let bmr = (10 * weight) + (6.25 * height) - (5 * age);
+    if (gender === "male") {
+        bmr += 5;
+    } else {
+        bmr -= 161;
+    }
+
+    // TDEE - Activity Multipliers
+    const activityMap = {
+        "sedentary": 1.2,
+        "lightly_active": 1.375,
+        "moderately_active": 1.55,
+        "very_active": 1.725,
+        "extra_active": 1.9
+    };
+    const activity = a.activity_level?.value || "moderately_active";
+    const multiplier = activityMap[activity] || 1.375;
+    const tdee = bmr * multiplier;
+
+    // Goal Adjustment
+    const goal = a.goal?.value || "maintain";
+    let adjustment = 0;
+    if (goal === "lose_weight") adjustment = -500;
+    else if (goal === "gain_weight") adjustment = 500;
+    
+    // Total Calories
+    // Ensure we don't go below 1200 as a safety floor
+    let dailyCalories = Math.round(tdee + adjustment);
+    if (dailyCalories < 1200) dailyCalories = 1200;
+
+    // Macros (30% Protein, 40% Carbs, 30% Fat)
+    const proteinCals = dailyCalories * 0.30;
+    const carbsCals = dailyCalories * 0.40;
+    const fatCals = dailyCalories * 0.30;
+
+    const proteinG = Math.round(proteinCals / 4);
+    const carbsG = Math.round(carbsCals / 4);
+    const fatG = Math.round(fatCals / 9);
+
+    return {
+        daily_calories: dailyCalories,
+        macros: {
+            protein_g: proteinG,
+            carbs_g: carbsG,
+            fat_g: fatG,
+            fiber_g: 30
+        },
+        // Flattened structure for UI
+        calories: dailyCalories,
+        proteinG: proteinG,
+        carbsG: carbsG,
+        fatG: fatG,
+        
+        // Metadata
+        bmi: weight / ((height/100) * (height/100)),
+        bmr: bmr,
+        tdee: tdee,
+        calorie_adjustment: adjustment,
+        isDefault: true
+    };
+}
+
 function showGoalsError(message, apiUrl) {
   const loadingEl = document.getElementById("goalsLoading");
   const resultsEl = document.getElementById("goalsResults");
@@ -2132,14 +2213,21 @@ function showGoalsError(message, apiUrl) {
 
   resultsEl.style.display = "block";
   resultsEl.innerHTML = `
-    <div class="successCheck" style="background: linear-gradient(135deg, rgba(255,90,122,.18), rgba(255,90,122,.08));">!</div>
-    <h1 style="margin-top:16px;">Couldn't generate goals</h1>
-    <p class="desc" style="margin-bottom:4px;">Load failed</p>
-    <p class="desc" style="margin-top:0;margin-bottom:12px;">${String(message || "Please try again.").replace(/</g, "&lt;")}</p>
-    <p class="desc" style="color: var(--muted2); font-size: 12px; margin-top:0;">API: ${String(apiUrl || "").replace(/</g, "&lt;")}</p>
+    <div class="successCheck" style="background: linear-gradient(135deg, rgba(255,90,122,.18), rgba(255,90,122,.08)); margin: 0 auto;">!</div>
+    <h1 style="margin-top:16px;">Something went wrong</h1>
+    <p class="desc" style="margin-bottom:12px;">We couldn't connect to our servers.</p>
   `;
 
   footer.innerHTML = "";
+  
+  // Container for stacked buttons
+  const btnGroup = document.createElement("div");
+  btnGroup.style.display = "flex";
+  btnGroup.style.flexDirection = "column";
+  btnGroup.style.width = "100%";
+  btnGroup.style.gap = "12px";
+
+  // Try Again Button
   const retry = document.createElement("button");
   retry.className = "btn primary";
   retry.type = "button";
@@ -2148,7 +2236,24 @@ function showGoalsError(message, apiUrl) {
     state.currentId = "generating";
     render();
   });
-  footer.appendChild(retry);
+
+  // Continue Anyway Button
+  const cont = document.createElement("button");
+  cont.className = "btn ghost";
+  cont.type = "button";
+  cont.textContent = "Continue Anyway";
+  cont.addEventListener("click", () => {
+    const defaultGoals = calculateDefaultGoals();
+    state.generatedGoals = defaultGoals;
+    showGoalsResults(defaultGoals);
+    
+    // Notify native
+    call("goals_generated", { ok: true, goals: defaultGoals, isDefault: true });
+  });
+
+  btnGroup.appendChild(retry);
+  btnGroup.appendChild(cont);
+  footer.appendChild(btnGroup);
 }
 
   function renderFooterButtons(step, { showPrimary, primaryTitle } = {}) {
