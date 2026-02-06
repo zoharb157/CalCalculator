@@ -20,6 +20,8 @@ struct HealthKitCard: View {
     @State private var showingPermissionSheet = false
     @State private var shouldRequestHealthKitPermission = false
     
+    private var userProfile: UserProfile { UserProfile.shared }
+    
     private var showEnableInSettings: Bool {
         healthKitManager.authorizationDenied && !isLoading
     }
@@ -188,7 +190,7 @@ struct HealthKitCard: View {
         ZStack {
             // Outer ring - Steps
             ActivityRing(
-                progress: animateRings ? min(Double(healthKitManager.steps) / 10000, 1.0) : 0,
+                progress: animateRings ? min(Double(healthKitManager.steps) / Double(userProfile.dailyStepGoal), 1.0) : 0,
                 ringColor: .green,
                 lineWidth: 12
             )
@@ -196,7 +198,7 @@ struct HealthKitCard: View {
             
             // Middle ring - Calories
             ActivityRing(
-                progress: animateRings ? min(Double(healthKitManager.activeCalories) / 500, 1.0) : 0,
+                progress: animateRings ? min(Double(healthKitManager.activeCalories) / Double(userProfile.activeCaloriesGoal), 1.0) : 0,
                 ringColor: .orange,
                 lineWidth: 12
             )
@@ -204,7 +206,7 @@ struct HealthKitCard: View {
             
             // Inner ring - Exercise
             ActivityRing(
-                progress: animateRings ? min(Double(healthKitManager.exerciseMinutes) / 30, 1.0) : 0,
+                progress: animateRings ? min(Double(healthKitManager.exerciseMinutes) / Double(userProfile.exerciseMinutesGoal), 1.0) : 0,
                 ringColor: .cyan,
                 lineWidth: 12
             )
@@ -223,7 +225,7 @@ struct HealthKitCard: View {
                 iconColor: .green,
                 value: formatNumber(healthKitManager.steps),
                 label: localizationManager.localizedString(for: AppStrings.Progress.steps),
-                goal: "10K"
+                goal: formatGoalNumber(userProfile.dailyStepGoal)
             )
             
             // Active Calories
@@ -232,7 +234,7 @@ struct HealthKitCard: View {
                 iconColor: .orange,
                 value: "\(healthKitManager.activeCalories)",
                 label: localizationManager.localizedString(for: AppStrings.Progress.activeCalories),
-                goal: "500"
+                goal: "\(userProfile.activeCaloriesGoal)"
             )
             
             // Exercise Minutes
@@ -241,7 +243,7 @@ struct HealthKitCard: View {
                 iconColor: .cyan,
                 value: "\(healthKitManager.exerciseMinutes)",
                 label: localizationManager.localizedString(for: AppStrings.Progress.exercise),
-                goal: "30min"
+                goal: "\(userProfile.exerciseMinutesGoal)min"
             )
             
             // Distance
@@ -250,7 +252,7 @@ struct HealthKitCard: View {
                 iconColor: .pink,
                 value: formatDistance(healthKitManager.distance),
                 label: localizationManager.localizedString(for: AppStrings.Progress.distance),
-                goal: "5km"
+                goal: formatDistanceGoal(userProfile.distanceGoalKm)
             )
         }
     }
@@ -521,6 +523,17 @@ struct HealthKitCard: View {
         return "\(number)"
     }
     
+    private func formatGoalNumber(_ number: Int) -> String {
+        if number >= 1000 {
+            let formatted = Double(number) / 1000.0
+            if formatted.truncatingRemainder(dividingBy: 1) == 0 {
+                return String(format: "%.0fK", formatted)
+            }
+            return String(format: "%.1fK", formatted)
+        }
+        return "\(number)"
+    }
+    
     private func formatDistance(_ km: Double) -> String {
         if km >= 1 {
             return String(format: "%.1f km", km)
@@ -528,6 +541,13 @@ struct HealthKitCard: View {
             let meters = Int(km * 1000)
             return "\(meters) m"
         }
+    }
+    
+    private func formatDistanceGoal(_ km: Double) -> String {
+        if km.truncatingRemainder(dividingBy: 1) == 0 {
+            return String(format: "%.0fkm", km)
+        }
+        return String(format: "%.1fkm", km)
     }
 }
 

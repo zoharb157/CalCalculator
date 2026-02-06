@@ -2404,7 +2404,8 @@ function showGoalsError(message, apiUrl) {
     }
     
     render();
-    call("step_view", { stepId });
+    const stepIndex = order.indexOf(stepId);
+    call("step_view", { stepId, stepIndex });
     sendPostRequest("step_" + stepId, '', false);
   }
 
@@ -2544,8 +2545,45 @@ function showGoalsError(message, apiUrl) {
       }
     }
 
+    saveAnswersToStorage();
     goTo(step.next);
   }
+
+  /**
+   * Navigate to a specific step by index (called from Swift when resuming)
+   * @param {number} stepIndex - The index of the step to navigate to (0-based)
+   */
+  function goToStep(stepIndex) {
+    if (typeof stepIndex !== "number" || stepIndex < 0 || stepIndex >= order.length) {
+      console.warn("[goToStep] Invalid stepIndex:", stepIndex);
+      return;
+    }
+    const stepId = order[stepIndex];
+    if (!stepId) {
+      console.warn("[goToStep] No step found at index:", stepIndex);
+      return;
+    }
+    
+    try {
+      const savedAnswers = localStorage.getItem('caloriecount_onboarding_answers');
+      if (savedAnswers) {
+        state.answers = JSON.parse(savedAnswers);
+        console.log("[goToStep] Loaded saved answers:", Object.keys(state.answers));
+      }
+    } catch (error) {
+      console.warn("[goToStep] Failed to load saved answers:", error);
+    }
+    
+    state.stack = order.slice(0, stepIndex);
+    state.currentId = stepId;
+    
+    console.log(`[goToStep] Navigating to step ${stepIndex} (${stepId})`);
+    render();
+    call("step_view", { stepId, stepIndex });
+  }
+
+  // Expose goToStep globally for Swift to call
+  window.goToStep = goToStep;
 
   function goBack() {
     const prev = state.stack.pop();

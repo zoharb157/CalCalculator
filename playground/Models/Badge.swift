@@ -61,7 +61,7 @@ enum BadgeType: String, CaseIterable, Codable {
         case .tenMeals: return "10.circle.fill"
         case .twentyFiveMeals: return "25.circle.fill"
         case .fiftyMeals: return "50.circle.fill"
-        case .hundredMeals: return "100.circle.fill"
+        case .hundredMeals: return "checkmark.seal.fill"
         case .firstExercise: return "figure.run.circle.fill"
         case .perfectWeek: return "star.circle.fill"
         case .proteinChampion: return "bolt.circle.fill"
@@ -164,6 +164,11 @@ final class BadgeManager {
             newBadges.append(.perfectWeek)
         }
         
+        // Protein Champion (hit protein goal 5 days in a row)
+        if checkProteinChampion(weekSummaries, proteinGoal: proteinGoal) && !hasBadge(.proteinChampion) {
+            newBadges.append(.proteinChampion)
+        }
+        
         // Award new badges
         for badge in newBadges {
             awardBadge(badge)
@@ -199,22 +204,40 @@ final class BadgeManager {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         
-        var perfectDays = 0
-        
         for dayOffset in 0..<7 {
             guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: today) else {
-                continue
+                return false
             }
             let dayStart = calendar.startOfDay(for: date)
-            if let summary = summaries[dayStart] {
-                let difference = abs(summary.totalCalories - calorieGoal)
-                if difference <= 100 && summary.totalCalories > 0 {
-                    perfectDays += 1
-                }
+            guard let summary = summaries[dayStart], summary.totalCalories > 0 else {
+                return false
+            }
+            let difference = abs(summary.totalCalories - calorieGoal)
+            if difference > 50 {
+                return false
             }
         }
         
-        return perfectDays >= 7
+        return true
+    }
+    
+    private func checkProteinChampion(_ summaries: [Date: DaySummary], proteinGoal: Double) -> Bool {
+        guard proteinGoal > 0 else { return false }
+        
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        
+        for dayOffset in 0..<5 {
+            guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: today) else {
+                return false
+            }
+            let dayStart = calendar.startOfDay(for: date)
+            guard let summary = summaries[dayStart], summary.totalProteinG >= proteinGoal else {
+                return false
+            }
+        }
+        
+        return true
     }
     
     // MARK: - Badge Management

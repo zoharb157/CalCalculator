@@ -41,75 +41,12 @@ struct TodaysProgressCard: View {
         // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
         let _ = localizationManager.currentLanguage
         
-        return VStack(spacing: isSmallScreen ? 12 : 16) {
-            // Top section - Calories gained vs lost
-            HStack(spacing: isSmallScreen ? 4 : 20) {
-                // Calories Gained (Consumed)
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.up.circle.fill")
-                            .font(.caption)
-                            .foregroundColor(.green)
-                        Text(localizationManager.localizedString(for: AppStrings.Home.gained))
-                            .font(isSmallScreen ? .caption2 : .caption)
-                            
-                            .foregroundColor(.secondary)
-                    }
-                    Text(consumed.formattedCalories)
-                        .font(.system(size: isSmallScreen ? 20 : 28, weight: .bold, design: .rounded))
-                        .foregroundStyle(.primary) // White in dark mode, black in light mode
-                        .contentTransition(.numericText())
-                        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: consumed)
-                        .minimumScaleFactor(0.6)
-                        .lineLimit(1)
-                }
-                .frame(maxWidth: .infinity)
-                
-                // Net Calories (Consumed - Burned)
-                VStack(alignment: .center, spacing: 4) {
-                    Text(localizationManager.localizedString(for: AppStrings.Home.net))
-                        .font(isSmallScreen ? .caption2 : .caption)
-                        .foregroundColor(.secondary)
-                        
-                    Text(netCalories.formattedCalories)
-                        .font(.system(size: isSmallScreen ? 18 : 36, weight: .bold, design: .rounded))
-                        .foregroundStyle(netCalories >= 0 ? .orange : .green)
-                        .contentTransition(.numericText())
-                        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: netCalories)
-                        .minimumScaleFactor(0.5)
-                        .lineLimit(1)
-                }
-                .frame(maxWidth: .infinity)
-                
-                // Calories Lost (Burned)
-                VStack(alignment: .trailing, spacing: 4) {
-                    HStack(spacing: 4) {
-                        Text(localizationManager.localizedString(for: AppStrings.Home.lost))
-                            .font(isSmallScreen ? .caption2 : .caption)
-                            
-                            .foregroundColor(.secondary)
-                        Image(systemName: "arrow.down.circle.fill")
-                            .font(.caption)
-                            .foregroundColor(.blue)
-                    }
-                    Text(burnedCalories.formattedCalories)
-                        .font(.system(size: isSmallScreen ? 20 : 28, weight: .bold, design: .rounded))
-                        .foregroundStyle(.primary) // White in dark mode, black in light mode
-                        .contentTransition(.numericText())
-                        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: burnedCalories)
-                        .minimumScaleFactor(0.6)
-                        .lineLimit(1)
-                }
-                .frame(maxWidth: .infinity)
-            }
-            
-            // Bottom section - Remaining calories and progress
-            HStack(spacing: isSmallScreen ? 12 : 20) {
-                // Left side - Remaining calories
-                VStack(alignment: .leading, spacing: isSmallScreen ? 4 : 6) {
+        return VStack(spacing: isSmallScreen ? 16 : 24) {
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(remainingCalories.formattedCalories)
-                        .font(.system(size: isSmallScreen ? 28 : 36, weight: .bold, design: .rounded))
-                        .foregroundStyle(.primary) // White in dark mode, black in light mode
+                        .font(.system(size: isSmallScreen ? 36 : 48, weight: .bold, design: .rounded))
+                        .foregroundStyle(.primary)
                         .contentTransition(.numericText())
                         .animation(.spring(response: 0.6, dampingFraction: 0.8), value: remainingCalories)
                         .minimumScaleFactor(0.8)
@@ -117,20 +54,77 @@ struct TodaysProgressCard: View {
                     
                     Text(localizationManager.localizedString(for: AppStrings.Home.caloriesLeft))
                         .font(isSmallScreen ? .caption : .subheadline)
+                        .fontWeight(.medium)
                         .foregroundColor(.secondary)
-                        .minimumScaleFactor(0.9)
-                        .lineLimit(1)
-                        
                 }
                 
-                Spacer(minLength: isSmallScreen ? 4 : 8)
+                Spacer()
                 
-                // Right side - Circular progress
                 CircularProgressView(progress: progress)
-                    .frame(width: isSmallScreen ? 70 : 90, height: isSmallScreen ? 70 : 90)
+                    .frame(width: isSmallScreen ? 80 : 100, height: isSmallScreen ? 80 : 100)
             }
+            .padding(.horizontal, isSmallScreen ? 4 : 8)
+            
+            Rectangle()
+                .fill(Color.primary.opacity(0.05))
+                .frame(height: 1)
+            
+            HStack(spacing: 0) {
+                VStack(spacing: 6) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.up.circle.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(.green)
+                        Text(localizationManager.localizedString(for: AppStrings.Home.gained))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    Text(consumed.formattedCalories)
+                        .font(.system(size: isSmallScreen ? 18 : 22, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.primary)
+                        .contentTransition(.numericText())
+                }
+                .frame(maxWidth: .infinity)
+                
+                Rectangle()
+                    .fill(Color.primary.opacity(0.1))
+                    .frame(width: 1, height: 30)
+                
+                VStack(spacing: 6) {
+                    Text(localizationManager.localizedString(for: AppStrings.Home.net))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        
+                    Text(netCalories.formattedCalories)
+                        .font(.system(size: isSmallScreen ? 18 : 22, weight: .semibold, design: .rounded))
+                        .foregroundStyle(netCalories >= 0 ? .orange : .green)
+                        .contentTransition(.numericText())
+                }
+                .frame(maxWidth: .infinity)
+                
+                Rectangle()
+                    .fill(Color.primary.opacity(0.1))
+                    .frame(width: 1, height: 30)
+                
+                VStack(spacing: 6) {
+                    HStack(spacing: 4) {
+                        Text(localizationManager.localizedString(for: AppStrings.Home.lost))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Image(systemName: "arrow.down.circle.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(.blue)
+                    }
+                    Text(burnedCalories.formattedCalories)
+                        .font(.system(size: isSmallScreen ? 18 : 22, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.primary)
+                        .contentTransition(.numericText())
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .padding(.top, 4)
         }
-        .padding(isSmallScreen ? 12 : 16)
+        .padding(isSmallScreen ? 16 : 24)
         .cardStyle(background: Color(.secondarySystemGroupedBackground))
     }
 }

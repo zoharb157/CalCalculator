@@ -215,7 +215,7 @@ struct BurnedCaloriesView: View {
                             model: sdk,
                             page: .splash,
                             show: paywallBinding(showPaywall: $showPaywall, sdk: sdk),
-                            backgroundColor: .white,
+                            backgroundColor: Color(UIColor.systemBackground),
                             ignoreSafeArea: true
                         )
                     }

@@ -193,43 +193,55 @@ final class UserProfileRepository: UserProfileRepositoryProtocol {
     }
     
     func getCurrentWeight() -> Double {
-        defaults.object(forKey: Keys.currentWeight) as? Double ?? Defaults.currentWeight
+        let weightInKg = UserSettings.shared.currentWeight
+        return weightInKg * 2.20462
     }
     
     func setCurrentWeight(_ value: Double) {
-        defaults.set(value, forKey: Keys.currentWeight)
+        let weightInKg = value / 2.20462
+        UserSettings.shared.updateWeight(weightInKg)
     }
     
     func getGoalWeight() -> Double {
-        defaults.object(forKey: Keys.goalWeight) as? Double ?? Defaults.goalWeight
+        let targetInKg = UserSettings.shared.targetWeight
+        return targetInKg * 2.20462
     }
     
     func setGoalWeight(_ value: Double) {
-        defaults.set(value, forKey: Keys.goalWeight)
+        let weightInKg = value / 2.20462
+        UserSettings.shared.targetWeight = weightInKg
     }
     
     func getHeightFeet() -> Int {
-        defaults.object(forKey: Keys.heightFeet) as? Int ?? Defaults.heightFeet
+        let heightInCm = UserSettings.shared.height
+        let totalInches = heightInCm / 2.54
+        return Int(totalInches / 12)
     }
     
     func setHeightFeet(_ value: Int) {
-        defaults.set(value, forKey: Keys.heightFeet)
+        let currentInches = getHeightInches()
+        let totalInches = Double(value * 12 + currentInches)
+        UserSettings.shared.height = totalInches * 2.54
     }
     
     func getHeightInches() -> Int {
-        defaults.object(forKey: Keys.heightInches) as? Int ?? Defaults.heightInches
+        let heightInCm = UserSettings.shared.height
+        let totalInches = heightInCm / 2.54
+        return Int(totalInches) % 12
     }
     
     func setHeightInches(_ value: Int) {
-        defaults.set(value, forKey: Keys.heightInches)
+        let currentFeet = getHeightFeet()
+        let totalInches = Double(currentFeet * 12 + value)
+        UserSettings.shared.height = totalInches * 2.54
     }
     
     func getDateOfBirth() -> Date {
-        defaults.object(forKey: Keys.dateOfBirth) as? Date ?? Calendar.current.date(byAdding: .year, value: -30, to: Date())!
+        UserSettings.shared.birthdate ?? Calendar.current.date(byAdding: .year, value: -30, to: Date())!
     }
     
     func setDateOfBirth(_ value: Date) {
-        defaults.set(value, forKey: Keys.dateOfBirth)
+        UserSettings.shared.birthdate = value
     }
     
     func getGender() -> Gender {
@@ -311,35 +323,35 @@ final class UserProfileRepository: UserProfileRepositoryProtocol {
     // MARK: - Nutrition Goals
     
     func getCalorieGoal() -> Int {
-        defaults.object(forKey: Keys.calorieGoal) as? Int ?? Defaults.calorieGoal
+        UserSettings.shared.calorieGoal
     }
     
     func setCalorieGoal(_ value: Int) {
-        defaults.set(value, forKey: Keys.calorieGoal)
+        UserSettings.shared.calorieGoal = value
     }
     
     func getProteinGoal() -> Double {
-        defaults.object(forKey: Keys.proteinGoal) as? Double ?? Defaults.proteinGoal
+        UserSettings.shared.proteinGoal
     }
     
     func setProteinGoal(_ value: Double) {
-        defaults.set(value, forKey: Keys.proteinGoal)
+        UserSettings.shared.proteinGoal = value
     }
     
     func getCarbsGoal() -> Double {
-        defaults.object(forKey: Keys.carbsGoal) as? Double ?? Defaults.carbsGoal
+        UserSettings.shared.carbsGoal
     }
     
     func setCarbsGoal(_ value: Double) {
-        defaults.set(value, forKey: Keys.carbsGoal)
+        UserSettings.shared.carbsGoal = value
     }
     
     func getFatGoal() -> Double {
-        defaults.object(forKey: Keys.fatGoal) as? Double ?? Defaults.fatGoal
+        UserSettings.shared.fatGoal
     }
     
     func setFatGoal(_ value: Double) {
-        defaults.set(value, forKey: Keys.fatGoal)
+        UserSettings.shared.fatGoal = value
     }
     
     // MARK: - Referral

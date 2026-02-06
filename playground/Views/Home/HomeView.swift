@@ -24,7 +24,7 @@ struct HomeView: View {
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
     private var settings = UserSettings.shared
-    @State private var badgeManager = BadgeManager.shared
+    private var badgeManager = BadgeManager.shared
     
     @State private var showScanSheet = false
     @State private var showLogFoodSheet = false
@@ -144,11 +144,9 @@ struct HomeView: View {
                 viewModel.updateLiveActivityIfNeeded()
             }
             .onReceive(NotificationCenter.default.publisher(for: .exerciseSaved)) { _ in
-                // Refresh burned calories when a new exercise is saved
-                // This ensures the calorie goal adjustment is recalculated
                 Task {
                     await viewModel.refreshBurnedCalories()
-                    // Update Live Activity with the new burned calories value
+                    checkForBadges()
                     viewModel.updateLiveActivityIfNeeded()
                 }
             }
@@ -242,7 +240,7 @@ struct HomeView: View {
                     model: sdk,
                     page: .splash,
                     show: paywallBinding(showPaywall: $showingPaywall, sdk: sdk),
-                    backgroundColor: .white,
+                    backgroundColor: Color(UIColor.systemBackground),
                     ignoreSafeArea: true
                 )
             }
@@ -291,8 +289,9 @@ struct HomeView: View {
     // MARK: - Badge Checking
 
     private func checkForBadges() {
-        let totalMeals = viewModel.recentMeals.count
-        let totalExercises = (try? repository.fetchTodaysExercises().count) ?? 0
+        let allSummaries = (try? repository.fetchAllDaySummaries()) ?? []
+        let totalMeals = allSummaries.reduce(0) { $0 + $1.mealCount }
+        let totalExercises = (try? repository.fetchAllExercisesCount()) ?? 0
 
         var weekSummaries: [Date: DaySummary] = [:]
         for day in viewModel.weekDays {

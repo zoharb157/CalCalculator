@@ -534,18 +534,30 @@ struct PersonalDetailsView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(localizationManager.localizedString(for: AppStrings.Common.save)) {
-                        // Update the weight in ProfileViewModel (this updates UserSettings)
                         viewModel.currentWeight = tempWeight
                         
-                        // Always create a new WeightEntry in SwiftData to preserve weight history
-                        // Convert to kg (ProfileViewModel stores weight in lbs)
                         let weightInKg = tempWeight * 0.453592
                         
                         do {
-                            // Always create a new entry with the current timestamp
-                            // This preserves the full weight change history
-                            let entry = WeightEntry(weight: weightInKg, date: Date())
-                            modelContext.insert(entry)
+                            let calendar = Calendar.current
+                            let today = calendar.startOfDay(for: Date())
+                            let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) ?? today
+                            
+                            let descriptor = FetchDescriptor<WeightEntry>(
+                                predicate: #Predicate<WeightEntry> { entry in
+                                    entry.date >= today && entry.date < tomorrow
+                                },
+                                sortBy: [SortDescriptor(\.date, order: .reverse)]
+                            )
+                            
+                            let existingEntries = try modelContext.fetch(descriptor)
+                            if let existingEntry = existingEntries.first {
+                                existingEntry.weight = weightInKg
+                                existingEntry.date = Date()
+                            } else {
+                                let entry = WeightEntry(weight: weightInKg, date: Date())
+                                modelContext.insert(entry)
+                            }
                             
                             try modelContext.save()
                         } catch {

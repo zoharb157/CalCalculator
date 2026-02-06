@@ -14,9 +14,15 @@ import AppTrackingTransparency
 /// A SwiftUI wrapper for the HTML-based onboarding flow
 struct OnboardingWebView: View {
     let onComplete: (OnboardingResult) -> Void
+    let startStep: Int?
+    
+    init(startStep: Int? = nil, onComplete: @escaping (OnboardingResult) -> Void) {
+        self.startStep = startStep
+        self.onComplete = onComplete
+    }
 
     var body: some View {
-        OnboardingWebViewRepresentable(onComplete: onComplete)
+        OnboardingWebViewRepresentable(startStep: startStep, onComplete: onComplete)
             .ignoresSafeArea()
     }
 }
@@ -69,14 +75,11 @@ class OnboardingWebViewWithDoneButton: WKWebView {
 
 /// UIViewRepresentable wrapper for WKWebView
 struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
+    let startStep: Int?
     let onComplete: (OnboardingResult) -> Void
 
-    // Conform to Equatable to prevent unnecessary updateUIView calls
-    // This prevents "Update NavigationRequestObserver tried to update multiple times per frame" warning
     static func == (lhs: OnboardingWebViewRepresentable, rhs: OnboardingWebViewRepresentable) -> Bool {
-        // Always return true since onComplete closure can't be compared
-        // This tells SwiftUI that the view hasn't changed and updateUIView shouldn't be called
-        return true
+        return lhs.startStep == rhs.startStep
     }
 
     func makeCoordinator() -> Coordinator {
@@ -86,13 +89,10 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
 
-        // Add message handler for communication from JS
         config.userContentController.add(context.coordinator, name: "onboarding")
 
-        // Configure preferences
         config.defaultWebpagePreferences.allowsContentJavaScript = true
 
-        // Use custom WKWebView subclass that shows Done button to dismiss keyboard
         let webView = OnboardingWebViewWithDoneButton(frame: .zero, configuration: config)
         webView.isOpaque = false
         webView.backgroundColor = .clear
@@ -100,18 +100,16 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
         webView.scrollView.bounces = false
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         
-        // Set navigation delegate to coordinator to avoid multiple updates per frame
         webView.navigationDelegate = context.coordinator
 
-        // Allow inspection in Safari for debugging (iOS 16.4+)
         if #available(iOS 16.4, *) {
             webView.isInspectable = true
         }
 
-        // Load the HTML with injected JS
         loadOnboardingContent(into: webView)
 
         context.coordinator.webView = webView
+        context.coordinator.startStep = startStep
 
         return webView
     }
@@ -166,6 +164,7 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
     class Coordinator: NSObject, WKScriptMessageHandler, WKNavigationDelegate {
         weak var webView: WKWebView?
         let onComplete: (OnboardingResult) -> Void
+        var startStep: Int?
 
         init(onComplete: @escaping (OnboardingResult) -> Void) {
             self.onComplete = onComplete
@@ -237,9 +236,25 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
                 print(
                     "📱 [OnboardingWebView] Onboarding ready, first step: \(params["firstStepId"] ?? "unknown")"
                 )
+                if let step = startStep, step > 0, let webView = webView {
+                    let js = "if (window.goToStep) { window.goToStep(\(step)); }"
+                    webView.evaluateJavaScript(js) { _, err in
+                        if let err = err {
+                            print("⚠️ [OnboardingWebView] Failed to resume at step \(step): \(err.localizedDescription)")
+                        } else {
+                            print("✅ [OnboardingWebView] Resumed at step \(step)")
+                        }
+                    }
+                }
 
             case "step_view":
                 print("📱 [OnboardingWebView] Viewing step: \(params["stepId"] ?? "unknown")")
+                if let stepIndex = params["stepIndex"] as? Int {
+                    UserSettings.shared.currentOnboardingStep = stepIndex
+                } else if let stepIdString = params["stepId"] as? String,
+                          let stepNum = Int(stepIdString.filter { $0.isNumber }) {
+                    UserSettings.shared.currentOnboardingStep = stepNum
+                }
 
             case "generate_goals_via_native":
                 print("📱 [OnboardingWebView] Generate goals via native requested")

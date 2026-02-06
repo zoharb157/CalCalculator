@@ -512,8 +512,9 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = playground/CalCalculator.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 5NS9ZUMYCS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -539,9 +540,10 @@
 					"@executable_path/Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = CalCalculatorAiPlaygournd;
 				PRODUCT_NAME = CalCalculator;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL_APP_INTENTS_METADATA = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -560,8 +562,9 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = playground/CalCalculator.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 5NS9ZUMYCS;
 				DWARF_DSYM_FILE_SHOULD_ACCOMPANY_PRODUCT = YES;
@@ -573,10 +576,10 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs camera access to take photos of your meals for calorie tracking.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "CalorieVisionAI needs access to read your health data to display activity metrics and weight history.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "CalorieVisionAI needs access to save your weight measurements to Apple Health.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We don’t use your location directly.\nIf allowed, it helps us improve calorie accuracy and tailor recommendations based on general regional context.\nYou can allow or deny this anytime.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We don't use your location directly.\nIf allowed, it helps us improve calorie accuracy and tailor recommendations based on general regional context.\nYou can allow or deny this anytime.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs photo library access to select photos of your meals for calorie tracking.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
-				INFOPLIST_KEY_NSUserTrackingUsageDescription = "Allowing this helps us learn what works best for you, so we can improve calorie calculations and tailor the app to your needs.\nYou’re always in control and can change this later";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "Allowing this helps us learn what works best for you, so we can improve calorie calculations and tailor the app to your needs.\nYou're always in control and can change this later";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -589,16 +592,17 @@
 					"@executable_path/Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = CalCalculatorAiPlaygournd;
 				PRODUCT_NAME = CalCalculator;
-				SKIP_INSTALL_APP_INTENTS_METADATA = YES;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SKIP_INSTALL = NO;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_STRICT_CONCURRENCY = off;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPACT_VISIBILITY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -656,7 +660,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = CaloriesCalculatorWidgetsExtension/CaloriesCalculatorWidgetsExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 5NS9ZUMYCS;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CaloriesCalculatorWidgetsExtension/Info.plist;
@@ -668,7 +672,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = CalCalculatorAiPlaygournd.widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -688,8 +692,9 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = CaloriesCalculatorWidgetsExtension/CaloriesCalculatorWidgetsExtension.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 5NS9ZUMYCS;
 				DWARF_DSYM_FILE_SHOULD_ACCOMPANY_PRODUCT = YES;
@@ -703,9 +708,10 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = CalCalculatorAiPlaygournd.widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SKIP_INSTALL_APP_INTENTS_METADATA = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

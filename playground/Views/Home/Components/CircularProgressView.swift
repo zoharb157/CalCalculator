@@ -11,44 +11,74 @@ import SwiftUI
 struct CircularProgressView: View {
     let progress: Double
     
-    private var progressColor: Color {
+    private var progressGradient: AngularGradient {
         if progress > 1 {
-            return .red
+            return AngularGradient(
+                gradient: Gradient(colors: [.red, .pink]),
+                center: .center,
+                startAngle: .degrees(0),
+                endAngle: .degrees(360)
+            )
         } else if progress >= 0.8 {
-            return .green
+            return AngularGradient(
+                gradient: Gradient(colors: [.green, .mint]),
+                center: .center,
+                startAngle: .degrees(0),
+                endAngle: .degrees(360)
+            )
         } else if progress >= 0.5 {
-            return .orange
+            return AngularGradient(
+                gradient: Gradient(colors: [.orange, .yellow]),
+                center: .center,
+                startAngle: .degrees(0),
+                endAngle: .degrees(360)
+            )
         } else {
-            return .blue // Use blue instead of black for visibility in dark mode
+            return AngularGradient(
+                gradient: Gradient(colors: [.blue, .cyan]),
+                center: .center,
+                startAngle: .degrees(0),
+                endAngle: .degrees(360)
+            )
         }
+    }
+    
+    private var ringShadowColor: Color {
+        if progress > 1 { return .red }
+        else if progress >= 0.8 { return .green }
+        else if progress >= 0.5 { return .orange }
+        else { return .blue }
     }
     
     var body: some View {
         ZStack {
-            // Background circle
+            // Background circle with depth
             Circle()
-                .stroke(Color.gray.opacity(0.2), lineWidth: 10)
+                .stroke(Color.primary.opacity(0.1), lineWidth: 12)
             
-            // Progress circle
+            // Progress circle with gradient and shadow
             Circle()
                 .trim(from: 0, to: min(progress, 1.0))
                 .stroke(
-                    progressColor,
-                    style: StrokeStyle(lineWidth: 10, lineCap: .round)
+                    progressGradient,
+                    style: StrokeStyle(lineWidth: 12, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))
-                .animation(.spring(response: 0.6), value: progress)
+                .shadow(color: ringShadowColor.opacity(0.3), radius: 5, x: 0, y: 0)
+                .animation(.spring(response: 0.6, dampingFraction: 0.7), value: progress)
             
-            // Percentage text
-            VStack(spacing: 2) {
+            // Percentage text with modern typography
+            VStack(spacing: 0) {
                 Text("\(Int(round(min(progress, 1.0) * 100)))%")
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
-                    .foregroundStyle(.primary) // White in dark mode, black in light mode
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .foregroundStyle(.primary)
+                    .contentTransition(.numericText())
                 
                 if progress > 1.0 {
                     Text("+\(Int(round((progress - 1.0) * 100)))%")
-                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
                         .foregroundColor(.red)
+                        .padding(.top, 2)
                 }
             }
         }

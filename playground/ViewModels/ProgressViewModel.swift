@@ -666,14 +666,29 @@ final class ProgressViewModel {
         UserSettings.shared.updateWeight(weightInKg)
         AppLogger.forClass("ProgressViewModel").info("UserSettings.weight updated")
         
-        // Save to SwiftData - always create a new entry to preserve weight history
-        // Each weight change is tracked as a separate entry for comprehensive progress tracking
         if let context = modelContext {
             do {
-                // Always create a new entry with the current timestamp
-                // This preserves the full weight change history
-                let entry = WeightEntry(weight: weightInKg, date: Date())
-                context.insert(entry)
+                let calendar = Calendar.current
+                let today = calendar.startOfDay(for: Date())
+                let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) ?? today
+                
+                let descriptor = FetchDescriptor<WeightEntry>(
+                    predicate: #Predicate<WeightEntry> { entry in
+                        entry.date >= today && entry.date < tomorrow
+                    },
+                    sortBy: [SortDescriptor(\.date, order: .reverse)]
+                )
+                
+                let existingEntries = try context.fetch(descriptor)
+                if let existingEntry = existingEntries.first {
+                    existingEntry.weight = weightInKg
+                    existingEntry.date = Date()
+                    AppLogger.forClass("ProgressViewModel").info("Updated existing weight entry for today")
+                } else {
+                    let entry = WeightEntry(weight: weightInKg, date: Date())
+                    context.insert(entry)
+                    AppLogger.forClass("ProgressViewModel").info("Created new weight entry for today")
+                }
                 
                 try context.save()
                 HapticManager.shared.notification(.success)

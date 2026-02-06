@@ -136,6 +136,11 @@ final class MealRepository {
         return try context.fetch(descriptor)
     }
     
+    func fetchAllExercisesCount() throws -> Int {
+        let descriptor = FetchDescriptor<Exercise>()
+        return try context.fetchCount(descriptor)
+    }
+    
     func saveExercise(_ exercise: Exercise) throws {
         // Ensure exercise date is normalized to start of day for consistent querying
         let calendar = Calendar.current
