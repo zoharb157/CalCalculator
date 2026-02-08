@@ -7,23 +7,43 @@
 import SwiftUI
 
 struct LogFoodView: View {
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    
+    @State private var viewModel: LogExperienceViewModel?
+    private let initialCategory: MealCategory?
+    
+    init(initialCategory: MealCategory? = nil) {
+        self.initialCategory = initialCategory
+    }
+    
+    var body: some View {
+        Group {
+            if let viewModel = viewModel {
+                LogFoodViewContent(viewModel: viewModel)
+            } else {
+                ProgressView()
+                    .onAppear {
+                        viewModel = LogExperienceViewModel(
+                            repository: MealRepository(context: modelContext),
+                            initialCategory: initialCategory
+                        )
+                    }
+            }
+        }
+    }
+}
+
+private struct LogFoodViewContent: View {
+    @Environment(\.dismiss) private var dismiss
     @ObservedObject private var localizationManager = LocalizationManager.shared
 
-    @State private var viewModel: LogExperienceViewModel
+    @Bindable var viewModel: LogExperienceViewModel
     @State private var selectedTab: FoodTab = .all
     @State private var showingManualEntry = false
     @State private var showingAnalyzedResults = false
     @State private var showingVoiceLog = false
     @State private var showingAddQuickAdd = false
     @FocusState private var isSearchFocused: Bool
-
-    init(initialCategory: MealCategory? = nil) {
-        let persistence = PersistenceController.shared
-        let repository = MealRepository(context: persistence.mainContext)
-        _viewModel = State(initialValue: LogExperienceViewModel(repository: repository, initialCategory: initialCategory))
-    }
 
     var body: some View {
         // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
@@ -152,8 +172,8 @@ struct LogFoodView: View {
             .background(Color(.systemGray6))
             .cornerRadius(12)
 
-            // Show "Analyze with AI" button only when no filtered results and there's text
-            if !viewModel.textInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !viewModel.hasFilteredResults {
+            // Show "Analyze with AI" button when there's text input
+            if !viewModel.textInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 Button {
                     isSearchFocused = false
                     Task {
@@ -519,6 +539,11 @@ struct LogFoodView: View {
                         } else {
                             viewModel.saveToFavorites(food)
                         }
+                    } onAnalyze: {
+                        viewModel.textInput = food.name
+                        Task {
+                            await viewModel.analyzeTextInput()
+                        }
                     }
                 }
             }
@@ -558,6 +583,11 @@ struct LogFoodView: View {
                         } else {
                             viewModel.saveToFavorites(food)
                         }
+                    } onAnalyze: {
+                        viewModel.textInput = food.name
+                        Task {
+                            await viewModel.analyzeTextInput()
+                        }
                     }
                 }
             }
@@ -594,6 +624,11 @@ struct LogFoodView: View {
                         }
                     } onSave: {
                         viewModel.removeFromFavorites(food)
+                    } onAnalyze: {
+                        viewModel.textInput = food.name
+                        Task {
+                            await viewModel.analyzeTextInput()
+                        }
                     }
                 }
             }
@@ -756,6 +791,7 @@ struct RecentFoodRow: View {
     let isSaved: Bool
     let onAdd: () -> Void
     let onSave: () -> Void
+    let onAnalyze: () -> Void
     @ObservedObject private var localizationManager = LocalizationManager.shared
 
     var body: some View {
@@ -782,6 +818,12 @@ struct RecentFoodRow: View {
             }
 
             Spacer()
+
+            Button(action: onAnalyze) {
+                Image(systemName: "sparkles")
+                    .font(.title3)
+                    .foregroundColor(.orange)
+            }
 
             Button(action: onSave) {
                 Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
@@ -1060,7 +1102,6 @@ struct AnalyzedFoodsResultView: View {
                         let success = await viewModel.saveAnalyzedFoods()
                         if success {
                             dismiss()
-                            onSaved()
                         }
                     }
                 } label: {

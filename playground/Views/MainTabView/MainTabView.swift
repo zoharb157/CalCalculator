@@ -387,6 +387,9 @@ struct MainTabView: View {
         .fullScreenCover(isPresented: $showingPaywall) {
             paywallView
         }
+        .onReceive(NotificationCenter.default.publisher(for: .showPaywall)) { _ in
+            showingPaywall = true
+        }
         // No need for onChange - SwiftUI automatically re-evaluates views when
         // @ObservedObject properties change. Since localizationManager.currentLanguage
         // is @Published, all views using localizationManager will update automatically.

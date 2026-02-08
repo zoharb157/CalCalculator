@@ -131,7 +131,7 @@
       type: "question",
       title: "How fast do you want to reach your goal?",
       description: "Weight change per week. Slower is healthier and more sustainable.",
-      input: { type: "slider", min: 0.1, max: 1.0, step: 0.1, unit: "kg/week", default: 0.5 },
+      input: { type: "slider", min: 0.1, max: 5.0, step: 0.1, unit: "kg/week", default: 0.5 },
       next: "coach",
     },
     {
@@ -732,12 +732,12 @@ function mapActivityToApi(activityValue) {
 }
 
 function mapGoalSpeedToApi(goalSpeedKgPerWeek) {
-  // UI captures kg/week (0.1–1.0). API expects an intensity from 1–4.
+  // UI captures kg/week (0.1–5.0). API expects an intensity from 1–4.
   const v = Number(goalSpeedKgPerWeek);
   if (!Number.isFinite(v)) return 1;
-  if (v <= 0.3) return 1;
-  if (v <= 0.6) return 2;
-  if (v <= 0.8) return 3;
+  if (v <= 0.5) return 1;
+  if (v <= 1.0) return 2;
+  if (v <= 2.0) return 3;
   return 4;
 }
 
@@ -875,7 +875,6 @@ async function generateGoalsViaApi() {
   // ---- DOM ----
   const content = document.getElementById("content");
   const footer = document.getElementById("footer");
-  const backBtn = document.getElementById("backBtn");
   const skipBtn = document.getElementById("skipBtn");
   const topbar = document.getElementById("topbar");
   const progressWrap = document.getElementById("progressWrap");
@@ -907,13 +906,6 @@ async function generateGoalsViaApi() {
     progressText.textContent = `${clamp(pct, 0, 100)}%`;
     progressSteps.textContent = `${idx + 1} / ${total}`;
     stepMeta.textContent = `Step ${idx + 1} of ${total}`;
-
-    // Hide back button on first step (Step 1 requirement)
-    const isFirstStep = state.stack.length === 0;
-    if (backBtn) {
-      backBtn.classList.toggle("hidden", isFirstStep);
-      backBtn.disabled = isFirstStep;
-    }
     
     if (skipBtn) {
       skipBtn.style.visibility = step.optional ? "visible" : "hidden";
@@ -2259,6 +2251,22 @@ function showGoalsError(message, apiUrl) {
   function renderFooterButtons(step, { showPrimary, primaryTitle } = {}) {
     footer.innerHTML = "";
     
+    const isFirstStep = state.stack.length === 0;
+    
+    if (!isFirstStep) {
+      const backBtn = document.createElement("button");
+      backBtn.className = "btn ghost";
+      backBtn.type = "button";
+      backBtn.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back
+      </span>`;
+      backBtn.addEventListener("click", goBack);
+      footer.appendChild(backBtn);
+    }
+    
     const primary = document.createElement("button");
     primary.className = "btn primary";
     primary.type = "button";
@@ -2266,7 +2274,6 @@ function showGoalsError(message, apiUrl) {
     primary.textContent = primaryTitle || (step.next ? "Continue" : "Get Started");
     primary.addEventListener("click", () => {
       if (step.type === "goals_generation") {
-        // After goals generation, finish onboarding (no more landing pages)
         finish();
         return;
       }
@@ -2697,14 +2704,7 @@ function showGoalsError(message, apiUrl) {
   // ============================================================================
   
   function initializeOnboarding() {
-    // Re-get DOM elements to ensure they exist
-    const backBtnEl = document.getElementById("backBtn");
     const skipBtnEl = document.getElementById("skipBtn");
-    
-    // Set up event listeners if elements exist
-    if (backBtnEl) {
-      backBtnEl.addEventListener("click", goBack);
-    }
     
     if (skipBtnEl) {
       skipBtnEl.addEventListener("click", () => {

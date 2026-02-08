@@ -80,7 +80,6 @@ struct HomeView: View {
                 HapticManager.shared.notification(.success)
             }
             .task {
-                // Load data asynchronously without blocking the UI
                 AppLogger.forClass("HomeView").info(".task called - this should only happen once when view appears")
                 let startTime = Date()
                 print("🟢 [HomeView] .task started - loading data")
@@ -90,12 +89,10 @@ struct HomeView: View {
                     "🟢 [HomeView] .task completed - total time: \(String(format: "%.3f", elapsed))s"
                 )
                 
-                // Check for newly earned badges after data loads
                 checkForBadges()
-                
-                // Request notification permission when user first reaches homepage
-                // Only requests if authorization status is .notDetermined (first time user sees homepage)
                 await requestNotificationPermissionIfNeeded()
+                
+                AppLaunchManager.shared.handleFirstHomeScreenReached()
                 
                 // QA: Check real subscription status from SDK for monitoring purposes
                 // This is only active in non-DEBUG builds (TestFlight/App Store)

@@ -218,7 +218,6 @@ final class LogExperienceViewModel {
 
     // MARK: - Text Analysis
 
-    /// Analyze text description of food using AI
     func analyzeTextInput() async {
         guard !textInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             errorMessage = "Please enter a food description"
@@ -227,15 +226,13 @@ final class LogExperienceViewModel {
         }
 
         isAnalyzing = true
-        analysisProgress = 0.1
+        analysisProgress = 0.3
 
-        // Set initial progress
-        analysisProgress = 0.1
+        // Simulate brief processing time
+        try? await Task.sleep(nanoseconds: 500_000_000)
+        analysisProgress = 0.7
 
-        // If we have an analysis service, use it
-        // For now, we'll create a simple estimate based on text
         let foods = estimateFoodsFromText(textInput)
-
         analysisProgress = 1.0
 
         analyzedFoods = foods
@@ -412,7 +409,6 @@ final class LogExperienceViewModel {
 
         for (pattern, baseFood) in foodPatterns {
             // Only match if the pattern is a complete word (not a substring)
-            // This prevents matching partial words like "egg" in "leg" or "apple" in "pineapple"
             let wordBoundaryPattern = "\\b\(NSRegularExpression.escapedPattern(for: pattern))\\b"
             if let regex = try? NSRegularExpression(pattern: wordBoundaryPattern, options: .caseInsensitive) {
                 let range = NSRange(lowercased.startIndex..<lowercased.endIndex, in: lowercased)
@@ -458,7 +454,6 @@ final class LogExperienceViewModel {
 
         // If no foods found, create a generic entry based on the text
         if foods.isEmpty && !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            // Make a best guess based on common meal sizes
             let words = text.split(separator: " ")
             let name = words.prefix(5).joined(separator: " ").capitalized
             foods.append(

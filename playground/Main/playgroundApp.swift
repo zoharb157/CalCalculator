@@ -258,6 +258,8 @@ struct playgroundApp: App {
                     
                     _ = RateUsManager.shared
                     
+                    setupAppLaunchManager()
+                    
                     await refreshSubscriptionStatus()
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .subscriptionStatusUpdated)) { _ in
@@ -393,6 +395,19 @@ struct playgroundApp: App {
             }
         } catch {
             print("❌ [AppStartup] Failed to fetch diet plans: \(error)")
+        }
+    }
+    
+    @MainActor
+    private func setupAppLaunchManager() {
+        let manager = AppLaunchManager.shared
+        
+        manager.onShowPaywall = {
+            NotificationCenter.default.post(name: .showPaywall, object: nil)
+        }
+        
+        manager.onShowRateUs = {
+            RateUsManager.shared.showRatePopupNow()
         }
     }
 }

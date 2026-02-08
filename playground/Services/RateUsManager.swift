@@ -111,6 +111,15 @@ final class RateUsManager {
         premiumSuccessfulActionsCount = 0
     }
     
+    /// Shows the rate popup immediately (used by AppLaunchManager for specific triggers)
+    func showRatePopupNow() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+                SKStoreReviewController.requestReview(in: windowScene)
+            }
+        }
+    }
+    
     // MARK: - Private Methods
     
     /// Handles a successful action - checks if we should show the rate popup
