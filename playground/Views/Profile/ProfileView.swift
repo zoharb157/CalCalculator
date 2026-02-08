@@ -113,13 +113,7 @@ struct ProfileView: View {
             HealthInfoSourcesView()
         }
         .fullScreenCover(isPresented: $showingSubscription) {
-            SDKView(
-                model: sdk,
-                page: .splash,
-                show: paywallBinding(showPaywall: $showingSubscription, sdk: sdk),
-                backgroundColor: Color(UIColor.systemBackground),
-                ignoreSafeArea: true
-            )
+            PaywallContainerView(isPresented: $showingSubscription, sdk: sdk)
         }
     }
     

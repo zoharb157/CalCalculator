@@ -18,6 +18,8 @@ struct SupportEmailView: View {
     @State private var issueDescription = ""
     @State private var showingMailComposer = false
     @State private var showCopiedAlert = false
+    @State private var showSentAlert = false
+    @State private var showFailedAlert = false
     
     private let supportEmail = "support@calai.app"
     
@@ -58,7 +60,18 @@ struct SupportEmailView: View {
                     recipients: [supportEmail],
                     subject: localizationManager.localizedString(for: AppStrings.Profile.supportRequest),
                     body: generateEmailBody()
-                )
+                ) { result in
+                    switch result {
+                    case .sent:
+                        showSentAlert = true
+                    case .failed:
+                        showFailedAlert = true
+                    case .cancelled, .saved:
+                        break
+                    @unknown default:
+                        break
+                    }
+                }
             }
             #endif
             .alert(localizationManager.localizedString(for: AppStrings.Common.success), isPresented: $showCopiedAlert) {
@@ -67,6 +80,18 @@ struct SupportEmailView: View {
             } message: {
                 Text(localizationManager.localizedString(for: AppStrings.Profile.emailContentCopied))
                     
+            }
+            .alert(localizationManager.localizedString(for: AppStrings.Common.success), isPresented: $showSentAlert) {
+                Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) {
+                    dismiss()
+                }
+            } message: {
+                Text(localizationManager.localizedString(for: AppStrings.Profile.supportSent))
+            }
+            .alert(localizationManager.localizedString(for: AppStrings.Common.error), isPresented: $showFailedAlert) {
+                Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) { }
+            } message: {
+                Text(localizationManager.localizedString(for: AppStrings.Profile.supportFailed))
             }
         }
     }
@@ -239,7 +264,7 @@ struct SupportEmailMailComposeView: UIViewControllerRepresentable {
     let recipients: [String]
     let subject: String
     let body: String
-    @Environment(\.dismiss) private var dismiss
+    let onComplete: (MFMailComposeResult) -> Void
     
     func makeUIViewController(context: Context) -> MFMailComposeViewController {
         let composer = MFMailComposeViewController()
@@ -253,18 +278,20 @@ struct SupportEmailMailComposeView: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: MFMailComposeViewController, context: Context) {}
     
     func makeCoordinator() -> Coordinator {
-        Coordinator(self)
+        Coordinator(onComplete: onComplete)
     }
     
     class Coordinator: NSObject, MFMailComposeViewControllerDelegate {
-        let parent: SupportEmailMailComposeView
+        let onComplete: (MFMailComposeResult) -> Void
         
-        init(_ parent: SupportEmailMailComposeView) {
-            self.parent = parent
+        init(onComplete: @escaping (MFMailComposeResult) -> Void) {
+            self.onComplete = onComplete
         }
         
         func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: Error?) {
-            parent.dismiss()
+            controller.dismiss(animated: true) {
+                self.onComplete(result)
+            }
         }
     }
 }

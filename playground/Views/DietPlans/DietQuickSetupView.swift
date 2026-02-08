@@ -100,13 +100,7 @@ struct DietQuickSetupView: View {
                 )
             }
             .fullScreenCover(isPresented: $showingPaywall) {
-                SDKView(
-                    model: sdk,
-                    page: .splash,
-                    show: paywallBinding(showPaywall: $showingPaywall, sdk: sdk),
-                    backgroundColor: Color(UIColor.systemBackground),
-                    ignoreSafeArea: true
-                )
+                PaywallContainerView(isPresented: $showingPaywall, sdk: sdk)
             }
         }
     }
@@ -631,13 +625,7 @@ struct DietQuickSetupView: View {
     // MARK: - Paywall View
     
     private var paywallView: some View {
-        SDKView(
-            model: sdk,
-            page: .splash,
-            show: paywallBinding(showPaywall: $showingPaywall, sdk: sdk),
-            backgroundColor: Color(UIColor.systemBackground),
-            ignoreSafeArea: true
-        )
+        PaywallContainerView(isPresented: $showingPaywall, sdk: sdk)
     }
 }
 

@@ -172,13 +172,7 @@ struct DietPlanEditorView: View {
             )
         }
         .fullScreenCover(isPresented: $showingPaywall) {
-            SDKView(
-                model: sdk,
-                page: .splash,
-                show: paywallBinding(showPaywall: $showingPaywall, sdk: sdk),
-                backgroundColor: Color(UIColor.systemBackground),
-                ignoreSafeArea: true
-            )
+            PaywallContainerView(isPresented: $showingPaywall, sdk: sdk)
         }
         .alert(localizationManager.localizedString(for: AppStrings.DietPlan.mealsRequired), isPresented: $showNoMealsAlert) {
             Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) {}

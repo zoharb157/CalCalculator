@@ -151,13 +151,7 @@ struct PremiumLockedContent<Content: View>: View {
             }
         }
         .fullScreenCover(isPresented: $showPaywall) {
-            SDKView(
-                model: sdk,
-                page: .splash,
-                show: paywallBinding(showPaywall: $showPaywall, sdk: sdk),
-                backgroundColor: Color(UIColor.systemBackground) ,
-                ignoreSafeArea: true
-            )
+            PaywallContainerView(isPresented: $showPaywall, sdk: sdk)
         }
     }
 }

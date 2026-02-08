@@ -772,3 +772,18 @@
 "This subscription is not available in your region." = "यह सदस्यता आपके क्षेत्र में उपलब्ध नहीं है।";
 "Network error. Please check your connection and try again." = "नेटवर्क त्रुटि। कृपया अपना कनेक्शन जांचें और पुनः प्रयास करें।";
 "Purchase failed. Please try again." = "खरीदारी विफल रही। कृपया पुनः प्रयास करें।";
+
+/* Paywall Dismiss Confirmation */
+"Paywall.dismiss.title" = "रुकिए! इसे मत छोड़िए";
+"Paywall.dismiss.subtitle" = "आप इन प्रीमियम सुविधाओं तक पहुंच खोने वाले हैं:";
+"Paywall.dismiss.stayButton" = "रहें और प्रीमियम अनलॉक करें";
+"Paywall.dismiss.leaveButton" = "फिर भी जाएं";
+"Paywall.feature.unlimitedScans" = "असीमित फ़ूड स्कैन";
+"Paywall.feature.advancedProgress" = "उन्नत प्रगति ट्रैकिंग";
+"Paywall.feature.dietPlans" = "कस्टम आहार योजनाएं";
+"Paywall.feature.pdfExport" = "PDF डेटा निर्यात";
+"Paywall.feature.premiumWidgets" = "प्रीमियम विजेट";
+
+/* Support Email */
+"Thank you! Your support request has been sent successfully. We'll get back to you soon." = "धन्यवाद! आपका सपोर्ट अनुरोध सफलतापूर्वक भेजा गया। हम जल्द ही आपसे संपर्क करेंगे।";
+"Failed to send support request. Please try again later." = "सपोर्ट अनुरोध भेजने में विफल। कृपया बाद में पुनः प्रयास करें।";

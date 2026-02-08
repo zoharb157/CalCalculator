@@ -192,25 +192,26 @@ final class HomeViewModel {
         }
     }
 
-    /// Refreshes today's data, invalidating cache if the day has changed
-    /// Called when user pulls to refresh or when data needs to be updated
+    /// Refreshes data for the currently selected date (not always today)
     func refreshTodayData() async {
         let startTime = Date()
-        print("🟢 [HomeViewModel] refreshTodayData() started")
+        print("🟢 [HomeViewModel] refreshTodayData() started for selected date: \(selectedDate)")
         
-        // Check if day changed and invalidate cache if needed
-        // This ensures burned calories cache is cleared when a new day starts
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         if let lastCachedDate = UserDefaults.standard.object(forKey: burnedCaloriesKey) as? Date,
            !calendar.isDate(lastCachedDate, inSameDayAs: today) {
-            // Day changed - clear old cache to prevent stale data
             todaysBurnedCalories = 0
             UserDefaults.standard.removeObject(forKey: burnedCaloriesKey)
             UserDefaults.standard.removeObject(forKey: burnedCaloriesAmountKey)
         }
         
-        await fetchData()
+        await loadDataForSelectedDate()
+        
+        Task { @MainActor in
+            await self.loadBackgroundData()
+        }
+        
         let elapsed = Date().timeIntervalSince(startTime)
         print("🟢 [HomeViewModel] refreshTodayData() completed in \(String(format: "%.3f", elapsed))s")
     }

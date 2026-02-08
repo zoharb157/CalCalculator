@@ -773,3 +773,18 @@
 "This subscription is not available in your region." = "Эта подписка недоступна в вашем регионе.";
 "Network error. Please check your connection and try again." = "Ошибка сети. Пожалуйста, проверьте подключение и попробуйте снова.";
 "Purchase failed. Please try again." = "Покупка не удалась. Пожалуйста, попробуйте снова.";
+
+/* Paywall Dismiss Confirmation */
+"Paywall.dismiss.title" = "Подождите! Не упустите";
+"Paywall.dismiss.subtitle" = "Вы вот-вот потеряете доступ к этим премиум-функциям:";
+"Paywall.dismiss.stayButton" = "Остаться и разблокировать Premium";
+"Paywall.dismiss.leaveButton" = "Всё равно выйти";
+"Paywall.feature.unlimitedScans" = "Безлимитное сканирование еды";
+"Paywall.feature.advancedProgress" = "Расширенное отслеживание прогресса";
+"Paywall.feature.dietPlans" = "Индивидуальные планы питания";
+"Paywall.feature.pdfExport" = "Экспорт данных в PDF";
+"Paywall.feature.premiumWidgets" = "Премиум виджеты";
+
+/* Support Email */
+"Thank you! Your support request has been sent successfully. We'll get back to you soon." = "Спасибо! Ваш запрос в службу поддержки успешно отправлен. Мы скоро свяжемся с вами.";
+"Failed to send support request. Please try again later." = "Не удалось отправить запрос в службу поддержки. Пожалуйста, попробуйте позже.";

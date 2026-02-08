@@ -772,3 +772,18 @@
 "This subscription is not available in your region." = "이 구독은 해당 지역에서 사용할 수 없습니다.";
 "Network error. Please check your connection and try again." = "네트워크 오류. 연결을 확인하고 다시 시도해 주세요.";
 "Purchase failed. Please try again." = "구매에 실패했습니다. 다시 시도해 주세요.";
+
+/* Paywall Dismiss Confirmation */
+"Paywall.dismiss.title" = "잠깐! 놓치지 마세요";
+"Paywall.dismiss.subtitle" = "다음 프리미엄 기능에 대한 액세스를 잃게 됩니다:";
+"Paywall.dismiss.stayButton" = "머물러서 프리미엄 잠금 해제";
+"Paywall.dismiss.leaveButton" = "그래도 나가기";
+"Paywall.feature.unlimitedScans" = "무제한 음식 스캔";
+"Paywall.feature.advancedProgress" = "고급 진행 상황 추적";
+"Paywall.feature.dietPlans" = "맞춤 식단 계획";
+"Paywall.feature.pdfExport" = "PDF 데이터 내보내기";
+"Paywall.feature.premiumWidgets" = "프리미엄 위젯";
+
+/* Support Email */
+"Thank you! Your support request has been sent successfully. We'll get back to you soon." = "감사합니다! 지원 요청이 성공적으로 전송되었습니다. 곧 연락드리겠습니다.";
+"Failed to send support request. Please try again later." = "지원 요청 전송에 실패했습니다. 나중에 다시 시도해 주세요.";

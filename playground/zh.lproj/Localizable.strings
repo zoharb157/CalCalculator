@@ -774,3 +774,18 @@
 "This subscription is not available in your region." = "此订阅在您的地区不可用。";
 "Network error. Please check your connection and try again." = "网络错误。请检查您的连接并重试。";
 "Purchase failed. Please try again." = "购买失败。请重试。";
+
+/* Paywall Dismiss Confirmation */
+"Paywall.dismiss.title" = "等等！不要错过";
+"Paywall.dismiss.subtitle" = "您即将失去以下高级功能的访问权限：";
+"Paywall.dismiss.stayButton" = "留下并解锁高级版";
+"Paywall.dismiss.leaveButton" = "仍然离开";
+"Paywall.feature.unlimitedScans" = "无限食物扫描";
+"Paywall.feature.advancedProgress" = "高级进度追踪";
+"Paywall.feature.dietPlans" = "自定义饮食计划";
+"Paywall.feature.pdfExport" = "PDF数据导出";
+"Paywall.feature.premiumWidgets" = "高级小组件";
+
+/* Support Email */
+"Thank you! Your support request has been sent successfully. We'll get back to you soon." = "感谢您！您的支持请求已成功发送。我们会尽快与您联系。";
+"Failed to send support request. Please try again later." = "发送支持请求失败。请稍后重试。";

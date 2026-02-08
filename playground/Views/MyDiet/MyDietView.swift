@@ -145,13 +145,7 @@ struct MyDietView: View {
             }
         }
         .fullScreenCover(isPresented: $showingPaywall) {
-            SDKView(
-                model: sdk,
-                page: .splash,
-                show: paywallBinding(showPaywall: $showingPaywall, sdk: sdk),
-                backgroundColor: Color(UIColor.systemBackground),
-                ignoreSafeArea: true
-            )
+            PaywallContainerView(isPresented: $showingPaywall, sdk: sdk)
         }
         .onChange(of: viewModel.selectedDate) { _, _ in
             Task {
@@ -883,13 +877,7 @@ struct MyDietView: View {
     // MARK: - Paywall View
     
     private var paywallView: some View {
-        SDKView(
-            model: sdk,
-            page: .splash,
-            show: paywallBinding(showPaywall: $showingPaywall, sdk: sdk),
-            backgroundColor: Color(UIColor.systemBackground),
-            ignoreSafeArea: true
-        )
+        PaywallContainerView(isPresented: $showingPaywall, sdk: sdk)
     }
 }
 
