@@ -77,19 +77,12 @@ struct TextFoodLogView: View {
             }
             .alert(localizationManager.localizedString(for: AppStrings.Common.success), isPresented: $viewModel.showSuccess) {
                 Button(localizationManager.localizedString(for: AppStrings.Common.done)) {
-                    // Add smooth dismiss animation
-                    withAnimation(.easeOut(duration: 0.3)) {
-                        dismiss()
-                    }
+                    dismiss()
                 }
                 .id("done-text-log-\(localizationManager.currentLanguage)")
             } message: {
                 Text(viewModel.successMessage ?? localizationManager.localizedString(for: AppStrings.Food.foodSaved))
                     .id("success-message-\(localizationManager.currentLanguage)")
-            }
-            .transaction { transaction in
-                // Ensure smooth animations for dismiss
-                transaction.animation = .easeOut(duration: 0.3)
             }
         }
     }
