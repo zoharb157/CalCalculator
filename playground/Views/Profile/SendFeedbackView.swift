@@ -19,6 +19,8 @@ struct SendFeedbackView: View {
     @State private var feedbackText = ""
     @State private var showingMailComposer = false
     @State private var showCopiedAlert = false
+    @State private var showSentAlert = false
+    @State private var showFailedAlert = false
     
     private let feedbackEmail = "feedback@calai.app"
     
@@ -52,13 +54,36 @@ struct SendFeedbackView: View {
                     recipients: [feedbackEmail],
                     subject: localizationManager.localizedString(for: AppStrings.Profile.sendFeedback),
                     body: generateEmailBody()
-                )
+                ) { result in
+                    switch result {
+                    case .sent:
+                        showSentAlert = true
+                    case .failed:
+                        showFailedAlert = true
+                    case .cancelled, .saved:
+                        break
+                    @unknown default:
+                        break
+                    }
+                }
             }
             #endif
             .alert(localizationManager.localizedString(for: AppStrings.Common.success), isPresented: $showCopiedAlert) {
                 Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) {}
             } message: {
                 Text(localizationManager.localizedString(for: AppStrings.Profile.emailContentCopied))
+            }
+            .alert(localizationManager.localizedString(for: AppStrings.Common.success), isPresented: $showSentAlert) {
+                Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) {
+                    dismiss()
+                }
+            } message: {
+                Text(localizationManager.localizedString(for: AppStrings.Profile.feedbackSent))
+            }
+            .alert(localizationManager.localizedString(for: AppStrings.Common.error), isPresented: $showFailedAlert) {
+                Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) {}
+            } message: {
+                Text(localizationManager.localizedString(for: AppStrings.Profile.feedbackFailed))
             }
         }
     }
@@ -205,6 +230,7 @@ struct MailComposeView: UIViewControllerRepresentable {
     let recipients: [String]
     let subject: String
     let body: String
+    let onComplete: (MFMailComposeResult) -> Void
     
     func makeUIViewController(context: Context) -> MFMailComposeViewController {
         let composer = MFMailComposeViewController()
@@ -218,12 +244,20 @@ struct MailComposeView: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: MFMailComposeViewController, context: Context) {}
     
     func makeCoordinator() -> Coordinator {
-        Coordinator()
+        Coordinator(onComplete: onComplete)
     }
     
     class Coordinator: NSObject, MFMailComposeViewControllerDelegate {
+        let onComplete: (MFMailComposeResult) -> Void
+        
+        init(onComplete: @escaping (MFMailComposeResult) -> Void) {
+            self.onComplete = onComplete
+        }
+        
         func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: Error?) {
-            controller.dismiss(animated: true)
+            controller.dismiss(animated: true) {
+                self.onComplete(result)
+            }
         }
     }
 }

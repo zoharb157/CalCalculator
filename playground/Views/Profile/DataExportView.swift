@@ -174,7 +174,7 @@ struct DataExportView: View {
                     model: sdk,
                     page: .splash,
                     show: paywallBinding(showPaywall: $showingPaywall, sdk: sdk),
-                    backgroundColor: .white,
+                    backgroundColor: Color(UIColor.systemBackground),
                     ignoreSafeArea: true
                 )
             }
@@ -184,41 +184,48 @@ struct DataExportView: View {
     // MARK: - PDF Export Functions
     
     private func exportWeightDataPDF() {
+        print("📊 [DataExportView] exportWeightDataPDF called - isSubscribed: \(isSubscribed), weightEntries: \(weightEntries.count)")
         isExporting = true
         
         Task { @MainActor in
             let pdfData = generateWeightPDF()
+            print("📊 [DataExportView] PDF data size: \(pdfData.count) bytes")
             let filename = "weight_history_\(dateString()).pdf"
             sharePDF(pdfData, filename: filename)
         }
     }
     
     private func exportMealDataPDF() {
+        print("📊 [DataExportView] exportMealDataPDF called - isSubscribed: \(isSubscribed), meals: \(meals.count)")
         isExporting = true
         
         Task { @MainActor in
             let pdfData = generateMealsPDF()
+            print("📊 [DataExportView] PDF data size: \(pdfData.count) bytes")
             let filename = "meal_history_\(dateString()).pdf"
             sharePDF(pdfData, filename: filename)
         }
     }
     
     private func exportDailyNutritionSummaryPDF() {
+        print("📊 [DataExportView] exportDailyNutritionSummaryPDF called - isSubscribed: \(isSubscribed)")
         isExporting = true
         
         Task { @MainActor in
             let pdfData = generateDailyNutritionPDF()
+            print("📊 [DataExportView] PDF data size: \(pdfData.count) bytes")
             let filename = "daily_nutrition_\(dateString()).pdf"
             sharePDF(pdfData, filename: filename)
         }
     }
     
     private func exportAllDataPDF() {
+        print("📊 [DataExportView] exportAllDataPDF called - isSubscribed: \(isSubscribed), weightEntries: \(weightEntries.count), meals: \(meals.count)")
         isExporting = true
         
         Task { @MainActor in
             let pdfData = generateComprehensivePDF()
-            // Get app name for filename
+            print("📊 [DataExportView] PDF data size: \(pdfData.count) bytes")
             let appNameForFile = (Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String 
                 ?? Bundle.main.infoDictionary?["CFBundleName"] as? String 
                 ?? "CalorieVisionAI").lowercased().replacingOccurrences(of: " ", with: "_")
@@ -723,7 +730,9 @@ struct DataExportView: View {
     }
     
     private func sharePDF(_ data: Data, filename: String) {
+        print("📊 [DataExportView] sharePDF called - filename: \(filename), dataSize: \(data.count)")
         guard !data.isEmpty else {
+            print("❌ [DataExportView] PDF data is empty!")
             DispatchQueue.main.async {
                 isExporting = false
                 exportError = "Failed to generate PDF. The data is empty."
@@ -732,11 +741,12 @@ struct DataExportView: View {
         }
         
         let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+        print("📊 [DataExportView] Writing to: \(tempURL.path)")
         
         do {
             try data.write(to: tempURL)
+            print("✅ [DataExportView] File written successfully")
             
-            // Verify file was written
             guard FileManager.default.fileExists(atPath: tempURL.path) else {
                 throw NSError(domain: "ExportError", code: -1, userInfo: [NSLocalizedDescriptionKey: "File was not created successfully"])
             }
@@ -746,6 +756,7 @@ struct DataExportView: View {
                 shareFile(tempURL)
             }
         } catch {
+            print("❌ [DataExportView] Failed to write file: \(error)")
             DispatchQueue.main.async {
                 isExporting = false
                 exportError = "Failed to export PDF: \(error.localizedDescription)"
@@ -755,6 +766,7 @@ struct DataExportView: View {
     }
     
     private func shareFile(_ url: URL) {
+        print("📊 [DataExportView] shareFile called - url: \(url.path)")
         shareSheetURL = url
         showShareSheet = true
         HapticManager.shared.notification(.success)

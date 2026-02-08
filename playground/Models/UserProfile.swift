@@ -27,6 +27,9 @@ final class UserProfile {
         static let dateOfBirth = "userProfile_dateOfBirth"
         static let gender = "userProfile_gender"
         static let dailyStepGoal = "userProfile_dailyStepGoal"
+        static let activeCaloriesGoal = "userProfile_activeCaloriesGoal"
+        static let exerciseMinutesGoal = "userProfile_exerciseMinutesGoal"
+        static let distanceGoalKm = "userProfile_distanceGoalKm"
         static let appearanceMode = "userProfile_appearanceMode"
         static let badgeCelebrations = "userProfile_badgeCelebrations"
         static let liveActivity = "userProfile_liveActivity"
@@ -76,6 +79,18 @@ final class UserProfile {
     
     var dailyStepGoal: Int {
         didSet { defaults.set(dailyStepGoal, forKey: Keys.dailyStepGoal) }
+    }
+    
+    var activeCaloriesGoal: Int {
+        didSet { defaults.set(activeCaloriesGoal, forKey: Keys.activeCaloriesGoal) }
+    }
+    
+    var exerciseMinutesGoal: Int {
+        didSet { defaults.set(exerciseMinutesGoal, forKey: Keys.exerciseMinutesGoal) }
+    }
+    
+    var distanceGoalKm: Double {
+        didSet { defaults.set(distanceGoalKm, forKey: Keys.distanceGoalKm) }
     }
     
     // MARK: - Preferences
@@ -155,6 +170,9 @@ final class UserProfile {
         let dateOfBirthValue = defaults.object(forKey: Keys.dateOfBirth) as? Date ?? Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date()
         let genderValue = Gender(rawValue: defaults.string(forKey: Keys.gender) ?? "male") ?? .male
         let dailyStepGoalValue = defaults.object(forKey: Keys.dailyStepGoal) as? Int ?? 10000
+        let activeCaloriesGoalValue = defaults.object(forKey: Keys.activeCaloriesGoal) as? Int ?? 500
+        let exerciseMinutesGoalValue = defaults.object(forKey: Keys.exerciseMinutesGoal) as? Int ?? 30
+        let distanceGoalKmValue = defaults.object(forKey: Keys.distanceGoalKm) as? Double ?? 5.0
         let appearanceModeValue = AppearanceMode(rawValue: defaults.string(forKey: Keys.appearanceMode) ?? "system") ?? .system
         let badgeCelebrationsValue = defaults.object(forKey: Keys.badgeCelebrations) as? Bool ?? true
         let liveActivityValue = defaults.object(forKey: Keys.liveActivity) as? Bool ?? false
@@ -182,6 +200,9 @@ final class UserProfile {
         self.dateOfBirth = dateOfBirthValue
         self.gender = genderValue
         self.dailyStepGoal = dailyStepGoalValue
+        self.activeCaloriesGoal = activeCaloriesGoalValue
+        self.exerciseMinutesGoal = exerciseMinutesGoalValue
+        self.distanceGoalKm = distanceGoalKmValue
         self.appearanceMode = appearanceModeValue
         self.badgeCelebrations = badgeCelebrationsValue
         self.liveActivity = liveActivityValue

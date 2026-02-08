@@ -166,7 +166,7 @@ struct DietPlansListView: View {
                     model: sdk,
                     page: .splash,
                     show: paywallBinding(showPaywall: $showingPaywall, sdk: sdk),
-                    backgroundColor: .white,
+                    backgroundColor: Color(UIColor.systemBackground),
                     ignoreSafeArea: true
                 )
             }
@@ -490,7 +490,7 @@ struct DietPlansListView: View {
             model: sdk,
             page: .splash,
             show: paywallBinding(showPaywall: $showingPaywall, sdk: sdk),
-            backgroundColor: .white,
+            backgroundColor: Color(UIColor.systemBackground),
             ignoreSafeArea: true
         )
     }

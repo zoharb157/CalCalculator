@@ -107,8 +107,9 @@ struct WeightHistoryView: View {
                             }
                         }
                         Button {
-                            // Convert from kg (storage) to display units
-                            newWeight = displayWeight(repository.getCurrentWeight())
+                            // getCurrentWeight() returns lbs, convert to display units
+                            let weightInLbs = repository.getCurrentWeight()
+                            newWeight = useMetricUnits ? (weightInLbs / 2.20462) : weightInLbs
                             newWeightNote = ""
                             selectedDate = Date()
                             showingAddWeight = true
@@ -153,8 +154,9 @@ struct WeightHistoryView: View {
                 .padding(.horizontal)
             
             Button {
-                // Convert from kg (storage) to display units
-                newWeight = displayWeight(repository.getCurrentWeight())
+                // getCurrentWeight() returns lbs, convert to display units
+                let weightInLbs = repository.getCurrentWeight()
+                newWeight = useMetricUnits ? (weightInLbs / 2.20462) : weightInLbs
                 newWeightNote = ""
                 selectedDate = Date()
                 showingAddWeight = true
@@ -197,6 +199,7 @@ struct WeightHistoryView: View {
                             .frame(height: 200)
                     }
                     .padding(.vertical, 8)
+                    .listRowBackground(Color.clear)
                 } header: {
                     Text(localizationManager.localizedString(for: AppStrings.Profile.progress))
                         .id("progress-label-\(localizationManager.currentLanguage)")
@@ -416,22 +419,24 @@ struct WeightHistoryView: View {
     // MARK: - Helper Functions
     
     private func saveWeightEntry() {
-        // Convert from display units to kg for storage
         let weightInKg = storageWeight(newWeight)
+        let calendar = Calendar.current
         
-        let entry = WeightEntry(
-            weight: weightInKg,
-            date: selectedDate,
-            note: newWeightNote.isEmpty ? nil : newWeightNote
-        )
-        modelContext.insert(entry)
+        if let existingEntry = weightEntries.first(where: { calendar.isDate($0.date, inSameDayAs: selectedDate) }) {
+            existingEntry.weight = weightInKg
+            existingEntry.date = selectedDate
+            existingEntry.note = newWeightNote.isEmpty ? nil : newWeightNote
+        } else {
+            let entry = WeightEntry(
+                weight: weightInKg,
+                date: selectedDate,
+                note: newWeightNote.isEmpty ? nil : newWeightNote
+            )
+            modelContext.insert(entry)
+        }
         
-        // Update current weight in repository and UserSettings if this is today's entry
-        // Repository expects weight in kg
-        if Calendar.current.isDateInToday(selectedDate) {
+        if calendar.isDateInToday(selectedDate) {
             repository.setCurrentWeight(weightInKg)
-            // Also update UserSettings to keep it in sync
-            // This ensures all views that observe UserSettings stay updated
             UserSettings.shared.updateWeight(weightInKg)
         }
         

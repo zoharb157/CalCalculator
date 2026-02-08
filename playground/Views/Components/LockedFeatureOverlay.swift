@@ -70,7 +70,7 @@ struct LockedFeatureOverlay: View {
                 model: sdk,
                 page: .splash,
                 show: $showPaywall,
-                backgroundColor: .white,
+                backgroundColor: Color(UIColor.systemBackground) ,
                 ignoreSafeArea: true
             )
         }
@@ -155,7 +155,7 @@ struct PremiumLockedContent<Content: View>: View {
                 model: sdk,
                 page: .splash,
                 show: paywallBinding(showPaywall: $showPaywall, sdk: sdk),
-                backgroundColor: .white,
+                backgroundColor: Color(UIColor.systemBackground) ,
                 ignoreSafeArea: true
             )
         }
@@ -201,7 +201,7 @@ struct LockedButton: View {
                 model: sdk,
                 page: .splash,
                 show: $showPaywall,
-                backgroundColor: .white,
+                backgroundColor: Color(UIColor.systemBackground) ,
                 ignoreSafeArea: true
             )
         }
