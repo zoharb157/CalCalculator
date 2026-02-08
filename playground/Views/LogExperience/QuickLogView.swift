@@ -136,7 +136,7 @@ struct QuickLogView: View {
                 Text(errorMessage)
             }
             .fullScreenCover(isPresented: $showPaywall) {
-                PaywallContainerView(isPresented: $showPaywall, sdk: sdk)
+                PaywallContainerView(isPresented: $showPaywall, sdk: sdk, source: "quick_log_view")
             }
         }
     }

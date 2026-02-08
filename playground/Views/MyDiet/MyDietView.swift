@@ -145,7 +145,7 @@ struct MyDietView: View {
             }
         }
         .fullScreenCover(isPresented: $showingPaywall) {
-            PaywallContainerView(isPresented: $showingPaywall, sdk: sdk)
+            PaywallContainerView(isPresented: $showingPaywall, sdk: sdk, source: "my_diet_view")
         }
         .onChange(of: viewModel.selectedDate) { _, _ in
             Task {
@@ -877,7 +877,7 @@ struct MyDietView: View {
     // MARK: - Paywall View
     
     private var paywallView: some View {
-        PaywallContainerView(isPresented: $showingPaywall, sdk: sdk)
+        PaywallContainerView(isPresented: $showingPaywall, sdk: sdk, source: "my_diet_view")
     }
 }
 

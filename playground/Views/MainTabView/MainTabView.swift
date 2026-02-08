@@ -402,7 +402,7 @@ struct MainTabView: View {
     // MARK: - Paywall View
     
     private var paywallView: some View {
-        PaywallContainerView(isPresented: $showingPaywall, sdk: sdk)
+        PaywallContainerView(isPresented: $showingPaywall, sdk: sdk, source: "main_tab_view")
     }
     // MARK: - Tab Bar Tap Detection
     private func setupTabBarTapDetection() {
@@ -582,6 +582,7 @@ private struct StableTabViewWrapper: View {
             },
             set: { newValue in
                 AppLogger.forClass("MainTabView").info("🔍 [binding set] TabView setting selection: '\(selectedTabRaw)' -> '\(newValue)'")
+                Pixel.track("tab_\(newValue)", type: .navigation)
                 selectedTabRaw = newValue
                 storedTab = newValue
                 UserDefaults.standard.set(newValue, forKey: "selectedMainTab")

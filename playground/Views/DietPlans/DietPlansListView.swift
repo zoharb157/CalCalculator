@@ -162,7 +162,7 @@ struct DietPlansListView: View {
                 Text(localizationManager.localizedString(for: AppStrings.DietPlan.deleteConfirmation))
             }
             .fullScreenCover(isPresented: $showingPaywall) {
-                PaywallContainerView(isPresented: $showingPaywall, sdk: sdk)
+                PaywallContainerView(isPresented: $showingPaywall, sdk: sdk, source: "diet_plans_list")
             }
         }
     }
@@ -480,7 +480,7 @@ struct DietPlansListView: View {
     // MARK: - Paywall View
     
     private var paywallView: some View {
-        PaywallContainerView(isPresented: $showingPaywall, sdk: sdk)
+        PaywallContainerView(isPresented: $showingPaywall, sdk: sdk, source: "diet_plans_list")
     }
 }
 

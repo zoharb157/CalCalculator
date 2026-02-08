@@ -151,7 +151,7 @@ struct PremiumLockedContent<Content: View>: View {
             }
         }
         .fullScreenCover(isPresented: $showPaywall) {
-            PaywallContainerView(isPresented: $showPaywall, sdk: sdk)
+            PaywallContainerView(isPresented: $showPaywall, sdk: sdk, source: "locked_feature_overlay")
         }
     }
 }

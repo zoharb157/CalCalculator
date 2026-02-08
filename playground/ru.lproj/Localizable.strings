@@ -788,3 +788,25 @@
 /* Support Email */
 "Thank you! Your support request has been sent successfully. We'll get back to you soon." = "Спасибо! Ваш запрос в службу поддержки успешно отправлен. Мы скоро свяжемся с вами.";
 "Failed to send support request. Please try again later." = "Не удалось отправить запрос в службу поддержки. Пожалуйста, попробуйте позже.";
+
+/* Developer Settings */
+"Developer Settings" = "Настройки разработчика";
+"Developer Mode" = "Режим разработчика";
+"Debug and testing options for developers" = "Опции отладки и тестирования для разработчиков";
+"User Information" = "Информация о пользователе";
+"User ID" = "ID пользователя";
+"Enable Developer Mode" = "Включить режим разработчика";
+"Unlock debugging options" = "Разблокировать опции отладки";
+"Premium Status" = "Статус Premium";
+"Override Premium Status" = "Переопределить статус Premium";
+"Manually control subscription for testing" = "Управлять подпиской вручную для тестирования";
+"Premium Unlocked" = "Premium разблокирован";
+"Premium" = "Премиум";
+"Free" = "Бесплатно";
+"Danger Zone" = "Опасная зона";
+"Delete All Data" = "Удалить все данные";
+"Reset app to initial state" = "Сбросить приложение до начального состояния";
+"Delete All Data?" = "Удалить все данные?";
+"Delete Everything" = "Удалить всё";
+"This will permanently delete all your data including meals, exercises, weight history, and settings. The app will restart from the welcome screen. This action cannot be undone." = "Это навсегда удалит все ваши данные, включая приёмы пищи, упражнения, историю веса и настройки. Приложение перезапустится с экрана приветствия. Это действие нельзя отменить.";
+"Copied to clipboard" = "Скопировано в буфер обмена";

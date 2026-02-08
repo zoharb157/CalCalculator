@@ -268,7 +268,7 @@ struct ProgressDashboardView: View {
                 )
             }
             .fullScreenCover(isPresented: $showPaywall) {
-                PaywallContainerView(isPresented: $showPaywall, sdk: sdk)
+                PaywallContainerView(isPresented: $showPaywall, sdk: sdk, source: "progress_view")
             }
             .sheet(isPresented: $showHealthKitPermissionSheet, onDismiss: {
                 // Only request HealthKit permission if the user tapped "Sync Health Data"

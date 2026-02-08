@@ -251,6 +251,9 @@ struct playgroundApp: App {
                 }
                 .environment(\.isSubscribed, subscriptionStatus)  // Inject reactive subscription status
                 .task {
+                    ActivityPixelService.shared.configure(with: sdk)
+                    Pixel.track("app_opened", type: .lifecycle)
+                    
                     await logDietPlansOnStartup()
                     
                     _ = RateUsManager.shared
@@ -314,7 +317,16 @@ struct playgroundApp: App {
     /// Also syncs the subscription status to the widget via shared UserDefaults
     /// Stores the value in UserDefaults so it persists across app launches
     private func updateSubscriptionStatus() {
-        // Always use SDK value as the source of truth
+        if let overrideStatus = DeveloperModeManager.shared.effectivePremiumStatus {
+            if subscriptionStatus != overrideStatus {
+                print("📱 [Subscription] Dev mode override active: \(overrideStatus)")
+            }
+            subscriptionStatus = overrideStatus
+            UserDefaults.standard.set(overrideStatus, forKey: "subscriptionStatus")
+            syncSubscriptionStatusToWidget(overrideStatus)
+            return
+        }
+        
         let sdkStatus = sdk.isSubscribed
         let cachedStatus = UserDefaults.standard.bool(forKey: "subscriptionStatus")
         

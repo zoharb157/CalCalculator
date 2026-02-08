@@ -152,6 +152,8 @@ final class SubscriptionManager {
                 
                 AppLogger.forClass("SubscriptionManager").success("Purchase successful for \(product.id)")
                 
+                Pixel.track("purchase_success", type: .transaction)
+                
                 // Notify the app about subscription status change
                 NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
                 
@@ -159,6 +161,7 @@ final class SubscriptionManager {
                 
             case .userCancelled:
                 AppLogger.forClass("SubscriptionManager").info("User cancelled purchase")
+                Pixel.track("purchase_cancelled", type: .transaction)
                 return nil
                 
             case .pending:
@@ -172,6 +175,7 @@ final class SubscriptionManager {
             }
         } catch {
             AppLogger.forClass("SubscriptionManager").warning("Purchase failed", error: error)
+            Pixel.track("purchase_failed", type: .transaction)
             errorMessage = "Purchase failed: \(error.localizedDescription)"
             throw error
         }
@@ -188,13 +192,16 @@ final class SubscriptionManager {
             
             if isSubscribed {
                 AppLogger.forClass("SubscriptionManager").success("Purchases restored successfully")
+                Pixel.track("restore_success", type: .transaction)
                 NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
             } else {
                 AppLogger.forClass("SubscriptionManager").info("No active subscriptions found to restore")
+                Pixel.track("restore_no_subscription", type: .transaction)
                 errorMessage = "No active subscriptions found."
             }
         } catch {
             AppLogger.forClass("SubscriptionManager").warning("Failed to restore purchases", error: error)
+            Pixel.track("restore_failed", type: .transaction)
             errorMessage = "Failed to restore purchases: \(error.localizedDescription)"
         }
         

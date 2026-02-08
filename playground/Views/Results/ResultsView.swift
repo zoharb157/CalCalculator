@@ -60,7 +60,7 @@ struct ResultsView: View {
                     fixResultSheet
                 }
                 .fullScreenCover(isPresented: $showPaywall) {
-                    PaywallContainerView(isPresented: $showPaywall, sdk: sdk)
+                    PaywallContainerView(isPresented: $showPaywall, sdk: sdk, source: "results_view")
                 }
         }
     }

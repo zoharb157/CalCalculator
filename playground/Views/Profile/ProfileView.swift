@@ -37,6 +37,8 @@ struct ProfileView: View {
     @State private var showingSendFeedback = false
     @State private var showingHealthInfoSources = false
     @State private var showingSubscription = false
+    @State private var showingDeveloperSettings = false
+    @State private var versionTapCount = 0
     
     // Subscription status
     @Environment(\.isSubscribed) private var isSubscribed
@@ -113,7 +115,10 @@ struct ProfileView: View {
             HealthInfoSourcesView()
         }
         .fullScreenCover(isPresented: $showingSubscription) {
-            PaywallContainerView(isPresented: $showingSubscription, sdk: sdk)
+            PaywallContainerView(isPresented: $showingSubscription, sdk: sdk, source: "profile_view")
+        }
+        .sheet(isPresented: $showingDeveloperSettings) {
+            DeveloperSettingsView()
         }
     }
     
@@ -141,7 +146,10 @@ struct ProfileView: View {
                     icon: "gearshape",
                     title: localizationManager.localizedString(for: AppStrings.Profile.preferences),
                     subtitle: localizationManager.localizedString(for: AppStrings.Profile.appearanceNotificationsBehavior),
-                    action: { showingPreferences = true }
+                    action: {
+                        Pixel.track("settings_preferences_tapped", type: .navigation)
+                        showingPreferences = true
+                    }
                 )
                 
                 SettingsDivider()
@@ -150,7 +158,10 @@ struct ProfileView: View {
                     icon: "globe",
                     title: localizationManager.localizedString(for: AppStrings.Profile.language),
                     subtitle: getLocalizedLanguageName(from: viewModel.selectedLanguage),
-                    action: { showingLanguageSelection = true }
+                    action: {
+                        Pixel.track("settings_language_tapped", type: .navigation)
+                        showingLanguageSelection = true
+                    }
                 )
                 
                 SettingsDivider()
@@ -163,11 +174,12 @@ struct ProfileView: View {
                     subtitle: isSubscribed ? "You have an active subscription" : "Unlock all premium features",
                     action: { 
                         if isSubscribed {
-                            // Open App Store subscription management
+                            Pixel.track("settings_manage_subscription_tapped", type: .navigation)
                             if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
                                 UIApplication.shared.open(url)
                             }
                         } else {
+                            Pixel.track("settings_upgrade_premium_tapped", type: .navigation)
                             showingSubscription = true
                         }
                     }
@@ -285,7 +297,10 @@ struct ProfileView: View {
                     icon: "envelope",
                     iconColor: .blue,
                     title: localizationManager.localizedString(for: AppStrings.Profile.contactSupport),
-                    action: { showingSupportEmail = true }
+                    action: {
+                        Pixel.track("settings_contact_support_tapped", type: .engagement)
+                        showingSupportEmail = true
+                    }
                 )
                 
                 SettingsDivider()
@@ -294,7 +309,10 @@ struct ProfileView: View {
                     icon: "star.fill",
                     iconColor: .yellow,
                     title: localizationManager.localizedString(for: AppStrings.Profile.rateUs),
-                    action: { showingRateUs = true }
+                    action: {
+                        Pixel.track("settings_rate_us_tapped", type: .engagement)
+                        showingRateUs = true
+                    }
                 )
                 
                 SettingsDivider()
@@ -303,7 +321,10 @@ struct ProfileView: View {
                     icon: "paperplane.fill",
                     iconColor: .green,
                     title: localizationManager.localizedString(for: AppStrings.Profile.sendFeedback),
-                    action: { showingSendFeedback = true }
+                    action: {
+                        Pixel.track("settings_send_feedback_tapped", type: .engagement)
+                        showingSendFeedback = true
+                    }
                 )
                 
                 SettingsDivider()
@@ -321,7 +342,10 @@ struct ProfileView: View {
                     icon: "doc.text",
                     iconColor: .gray,
                     title: localizationManager.localizedString(for: AppStrings.Profile.termsOfService),
-                    action: { openURL("https://www.apple.com/legal/internet-services/itunes/dev/stdeula/") }
+                    action: {
+                        Pixel.track("settings_terms_tapped", type: .navigation)
+                        openURL("https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")
+                    }
                 )
                 
                 SettingsDivider()
@@ -330,18 +354,40 @@ struct ProfileView: View {
                     icon: "hand.raised",
                     iconColor: .gray,
                     title: localizationManager.localizedString(for: AppStrings.Profile.privacyPolicy),
-                    action: { openURL("https://www.apple.com/legal/privacy/") }
+                    action: {
+                        Pixel.track("settings_privacy_tapped", type: .navigation)
+                        openURL("https://www.apple.com/legal/privacy/")
+                    }
                 )
             }
             
             // App Version
-            HStack {
-                Spacer()
-                Text(localizationManager.localizedString(for: AppStrings.Profile.version))
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                Spacer()
+            Button {
+                versionTapCount += 1
+                if versionTapCount >= 10 {
+                    showingDeveloperSettings = true
+                    versionTapCount = 0
+                }
+            } label: {
+                HStack {
+                    Spacer()
+                    if versionTapCount >= 5 {
+                        Text("\(10 - versionTapCount)")
+                            .font(.caption2)
+                            .foregroundColor(.secondary.opacity(0.6))
+                    }
+                    Text(localizationManager.localizedString(for: AppStrings.Profile.version))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    if versionTapCount >= 5 {
+                        Text("\(10 - versionTapCount)")
+                            .font(.caption2)
+                            .foregroundColor(.clear)
+                    }
+                    Spacer()
+                }
             }
+            .buttonStyle(.plain)
             .padding(.top, 16)
         }
     }

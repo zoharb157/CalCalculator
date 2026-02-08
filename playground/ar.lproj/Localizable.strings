@@ -793,3 +793,25 @@
 /* Support Email */
 "Thank you! Your support request has been sent successfully. We'll get back to you soon." = "شكراً لك! تم إرسال طلب الدعم بنجاح. سنتواصل معك قريباً.";
 "Failed to send support request. Please try again later." = "فشل إرسال طلب الدعم. يرجى المحاولة مرة أخرى لاحقاً.";
+
+/* Developer Settings */
+"Developer Settings" = "إعدادات المطور";
+"Developer Mode" = "وضع المطور";
+"Debug and testing options for developers" = "خيارات التصحيح والاختبار للمطورين";
+"User Information" = "معلومات المستخدم";
+"User ID" = "معرّف المستخدم";
+"Enable Developer Mode" = "تفعيل وضع المطور";
+"Unlock debugging options" = "فتح خيارات التصحيح";
+"Premium Status" = "حالة الاشتراك";
+"Override Premium Status" = "تجاوز حالة الاشتراك";
+"Manually control subscription for testing" = "التحكم يدوياً في الاشتراك للاختبار";
+"Premium Unlocked" = "الاشتراك مفعّل";
+"Premium" = "بريميوم";
+"Free" = "مجاني";
+"Danger Zone" = "منطقة الخطر";
+"Delete All Data" = "حذف جميع البيانات";
+"Reset app to initial state" = "إعادة التطبيق للحالة الأولية";
+"Delete All Data?" = "حذف جميع البيانات؟";
+"Delete Everything" = "حذف كل شيء";
+"This will permanently delete all your data including meals, exercises, weight history, and settings. The app will restart from the welcome screen. This action cannot be undone." = "سيؤدي هذا إلى حذف جميع بياناتك نهائياً بما في ذلك الوجبات والتمارين وسجل الوزن والإعدادات. سيُعاد تشغيل التطبيق من شاشة الترحيب. لا يمكن التراجع عن هذا الإجراء.";
+"Copied to clipboard" = "تم النسخ للحافظة";

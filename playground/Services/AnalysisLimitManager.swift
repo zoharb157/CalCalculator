@@ -28,7 +28,11 @@ final class AnalysisLimitManager {
         if isSubscribed {
             return true
         }
-        return currentAnalysisCount < freeAnalysisLimit
+        let canPerform = currentAnalysisCount < freeAnalysisLimit
+        if !canPerform {
+            Pixel.track("analysis_limit_reached", type: .lifecycle)
+        }
+        return canPerform
     }
     
     /// Record that an analysis was performed

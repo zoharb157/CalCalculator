@@ -787,3 +787,25 @@
 /* Support Email */
 "Thank you! Your support request has been sent successfully. We'll get back to you soon." = "धन्यवाद! आपका सपोर्ट अनुरोध सफलतापूर्वक भेजा गया। हम जल्द ही आपसे संपर्क करेंगे।";
 "Failed to send support request. Please try again later." = "सपोर्ट अनुरोध भेजने में विफल। कृपया बाद में पुनः प्रयास करें।";
+
+/* Developer Settings */
+"Developer Settings" = "डेवलपर सेटिंग्स";
+"Developer Mode" = "डेवलपर मोड";
+"Debug and testing options for developers" = "डेवलपर्स के लिए डीबग और टेस्टिंग विकल्प";
+"User Information" = "उपयोगकर्ता जानकारी";
+"User ID" = "यूजर आईडी";
+"Enable Developer Mode" = "डेवलपर मोड सक्षम करें";
+"Unlock debugging options" = "डीबगिंग विकल्प अनलॉक करें";
+"Premium Status" = "प्रीमियम स्थिति";
+"Override Premium Status" = "प्रीमियम स्थिति ओवरराइड करें";
+"Manually control subscription for testing" = "टेस्टिंग के लिए सब्सक्रिप्शन को मैन्युअली नियंत्रित करें";
+"Premium Unlocked" = "प्रीमियम अनलॉक";
+"Premium" = "प्रीमियम";
+"Free" = "मुफ़्त";
+"Danger Zone" = "खतरे का क्षेत्र";
+"Delete All Data" = "सभी डेटा हटाएं";
+"Reset app to initial state" = "ऐप को प्रारंभिक स्थिति में रीसेट करें";
+"Delete All Data?" = "सभी डेटा हटाएं?";
+"Delete Everything" = "सब कुछ हटाएं";
+"This will permanently delete all your data including meals, exercises, weight history, and settings. The app will restart from the welcome screen. This action cannot be undone." = "यह आपके सभी डेटा को स्थायी रूप से हटा देगा जिसमें भोजन, व्यायाम, वजन इतिहास और सेटिंग्स शामिल हैं। ऐप वेलकम स्क्रीन से पुनः आरंभ होगा। यह क्रिया पूर्ववत नहीं की जा सकती।";
+"Copied to clipboard" = "क्लिपबोर्ड पर कॉपी किया गया";

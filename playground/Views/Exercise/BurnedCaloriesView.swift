@@ -211,7 +211,7 @@ struct BurnedCaloriesView: View {
                         Text(errorMessage)
                     }
                     .fullScreenCover(isPresented: $showPaywall) {
-                        PaywallContainerView(isPresented: $showPaywall, sdk: sdk)
+                        PaywallContainerView(isPresented: $showPaywall, sdk: sdk, source: "burned_calories_view")
                     }
                 }
                 .padding()

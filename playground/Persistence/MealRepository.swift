@@ -23,22 +23,23 @@ final class MealRepository {
         context.insert(meal)
         try context.save()
         
-        // Update or create day summary
         try updateDaySummary(for: meal.timestamp, adding: meal)
         
-        // Sync widget data
         syncWidgetData()
+        
+        Pixel.track("meal_saved", type: .interaction)
     }
     
     func deleteMeal(_ meal: Meal) throws {
-        // Update day summary before deletion
+        let calories = meal.totalCalories
         try updateDaySummary(for: meal.timestamp, removing: meal)
         
         context.delete(meal)
         try context.save()
         
-        // Sync widget data
         syncWidgetData()
+        
+        Pixel.track("meal_deleted", type: .interaction)
     }
     
     func fetchMeals(for date: Date? = nil) throws -> [Meal] {
@@ -142,17 +143,21 @@ final class MealRepository {
     }
     
     func saveExercise(_ exercise: Exercise) throws {
-        // Ensure exercise date is normalized to start of day for consistent querying
         let calendar = Calendar.current
         exercise.date = calendar.startOfDay(for: exercise.date)
         
         context.insert(exercise)
         try context.save()
+        
+        Pixel.track("exercise_saved", type: .interaction)
     }
     
     func deleteExercise(_ exercise: Exercise) throws {
+        let calories = exercise.calories
         context.delete(exercise)
         try context.save()
+        
+        Pixel.track("exercise_deleted", type: .interaction)
     }
     
     // MARK: - Day Summary Operations

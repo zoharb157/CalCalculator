@@ -67,7 +67,7 @@ struct ScanView: View {
                     errorAlertMessage
                 }
                 .fullScreenCover(isPresented: $showPaywall) {
-                    PaywallContainerView(isPresented: $showPaywall, sdk: sdk)
+                    PaywallContainerView(isPresented: $showPaywall, sdk: sdk, source: "scan_view")
                 }
         }
     }

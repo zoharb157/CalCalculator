@@ -170,7 +170,7 @@ struct DataExportView: View {
                 }
             }
             .fullScreenCover(isPresented: $showingPaywall) {
-                PaywallContainerView(isPresented: $showingPaywall, sdk: sdk)
+                PaywallContainerView(isPresented: $showingPaywall, sdk: sdk, source: "data_export_view")
             }
         }
     }

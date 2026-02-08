@@ -788,3 +788,25 @@
 /* Support Email */
 "Thank you! Your support request has been sent successfully. We'll get back to you soon." = "Merci ! Votre demande de support a été envoyée avec succès. Nous vous répondrons bientôt.";
 "Failed to send support request. Please try again later." = "Échec de l'envoi de la demande de support. Veuillez réessayer plus tard.";
+
+/* Developer Settings */
+"Developer Settings" = "Paramètres développeur";
+"Developer Mode" = "Mode développeur";
+"Debug and testing options for developers" = "Options de débogage et de test pour les développeurs";
+"User Information" = "Informations utilisateur";
+"User ID" = "ID utilisateur";
+"Enable Developer Mode" = "Activer le mode développeur";
+"Unlock debugging options" = "Débloquer les options de débogage";
+"Premium Status" = "Statut Premium";
+"Override Premium Status" = "Remplacer le statut Premium";
+"Manually control subscription for testing" = "Contrôler manuellement l'abonnement pour les tests";
+"Premium Unlocked" = "Premium débloqué";
+"Premium" = "Premium";
+"Free" = "Gratuit";
+"Danger Zone" = "Zone de danger";
+"Delete All Data" = "Supprimer toutes les données";
+"Reset app to initial state" = "Réinitialiser l'app à l'état initial";
+"Delete All Data?" = "Supprimer toutes les données ?";
+"Delete Everything" = "Tout supprimer";
+"This will permanently delete all your data including meals, exercises, weight history, and settings. The app will restart from the welcome screen. This action cannot be undone." = "Cela supprimera définitivement toutes vos données, y compris les repas, exercices, historique de poids et paramètres. L'app redémarrera depuis l'écran d'accueil. Cette action ne peut pas être annulée.";
+"Copied to clipboard" = "Copié dans le presse-papiers";

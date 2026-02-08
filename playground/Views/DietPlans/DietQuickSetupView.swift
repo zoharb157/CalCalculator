@@ -100,7 +100,7 @@ struct DietQuickSetupView: View {
                 )
             }
             .fullScreenCover(isPresented: $showingPaywall) {
-                PaywallContainerView(isPresented: $showingPaywall, sdk: sdk)
+                PaywallContainerView(isPresented: $showingPaywall, sdk: sdk, source: "diet_quick_setup")
             }
         }
     }
@@ -625,7 +625,7 @@ struct DietQuickSetupView: View {
     // MARK: - Paywall View
     
     private var paywallView: some View {
-        PaywallContainerView(isPresented: $showingPaywall, sdk: sdk)
+        PaywallContainerView(isPresented: $showingPaywall, sdk: sdk, source: "diet_quick_setup")
     }
 }
 

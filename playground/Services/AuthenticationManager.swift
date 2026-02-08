@@ -47,6 +47,10 @@ final class AuthenticationManager {
         userId = nil
     }
     
+    func regenerateUserId() {
+        userId = generateUserId()
+    }
+    
     private func generateUserId() -> String {
         let uuid = UUID().uuidString.lowercased().replacingOccurrences(of: "-", with: "")
         return "demo_user_\(uuid.prefix(8).uppercased())"

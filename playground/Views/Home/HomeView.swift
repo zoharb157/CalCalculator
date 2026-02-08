@@ -236,7 +236,7 @@ struct HomeView: View {
                 }
             }
             .fullScreenCover(isPresented: $showingPaywall) {
-                PaywallContainerView(isPresented: $showingPaywall, sdk: sdk)
+                PaywallContainerView(isPresented: $showingPaywall, sdk: sdk, source: "home_view")
             }
         
         let withOverlays = withSheets
