@@ -126,6 +126,9 @@ struct ContentView: View {
                         // Check if onboarding is already completed
                         if UserSettings.shared.hasCompletedOnboarding {
                             authState = .authenticated
+                        } else if UserSettings.shared.currentOnboardingStep != nil {
+                            // User started onboarding but didn't finish - resume onboarding
+                            authState = .onboarding
                         }
                     }
             }
