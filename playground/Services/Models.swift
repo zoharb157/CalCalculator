@@ -13,10 +13,12 @@ import Foundation
 /// - `food`: Analyze a photo of food to estimate calories and nutrition
 /// - `barcode`: Scan a product barcode to look up nutritional data
 /// - `label`: Read nutrition facts labels or ingredients lists
+/// - `text`: Analyze a text description of food (no image required)
 enum ScanMode: String, Encodable {
     case food = "food"
     case barcode = "barcode"
     case label = "label"
+//    case text = "text"
 }
 
 // MARK: - API Request Model

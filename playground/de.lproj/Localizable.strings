@@ -772,3 +772,40 @@
 "This subscription is not available in your region." = "Dieses Abonnement ist in Ihrer Region nicht verfügbar.";
 "Network error. Please check your connection and try again." = "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.";
 "Purchase failed. Please try again." = "Kauf fehlgeschlagen. Bitte versuchen Sie es erneut.";
+
+/* Paywall Dismiss Confirmation */
+"Paywall.dismiss.title" = "Warte! Verpassen Sie nichts";
+"Paywall.dismiss.subtitle" = "Sie verlieren gleich den Zugang zu diesen Premium-Funktionen:";
+"Paywall.dismiss.stayButton" = "Bleiben & Premium freischalten";
+"Paywall.dismiss.leaveButton" = "Trotzdem verlassen";
+"Paywall.feature.unlimitedScans" = "Unbegrenzte Lebensmittel-Scans";
+"Paywall.feature.advancedProgress" = "Erweiterte Fortschrittsverfolgung";
+"Paywall.feature.dietPlans" = "Individuelle Ernährungspläne";
+"Paywall.feature.pdfExport" = "PDF-Datenexport";
+"Paywall.feature.premiumWidgets" = "Premium-Widgets";
+
+/* Support Email */
+"Thank you! Your support request has been sent successfully. We'll get back to you soon." = "Vielen Dank! Ihre Support-Anfrage wurde erfolgreich gesendet. Wir melden uns bald bei Ihnen.";
+"Failed to send support request. Please try again later." = "Support-Anfrage konnte nicht gesendet werden. Bitte versuchen Sie es später erneut.";
+
+/* Developer Settings */
+"Developer Settings" = "Entwicklereinstellungen";
+"Developer Mode" = "Entwicklermodus";
+"Debug and testing options for developers" = "Debug- und Testoptionen für Entwickler";
+"User Information" = "Benutzerinformationen";
+"User ID" = "Benutzer-ID";
+"Enable Developer Mode" = "Entwicklermodus aktivieren";
+"Unlock debugging options" = "Debug-Optionen freischalten";
+"Premium Status" = "Premium-Status";
+"Override Premium Status" = "Premium-Status überschreiben";
+"Manually control subscription for testing" = "Abonnement manuell zum Testen steuern";
+"Premium Unlocked" = "Premium freigeschaltet";
+"Premium" = "Premium";
+"Free" = "Kostenlos";
+"Danger Zone" = "Gefahrenzone";
+"Delete All Data" = "Alle Daten löschen";
+"Reset app to initial state" = "App auf Anfangszustand zurücksetzen";
+"Delete All Data?" = "Alle Daten löschen?";
+"Delete Everything" = "Alles löschen";
+"This will permanently delete all your data including meals, exercises, weight history, and settings. The app will restart from the welcome screen. This action cannot be undone." = "Dadurch werden alle Ihre Daten dauerhaft gelöscht, einschließlich Mahlzeiten, Übungen, Gewichtsverlauf und Einstellungen. Die App wird vom Begrüßungsbildschirm neu gestartet. Diese Aktion kann nicht rückgängig gemacht werden.";
+"Copied to clipboard" = "In Zwischenablage kopiert";

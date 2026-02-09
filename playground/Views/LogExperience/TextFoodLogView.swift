@@ -60,6 +60,13 @@ struct TextFoodLogView: View {
                             .foregroundColor(.secondary)
                     }
                 }
+                
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button(localizationManager.localizedString(for: AppStrings.Common.done)) {
+                        isInputFocused = false
+                    }
+                }
             }
             .alert(localizationManager.localizedString(for: AppStrings.Common.error), isPresented: $viewModel.showError) {
                 Button(localizationManager.localizedString(for: AppStrings.Common.ok), role: .cancel) {}
@@ -70,19 +77,12 @@ struct TextFoodLogView: View {
             }
             .alert(localizationManager.localizedString(for: AppStrings.Common.success), isPresented: $viewModel.showSuccess) {
                 Button(localizationManager.localizedString(for: AppStrings.Common.done)) {
-                    // Add smooth dismiss animation
-                    withAnimation(.easeOut(duration: 0.3)) {
-                        dismiss()
-                    }
+                    dismiss()
                 }
                 .id("done-text-log-\(localizationManager.currentLanguage)")
             } message: {
                 Text(viewModel.successMessage ?? localizationManager.localizedString(for: AppStrings.Food.foodSaved))
                     .id("success-message-\(localizationManager.currentLanguage)")
-            }
-            .transaction { transaction in
-                // Ensure smooth animations for dismiss
-                transaction.animation = .easeOut(duration: 0.3)
             }
         }
     }
@@ -90,129 +90,126 @@ struct TextFoodLogView: View {
     // MARK: - Input View
 
     private var inputView: some View {
-        VStack(spacing: 24) {
-            // Header illustration
-            VStack(spacing: 12) {
-                Image(systemName: "text.bubble.fill")
-                    .font(.system(size: 60))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.blue, .purple],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+        ScrollView {
+            VStack(spacing: 24) {
+                VStack(spacing: 12) {
+                    Image(systemName: "text.bubble.fill")
+                        .font(.system(size: 60))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.blue, .purple],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
                         )
-                    )
 
-                Text(localizationManager.localizedString(for: AppStrings.Food.tellUsWhatYouAte))
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .id("tell-us-what-ate-\(localizationManager.currentLanguage)")
+                    Text(localizationManager.localizedString(for: AppStrings.Food.tellUsWhatYouAte))
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .id("tell-us-what-ate-\(localizationManager.currentLanguage)")
 
-                Text(localizationManager.localizedString(for: AppStrings.Food.describeMealNaturalLanguage))
-                    .id("describe-meal-natural-\(localizationManager.currentLanguage)")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-            }
-            .padding(.top, 20)
-
-            // Text input
-            VStack(alignment: .leading, spacing: 8) {
-                TextField(localizationManager.localizedString(for: AppStrings.Food.iHad), text: $inputText, axis: .vertical)
-                    .id("i-had-placeholder-\(localizationManager.currentLanguage)")
-                    .textFieldStyle(.plain)
-                    .font(.body)
-                    .lineLimit(3...6)
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(16)
-                    .focused($isInputFocused)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(isInputFocused ? Color.blue : Color.clear, lineWidth: 2)
-                    )
-
-                Text("\(inputText.count)/500")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-            }
-            .padding(.horizontal)
-
-            // Suggestions
-            VStack(alignment: .leading, spacing: 12) {
-                Text(localizationManager.localizedString(for: AppStrings.Food.trySaying))
+                    Text(localizationManager.localizedString(for: AppStrings.Food.describeMealNaturalLanguage))
+                        .id("describe-meal-natural-\(localizationManager.currentLanguage)")
                     .font(.subheadline)
-                    .fontWeight(.medium)
                     .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
                     .padding(.horizontal)
-                    .id("try-saying-\(localizationManager.currentLanguage)")
+                }
+                .padding(.top, 20)
 
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(suggestions, id: \.self) { suggestion in
-                            SuggestionChip(text: suggestion) {
-                                inputText = suggestion
-                                isInputFocused = false
+                VStack(alignment: .leading, spacing: 8) {
+                    TextField(localizationManager.localizedString(for: AppStrings.Food.iHad), text: $inputText, axis: .vertical)
+                        .id("i-had-placeholder-\(localizationManager.currentLanguage)")
+                        .textFieldStyle(.plain)
+                        .font(.body)
+                        .lineLimit(3...6)
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(16)
+                        .focused($isInputFocused)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(isInputFocused ? Color.blue : Color.clear, lineWidth: 2)
+                        )
+
+                    Text("\(inputText.count)/500")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+                .padding(.horizontal)
+
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(localizationManager.localizedString(for: AppStrings.Food.trySaying))
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal)
+                        .id("try-saying-\(localizationManager.currentLanguage)")
+
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(suggestions, id: \.self) { suggestion in
+                                SuggestionChip(text: suggestion) {
+                                    inputText = suggestion
+                                    isInputFocused = false
+                                }
                             }
                         }
-                    }
-                    .padding(.horizontal)
-                }
-            }
-
-            Spacer()
-
-            // Category selector
-            VStack(alignment: .leading, spacing: 8) {
-                Text(localizationManager.localizedString(for: AppStrings.Food.mealCategory))
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundColor(.secondary)
-                    .id("meal-category-\(localizationManager.currentLanguage)")
-
-                Picker(localizationManager.localizedString(for: AppStrings.Food.category), selection: $viewModel.selectedCategory) {
-                    ForEach(MealCategory.allCases, id: \.self) { category in
-                        Label(category.displayName, systemImage: category.icon)
-                            .tag(category)
+                        .padding(.horizontal)
                     }
                 }
-                .pickerStyle(.segmented)
-            }
-            .padding(.horizontal)
 
-            // Analyze button
-            Button {
-                isInputFocused = false
-                viewModel.textInput = inputText
-                Task {
-                    await viewModel.analyzeTextInput()
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(localizationManager.localizedString(for: AppStrings.Food.mealCategory))
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.secondary)
+                        .id("meal-category-\(localizationManager.currentLanguage)")
+
+                    Picker(localizationManager.localizedString(for: AppStrings.Food.category), selection: $viewModel.selectedCategory) {
+                        ForEach(MealCategory.allCases, id: \.self) { category in
+                            Label(category.displayName, systemImage: category.icon)
+                                .tag(category)
+                        }
+                    }
+                    .pickerStyle(.segmented)
                 }
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "sparkles")
-                    Text(localizationManager.localizedString(for: AppStrings.Food.analyzeWithAI))
-                    .id("analyze-ai-text-\(localizationManager.currentLanguage)")
-                }
-                .font(.headline)
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(
-                    LinearGradient(
-                        colors: inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                            ? [.gray, .gray]
-                            : [.blue, .purple],
-                        startPoint: .leading,
-                        endPoint: .trailing
+                .padding(.horizontal)
+
+                Button {
+                    isInputFocused = false
+                    viewModel.textInput = inputText
+                    Task {
+                        await viewModel.analyzeTextInput()
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "sparkles")
+                        Text(localizationManager.localizedString(for: AppStrings.Food.analyzeWithAI))
+                        .id("analyze-ai-text-\(localizationManager.currentLanguage)")
+                    }
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(
+                        LinearGradient(
+                            colors: inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                                ? [.gray, .gray]
+                                : [.blue, .purple],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
                     )
-                )
-                .cornerRadius(14)
+                    .cornerRadius(14)
+                }
+                .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .padding(.horizontal)
+                .padding(.bottom)
             }
-            .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            .padding()
         }
+        .scrollDismissesKeyboard(.interactively)
     }
 
     // MARK: - Analyzing View

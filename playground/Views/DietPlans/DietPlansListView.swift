@@ -162,13 +162,7 @@ struct DietPlansListView: View {
                 Text(localizationManager.localizedString(for: AppStrings.DietPlan.deleteConfirmation))
             }
             .fullScreenCover(isPresented: $showingPaywall) {
-                SDKView(
-                    model: sdk,
-                    page: .splash,
-                    show: paywallBinding(showPaywall: $showingPaywall, sdk: sdk),
-                    backgroundColor: Color(UIColor.systemBackground),
-                    ignoreSafeArea: true
-                )
+                PaywallContainerView(isPresented: $showingPaywall, sdk: sdk, source: "diet_plans_list")
             }
         }
     }
@@ -486,13 +480,7 @@ struct DietPlansListView: View {
     // MARK: - Paywall View
     
     private var paywallView: some View {
-        SDKView(
-            model: sdk,
-            page: .splash,
-            show: paywallBinding(showPaywall: $showingPaywall, sdk: sdk),
-            backgroundColor: Color(UIColor.systemBackground),
-            ignoreSafeArea: true
-        )
+        PaywallContainerView(isPresented: $showingPaywall, sdk: sdk, source: "diet_plans_list")
     }
 }
 

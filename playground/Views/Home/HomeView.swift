@@ -80,7 +80,6 @@ struct HomeView: View {
                 HapticManager.shared.notification(.success)
             }
             .task {
-                // Load data asynchronously without blocking the UI
                 AppLogger.forClass("HomeView").info(".task called - this should only happen once when view appears")
                 let startTime = Date()
                 print("🟢 [HomeView] .task started - loading data")
@@ -90,12 +89,10 @@ struct HomeView: View {
                     "🟢 [HomeView] .task completed - total time: \(String(format: "%.3f", elapsed))s"
                 )
                 
-                // Check for newly earned badges after data loads
                 checkForBadges()
-                
-                // Request notification permission when user first reaches homepage
-                // Only requests if authorization status is .notDetermined (first time user sees homepage)
                 await requestNotificationPermissionIfNeeded()
+                
+                AppLaunchManager.shared.handleFirstHomeScreenReached()
                 
                 // QA: Check real subscription status from SDK for monitoring purposes
                 // This is only active in non-DEBUG builds (TestFlight/App Store)
@@ -236,13 +233,7 @@ struct HomeView: View {
                 }
             }
             .fullScreenCover(isPresented: $showingPaywall) {
-                SDKView(
-                    model: sdk,
-                    page: .splash,
-                    show: paywallBinding(showPaywall: $showingPaywall, sdk: sdk),
-                    backgroundColor: Color(UIColor.systemBackground),
-                    ignoreSafeArea: true
-                )
+                PaywallContainerView(isPresented: $showingPaywall, sdk: sdk, source: "home_view")
             }
         
         let withOverlays = withSheets
@@ -456,14 +447,11 @@ struct HomeView: View {
     @State private var selectedDietPlan: DietPlan?
     
     private var logExperienceSection: some View {
-        // Use selected date's burned calories, or today's if viewing today
-        // This ensures the card shows correct data when viewing historical dates
-        let burnedCalories = Calendar.current.isDateInToday(viewModel.selectedDate) 
+        let isToday = Calendar.current.isDateInToday(viewModel.selectedDate)
+        let burnedCalories = isToday 
             ? viewModel.todaysBurnedCalories 
             : viewModel.selectedDateBurnedCalories
         
-        // Use selected date's exercise count from viewModel
-        // This ensures consistency with the burned calories calculation
         let exercisesCount = viewModel.selectedDateExercisesCount
         
         return LogExperienceCard(
@@ -471,6 +459,8 @@ struct HomeView: View {
             exercisesCount: exercisesCount,
             totalCaloriesConsumed: viewModel.todaysSummary?.totalCalories ?? 0,
             totalCaloriesBurned: burnedCalories,
+            isToday: isToday,
+            selectedDate: viewModel.selectedDate,
             onLogFood: {
                 showLogFoodSheet = true
             },
@@ -486,10 +476,8 @@ struct HomeView: View {
             onViewDiet: {
                 if isSubscribed {
                     if activeDietPlans.isEmpty {
-                        // No active plan - show create plan screen
                         showDietPlansSheet = true
                     } else {
-                        // Active plan exists - switch to MyDiet tab
                         onSwitchToMyDiet()
                     }
                 } else {

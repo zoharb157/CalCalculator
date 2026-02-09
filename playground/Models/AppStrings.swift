@@ -561,6 +561,8 @@ struct AppStrings {
         static let mailNotConfigured = "Mail is not configured on this device. Please configure Mail in Settings or send feedback to feedback@calai.app"
         static let feedbackSent = "Thank you! Your feedback has been sent successfully."
         static let feedbackFailed = "Failed to send feedback. Please try again later."
+        static let supportSent = "Thank you! Your support request has been sent successfully. We'll get back to you soon."
+        static let supportFailed = "Failed to send support request. Please try again later."
         static let termsOfService = "Terms of Service"
         static let privacyPolicy = "Privacy Policy"
         static let version = "Version 1.0.0"

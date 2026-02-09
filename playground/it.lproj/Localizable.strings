@@ -772,3 +772,40 @@
 "This subscription is not available in your region." = "Questo abbonamento non è disponibile nella tua regione.";
 "Network error. Please check your connection and try again." = "Errore di rete. Controlla la connessione e riprova.";
 "Purchase failed. Please try again." = "Acquisto fallito. Riprova.";
+
+/* Paywall Dismiss Confirmation */
+"Paywall.dismiss.title" = "Aspetta! Non perderti questo";
+"Paywall.dismiss.subtitle" = "Stai per perdere l'accesso a queste funzionalità premium:";
+"Paywall.dismiss.stayButton" = "Resta e Sblocca Premium";
+"Paywall.dismiss.leaveButton" = "Esci comunque";
+"Paywall.feature.unlimitedScans" = "Scansioni cibo illimitate";
+"Paywall.feature.advancedProgress" = "Tracciamento progressi avanzato";
+"Paywall.feature.dietPlans" = "Piani dietetici personalizzati";
+"Paywall.feature.pdfExport" = "Esportazione dati in PDF";
+"Paywall.feature.premiumWidgets" = "Widget Premium";
+
+/* Support Email */
+"Thank you! Your support request has been sent successfully. We'll get back to you soon." = "Grazie! La tua richiesta di supporto è stata inviata con successo. Ti risponderemo presto.";
+"Failed to send support request. Please try again later." = "Impossibile inviare la richiesta di supporto. Riprova più tardi.";
+
+/* Developer Settings */
+"Developer Settings" = "Impostazioni sviluppatore";
+"Developer Mode" = "Modalità sviluppatore";
+"Debug and testing options for developers" = "Opzioni di debug e test per sviluppatori";
+"User Information" = "Informazioni utente";
+"User ID" = "ID utente";
+"Enable Developer Mode" = "Abilita modalità sviluppatore";
+"Unlock debugging options" = "Sblocca opzioni di debug";
+"Premium Status" = "Stato Premium";
+"Override Premium Status" = "Sovrascrivi stato Premium";
+"Manually control subscription for testing" = "Controlla manualmente l'abbonamento per i test";
+"Premium Unlocked" = "Premium sbloccato";
+"Premium" = "Premium";
+"Free" = "Gratis";
+"Danger Zone" = "Zona pericolosa";
+"Delete All Data" = "Elimina tutti i dati";
+"Reset app to initial state" = "Ripristina app allo stato iniziale";
+"Delete All Data?" = "Eliminare tutti i dati?";
+"Delete Everything" = "Elimina tutto";
+"This will permanently delete all your data including meals, exercises, weight history, and settings. The app will restart from the welcome screen. This action cannot be undone." = "Questo eliminerà permanentemente tutti i tuoi dati inclusi pasti, esercizi, cronologia peso e impostazioni. L'app si riavvierà dalla schermata di benvenuto. Questa azione non può essere annullata.";
+"Copied to clipboard" = "Copiato negli appunti";

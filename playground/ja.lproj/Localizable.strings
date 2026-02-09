@@ -772,3 +772,40 @@
 "This subscription is not available in your region." = "このサブスクリプションはお住まいの地域ではご利用いただけません。";
 "Network error. Please check your connection and try again." = "ネットワークエラー。接続を確認してもう一度お試しください。";
 "Purchase failed. Please try again." = "購入に失敗しました。もう一度お試しください。";
+
+/* Paywall Dismiss Confirmation */
+"Paywall.dismiss.title" = "お待ちください！お見逃しなく";
+"Paywall.dismiss.subtitle" = "これらのプレミアム機能へのアクセスを失おうとしています：";
+"Paywall.dismiss.stayButton" = "ここに留まりプレミアムを解除";
+"Paywall.dismiss.leaveButton" = "それでも閉じる";
+"Paywall.feature.unlimitedScans" = "無制限のフードスキャン";
+"Paywall.feature.advancedProgress" = "高度な進捗追跡";
+"Paywall.feature.dietPlans" = "カスタム食事計画";
+"Paywall.feature.pdfExport" = "PDFデータエクスポート";
+"Paywall.feature.premiumWidgets" = "プレミアムウィジェット";
+
+/* Support Email */
+"Thank you! Your support request has been sent successfully. We'll get back to you soon." = "ありがとうございます！サポートリクエストが正常に送信されました。まもなくご連絡いたします。";
+"Failed to send support request. Please try again later." = "サポートリクエストの送信に失敗しました。後でもう一度お試しください。";
+
+/* Developer Settings */
+"Developer Settings" = "開発者設定";
+"Developer Mode" = "開発者モード";
+"Debug and testing options for developers" = "開発者向けのデバッグとテストオプション";
+"User Information" = "ユーザー情報";
+"User ID" = "ユーザーID";
+"Enable Developer Mode" = "開発者モードを有効にする";
+"Unlock debugging options" = "デバッグオプションをロック解除";
+"Premium Status" = "プレミアムステータス";
+"Override Premium Status" = "プレミアムステータスを上書き";
+"Manually control subscription for testing" = "テスト用にサブスクリプションを手動制御";
+"Premium Unlocked" = "プレミアム解除済み";
+"Premium" = "プレミアム";
+"Free" = "無料";
+"Danger Zone" = "危険ゾーン";
+"Delete All Data" = "すべてのデータを削除";
+"Reset app to initial state" = "アプリを初期状態にリセット";
+"Delete All Data?" = "すべてのデータを削除しますか？";
+"Delete Everything" = "すべて削除";
+"This will permanently delete all your data including meals, exercises, weight history, and settings. The app will restart from the welcome screen. This action cannot be undone." = "これにより、食事、運動、体重履歴、設定を含むすべてのデータが完全に削除されます。アプリはウェルカム画面から再起動します。この操作は元に戻せません。";
+"Copied to clipboard" = "クリップボードにコピーしました";

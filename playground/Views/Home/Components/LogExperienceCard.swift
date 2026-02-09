@@ -13,6 +13,8 @@ struct LogExperienceCard: View {
     let exercisesCount: Int
     let totalCaloriesConsumed: Int
     let totalCaloriesBurned: Int
+    let isToday: Bool
+    let selectedDate: Date
 
     let onLogFood: () -> Void
     let onLogExercise: () -> Void
@@ -32,23 +34,33 @@ struct LogExperienceCard: View {
     }
     
     private var isSmallScreen: Bool {
-        UIScreen.main.bounds.width < 375 // iPhone SE and similar small devices
+        UIScreen.main.bounds.width < 375
+    }
+    
+    private var headerTitle: String {
+        if isToday {
+            return localizationManager.localizedString(for: AppStrings.Food.todayActivity)
+        } else {
+            let formatter = DateFormatter()
+            formatter.dateStyle = .medium
+            formatter.timeStyle = .none
+            formatter.locale = Locale(identifier: localizationManager.currentLanguage)
+            return formatter.string(from: selectedDate)
+        }
     }
 
     var body: some View {
-        // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
         let _ = localizationManager.currentLanguage
         
         return VStack(spacing: 16) {
-            // Header
             HStack {
-                Label(localizationManager.localizedString(for: AppStrings.Food.todayActivity), systemImage: "list.bullet.clipboard.fill")
+                Label(headerTitle, systemImage: "list.bullet.clipboard.fill")
                     .font(.headline)
                     .foregroundColor(.primary)
 
                 Spacer()
 
-                if let onViewHistory = onViewHistory {
+                if isToday, let onViewHistory = onViewHistory {
                     Button(action: onViewHistory) {
                         HStack(spacing: 4) {
                             Text(localizationManager.localizedString(for: AppStrings.Food.viewAll))
@@ -58,14 +70,9 @@ struct LogExperienceCard: View {
                         }
                         .foregroundColor(.blue)
                     }
-                } else {
-                    Text(Date().formatted(date: .abbreviated, time: .omitted))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
                 }
             }
 
-            // Stats Row
             HStack(spacing: isSmallScreen ? 12 : 24) {
                 LogStatItem(
                     icon: "fork.knife",
@@ -96,42 +103,42 @@ struct LogExperienceCard: View {
                 )
             }
 
-            Divider()
+            if isToday {
+                Divider()
 
-            // Quick Actions
-            HStack(spacing: isSmallScreen ? 4 : 8) {
-                // Diet Plan Button - always show (premium feature)
-                if let onViewDiet = onViewDiet {
+                HStack(spacing: isSmallScreen ? 4 : 8) {
+                    if let onViewDiet = onViewDiet {
+                        QuickLogButton(
+                            icon: "calendar.badge.clock",
+                            title: localizationManager.localizedString(for: AppStrings.DietPlan.myDiet),
+                            color: .blue,
+                            action: onViewDiet
+                        )
+                    }
+
                     QuickLogButton(
-                        icon: "calendar.badge.clock",
-                        title: localizationManager.localizedString(for: AppStrings.DietPlan.myDiet),
-                        color: .blue,
-                        action: onViewDiet
+                        icon: "pencil.line",
+                        title: localizationManager.localizedString(for: AppStrings.Food.saveFood),
+                        color: .green,
+                        action: onLogFood
+                    )
+
+                    if let onTextLog = onTextLog {
+                        QuickLogButton(
+                            icon: "text.bubble.fill",
+                            title: localizationManager.localizedString(for: AppStrings.Food.describeYourFood),
+                            color: .indigo,
+                            action: onTextLog
+                        )
+                    }
+
+                    QuickLogButton(
+                        icon: "dumbbell.fill",
+                        title: localizationManager.localizedString(for: AppStrings.Food.exercise),
+                        color: .orange,
+                        action: onLogExercise
                     )
                 }
-
-                QuickLogButton(
-                    icon: "pencil.line",
-                    title: localizationManager.localizedString(for: AppStrings.Food.saveFood),
-                    color: .green,
-                    action: onLogFood
-                )
-
-                if let onTextLog = onTextLog {
-                    QuickLogButton(
-                        icon: "text.bubble.fill",
-                        title: localizationManager.localizedString(for: AppStrings.Food.describeYourFood),
-                        color: .indigo,
-                        action: onTextLog
-                    )
-                }
-
-                QuickLogButton(
-                    icon: "dumbbell.fill",
-                    title: localizationManager.localizedString(for: AppStrings.Food.exercise),
-                    color: .orange,
-                    action: onLogExercise
-                )
             }
         }
         .padding()
@@ -155,7 +162,6 @@ struct LogExperienceCard: View {
                 meals.append(contentsOf: plan.scheduledMeals(for: dayOfWeek))
             }
             
-            // Get completed meals
             var completedCount = 0
             if !activePlans.isEmpty {
                 do {
@@ -165,7 +171,6 @@ struct LogExperienceCard: View {
                     )
                     completedCount = adherence.completedMeals.count
                 } catch {
-                    // Ignore error, use 0
                 }
             }
             
@@ -365,6 +370,8 @@ struct LogSummaryBanner: View {
         exercisesCount: 1,
         totalCaloriesConsumed: 1450,
         totalCaloriesBurned: 320,
+        isToday: true,
+        selectedDate: Date(),
         onLogFood: {},
         onLogExercise: {},
         onViewDiet: {}

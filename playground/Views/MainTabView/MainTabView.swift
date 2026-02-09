@@ -387,6 +387,9 @@ struct MainTabView: View {
         .fullScreenCover(isPresented: $showingPaywall) {
             paywallView
         }
+        .onReceive(NotificationCenter.default.publisher(for: .showPaywall)) { _ in
+            showingPaywall = true
+        }
         // No need for onChange - SwiftUI automatically re-evaluates views when
         // @ObservedObject properties change. Since localizationManager.currentLanguage
         // is @Published, all views using localizationManager will update automatically.
@@ -402,13 +405,7 @@ struct MainTabView: View {
     // MARK: - Paywall View
     
     private var paywallView: some View {
-        SDKView(
-            model: sdk,
-            page: .splash,
-            show: paywallBinding(showPaywall: $showingPaywall, sdk: sdk),
-            backgroundColor: Color(UIColor.systemBackground),
-            ignoreSafeArea: true
-        )
+        PaywallContainerView(isPresented: $showingPaywall, sdk: sdk, source: "main_tab_view")
     }
     // MARK: - Tab Bar Tap Detection
     private func setupTabBarTapDetection() {
@@ -588,6 +585,7 @@ private struct StableTabViewWrapper: View {
             },
             set: { newValue in
                 AppLogger.forClass("MainTabView").info("🔍 [binding set] TabView setting selection: '\(selectedTabRaw)' -> '\(newValue)'")
+                Pixel.track("tab_\(newValue)", type: .navigation)
                 selectedTabRaw = newValue
                 storedTab = newValue
                 UserDefaults.standard.set(newValue, forKey: "selectedMainTab")

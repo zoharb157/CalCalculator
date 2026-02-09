@@ -795,3 +795,40 @@
 "This subscription is not available in your region." = "This subscription is not available in your region.";
 "Network error. Please check your connection and try again." = "Network error. Please check your connection and try again.";
 "Purchase failed. Please try again." = "Purchase failed. Please try again.";
+
+/* Paywall Dismiss Confirmation */
+"Paywall.dismiss.title" = "Wait! Don't Miss Out";
+"Paywall.dismiss.subtitle" = "You're about to lose access to these premium features:";
+"Paywall.dismiss.stayButton" = "Stay & Unlock Premium";
+"Paywall.dismiss.leaveButton" = "Leave Anyway";
+"Paywall.feature.unlimitedScans" = "Unlimited Food Scans";
+"Paywall.feature.advancedProgress" = "Advanced Progress Tracking";
+"Paywall.feature.dietPlans" = "Custom Diet Plans";
+"Paywall.feature.pdfExport" = "PDF Data Export";
+"Paywall.feature.premiumWidgets" = "Premium Widgets";
+
+/* Support Email */
+"Thank you! Your support request has been sent successfully. We'll get back to you soon." = "Thank you! Your support request has been sent successfully. We'll get back to you soon.";
+"Failed to send support request. Please try again later." = "Failed to send support request. Please try again later.";
+
+/* Developer Settings */
+"Developer Settings" = "Developer Settings";
+"Developer Mode" = "Developer Mode";
+"Debug and testing options for developers" = "Debug and testing options for developers";
+"User Information" = "User Information";
+"User ID" = "User ID";
+"Enable Developer Mode" = "Enable Developer Mode";
+"Unlock debugging options" = "Unlock debugging options";
+"Premium Status" = "Premium Status";
+"Override Premium Status" = "Override Premium Status";
+"Manually control subscription for testing" = "Manually control subscription for testing";
+"Premium Unlocked" = "Premium Unlocked";
+"Premium" = "Premium";
+"Free" = "Free";
+"Danger Zone" = "Danger Zone";
+"Delete All Data" = "Delete All Data";
+"Reset app to initial state" = "Reset app to initial state";
+"Delete All Data?" = "Delete All Data?";
+"Delete Everything" = "Delete Everything";
+"This will permanently delete all your data including meals, exercises, weight history, and settings. The app will restart from the welcome screen. This action cannot be undone." = "This will permanently delete all your data including meals, exercises, weight history, and settings. The app will restart from the welcome screen. This action cannot be undone.";
+"Copied to clipboard" = "Copied to clipboard";

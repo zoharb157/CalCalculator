@@ -693,8 +693,8 @@ final class ProgressViewModel {
                 try context.save()
                 HapticManager.shared.notification(.success)
                 
-                // Force SwiftData to process the save before fetching
-                // This ensures the new entry is available when we reload
+                Pixel.track("weight_logged", type: .interaction)
+                
                 context.processPendingChanges()
             } catch {
                 AppLogger.forClass("ProgressViewModel").warning("Failed to save weight entry to SwiftData", error: error)
@@ -777,14 +777,13 @@ final class ProgressViewModel {
         do {
             try context.save()
             HapticManager.shared.notification(.success)
+            Pixel.track("weight_deleted", type: .interaction)
             
-            // Reload data
             Task {
                 await loadWeightHistory()
             }
         } catch {
             AppLogger.forClass("ProgressViewModel").warning("Failed to delete weight entry", error: error)
-            // Reload weight history even if delete failed to ensure UI is up to date
             Task {
                 await loadWeightHistory()
             }

@@ -154,6 +154,11 @@ struct ContentView: View {
         .onOpenURL { url in
             handleDeepLink(url)
         }
+        .onReceive(NotificationCenter.default.publisher(for: .userDataDeleted)) { _ in
+            withAnimation {
+                authState = .welcome
+            }
+        }
     }
     
     // MARK: - Deep Link Handling
