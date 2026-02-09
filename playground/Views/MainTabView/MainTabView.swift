@@ -406,6 +406,11 @@ struct MainTabView: View {
         .onReceive(NotificationCenter.default.publisher(for: .showPaywall)) { _ in
             showingPaywall = true
         }
+        .onReceive(NotificationCenter.default.publisher(for: .paywallDismissed)) { _ in
+            showingCreateDiet = false
+            showingPaywall = false            
+            dismissAllPresentedViewControllers()
+        }
         // No need for onChange - SwiftUI automatically re-evaluates views when
         // @ObservedObject properties change. Since localizationManager.currentLanguage
         // is @Published, all views using localizationManager will update automatically.
@@ -512,6 +517,23 @@ struct MainTabView: View {
         }
         
         return nil
+    }
+    
+    private func dismissAllPresentedViewControllers() {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first(where: { $0.isKeyWindow }) ?? windowScene.windows.first,
+              let rootVC = window.rootViewController else {
+            return
+        }
+        
+        var currentVC = rootVC
+        while let presented = currentVC.presentedViewController {
+            currentVC = presented
+        }
+        
+        if currentVC != rootVC {
+            rootVC.dismiss(animated: true)
+        }
     }
 }
 

@@ -436,4 +436,5 @@ extension Notification.Name {
     static let subscriptionStatusUpdated = Notification.Name("subscriptionStatusUpdated")
     static let homeTabTapped = Notification.Name("homeTabTapped")
     static let showPaywall = Notification.Name("showPaywall")
+    static let paywallDismissed = Notification.Name("paywallDismissed")
 }

@@ -35,6 +35,7 @@ struct PaywallContainerView: View {
                     onLeave: {
                         showingConfirmation = false
                         isPresented = false
+                        NotificationCenter.default.post(name: .paywallDismissed, object: nil)
                     }
                 )
                 .transition(.opacity.combined(with: .scale(scale: 0.9)))
@@ -51,6 +52,7 @@ struct PaywallContainerView: View {
                 }
             } else if !newValue {
                 isPresented = false
+                NotificationCenter.default.post(name: .paywallDismissed, object: nil)
             }
         }
     }
