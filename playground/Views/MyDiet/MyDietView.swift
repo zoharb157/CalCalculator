@@ -158,9 +158,11 @@ struct MyDietView: View {
             }
         }
         .task {
-            Pixel.track("screen_my_diet", type: .navigation)
             viewModel.configure(modelContext: modelContext, activePlans: activeDietPlans)
             await viewModel.loadAllData()
+        }
+        .onAppear {
+            Pixel.track("screen_my_diet", type: .navigation)
         }
         .onChange(of: allDietPlans) { _, _ in
             viewModel.activePlans = activeDietPlans
@@ -996,38 +998,23 @@ struct DietPlanSummaryCard: View {
         }
     }
     
-    /// Calculate macros from total calories or from meal templates
     private var macros: (protein: Double, carbs: Double, fat: Double) {
         guard let data = adherenceData else {
-            // Fall back to standard calculation from calories
             let calculated = DietPlanCalculator.calculateMacros(from: totalCalories)
             return (calculated.proteinG, calculated.carbsG, calculated.fatG)
         }
         
-        // Calculate from scheduled meal templates if available
         var protein: Double = 0
         var carbs: Double = 0
         var fat: Double = 0
-        var hasTemplateData = false
         
-        for meal in data.scheduledMeals {
-            if let template = meal.mealTemplate {
-                for item in template.templateItems {
-                    protein += item.proteinG
-                    carbs += item.carbsG
-                    fat += item.fatG
-                    hasTemplateData = true
-                }
-            }
+        for (_, mealInfo) in data.completedMealDetails {
+            protein += mealInfo.proteinG
+            carbs += mealInfo.carbsG
+            fat += mealInfo.fatG
         }
         
-        // If we have template data, use it; otherwise calculate from calories
-        if hasTemplateData {
-            return (protein, carbs, fat)
-        } else {
-            let calculated = DietPlanCalculator.calculateMacros(from: totalCalories)
-            return (calculated.proteinG, calculated.carbsG, calculated.fatG)
-        }
+        return (protein, carbs, fat)
     }
     
     /// Number of meals scheduled for today

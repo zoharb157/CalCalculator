@@ -468,6 +468,9 @@ struct CompletedMealInfo {
     let mealId: UUID
     let mealName: String
     let calories: Int
+    let proteinG: Double
+    let carbsG: Double
+    let fatG: Double
     let foodItemsSummary: String // e.g., "Eggs, Toast, Coffee"
     
     /// Create a formatted display string (e.g., "Eggs, Toast • 450 cal")
@@ -482,7 +485,11 @@ struct CompletedMealInfo {
     init(from meal: Meal) {
         self.mealId = meal.id
         self.mealName = meal.name
-        self.calories = meal.totalCalories
+        let macros = meal.totalMacros
+        self.calories = macros.calories
+        self.proteinG = macros.proteinG
+        self.carbsG = macros.carbsG
+        self.fatG = macros.fatG
         
         // Get first 3 food items for summary
         let itemsArray = Array(meal.items)
