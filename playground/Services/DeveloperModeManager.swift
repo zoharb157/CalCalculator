@@ -24,9 +24,8 @@ final class DeveloperModeManager: ObservableObject {
         didSet {
             UserDefaults.standard.set(isDevModeEnabled, forKey: Keys.devModeEnabled)
             if isDevModeEnabled {
-                Pixel.track("dev_mode_enabled", type: .interaction)
+
             } else {
-                Pixel.track("dev_mode_disabled", type: .interaction)
                 isPremiumOverrideEnabled = false
             }
         }
@@ -35,7 +34,6 @@ final class DeveloperModeManager: ObservableObject {
     @Published var isPremiumOverrideEnabled: Bool {
         didSet {
             UserDefaults.standard.set(isPremiumOverrideEnabled, forKey: Keys.premiumOverride)
-            Pixel.track("dev_premium_override_changed", type: .interaction)
             NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
         }
     }
@@ -44,7 +42,6 @@ final class DeveloperModeManager: ObservableObject {
         didSet {
             UserDefaults.standard.set(overriddenPremiumValue, forKey: Keys.premiumValue)
             if isPremiumOverrideEnabled {
-                Pixel.track("dev_premium_override_changed", type: .interaction)
                 NotificationCenter.default.post(name: .subscriptionStatusUpdated, object: nil)
             }
         }
@@ -88,15 +85,13 @@ final class DeveloperModeManager: ObservableObject {
     /// Returns true if successful
     func deleteAllUserData() async -> Bool {
         AppLogger.forClass("DeveloperModeManager").info("Starting complete data deletion...")
-        Pixel.track("dev_data_deleted", type: .interaction)
-        
         clearUserDefaults()
         AppLogger.forClass("DeveloperModeManager").info("UserDefaults cleared")
         
         AuthenticationManager.shared.clearCredentials()
         AuthenticationManager.shared.regenerateUserId()
         if AuthenticationManager.shared.userId != nil {
-            Pixel.track("user_id_regenerated", type: .lifecycle)
+
         }
         AppLogger.forClass("DeveloperModeManager").info("Credentials cleared and new user ID generated: \(AuthenticationManager.shared.userId ?? "nil")")
         

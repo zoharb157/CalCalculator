@@ -585,7 +585,6 @@ private struct StableTabViewWrapper: View {
             },
             set: { newValue in
                 AppLogger.forClass("MainTabView").info("🔍 [binding set] TabView setting selection: '\(selectedTabRaw)' -> '\(newValue)'")
-                Pixel.track("tab_\(newValue)", type: .navigation)
                 selectedTabRaw = newValue
                 storedTab = newValue
                 UserDefaults.standard.set(newValue, forKey: "selectedMainTab")

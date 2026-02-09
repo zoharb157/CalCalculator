@@ -70,7 +70,6 @@ struct RateUsView: View {
     }
     
     private func rateApp() {
-        Pixel.track("rate_us_tapped", type: .engagement)
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
             SKStoreReviewController.requestReview(in: windowScene)
         }

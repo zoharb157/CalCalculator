@@ -30,12 +30,10 @@ struct PaywallContainerView: View {
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                             showingConfirmation = false
                         }
-                        Pixel.track("paywall_stay_tapped", type: .interaction)
                         internalPresented = true
                     },
                     onLeave: {
                         showingConfirmation = false
-                        Pixel.track("paywall_leave_confirmed", type: .interaction)
                         isPresented = false
                     }
                 )
@@ -44,14 +42,13 @@ struct PaywallContainerView: View {
             }
         }
         .onAppear {
-            Pixel.track("paywall_shown_\(source)", type: .transaction)
+
         }
         .onChange(of: internalPresented) { _, newValue in
             if !newValue && !sdk.isSubscribed {
                 withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
                     showingConfirmation = true
                 }
-                Pixel.track("paywall_dismiss_confirmation_shown", type: .transaction)
             } else if !newValue {
                 isPresented = false
             }

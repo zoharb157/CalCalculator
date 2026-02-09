@@ -252,7 +252,6 @@ struct playgroundApp: App {
                 .environment(\.isSubscribed, subscriptionStatus)  // Inject reactive subscription status
                 .task {
                     ActivityPixelService.shared.configure(with: sdk)
-                    Pixel.track("app_opened", type: .lifecycle)
                     
                     await logDietPlansOnStartup()
                     

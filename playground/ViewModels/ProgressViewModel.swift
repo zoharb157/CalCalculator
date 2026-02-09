@@ -692,9 +692,7 @@ final class ProgressViewModel {
                 
                 try context.save()
                 HapticManager.shared.notification(.success)
-                
-                Pixel.track("weight_logged", type: .interaction)
-                
+
                 context.processPendingChanges()
             } catch {
                 AppLogger.forClass("ProgressViewModel").warning("Failed to save weight entry to SwiftData", error: error)
@@ -777,7 +775,6 @@ final class ProgressViewModel {
         do {
             try context.save()
             HapticManager.shared.notification(.success)
-            Pixel.track("weight_deleted", type: .interaction)
             
             Task {
                 await loadWeightHistory()

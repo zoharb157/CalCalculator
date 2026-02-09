@@ -236,7 +236,6 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
                 print(
                     "📱 [OnboardingWebView] Onboarding ready, first step: \(params["firstStepId"] ?? "unknown")"
                 )
-                Pixel.track("onboarding_started", type: .lifecycle)
                 if let step = startStep, step > 0, let webView = webView {
                     let js = "if (window.goToStep) { window.goToStep(\(step)); }"
                     webView.evaluateJavaScript(js) { _, err in
@@ -252,7 +251,6 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
                 let stepId = params["stepId"] as? String ?? "unknown"
                 let stepIndex = params["stepIndex"] as? Int ?? 0
                 print("📱 [OnboardingWebView] Viewing step: \(stepId)")
-                Pixel.track("onboarding_step_\(stepIndex)", type: .navigation)
                 if let stepIndex = params["stepIndex"] as? Int {
                     UserSettings.shared.currentOnboardingStep = stepIndex
                 } else if let stepIdString = params["stepId"] as? String,
@@ -396,7 +394,6 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
                     print("   - Carbs: \(goals.carbsG)g")
                     print("   - Fat: \(goals.fatG)g")
                     
-                    Pixel.track("onboarding_goals_generated", type: .lifecycle)
                     
                     let goalsData: [String: Any] = [
                         "calories": goals.calories,
@@ -414,7 +411,6 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
                 } catch {
                     print("❌ [OnboardingWebView] Failed to generate goals via native (async): \(error)")
                     let errorMsg = (error as? GoalsGenerationError)?.errorDescription ?? error.localizedDescription
-                    Pixel.track("onboarding_goals_failed", type: .lifecycle)
                     let response: [String: Any] = [
                         "ok": false,
                         "error": errorMsg
@@ -690,7 +686,6 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
 
                     let newStatus = await requestTrackingAuthorizationCompat()
                     let status = self.mapTrackingStatus(newStatus)
-                    Pixel.track("permission_tracking_\(status)", type: .lifecycle)
                     self.postPermissionResultToJS(
                         ok: true,
                         requestId: requestId,
@@ -1005,8 +1000,6 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
                 completedAt: completedAt
             )
             
-            Pixel.track("onboarding_completed", type: .lifecycle)
-
             DispatchQueue.main.async { [weak self] in
                 self?.onComplete(result)
             }

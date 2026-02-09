@@ -131,7 +131,6 @@ final class ScanViewModel {
     // MARK: - Meal Analysis
 
     func analyzeImage(_ image: UIImage, mode: ScanMode = .food, foodHint: String? = nil) async {
-        Pixel.track("scan_started", type: .interaction)
         
         // Note: isAnalyzing and analysisProgress may already be set by the caller
         // to provide immediate feedback. Only set if not already analyzing.
@@ -207,7 +206,6 @@ final class ScanViewModel {
 
             print("🟢 [ScanViewModel] Meal created: \(meal.name)")
             
-            Pixel.track("scan_success", type: .lifecycle)
             
             // Apply override category if set (e.g., from diet plan scheduled meal)
             if let overrideCategory = overrideCategory {
@@ -238,7 +236,6 @@ final class ScanViewModel {
             // Handle no food detected specifically
             if foodError.isNoFoodDetected {
                 print("⚠️ [ScanViewModel] No food detected - showing no food message")
-                Pixel.track("scan_failed", type: .lifecycle)
                 isAnalyzing = false
                 showingNoFoodDetected = true
                 noFoodDetectedMessage = foodError.errorDescription
@@ -250,7 +247,6 @@ final class ScanViewModel {
                 HapticManager.shared.notification(.warning)
             } else {
                 print("🔴 [ScanViewModel] Other error - showing error dialog")
-                Pixel.track("scan_failed", type: .lifecycle)
                 self.errorMessage = foodError.errorDescription
                 self.error = mapToScanError(foodError)
                 self.showingError = true
@@ -262,7 +258,6 @@ final class ScanViewModel {
             print("🔴 [ScanViewModel] Error type: \(type(of: error))")
             print("🔴 [ScanViewModel] Error description: \(error.localizedDescription)")
             
-            Pixel.track("scan_failed", type: .lifecycle)
             
             // Reset progress on error
             await MainActor.run {

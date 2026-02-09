@@ -147,7 +147,6 @@ struct ProfileView: View {
                     title: localizationManager.localizedString(for: AppStrings.Profile.preferences),
                     subtitle: localizationManager.localizedString(for: AppStrings.Profile.appearanceNotificationsBehavior),
                     action: {
-                        Pixel.track("settings_preferences_tapped", type: .navigation)
                         showingPreferences = true
                     }
                 )
@@ -159,7 +158,6 @@ struct ProfileView: View {
                     title: localizationManager.localizedString(for: AppStrings.Profile.language),
                     subtitle: getLocalizedLanguageName(from: viewModel.selectedLanguage),
                     action: {
-                        Pixel.track("settings_language_tapped", type: .navigation)
                         showingLanguageSelection = true
                     }
                 )
@@ -174,12 +172,10 @@ struct ProfileView: View {
                     subtitle: isSubscribed ? "You have an active subscription" : "Unlock all premium features",
                     action: { 
                         if isSubscribed {
-                            Pixel.track("settings_manage_subscription_tapped", type: .navigation)
                             if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
                                 UIApplication.shared.open(url)
                             }
                         } else {
-                            Pixel.track("settings_upgrade_premium_tapped", type: .navigation)
                             showingSubscription = true
                         }
                     }
@@ -298,7 +294,6 @@ struct ProfileView: View {
                     iconColor: .blue,
                     title: localizationManager.localizedString(for: AppStrings.Profile.contactSupport),
                     action: {
-                        Pixel.track("settings_contact_support_tapped", type: .engagement)
                         showingSupportEmail = true
                     }
                 )
@@ -310,7 +305,7 @@ struct ProfileView: View {
                     iconColor: .yellow,
                     title: localizationManager.localizedString(for: AppStrings.Profile.rateUs),
                     action: {
-                        Pixel.track("settings_rate_us_tapped", type: .engagement)
+
                         showingRateUs = true
                     }
                 )
@@ -322,7 +317,6 @@ struct ProfileView: View {
                     iconColor: .green,
                     title: localizationManager.localizedString(for: AppStrings.Profile.sendFeedback),
                     action: {
-                        Pixel.track("settings_send_feedback_tapped", type: .engagement)
                         showingSendFeedback = true
                     }
                 )
@@ -343,7 +337,6 @@ struct ProfileView: View {
                     iconColor: .gray,
                     title: localizationManager.localizedString(for: AppStrings.Profile.termsOfService),
                     action: {
-                        Pixel.track("settings_terms_tapped", type: .navigation)
                         openURL("https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")
                     }
                 )
@@ -355,7 +348,6 @@ struct ProfileView: View {
                     iconColor: .gray,
                     title: localizationManager.localizedString(for: AppStrings.Profile.privacyPolicy),
                     action: {
-                        Pixel.track("settings_privacy_tapped", type: .navigation)
                         openURL("https://www.apple.com/legal/privacy/")
                     }
                 )

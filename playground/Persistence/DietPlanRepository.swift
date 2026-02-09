@@ -68,9 +68,7 @@ final class DietPlanRepository {
         
         context.insert(plan)
         try context.save()
-        
-        Pixel.track("diet_plan_created", type: .interaction)
-        
+
         print("✅ [DietPlanRepository] Successfully saved diet plan with ID: \(plan.id)")
         
         // Verify the plan was saved by fetching it back
@@ -133,8 +131,6 @@ final class DietPlanRepository {
         plan.scheduledMeals = meals
         
         try context.save()
-        
-        Pixel.track("diet_plan_updated", type: .interaction)
     }
     
     /// Activates a specific plan and deactivates all others.
@@ -143,7 +139,6 @@ final class DietPlanRepository {
         try deactivateAllPlans(except: plan.id)
         plan.isActive = true
         try context.save()
-        Pixel.track("diet_plan_activated", type: .interaction)
     }
     
     /// Deactivates a specific plan.
@@ -151,7 +146,6 @@ final class DietPlanRepository {
     func deactivatePlan(_ plan: DietPlan) throws {
         plan.isActive = false
         try context.save()
-        Pixel.track("diet_plan_deactivated", type: .interaction)
     }
     
     /// Deactivates all plans except the one with the given ID.
@@ -170,7 +164,6 @@ final class DietPlanRepository {
     func deleteDietPlan(_ plan: DietPlan) throws {
         context.delete(plan)
         try context.save()
-        Pixel.track("diet_plan_deleted", type: .interaction)
     }
     
     func fetchAllDietPlans() throws -> [DietPlan] {
