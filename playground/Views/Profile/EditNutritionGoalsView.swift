@@ -57,48 +57,52 @@ struct EditNutritionGoalsView: View {
                 }
             }
             .onAppear {
+                Pixel.track("screen_nutrition_goals", type: .navigation)
                 loadCurrentValues()
             }
         }
         .sheet(isPresented: $isEditingCalories) {
             editCaloriesSheet
         }
-        .sheet(isPresented: $isEditingProtein) {
-            editMacroSheet(
-                title: localizationManager.localizedString(for: AppStrings.Profile.proteinGoal),
-                value: $tempProtein,
-                range: 50...400,
-                unit: "g",
-                color: .red
-            ) {
-                viewModel.proteinGoal = tempProtein
-                isEditingProtein = false
+            .sheet(isPresented: $isEditingProtein) {
+                editMacroSheet(
+                    title: localizationManager.localizedString(for: AppStrings.Profile.proteinGoal),
+                    value: $tempProtein,
+                    range: 50...400,
+                    unit: "g",
+                    color: .red
+                ) {
+                    viewModel.proteinGoal = tempProtein
+                    isEditingProtein = false
+                    Pixel.track("nutrition_goals_updated", type: .interaction)
+                }
             }
-        }
-        .sheet(isPresented: $isEditingCarbs) {
-            editMacroSheet(
-                title: localizationManager.localizedString(for: AppStrings.Profile.carbsGoal),
-                value: $tempCarbs,
-                range: 50...500,
-                unit: "g",
-                color: .orange
-            ) {
-                viewModel.carbsGoal = tempCarbs
-                isEditingCarbs = false
+            .sheet(isPresented: $isEditingCarbs) {
+                editMacroSheet(
+                    title: localizationManager.localizedString(for: AppStrings.Profile.carbsGoal),
+                    value: $tempCarbs,
+                    range: 50...500,
+                    unit: "g",
+                    color: .orange
+                ) {
+                    viewModel.carbsGoal = tempCarbs
+                    isEditingCarbs = false
+                    Pixel.track("nutrition_goals_updated", type: .interaction)
+                }
             }
-        }
-        .sheet(isPresented: $isEditingFat) {
-            editMacroSheet(
-                title: localizationManager.localizedString(for: AppStrings.Profile.fatGoal),
-                value: $tempFat,
-                range: 20...200,
-                unit: "g",
-                color: .blue
-            ) {
-                viewModel.fatGoal = tempFat
-                isEditingFat = false
+            .sheet(isPresented: $isEditingFat) {
+                editMacroSheet(
+                    title: localizationManager.localizedString(for: AppStrings.Profile.fatGoal),
+                    value: $tempFat,
+                    range: 20...200,
+                    unit: "g",
+                    color: .blue
+                ) {
+                    viewModel.fatGoal = tempFat
+                    isEditingFat = false
+                    Pixel.track("nutrition_goals_updated", type: .interaction)
+                }
             }
-        }
         .onChange(of: isEditingCalories) { _, newValue in
             if newValue {
                 tempCalories = viewModel.calorieGoal
@@ -405,6 +409,7 @@ struct EditNutritionGoalsView: View {
                     Button(localizationManager.localizedString(for: AppStrings.Common.save)) {
                         viewModel.calorieGoal = tempCalories
                         isEditingCalories = false
+                        Pixel.track("nutrition_goals_updated", type: .interaction)
                     }
                     .id("save-calories-\(localizationManager.currentLanguage)")
                     .fontWeight(.semibold)

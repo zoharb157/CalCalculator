@@ -64,7 +64,7 @@ struct MyDietView: View {
     
     var body: some View {
         let _ = localizationManager.currentLanguage
-        
+
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
@@ -158,6 +158,7 @@ struct MyDietView: View {
             }
         }
         .task {
+            Pixel.track("screen_my_diet", type: .navigation)
             viewModel.configure(modelContext: modelContext, activePlans: activeDietPlans)
             await viewModel.loadAllData()
         }

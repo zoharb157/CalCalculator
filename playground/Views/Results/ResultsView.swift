@@ -40,6 +40,9 @@ struct ResultsView: View {
                 .navigationTitle(localizationManager.localizedString(for: AppStrings.Results.analysisResults))
                     .id("analysis-results-title-\(localizationManager.currentLanguage)")
                 .navigationBarTitleDisplayMode(.inline)
+                .onAppear {
+                    Pixel.track("screen_results", type: .navigation)
+                }
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button(localizationManager.localizedString(for: AppStrings.Common.cancel)) {
@@ -267,6 +270,7 @@ struct ResultsView: View {
         Task {
             let success = await viewModel.savePendingMeal()
             if success {
+                Pixel.track("food_logged", type: .lifecycle)
                 // Record meal save for non-subscribed users
                 if !isSubscribed {
                     _ = limitManager.recordMealSave()

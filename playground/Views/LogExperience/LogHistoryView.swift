@@ -311,9 +311,11 @@ struct LogHistoryView: View {
         do {
             switch entry {
             case .meal(let meal):
+                Pixel.track("food_deleted", type: .interaction)
                 try repository.deleteMeal(meal)
                 meals.removeAll { $0.id == meal.id }
             case .exercise(let exercise):
+                Pixel.track("exercise_deleted", type: .interaction)
                 try repository.deleteExercise(exercise)
                 exercises.removeAll { $0.id == exercise.id }
                 // Notify that an exercise was deleted so HomeViewModel can refresh burned calories

@@ -567,6 +567,7 @@ final class LogExperienceViewModel {
             // Notify that food was logged so HomeViewModel can refresh
             // Pass the meal ID so listeners can link to this specific meal
             NotificationCenter.default.post(name: .foodLogged, object: meal.id)
+            Pixel.track("food_logged", type: .lifecycle)
 
             successMessage = "\(entry.name) logged successfully!"
             showSuccess = true
@@ -617,6 +618,7 @@ final class LogExperienceViewModel {
             // Notify that food was logged so HomeViewModel can refresh
             // Pass the meal ID so listeners can link to this specific meal
             NotificationCenter.default.post(name: .foodLogged, object: meal.id)
+            Pixel.track("food_logged", type: .lifecycle)
 
             // Clear analyzed foods
             analyzedFoods = []

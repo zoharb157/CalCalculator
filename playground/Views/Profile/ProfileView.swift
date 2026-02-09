@@ -65,6 +65,7 @@ struct ProfileView: View {
             .navigationTitle(localizationManager.localizedString(for: AppStrings.Profile.title))
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
+                Pixel.track("screen_profile", type: .navigation)
                 profileImage = imageStorage.loadProfilePhoto()
             }
             .onChange(of: localizationManager.currentLanguage) { oldValue, newValue in
@@ -147,6 +148,7 @@ struct ProfileView: View {
                     title: localizationManager.localizedString(for: AppStrings.Profile.preferences),
                     subtitle: localizationManager.localizedString(for: AppStrings.Profile.appearanceNotificationsBehavior),
                     action: {
+                        Pixel.track("settings_preferences", type: .interaction)
                         showingPreferences = true
                     }
                 )
@@ -158,6 +160,7 @@ struct ProfileView: View {
                     title: localizationManager.localizedString(for: AppStrings.Profile.language),
                     subtitle: getLocalizedLanguageName(from: viewModel.selectedLanguage),
                     action: {
+                        Pixel.track("settings_language", type: .interaction)
                         showingLanguageSelection = true
                     }
                 )
@@ -170,12 +173,14 @@ struct ProfileView: View {
                     iconColor: isSubscribed ? .yellow : .orange,
                     title: isSubscribed ? "Manage Subscription" : "Upgrade to Premium",
                     subtitle: isSubscribed ? "You have an active subscription" : "Unlock all premium features",
-                    action: { 
+                    action: {
                         if isSubscribed {
+                            Pixel.track("settings_manage_subscription", type: .interaction)
                             if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
                                 UIApplication.shared.open(url)
                             }
                         } else {
+                            Pixel.track("premium_button_tapped", type: .transaction)
                             showingSubscription = true
                         }
                     }
@@ -201,7 +206,10 @@ struct ProfileView: View {
                     icon: "clock.arrow.circlepath",
                     iconColor: .purple,
                     title: localizationManager.localizedString(for: AppStrings.Profile.weightHistory),
-                    action: { showingWeightHistory = true }
+                    action: {
+                        Pixel.track("settings_weight_history", type: .interaction)
+                        showingWeightHistory = true
+                    }
                 )
                 
                 SettingsDivider()
@@ -210,7 +218,10 @@ struct ProfileView: View {
                     icon: "circle.inset.filled",
                     iconColor: .blue,
                     title: localizationManager.localizedString(for: AppStrings.Profile.ringColorsExplained),
-                    action: { showingRingColorsExplained = true }
+                    action: {
+                        Pixel.track("settings_ring_colors", type: .interaction)
+                        showingRingColorsExplained = true
+                    }
                 )
                 
                 SettingsDivider()
@@ -220,7 +231,10 @@ struct ProfileView: View {
                     iconColor: .yellow,
                     title: localizationManager.localizedString(for: AppStrings.Profile.myBadges),
                     subtitle: BadgeManager.shared.progressText,
-                    action: { showingBadges = true }
+                    action: {
+                        Pixel.track("settings_badges", type: .interaction)
+                        showingBadges = true
+                    }
                 )
                 
                 SettingsDivider()
@@ -230,7 +244,10 @@ struct ProfileView: View {
                     iconColor: .green,
                     title: localizationManager.localizedString(for: AppStrings.Profile.exportData),
                     subtitle: localizationManager.localizedString(for: AppStrings.Profile.downloadDataAsPDF),
-                    action: { showingDataExport = true }
+                    action: {
+                        Pixel.track("settings_export_data", type: .interaction)
+                        showingDataExport = true
+                    }
                 )
                 
                 // Referral code row commented out - no longer needed
@@ -251,7 +268,10 @@ struct ProfileView: View {
     
     @ViewBuilder
     private var nutritionGoalsRow: some View {
-        Button(action: { showingEditNutritionGoals = true }) {
+        Button(action: {
+            Pixel.track("settings_nutrition_goals", type: .interaction)
+            showingEditNutritionGoals = true
+        }) {
             HStack(spacing: 16) {
                 Image(systemName: "target")
                     .font(.system(size: 18))
@@ -294,6 +314,7 @@ struct ProfileView: View {
                     iconColor: .blue,
                     title: localizationManager.localizedString(for: AppStrings.Profile.contactSupport),
                     action: {
+                        Pixel.track("settings_contact_support", type: .interaction)
                         showingSupportEmail = true
                     }
                 )
@@ -305,7 +326,7 @@ struct ProfileView: View {
                     iconColor: .yellow,
                     title: localizationManager.localizedString(for: AppStrings.Profile.rateUs),
                     action: {
-
+                        Pixel.track("settings_rate_us", type: .interaction)
                         showingRateUs = true
                     }
                 )
@@ -317,6 +338,7 @@ struct ProfileView: View {
                     iconColor: .green,
                     title: localizationManager.localizedString(for: AppStrings.Profile.sendFeedback),
                     action: {
+                        Pixel.track("feedback_tapped", type: .engagement)
                         showingSendFeedback = true
                     }
                 )
@@ -327,7 +349,10 @@ struct ProfileView: View {
                     icon: "book.closed.fill",
                     iconColor: .purple,
                     title: "Health Information Sources",
-                    action: { showingHealthInfoSources = true }
+                    action: {
+                        Pixel.track("settings_health_sources", type: .interaction)
+                        showingHealthInfoSources = true
+                    }
                 )
                 
                 SettingsDivider()
@@ -337,6 +362,7 @@ struct ProfileView: View {
                     iconColor: .gray,
                     title: localizationManager.localizedString(for: AppStrings.Profile.termsOfService),
                     action: {
+                        Pixel.track("settings_terms", type: .interaction)
                         openURL("https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")
                     }
                 )
@@ -348,6 +374,7 @@ struct ProfileView: View {
                     iconColor: .gray,
                     title: localizationManager.localizedString(for: AppStrings.Profile.privacyPolicy),
                     action: {
+                        Pixel.track("settings_privacy", type: .interaction)
                         openURL("https://www.apple.com/legal/privacy/")
                     }
                 )

@@ -62,6 +62,7 @@ struct RateUsView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(localizationManager.localizedString(for: AppStrings.Common.close)) {
+                        Pixel.track("rate_us_dismissed", type: .engagement)
                         dismiss()
                     }
                 }
@@ -70,6 +71,7 @@ struct RateUsView: View {
     }
     
     private func rateApp() {
+        Pixel.track("rate_us_tapped", type: .engagement)
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
             SKStoreReviewController.requestReview(in: windowScene)
         }

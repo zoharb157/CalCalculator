@@ -113,6 +113,7 @@ final class RateUsManager {
     
     /// Shows the rate popup immediately (used by AppLaunchManager for specific triggers)
     func showRatePopupNow() {
+        Pixel.track("rate_us_shown", type: .engagement)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
                 SKStoreReviewController.requestReview(in: windowScene)
@@ -147,6 +148,7 @@ final class RateUsManager {
     private func showRatePopup() {
         // Mark as shown immediately to prevent duplicate shows
         hasShownRatePopup = true
+        Pixel.track("rate_us_shown", type: .engagement)
         
         // Small delay to allow current action's UI to complete
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {

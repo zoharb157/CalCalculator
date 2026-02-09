@@ -261,6 +261,11 @@ struct playgroundApp: App {
                     
                     await refreshSubscriptionStatus()
                 }
+                .onChange(of: subscriptionStatus) { oldValue, newValue in
+                    if !oldValue && newValue {
+                        Pixel.track("purchase_success", type: .transaction)
+                    }
+                }
                 .onReceive(NotificationCenter.default.publisher(for: .subscriptionStatusUpdated)) { _ in
                     // Subscription status updated from paywall dismiss - update reactive state
                     updateSubscriptionStatus()

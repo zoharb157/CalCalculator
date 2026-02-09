@@ -48,7 +48,6 @@ private struct LogFoodViewContent: View {
     var body: some View {
         // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
         let _ = localizationManager.currentLanguage
-        
         return NavigationStack {
             VStack(spacing: 0) {
                 // Tabs
@@ -63,6 +62,9 @@ private struct LogFoodViewContent: View {
             .navigationTitle(localizationManager.localizedString(for: AppStrings.Food.saveFood))
                 .id("save-food-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                Pixel.track("screen_log_food", type: .navigation)
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button {

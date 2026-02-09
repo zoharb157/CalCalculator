@@ -739,6 +739,7 @@ final class HomeViewModel {
             updateLiveActivityIfNeeded()
 
             HapticManager.shared.notification(.success)
+            Pixel.track("food_deleted", type: .interaction)
         } catch {
             self.error = error
             self.errorMessage = error.localizedDescription

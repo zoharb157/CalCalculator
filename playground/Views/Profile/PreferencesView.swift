@@ -46,6 +46,9 @@ struct PreferencesView: View {
                     .fontWeight(.semibold)
                 }
             }
+            .onAppear {
+                Pixel.track("screen_settings", type: .navigation)
+            }
         }
         .preferredColorScheme(viewModel.appearanceMode.colorScheme)
     }

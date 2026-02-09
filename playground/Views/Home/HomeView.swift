@@ -81,6 +81,8 @@ struct HomeView: View {
             }
             .task {
                 AppLogger.forClass("HomeView").info(".task called - this should only happen once when view appears")
+                Pixel.track("app_opened", type: .lifecycle)
+                Pixel.track("screen_home", type: .navigation)
                 let startTime = Date()
                 print("🟢 [HomeView] .task started - loading data")
                 await viewModel.loadData()
@@ -191,7 +193,7 @@ struct HomeView: View {
             }
         
         // Break up sheets and overlays into separate expression for better organization
-        let withSheets = withNotifications
+            let withSheets = withNotifications
             // Note: No need for onChange modifier - SwiftUI automatically re-evaluates views when
             // @ObservedObject properties change. Since localizationManager.currentLanguage
             // is @Published, all views using localizationManager will update automatically.
@@ -719,8 +721,10 @@ struct HomeView: View {
         do {
             let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
             if granted {
+                Pixel.track("permission_notifications_granted", type: .lifecycle)
                 print("✅ [HomeView] Notification permission granted")
             } else {
+                Pixel.track("permission_notifications_denied", type: .lifecycle)
                 print("⚠️ [HomeView] Notification permission denied")
             }
         } catch {

@@ -327,6 +327,22 @@ struct MainTabView: View {
             }
         }
         .onChange(of: selectedTabRaw) { oldValue, newValue in
+            if let tab = MainTab(rawValue: newValue) {
+                let tabEvent: String
+                switch tab {
+                case .home:
+                    tabEvent = "tab_home"
+                case .progress:
+                    tabEvent = "tab_progress"
+                case .myDiet:
+                    tabEvent = "tab_my_diet"
+                case .history:
+                    tabEvent = "tab_history"
+                case .profile:
+                    tabEvent = "tab_profile"
+                }
+                Pixel.track(tabEvent, type: .navigation)
+            }
             let timestamp = Date()
             AppLogger.forClass("MainTabView").info("🔍 [onChange selectedTabRaw] Changed at \(timestamp): '\(oldValue)' -> '\(newValue)'")
             AppLogger.forClass("MainTabView").info("🔍 [onChange selectedTabRaw] Stack trace: \(Thread.callStackSymbols.prefix(5).joined(separator: "\n"))")
@@ -617,7 +633,7 @@ private struct StableTabViewWrapper: View {
                 Label(localizationManager.localizedString(for: AppStrings.Home.title), systemImage: "house.fill")
             }
             .tag(MainTab.home.rawValue)
-            
+
             ProgressTabView(repository: repository)
                 .tabItem {
                     Label(localizationManager.localizedString(for: AppStrings.Progress.title), systemImage: "chart.line.uptrend.xyaxis")
@@ -633,7 +649,7 @@ private struct StableTabViewWrapper: View {
                     }
                     .tag(MainTab.myDiet.rawValue)
             }
-            
+
             HistoryView(
                 viewModel: historyViewModel,
                 repository: repository,

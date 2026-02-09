@@ -81,6 +81,7 @@ struct PersonalDetailsView: View {
                 }
             }
             .onAppear {
+                Pixel.track("screen_personal_details", type: .navigation)
                 loadCurrentValues()
                 loadProfileImage()
             }
@@ -565,6 +566,7 @@ struct PersonalDetailsView: View {
                         }
                         
                         isEditingWeight = false
+                        Pixel.track("weight_updated", type: .interaction)
                         HapticManager.shared.notification(.success)
                     }
                     .fontWeight(.semibold)

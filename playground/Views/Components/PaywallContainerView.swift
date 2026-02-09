@@ -42,7 +42,7 @@ struct PaywallContainerView: View {
             }
         }
         .onAppear {
-
+            Pixel.track("paywall_shown_\(source)", type: .transaction)
         }
         .onChange(of: internalPresented) { _, newValue in
             if !newValue && !sdk.isSubscribed {
