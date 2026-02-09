@@ -327,6 +327,22 @@ struct MainTabView: View {
             }
         }
         .onChange(of: selectedTabRaw) { oldValue, newValue in
+            if let tab = MainTab(rawValue: newValue) {
+                let tabEvent: String
+                switch tab {
+                case .home:
+                    tabEvent = "tab_home"
+                case .progress:
+                    tabEvent = "tab_progress"
+                case .myDiet:
+                    tabEvent = "tab_my_diet"
+                case .history:
+                    tabEvent = "tab_history"
+                case .profile:
+                    tabEvent = "tab_profile"
+                }
+                Pixel.track(tabEvent, type: .navigation)
+            }
             let timestamp = Date()
             AppLogger.forClass("MainTabView").info("🔍 [onChange selectedTabRaw] Changed at \(timestamp): '\(oldValue)' -> '\(newValue)'")
             AppLogger.forClass("MainTabView").info("🔍 [onChange selectedTabRaw] Stack trace: \(Thread.callStackSymbols.prefix(5).joined(separator: "\n"))")
@@ -389,6 +405,11 @@ struct MainTabView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .showPaywall)) { _ in
             showingPaywall = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .paywallDismissed)) { _ in
+            showingCreateDiet = false
+            showingPaywall = false            
+            dismissAllPresentedViewControllers()
         }
         // No need for onChange - SwiftUI automatically re-evaluates views when
         // @ObservedObject properties change. Since localizationManager.currentLanguage
@@ -497,6 +518,23 @@ struct MainTabView: View {
         
         return nil
     }
+    
+    private func dismissAllPresentedViewControllers() {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first(where: { $0.isKeyWindow }) ?? windowScene.windows.first,
+              let rootVC = window.rootViewController else {
+            return
+        }
+        
+        var currentVC = rootVC
+        while let presented = currentVC.presentedViewController {
+            currentVC = presented
+        }
+        
+        if currentVC != rootVC {
+            rootVC.dismiss(animated: true)
+        }
+    }
 }
 
 // MARK: - Stable Tab View Wrapper
@@ -585,7 +623,6 @@ private struct StableTabViewWrapper: View {
             },
             set: { newValue in
                 AppLogger.forClass("MainTabView").info("🔍 [binding set] TabView setting selection: '\(selectedTabRaw)' -> '\(newValue)'")
-                Pixel.track("tab_\(newValue)", type: .navigation)
                 selectedTabRaw = newValue
                 storedTab = newValue
                 UserDefaults.standard.set(newValue, forKey: "selectedMainTab")
@@ -618,7 +655,7 @@ private struct StableTabViewWrapper: View {
                 Label(localizationManager.localizedString(for: AppStrings.Home.title), systemImage: "house.fill")
             }
             .tag(MainTab.home.rawValue)
-            
+
             ProgressTabView(repository: repository)
                 .tabItem {
                     Label(localizationManager.localizedString(for: AppStrings.Progress.title), systemImage: "chart.line.uptrend.xyaxis")
@@ -634,7 +671,7 @@ private struct StableTabViewWrapper: View {
                     }
                     .tag(MainTab.myDiet.rawValue)
             }
-            
+
             HistoryView(
                 viewModel: historyViewModel,
                 repository: repository,

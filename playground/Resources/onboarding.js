@@ -201,6 +201,9 @@
   // Minimum age requirement
   const MIN_AGE = 13;
 
+  // Cleanup registry for event listeners that need to be removed on navigation
+  let cleanupFunctions = [];
+
   // ============================================================================
   // ONBOARDING COMPLETION TRACKING
   // ============================================================================
@@ -913,6 +916,9 @@ async function generateGoalsViaApi() {
 
     content.innerHTML = "";
     footer.innerHTML = "";
+
+    cleanupFunctions.forEach(fn => fn());
+    cleanupFunctions = [];
 
     const wrap = document.createElement("div");
     // Apply transition animation based on navigation direction (Step 9)
@@ -1693,16 +1699,7 @@ async function generateGoalsViaApi() {
 
         primaryBtn.textContent = "Open Settings";
         primaryBtn.onclick = async () => {
-          setBusy(true);
           await permissionViaNative(step.permissionType, "open_settings");
-          setBusy(false);
-          // After returning from Settings, we can re-check status
-          const res = await permissionViaNative(step.permissionType, "status");
-          if (res && res.ok) {
-            setStatus(res.status);
-            setButtonsForStatus(res.status);
-            persistAnswer(res.status, "status");
-          }
         };
 
         footer.appendChild(secondaryBtn);
@@ -1741,6 +1738,24 @@ async function generateGoalsViaApi() {
       footer.appendChild(secondaryBtn);
       footer.appendChild(primaryBtn);
     }
+
+    async function recheckPermissionStatus() {
+      const res = await permissionViaNative(step.permissionType, "status");
+      if (res && res.ok) {
+        setStatus(res.status);
+        setButtonsForStatus(res.status);
+        persistAnswer(res.status, "status");
+      }
+    }
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible" && state.currentId === step.id) {
+        recheckPermissionStatus();
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    cleanupFunctions.push(() => document.removeEventListener("visibilitychange", handleVisibilityChange));
 
     // Initial status check and auto-request permission if not determined
     (async () => {

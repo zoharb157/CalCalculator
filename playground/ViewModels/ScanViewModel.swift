@@ -85,11 +85,15 @@ final class ScanViewModel {
         case .notDetermined:
             await requestCameraPermission()
             if cameraPermissionStatus == .authorized {
+                Pixel.track("permission_camera_granted", type: .lifecycle)
                 showingCamera = true
+            } else {
+                Pixel.track("permission_camera_denied", type: .lifecycle)
             }
         case .authorized:
             showingCamera = true
         case .denied, .restricted:
+            Pixel.track("permission_camera_denied", type: .lifecycle)
             error = .cameraPermissionDenied
             showingError = true
         @unknown default:
@@ -131,7 +135,6 @@ final class ScanViewModel {
     // MARK: - Meal Analysis
 
     func analyzeImage(_ image: UIImage, mode: ScanMode = .food, foodHint: String? = nil) async {
-        Pixel.track("scan_started", type: .interaction)
         
         // Note: isAnalyzing and analysisProgress may already be set by the caller
         // to provide immediate feedback. Only set if not already analyzing.
@@ -192,6 +195,7 @@ final class ScanViewModel {
             // Check if food was detected
             guard response.foodDetected, let meal = response.toMeal() else {
                 print("⚠️ [ScanViewModel] Food not detected or meal conversion failed")
+                Pixel.track("scan_failed", type: .lifecycle)
                 isAnalyzing = false
                 showingNoFoodDetected = true
                 // Use notes from response, or provide default message
@@ -207,7 +211,6 @@ final class ScanViewModel {
 
             print("🟢 [ScanViewModel] Meal created: \(meal.name)")
             
-            Pixel.track("scan_success", type: .lifecycle)
             
             // Apply override category if set (e.g., from diet plan scheduled meal)
             if let overrideCategory = overrideCategory {
@@ -222,6 +225,8 @@ final class ScanViewModel {
             pendingMeal = meal
             pendingImage = image
             showingResults = true
+
+            Pixel.track("scan_success", type: .lifecycle)
 
             print("🟢 [ScanViewModel] Analysis complete, showing results")
             HapticManager.shared.notification(.success)
@@ -262,7 +267,6 @@ final class ScanViewModel {
             print("🔴 [ScanViewModel] Error type: \(type(of: error))")
             print("🔴 [ScanViewModel] Error description: \(error.localizedDescription)")
             
-            Pixel.track("scan_failed", type: .lifecycle)
             
             // Reset progress on error
             await MainActor.run {
@@ -272,6 +276,7 @@ final class ScanViewModel {
             self.errorMessage = error.localizedDescription
             self.error = .analysisTimeout
             self.showingError = true
+            Pixel.track("scan_failed", type: .lifecycle)
             HapticManager.shared.notification(.error)
         }
 

@@ -62,6 +62,7 @@ struct RateUsView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(localizationManager.localizedString(for: AppStrings.Common.close)) {
+                        Pixel.track("rate_us_dismissed", type: .engagement)
                         dismiss()
                     }
                 }

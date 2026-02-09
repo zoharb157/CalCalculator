@@ -252,7 +252,6 @@ struct playgroundApp: App {
                 .environment(\.isSubscribed, subscriptionStatus)  // Inject reactive subscription status
                 .task {
                     ActivityPixelService.shared.configure(with: sdk)
-                    Pixel.track("app_opened", type: .lifecycle)
                     
                     await logDietPlansOnStartup()
                     
@@ -261,6 +260,11 @@ struct playgroundApp: App {
                     setupAppLaunchManager()
                     
                     await refreshSubscriptionStatus()
+                }
+                .onChange(of: subscriptionStatus) { oldValue, newValue in
+                    if !oldValue && newValue {
+                        Pixel.track("purchase_success", type: .transaction)
+                    }
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .subscriptionStatusUpdated)) { _ in
                     // Subscription status updated from paywall dismiss - update reactive state
@@ -432,4 +436,5 @@ extension Notification.Name {
     static let subscriptionStatusUpdated = Notification.Name("subscriptionStatusUpdated")
     static let homeTabTapped = Notification.Name("homeTabTapped")
     static let showPaywall = Notification.Name("showPaywall")
+    static let paywallDismissed = Notification.Name("paywallDismissed")
 }

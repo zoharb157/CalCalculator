@@ -32,6 +32,7 @@ struct ProgressDashboardView: View {
     var body: some View {
         // Explicitly reference currentLanguage to ensure SwiftUI tracks the dependency
         let _ = localizationManager.currentLanguage
+        
         NavigationStack {
             Group {
                 if viewModel.isLoading && viewModel.weightHistory.isEmpty {
@@ -143,6 +144,9 @@ struct ProgressDashboardView: View {
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle(LocalizationManager.shared.localizedString(for: AppStrings.Progress.title))
+            .onAppear {
+                Pixel.track("screen_progress", type: .navigation)
+            }
             .refreshable {
                 await viewModel.loadData()
             }

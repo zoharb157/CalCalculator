@@ -41,6 +41,9 @@ struct ScanView: View {
                 .navigationTitle(localizationManager.localizedString(for: AppStrings.Scanning.scanMeal))
                     .id("scan-meal-title-\(localizationManager.currentLanguage)")
                 .navigationBarTitleDisplayMode(.inline)
+                .onAppear {
+                    Pixel.track("screen_scan", type: .navigation)
+                }
                 .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
                     // When app returns from settings, viewModel state is automatically maintained
                     // The view will automatically show the correct screen based on viewModel state
@@ -110,8 +113,14 @@ struct ScanView: View {
             )
         } else {
             CaptureOptionsView(
-                onCamera: { Task { await viewModel.openCamera() } },
-                onPhotoLibrary: { viewModel.openPhotoLibrary() }
+                onCamera: {
+                    Pixel.track("scan_camera_tapped", type: .interaction)
+                    Task { await viewModel.openCamera() }
+                },
+                onPhotoLibrary: {
+                    Pixel.track("scan_gallery_tapped", type: .interaction)
+                    viewModel.openPhotoLibrary()
+                }
             )
         }
     }

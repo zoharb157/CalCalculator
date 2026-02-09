@@ -122,6 +122,9 @@ final class HealthKitManager {
     
     /// Verify authorization by checking status and fetching data
     private func verifyAuthorizationWithData(store: HKHealthStore) async {
+        let wasAuthorized = isAuthorized
+        let wasDenied = authorizationDenied
+        
         // Fetch data to verify read access
         await fetchTodayData()
         
@@ -129,6 +132,10 @@ final class HealthKitManager {
         if steps > 0 || activeCalories > 0 || exerciseMinutes > 0 || heartRate > 0 || distance > 0 || sleepHours > 0 {
             isAuthorized = true
             authorizationDenied = false
+            // Track pixel only on first successful authorization
+            if !wasAuthorized {
+                Pixel.track("permission_healthkit_granted", type: .lifecycle)
+            }
             return
         }
         
@@ -141,10 +148,18 @@ final class HealthKitManager {
             // User granted write, likely granted read too - just no activity yet
             isAuthorized = true
             authorizationDenied = false
+            // Track pixel only on first successful authorization
+            if !wasAuthorized {
+                Pixel.track("permission_healthkit_granted", type: .lifecycle)
+            }
         case .sharingDenied:
             // User denied - show settings prompt
             isAuthorized = false
             authorizationDenied = true
+            // Track pixel only on first denial
+            if !wasDenied {
+                Pixel.track("permission_healthkit_denied", type: .lifecycle)
+            }
         case .notDetermined:
             // Shouldn't happen after requesting, but treat as denied
             isAuthorized = false

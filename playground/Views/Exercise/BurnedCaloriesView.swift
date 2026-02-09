@@ -648,6 +648,7 @@ struct BurnedCaloriesView: View {
             
             // Notify that an exercise was saved so HomeViewModel can refresh burned calories
             NotificationCenter.default.post(name: .exerciseSaved, object: nil)
+            Pixel.track("exercise_logged", type: .lifecycle)
             
             // Notify that exercise flow should be dismissed (dismiss all exercise views back to home)
             NotificationCenter.default.post(name: .exerciseFlowShouldDismiss, object: nil)

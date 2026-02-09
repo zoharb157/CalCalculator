@@ -445,6 +445,7 @@ struct QuickLogView: View {
 
             let success = await viewModel.saveFoodEntry(entry)
             if success {
+                Pixel.track("food_logged", type: .lifecycle)
                 HapticManager.shared.notification(.success)
                 showSuccess = true
             }
@@ -521,10 +522,11 @@ struct QuickLogView: View {
                 }
                 
                 // Notify that an exercise was saved
-                NotificationCenter.default.post(name: .exerciseSaved, object: nil)
+            NotificationCenter.default.post(name: .exerciseSaved, object: nil)
+            Pixel.track("exercise_logged", type: .lifecycle)
                 
-                HapticManager.shared.notification(.success)
-                showSuccess = true
+            HapticManager.shared.notification(.success)
+            showSuccess = true
             } catch {
                 errorMessage = "Failed to save exercise: \(error.localizedDescription)"
                 showError = true

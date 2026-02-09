@@ -28,6 +28,7 @@ struct LanguageSelectionView: View {
                             
                             // Update language synchronously - this will trigger didSet immediately
                             viewModel.selectedLanguage = language.name
+                            Pixel.track("language_changed", type: .interaction)
                             print("🌐 [LanguageSelectionView] After update, selectedLanguage: '\(viewModel.selectedLanguage)'")
                             
                             // Close the sheet after language change with a small delay

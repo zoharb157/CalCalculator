@@ -97,6 +97,9 @@ struct LogExerciseView: View {
             .navigationTitle(localizationManager.localizedString(for: AppStrings.Food.exercise))
                 .id("exercise-nav-title-\(localizationManager.currentLanguage)")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                Pixel.track("screen_log_exercise", type: .navigation)
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button {

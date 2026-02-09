@@ -23,6 +23,9 @@ struct HistoryView: View {
                 isSubscribed: isSubscribed
             )
         }
+        .onAppear {
+            Pixel.track("screen_history", type: .navigation)
+        }
     }
 }
 

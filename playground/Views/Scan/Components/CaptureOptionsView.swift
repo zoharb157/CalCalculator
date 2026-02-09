@@ -71,7 +71,6 @@ struct CaptureOptionsView: View {
     
     private var cameraButton: some View {
         Button(action: {
-            Pixel.track("source_camera", type: .interaction)
             onCamera()
         }) {
             Label(localizationManager.localizedString(for: AppStrings.Scanning.takePhoto), systemImage: "camera.fill")
@@ -86,7 +85,6 @@ struct CaptureOptionsView: View {
     
     private var libraryButton: some View {
         Button(action: {
-            Pixel.track("source_gallery", type: .interaction)
             onPhotoLibrary()
         }) {
             Label(localizationManager.localizedString(for: AppStrings.Scanning.chooseFromLibrary), systemImage: "photo.fill")
