@@ -4,9 +4,11 @@
 //
 
 import SwiftUI
+import SDK
 
 struct DeveloperSettingsView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(TheSDK.self) private var sdk
     @ObservedObject private var devManager = DeveloperModeManager.shared
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
@@ -111,7 +113,7 @@ struct DeveloperSettingsView: View {
                     
                     Spacer()
                     
-                    Text(devManager.userId)
+                    Text(sdk.userId)
                         .font(.system(.caption, design: .monospaced))
                         .foregroundColor(.secondary)
                         .lineLimit(1)
@@ -320,7 +322,7 @@ struct DeveloperSettingsView: View {
     // MARK: - Actions
     
     private func copyUserId() {
-        UIPasteboard.general.string = devManager.userId
+        UIPasteboard.general.string = sdk.userId
         
         withAnimation {
             showCopiedToast = true

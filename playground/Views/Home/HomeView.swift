@@ -476,14 +476,10 @@ struct HomeView: View {
                 showLogHistorySheet = true
             },
             onViewDiet: {
-                if isSubscribed {
-                    if activeDietPlans.isEmpty {
-                        showDietPlansSheet = true
-                    } else {
-                        onSwitchToMyDiet()
-                    }
+                if activeDietPlans.isEmpty {
+                    showDietPlansSheet = true
                 } else {
-                    showingPaywall = true
+                    onSwitchToMyDiet()
                 }
             }
         )
@@ -599,16 +595,12 @@ struct HomeView: View {
             .contentShape(Rectangle())
             .onTapGesture {
                 HapticManager.shared.impact(.light)
-                if isSubscribed {
-                    if activeDietPlans.isEmpty {
-                        // No active plan - show create plan screen
-                        showDietPlansSheet = true
-                    } else {
-                        // Active plan exists - switch to MyDiet tab
-                        onSwitchToMyDiet()
-                    }
+                if activeDietPlans.isEmpty {
+                    // No active plan - show create plan screen
+                    showDietPlansSheet = true
                 } else {
-                    showingPaywall = true
+                    // Active plan exists - switch to MyDiet tab
+                    onSwitchToMyDiet()
                 }
             }
             .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
@@ -619,9 +611,6 @@ struct HomeView: View {
                     selectedDietPlan = plan
                     showingEditDietPlan = true
                 }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .showPaywall)) { _ in
-                showingPaywall = true
             }
     }
 

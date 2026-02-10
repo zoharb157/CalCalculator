@@ -74,8 +74,8 @@
       title: "Height & weight",
       description: "This will be used to calibrate your plan.",
       fields: [
-        { id: "height", label: "Height", required: true, input: { type: "number", placeholder: "170", unitOptions: ["cm", "ft"], defaultUnit: "cm" } },
-        { id: "weight", label: "Weight", required: true, input: { type: "number", placeholder: "70", unitOptions: ["kg", "lb"], defaultUnit: "kg" } },
+        { id: "height", label: "Height", required: true, input: { type: "wheel_picker", ranges: { cm: { min: 100, max: 220, default: 170 }, ft: { min: 3, max: 7, default: 5 } }, unitOptions: ["cm", "ft"], defaultUnit: "cm" } },
+        { id: "weight", label: "Weight", required: true, input: { type: "wheel_picker", ranges: { kg: { min: 30, max: 200, default: 70 }, lb: { min: 66, max: 440, default: 154 } }, unitOptions: ["kg", "lb"], defaultUnit: "kg" } },
       ],
       next: "birthdate",
     },
@@ -260,6 +260,11 @@
   const saveAnswersToStorage = () => {
     try {
       localStorage.setItem('caloriecount_onboarding_answers', JSON.stringify(state.answers));
+      // Also save current step index for resuming
+      const stepIndex = order.indexOf(state.currentId);
+      if (stepIndex >= 0) {
+        localStorage.setItem('caloriecount_onboarding_step', String(stepIndex));
+      }
     } catch (error) {
       // Silently fail
     }
@@ -1001,6 +1006,15 @@ async function generateGoalsViaApi() {
       labelRow.appendChild(label);
       labelRow.appendChild(req);
 
+      fieldEl.appendChild(labelRow);
+
+      if (field.input.type === "wheel_picker") {
+        const picker = createWheelPicker(step.id, field);
+        fieldEl.appendChild(picker);
+        fieldsWrap.appendChild(fieldEl);
+        return;
+      }
+
       const control = document.createElement("div");
       control.className = "control";
 
@@ -1132,6 +1146,130 @@ async function generateGoalsViaApi() {
     });
 
     return fieldsWrap;
+  }
+
+  function createWheelPicker(stepId, field) {
+    const ITEM_HEIGHT = 44;
+    
+    const saved = state.answers[stepId] || {};
+    const currentUnit = saved[`${field.id}__unit`] || field.input.defaultUnit || field.input.unitOptions[0];
+    const range = field.input.ranges[currentUnit];
+    
+    const container = document.createElement("div");
+    container.className = "wheel-picker-field";
+    container.dataset.fieldType = "wheel_picker";
+    
+    if (field.input.unitOptions && field.input.unitOptions.length > 1) {
+      const unitToggle = document.createElement("div");
+      unitToggle.className = "wheel-picker-unit-toggle";
+      
+      field.input.unitOptions.forEach(unit => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "wheel-picker-unit-btn" + (unit === currentUnit ? " active" : "");
+        btn.textContent = unit;
+        btn.onclick = () => switchUnit(unit);
+        unitToggle.appendChild(btn);
+      });
+      container.appendChild(unitToggle);
+    }
+    
+    const wrapper = document.createElement("div");
+    wrapper.className = "wheel-picker-wrapper";
+    
+    const scrollContainer = document.createElement("div");
+    scrollContainer.className = "wheel-picker-container";
+    
+    const items = document.createElement("div");
+    items.className = "wheel-picker-items";
+    
+    function renderItems(r) {
+      items.innerHTML = "";
+      for (let i = r.min; i <= r.max; i++) {
+        const item = document.createElement("div");
+        item.className = "wheel-picker-item";
+        item.textContent = i;
+        item.dataset.value = i;
+        items.appendChild(item);
+      }
+    }
+    
+    renderItems(range);
+    scrollContainer.appendChild(items);
+    wrapper.appendChild(scrollContainer);
+    
+    const topGradient = document.createElement("div");
+    topGradient.className = "wheel-picker-gradient top";
+    wrapper.appendChild(topGradient);
+    
+    const bottomGradient = document.createElement("div");
+    bottomGradient.className = "wheel-picker-gradient bottom";
+    wrapper.appendChild(bottomGradient);
+    
+    const indicator = document.createElement("div");
+    indicator.className = "wheel-picker-indicator";
+    wrapper.appendChild(indicator);
+    
+    container.appendChild(wrapper);
+    
+    if (!state.answers[stepId]) state.answers[stepId] = {};
+    const initialValue = saved[field.id] || range.default;
+    state.answers[stepId][field.id] = initialValue;
+    state.answers[stepId][`${field.id}__unit`] = currentUnit;
+    
+    requestAnimationFrame(() => {
+      const idx = initialValue - range.min;
+      scrollContainer.scrollTop = idx * ITEM_HEIGHT;
+      updateSelection();
+    });
+    
+    function updateSelection() {
+      const scrollTop = scrollContainer.scrollTop;
+      const selectedIdx = Math.round(scrollTop / ITEM_HEIGHT);
+      const r = field.input.ranges[state.answers[stepId][`${field.id}__unit`]];
+      const value = Math.min(Math.max(r.min + selectedIdx, r.min), r.max);
+      
+      items.querySelectorAll(".wheel-picker-item").forEach((item, idx) => {
+        item.classList.toggle("selected", idx === selectedIdx);
+      });
+      
+      state.answers[stepId][field.id] = value;
+    }
+    
+    scrollContainer.addEventListener("scroll", updateSelection);
+    scrollContainer.addEventListener("scrollend", () => {
+      const scrollTop = scrollContainer.scrollTop;
+      const selectedIdx = Math.round(scrollTop / ITEM_HEIGHT);
+      scrollContainer.scrollTo({ top: selectedIdx * ITEM_HEIGHT, behavior: "smooth" });
+    });
+    
+    function switchUnit(newUnit) {
+      const oldUnit = state.answers[stepId][`${field.id}__unit`];
+      if (oldUnit === newUnit) return;
+      
+      const oldValue = state.answers[stepId][field.id];
+      const oldRange = field.input.ranges[oldUnit];
+      const newRange = field.input.ranges[newUnit];
+      
+      const ratio = (oldValue - oldRange.min) / (oldRange.max - oldRange.min);
+      const newValue = Math.round(newRange.min + ratio * (newRange.max - newRange.min));
+      
+      state.answers[stepId][`${field.id}__unit`] = newUnit;
+      state.answers[stepId][field.id] = newValue;
+      
+      container.querySelectorAll(".wheel-picker-unit-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.textContent === newUnit);
+      });
+      
+      renderItems(newRange);
+      requestAnimationFrame(() => {
+        const idx = newValue - newRange.min;
+        scrollContainer.scrollTop = idx * ITEM_HEIGHT;
+        updateSelection();
+      });
+    }
+    
+    return container;
   }
 
   // Step 7: Age validation function
@@ -2267,8 +2405,9 @@ function showGoalsError(message, apiUrl) {
     footer.innerHTML = "";
     
     const isFirstStep = state.stack.length === 0;
+    const isGoalsGeneration = step.type === "goals_generation";
     
-    if (!isFirstStep) {
+    if (!isFirstStep && !isGoalsGeneration) {
       const backBtn = document.createElement("button");
       backBtn.className = "btn ghost";
       backBtn.type = "button";
@@ -2333,6 +2472,18 @@ function showGoalsError(message, apiUrl) {
 
     step.fields.forEach((field) => {
       const fieldEl = content.querySelector(`.field[data-field-id="${field.id}"]`);
+      
+      if (field.input.type === "wheel_picker") {
+        const val = saved[field.id];
+        const isValid = !(field.required && (val == null || val === ""));
+        if (!isValid) ok = false;
+        if (fieldEl) {
+          if (!soft && !isValid) fieldEl.classList.add("invalid");
+          else if (isValid) fieldEl.classList.remove("invalid");
+        }
+        return;
+      }
+      
       let val = (saved[field.id] ?? "").toString().trim();
 
       // If saved value is empty, check the actual input field value (for default values)
@@ -2422,8 +2573,10 @@ function showGoalsError(message, apiUrl) {
     // This means user has answered all questions
     if (stepId === "generating") {
       setOnboardingCompleted();
-      saveAnswersToStorage();
     }
+    
+    // Save current progress (answers + step) for resuming
+    saveAnswersToStorage();
     
     render();
     const stepIndex = order.indexOf(stepId);
@@ -2667,8 +2820,25 @@ function showGoalsError(message, apiUrl) {
         // Returning user - skip directly to paywall/generating
         skipToPaywall();
       } else {
-        // First time user - show full onboarding
-        render();
+        // Check if there's a saved step to resume from (e.g., after returning from Settings)
+        let savedStepIndex = null;
+        try {
+          const savedStep = localStorage.getItem('caloriecount_onboarding_step');
+          if (savedStep !== null) {
+            savedStepIndex = parseInt(savedStep, 10);
+            if (isNaN(savedStepIndex) || savedStepIndex < 0 || savedStepIndex >= order.length) {
+              savedStepIndex = null;
+            }
+          }
+        } catch (e) {}
+        
+        if (savedStepIndex !== null && savedStepIndex > 0) {
+          // Resume from saved step
+          goToStep(savedStepIndex);
+        } else {
+          // First time user - show full onboarding from beginning
+          render();
+        }
         call("ready", { firstStepId: state.currentId });
       }
       
@@ -2681,6 +2851,7 @@ function showGoalsError(message, apiUrl) {
       try {
         localStorage.removeItem(ONBOARDING_COMPLETED_KEY);
         localStorage.removeItem('caloriecount_onboarding_answers');
+        localStorage.removeItem('caloriecount_onboarding_step');
         sendPostRequest("onboarding_reset", '', false);
       } catch (e) {}
     }
