@@ -1023,11 +1023,13 @@
         overflow: hidden;
         border-radius: 12px;
         background: color-mix(in srgb, var(--cardSolid) 60%, transparent);
+        overflow-x: hidden;
       }
 
       .wheel-picker-container {
         height: 100%;
         overflow-y: scroll;
+        overflow-x: hidden;
         scroll-snap-type: y mandatory;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
@@ -1094,6 +1096,7 @@
         display: flex;
         flex-direction: column;
         gap: 8px;
+        overflow-x: hidden;
       }
 
       .wheel-picker-unit-toggle {
