@@ -23,7 +23,16 @@ final class ActivityPixelService {
     private var appOpenedSentThisSession = false
     private weak var sdk: TheSDK?
     
+    /// Flag to indicate SDK has fully initialized - used to guard purchase_success tracking
+    /// This prevents false purchase_success events on app launch when existing subscription is detected
+    private(set) var sdkDidInitialize = false
+    
     private init() {}
+    
+    /// Mark SDK as initialized - call this after SDK initialization completes
+    func markSDKInitialized() {
+        sdkDidInitialize = true
+    }
     
     func configure(with sdk: TheSDK) {
         self.sdk = sdk
