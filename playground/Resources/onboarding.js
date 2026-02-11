@@ -227,7 +227,7 @@
   const setOnboardingCompleted = () => {
     try {
       localStorage.setItem(ONBOARDING_COMPLETED_KEY, 'true');
-      sendPostRequest("onboarding_marked_completed", '', false);
+      sendPostRequest("onboarding_completion_tapped", '', false);
     } catch (error) {
       // Silently fail if localStorage is not available
     }
@@ -472,8 +472,8 @@
         eventType: type,
         error: JSON.stringify(error),
       };
-      if (type !== "fetchError") {
-        sendPostRequest("fetchError", '', false, JSON.stringify(errorData));
+      if (type !== "subscription_fetch_failed") {
+        sendPostRequest("subscription_fetch_failed", '', false, JSON.stringify(errorData));
       }
       cb();
     });
@@ -1403,8 +1403,8 @@ async function generateGoalsViaApi() {
           });
           btn.classList.add("selected");
           btn.setAttribute("aria-checked", "true");
+          sendPostRequest("gender_selected", '', false, optText.toLowerCase());
           updatePrimaryEnabled(step);
-          // Don't auto-advance - user must click Continue button
         });
 
         options.appendChild(btn);
@@ -1476,8 +1476,18 @@ async function generateGoalsViaApi() {
           });
           btn.classList.add("selected");
           btn.setAttribute("aria-checked", "true");
+          
+          const interactionEventMap = {
+            "activity_level": "activity_level_selected",
+            "goal": "goal_selected",
+            "coach": "coach_selected"
+          };
+          const interactionEvent = interactionEventMap[step.id];
+          if (interactionEvent) {
+            sendPostRequest(interactionEvent, '', false, optValue);
+          }
+          
           updatePrimaryEnabled(step);
-          // Don't auto-advance - user must click Continue button
         });
 
         options.appendChild(btn);
@@ -1875,6 +1885,20 @@ async function generateGoalsViaApi() {
       const allowed = isPermissionGranted(status);
       state.permissions[step.permissionType] = allowed;
       state.answers[step.id] = { allowed, status, action };
+      
+      if (step.permissionType === "notifications") {
+        if (allowed) {
+          sendPostRequest("permission_notifications_granted", '', false);
+        } else if (status === "denied" || status === "skipped") {
+          sendPostRequest("permission_notifications_denied", '', false);
+        }
+      } else if (step.permissionType === "tracking") {
+        if (allowed) {
+          sendPostRequest("permission_tracking_granted", '', false);
+        } else if (status === "denied" || status === "skipped") {
+          sendPostRequest("permission_tracking_denied", '', false);
+        }
+      }
     }
 
     function setButtonsForStatus(status) {
@@ -2638,7 +2662,25 @@ function showGoalsError(message, apiUrl) {
     render();
     const stepIndex = order.indexOf(stepId);
     call("step_view", { stepId, stepIndex });
-    sendPostRequest("step_" + stepId, '', false);
+    
+    // Map step IDs to new screen event names
+    const stepEventMap = {
+      "welcome": "screen_onboarding_welcome",
+      "name_input": "screen_onboarding_name",
+      "gender": "screen_onboarding_gender",
+      "birthdate": "screen_onboarding_birthdate",
+      "height_weight": "screen_onboarding_height_weight",
+      "desired_weight": "screen_onboarding_desired_weight",
+      "goal": "screen_onboarding_goal",
+      "goal_speed": "screen_onboarding_goal_speed",
+      "activity_level": "screen_onboarding_activity_level",
+      "coach": "screen_onboarding_coach",
+      "generating": "screen_onboarding_generating",
+      "notifications_permission": "screen_onboarding_notifications",
+      "tracking_permission": "screen_onboarding_tracking"
+    };
+    const eventName = stepEventMap[stepId] || ("screen_onboarding_" + stepId);
+    sendPostRequest(eventName, '', false);
   }
 
   function goNext() {
@@ -2723,9 +2765,14 @@ function showGoalsError(message, apiUrl) {
         if (fieldEl) fieldEl.classList.add("invalid");
         return;
       }
+      sendPostRequest("name_input_completed", '', false);
     }
 
     state.stack.push(step.id);
+    
+    if (step.id === "birthdate") {
+      sendPostRequest("birthdate_selected", '', false);
+    }
 
     if (step.id === "height_weight") {
       const a = state.answers[step.id] || {};
@@ -2795,6 +2842,15 @@ function showGoalsError(message, apiUrl) {
           state.answers._normalized.weight_kg = kg;
         }
       }
+      sendPostRequest("height_weight_entered", '', false);
+    }
+    
+    if (step.id === "desired_weight") {
+      sendPostRequest("desired_weight_entered", '', false);
+    }
+    
+    if (step.id === "goal_speed") {
+      sendPostRequest("goal_speed_selected", '', false);
     }
 
     saveAnswersToStorage();
@@ -2855,7 +2911,7 @@ function showGoalsError(message, apiUrl) {
     };
 
     call("complete", payload);
-    sendPostRequest("onboarding_complete", '', true, JSON.stringify(payload), () => {
+    sendPostRequest("onboarding_success", '', true, JSON.stringify(payload), () => {
       callAction({ action: "dismiss" });
     });
 
@@ -2982,8 +3038,9 @@ function showGoalsError(message, apiUrl) {
     // Render the initial step
     render();
     call("ready", { firstStepId: state.currentId });
-    sendPostRequest("JSLoaded", "", false);
-    sendPostRequest("initAppReady", "", false);
+    // Internal debug events - not for analytics
+    sendPostRequest("internal_js_loaded", "", false);
+    sendPostRequest("internal_app_ready", "", false);
   }
   
   if (document.readyState === 'loading') {

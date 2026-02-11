@@ -252,6 +252,7 @@ struct playgroundApp: App {
                 .environment(\.isSubscribed, subscriptionStatus)  // Inject reactive subscription status
                 .task {
                     ActivityPixelService.shared.configure(with: sdk)
+                    ActivityPixelService.shared.markSDKInitialized()
                     
                     await logDietPlansOnStartup()
                     
@@ -262,7 +263,7 @@ struct playgroundApp: App {
                     await refreshSubscriptionStatus()
                 }
                 .onChange(of: subscriptionStatus) { oldValue, newValue in
-                    if !oldValue && newValue {
+                    if !oldValue && newValue && ActivityPixelService.shared.sdkDidInitialize {
                         Pixel.track("purchase_success", type: .transaction)
                     }
                 }

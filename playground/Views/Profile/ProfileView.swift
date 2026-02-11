@@ -314,7 +314,7 @@ struct ProfileView: View {
                     iconColor: .blue,
                     title: localizationManager.localizedString(for: AppStrings.Profile.contactSupport),
                     action: {
-                        Pixel.track("settings_contact_support", type: .interaction)
+                        Pixel.track("settings_mail_us_tapped", type: .interaction)
                         showingSupportEmail = true
                     }
                 )
@@ -338,7 +338,7 @@ struct ProfileView: View {
                     iconColor: .green,
                     title: localizationManager.localizedString(for: AppStrings.Profile.sendFeedback),
                     action: {
-                        Pixel.track("feedback_tapped", type: .engagement)
+                        Pixel.track("settings_feedback_tapped", type: .interaction)
                         showingSendFeedback = true
                     }
                 )
@@ -362,7 +362,7 @@ struct ProfileView: View {
                     iconColor: .gray,
                     title: localizationManager.localizedString(for: AppStrings.Profile.termsOfService),
                     action: {
-                        Pixel.track("settings_terms", type: .interaction)
+                        Pixel.track("settings_terms_tapped", type: .interaction)
                         openURL("https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")
                     }
                 )
@@ -374,7 +374,7 @@ struct ProfileView: View {
                     iconColor: .gray,
                     title: localizationManager.localizedString(for: AppStrings.Profile.privacyPolicy),
                     action: {
-                        Pixel.track("settings_privacy", type: .interaction)
+                        Pixel.track("settings_privacy_tapped", type: .interaction)
                         openURL("https://www.apple.com/legal/privacy/")
                     }
                 )
