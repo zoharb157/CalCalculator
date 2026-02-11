@@ -74,8 +74,8 @@
       title: "Height & weight",
       description: "This will be used to calibrate your plan.",
       fields: [
-        { id: "height", label: "Height", required: true, input: { type: "wheel_picker", ranges: { cm: { min: 100, max: 220, default: 170 }, ft: { min: 3, max: 7, default: 5 } }, unitOptions: ["cm", "ft"], defaultUnit: "cm" } },
-        { id: "weight", label: "Weight", required: true, input: { type: "wheel_picker", ranges: { kg: { min: 30, max: 200, default: 70 }, lb: { min: 66, max: 440, default: 154 } }, unitOptions: ["kg", "lb"], defaultUnit: "kg" } },
+        { id: "height", label: "Height", required: true, input: { type: "wheel_picker", min: 100, max: 220, defaultValue: 170, unitOptions: ["cm", "ft"], defaultUnit: "cm" } },
+        { id: "weight", label: "Weight", required: true, input: { type: "wheel_picker", min: 30, max: 200, defaultValue: 70, unitOptions: ["kg", "lb"], defaultUnit: "kg" } },
       ],
       next: "birthdate",
     },
@@ -499,6 +499,14 @@
       return null;
     }
     return unit === "lb" || unit === "lbs" ? v * 0.453592 : v;
+  }
+
+  function cmToFt(cm) {
+    return cm / 30.48;
+  }
+
+  function ftToCm(ft) {
+    return ft * 30.48;
   }
   
   // Try to generate goals via native Swift code (bypasses CORS)
@@ -1009,7 +1017,7 @@ async function generateGoalsViaApi() {
       fieldEl.appendChild(labelRow);
 
       if (field.input.type === "wheel_picker") {
-        const picker = createWheelPicker(step.id, field);
+        const picker = createWheelPicker(field.id, field.input, step.id);
         fieldEl.appendChild(picker);
         fieldsWrap.appendChild(fieldEl);
         return;
@@ -1148,128 +1156,184 @@ async function generateGoalsViaApi() {
     return fieldsWrap;
   }
 
-  function createWheelPicker(stepId, field) {
+  function createWheelPicker(fieldId, config, stepId) {
     const ITEM_HEIGHT = 44;
-    
+
+    const defaultUnit = config.defaultUnit || (config.unitOptions ? config.unitOptions[0] : undefined);
     const saved = state.answers[stepId] || {};
-    const currentUnit = saved[`${field.id}__unit`] || field.input.defaultUnit || field.input.unitOptions[0];
-    const range = field.input.ranges[currentUnit];
-    
-    const container = document.createElement("div");
-    container.className = "wheel-picker-field";
-    container.dataset.fieldType = "wheel_picker";
-    
-    if (field.input.unitOptions && field.input.unitOptions.length > 1) {
-      const unitToggle = document.createElement("div");
+    const savedUnit = saved[`${fieldId}__unit`];
+    let currentUnit = savedUnit || defaultUnit;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "wheel-picker-field";
+
+    let unitToggle = null;
+    if (config.unitOptions && config.unitOptions.length > 1) {
+      unitToggle = document.createElement("div");
       unitToggle.className = "wheel-picker-unit-toggle";
-      
-      field.input.unitOptions.forEach(unit => {
+
+      config.unitOptions.forEach((unit) => {
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = "wheel-picker-unit-btn" + (unit === currentUnit ? " active" : "");
         btn.textContent = unit;
-        btn.onclick = () => switchUnit(unit);
+        btn.addEventListener("click", () => switchUnit(unit));
         unitToggle.appendChild(btn);
       });
-      container.appendChild(unitToggle);
+
+      wrapper.appendChild(unitToggle);
     }
-    
-    const wrapper = document.createElement("div");
-    wrapper.className = "wheel-picker-wrapper";
-    
-    const scrollContainer = document.createElement("div");
-    scrollContainer.className = "wheel-picker-container";
-    
+
+    const pickerWrapper = document.createElement("div");
+    pickerWrapper.className = "wheel-picker-wrapper";
+
+    const container = document.createElement("div");
+    container.className = "wheel-picker-container";
+
     const items = document.createElement("div");
     items.className = "wheel-picker-items";
-    
-    function renderItems(r) {
+
+    container.appendChild(items);
+    pickerWrapper.appendChild(container);
+    wrapper.appendChild(pickerWrapper);
+
+    const topGradient = document.createElement("div");
+    topGradient.className = "wheel-picker-gradient top";
+    pickerWrapper.appendChild(topGradient);
+
+    const bottomGradient = document.createElement("div");
+    bottomGradient.className = "wheel-picker-gradient bottom";
+    pickerWrapper.appendChild(bottomGradient);
+
+    const indicator = document.createElement("div");
+    indicator.className = "wheel-picker-indicator";
+    pickerWrapper.appendChild(indicator);
+
+    function resolveRange(unit) {
+      const baseMin = Number(config.min ?? 0);
+      const baseMax = Number(config.max ?? 100);
+      const baseDefault = Number(config.defaultValue ?? Math.floor((baseMin + baseMax) / 2));
+      const step = config.step ? Number(config.step) : 1;
+
+      if (fieldId === "height" && unit === "ft") {
+        return { min: 3, max: 7, step: 0.1, defaultValue: 5.6, precision: 1 };
+      }
+      if (fieldId === "weight" && unit === "lb") {
+        return { min: 66, max: 440, step: 1, defaultValue: 154, precision: 0 };
+      }
+
+      return { min: baseMin, max: baseMax, step, defaultValue: baseDefault, precision: step % 1 ? String(step).split(".")[1].length : 0 };
+    }
+
+    function renderItems(range) {
       items.innerHTML = "";
-      for (let i = r.min; i <= r.max; i++) {
+      for (let v = range.min; v <= range.max + 0.0001; v += range.step) {
+        const value = range.precision ? Number(v.toFixed(range.precision)) : Number(v.toFixed(0));
         const item = document.createElement("div");
         item.className = "wheel-picker-item";
-        item.textContent = i;
-        item.dataset.value = i;
+        item.textContent = value;
+        item.dataset.value = String(value);
         items.appendChild(item);
       }
     }
-    
-    renderItems(range);
-    scrollContainer.appendChild(items);
-    wrapper.appendChild(scrollContainer);
-    
-    const topGradient = document.createElement("div");
-    topGradient.className = "wheel-picker-gradient top";
-    wrapper.appendChild(topGradient);
-    
-    const bottomGradient = document.createElement("div");
-    bottomGradient.className = "wheel-picker-gradient bottom";
-    wrapper.appendChild(bottomGradient);
-    
-    const indicator = document.createElement("div");
-    indicator.className = "wheel-picker-indicator";
-    wrapper.appendChild(indicator);
-    
-    container.appendChild(wrapper);
-    
-    if (!state.answers[stepId]) state.answers[stepId] = {};
-    const initialValue = saved[field.id] || range.default;
-    state.answers[stepId][field.id] = initialValue;
-    state.answers[stepId][`${field.id}__unit`] = currentUnit;
-    
-    requestAnimationFrame(() => {
-      const idx = initialValue - range.min;
-      scrollContainer.scrollTop = idx * ITEM_HEIGHT;
-      updateSelection();
-    });
-    
-    function updateSelection() {
-      const scrollTop = scrollContainer.scrollTop;
-      const selectedIdx = Math.round(scrollTop / ITEM_HEIGHT);
-      const r = field.input.ranges[state.answers[stepId][`${field.id}__unit`]];
-      const value = Math.min(Math.max(r.min + selectedIdx, r.min), r.max);
-      
-      items.querySelectorAll(".wheel-picker-item").forEach((item, idx) => {
-        item.classList.toggle("selected", idx === selectedIdx);
-      });
-      
-      state.answers[stepId][field.id] = value;
+
+    function snapToValue(value, smooth = true) {
+      const range = resolveRange(currentUnit);
+      const maxIndex = Math.max(items.children.length - 1, 0);
+      const index = clamp(Math.round((value - range.min) / range.step), 0, maxIndex);
+      const scrollTop = index * ITEM_HEIGHT;
+      container.scrollTo({ top: scrollTop, behavior: smooth ? "smooth" : "auto" });
     }
-    
-    scrollContainer.addEventListener("scroll", updateSelection);
-    scrollContainer.addEventListener("scrollend", () => {
-      const scrollTop = scrollContainer.scrollTop;
-      const selectedIdx = Math.round(scrollTop / ITEM_HEIGHT);
-      scrollContainer.scrollTo({ top: selectedIdx * ITEM_HEIGHT, behavior: "smooth" });
-    });
-    
-    function switchUnit(newUnit) {
-      const oldUnit = state.answers[stepId][`${field.id}__unit`];
-      if (oldUnit === newUnit) return;
-      
-      const oldValue = state.answers[stepId][field.id];
-      const oldRange = field.input.ranges[oldUnit];
-      const newRange = field.input.ranges[newUnit];
-      
-      const ratio = (oldValue - oldRange.min) / (oldRange.max - oldRange.min);
-      const newValue = Math.round(newRange.min + ratio * (newRange.max - newRange.min));
-      
-      state.answers[stepId][`${field.id}__unit`] = newUnit;
-      state.answers[stepId][field.id] = newValue;
-      
-      container.querySelectorAll(".wheel-picker-unit-btn").forEach(btn => {
-        btn.classList.toggle("active", btn.textContent === newUnit);
+
+    function updateSelection() {
+      const range = resolveRange(currentUnit);
+      const maxIndex = Math.max(items.children.length - 1, 0);
+      const selectedIndex = clamp(Math.round(container.scrollTop / ITEM_HEIGHT), 0, maxIndex);
+      const selectedValue = range.min + selectedIndex * range.step;
+      const rounded = range.precision ? Number(selectedValue.toFixed(range.precision)) : Number(selectedValue.toFixed(0));
+
+      items.querySelectorAll(".wheel-picker-item").forEach((item, idx) => {
+        item.classList.toggle("selected", idx === selectedIndex);
       });
-      
-      renderItems(newRange);
+
+      if (!state.answers[stepId]) state.answers[stepId] = {};
+      state.answers[stepId][fieldId] = rounded;
+      state.answers[stepId][`${fieldId}__unit`] = currentUnit;
+    }
+
+    function convertValue(value, fromUnit, toUnit) {
+      if (fieldId === "height") {
+        if (fromUnit === "cm" && toUnit === "ft") return cmToFt(value);
+        if (fromUnit === "ft" && toUnit === "cm") return ftToCm(value);
+      }
+      if (fieldId === "weight") {
+        if (fromUnit === "kg" && toUnit === "lb") return kgToLb(value);
+        if (fromUnit === "lb" && toUnit === "kg") return lbToKg(value);
+      }
+      return value;
+    }
+
+    function switchUnit(nextUnit) {
+      if (currentUnit === nextUnit) return;
+
+      const currentValue = state.answers[stepId] ? Number(state.answers[stepId][fieldId]) : undefined;
+      const fromUnit = currentUnit;
+      currentUnit = nextUnit;
+
+      if (unitToggle) {
+        unitToggle.querySelectorAll(".wheel-picker-unit-btn").forEach((btn) => {
+          btn.classList.toggle("active", btn.textContent === currentUnit);
+        });
+      }
+
+      const range = resolveRange(currentUnit);
+      renderItems(range);
+
+      let nextValue = Number.isFinite(currentValue) ? convertValue(currentValue, fromUnit, currentUnit) : range.defaultValue;
+      nextValue = clamp(nextValue, range.min, range.max);
+      nextValue = range.precision ? Number(nextValue.toFixed(range.precision)) : Math.round(nextValue);
+
+      if (!state.answers[stepId]) state.answers[stepId] = {};
+      state.answers[stepId][fieldId] = nextValue;
+      state.answers[stepId][`${fieldId}__unit`] = currentUnit;
+
       requestAnimationFrame(() => {
-        const idx = newValue - newRange.min;
-        scrollContainer.scrollTop = idx * ITEM_HEIGHT;
+        snapToValue(nextValue, false);
         updateSelection();
       });
     }
-    
-    return container;
+
+    const initialRange = resolveRange(currentUnit);
+    renderItems(initialRange);
+
+    let initialValue = saved[fieldId];
+    if (!Number.isFinite(Number(initialValue))) {
+      initialValue = initialRange.defaultValue;
+    }
+    initialValue = clamp(Number(initialValue), initialRange.min, initialRange.max);
+    initialValue = initialRange.precision ? Number(initialValue.toFixed(initialRange.precision)) : Math.round(initialValue);
+
+    if (!state.answers[stepId]) state.answers[stepId] = {};
+    state.answers[stepId][fieldId] = initialValue;
+    if (currentUnit) {
+      state.answers[stepId][`${fieldId}__unit`] = currentUnit;
+    }
+
+    requestAnimationFrame(() => {
+      snapToValue(initialValue, false);
+      updateSelection();
+    });
+
+    container.addEventListener("scroll", updateSelection);
+    container.addEventListener("scrollend", () => {
+      const range = resolveRange(currentUnit);
+      const maxIndex = Math.max(items.children.length - 1, 0);
+      const selectedIndex = clamp(Math.round(container.scrollTop / ITEM_HEIGHT), 0, maxIndex);
+      const snappedValue = range.min + selectedIndex * range.step;
+      snapToValue(snappedValue, true);
+    });
+
+    return wrapper;
   }
 
   // Step 7: Age validation function
@@ -2471,18 +2535,11 @@ function showGoalsError(message, apiUrl) {
     const saved = state.answers[step.id] || {};
 
     step.fields.forEach((field) => {
-      const fieldEl = content.querySelector(`.field[data-field-id="${field.id}"]`);
-      
-      if (field.input.type === "wheel_picker") {
-        const val = saved[field.id];
-        const isValid = !(field.required && (val == null || val === ""));
-        if (!isValid) ok = false;
-        if (fieldEl) {
-          if (!soft && !isValid) fieldEl.classList.add("invalid");
-          else if (isValid) fieldEl.classList.remove("invalid");
-        }
+      if (field.input && field.input.type === "wheel_picker") {
         return;
       }
+
+      const fieldEl = content.querySelector(`.field[data-field-id="${field.id}"]`);
       
       let val = (saved[field.id] ?? "").toString().trim();
 
@@ -2601,6 +2658,26 @@ function showGoalsError(message, apiUrl) {
     if (step.type === "form") {
       const obj = state.answers[step.id] || {};
       step.fields.forEach((field) => {
+        if (field.input && field.input.type === "wheel_picker") {
+          const value = obj[field.id];
+          if (value !== undefined) {
+            return;
+          }
+          const currentUnit = obj[`${field.id}__unit`];
+          const fallbackUnit = currentUnit || field.input.defaultUnit || (field.input.unitOptions ? field.input.unitOptions[0] : undefined);
+          let fallbackValue = field.input.defaultValue || field.input.min || 0;
+          if (field.id === "height" && fallbackUnit === "ft") fallbackValue = 5.6;
+          if (field.id === "weight" && fallbackUnit === "lb") fallbackValue = 154;
+          obj[field.id] = fallbackValue;
+          if (field.input.unitOptions && field.input.unitOptions.length) {
+            const unitKey = `${field.id}__unit`;
+            if (!obj[unitKey]) {
+              obj[unitKey] = fallbackUnit;
+            }
+          }
+          return;
+        }
+
         const input = content.querySelector(`#in_${step.id}_${field.id}`);
         if (input) {
           const rawValue = input.value.trim();

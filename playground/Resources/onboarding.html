@@ -1023,7 +1023,6 @@
         overflow: hidden;
         border-radius: 12px;
         background: color-mix(in srgb, var(--cardSolid) 60%, transparent);
-        border: 1px solid color-mix(in srgb, var(--stroke2) 60%, transparent);
       }
 
       .wheel-picker-container {
@@ -1091,10 +1090,15 @@
         z-index: 1;
       }
 
+      .wheel-picker-field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
       .wheel-picker-unit-toggle {
         display: flex;
         gap: 0;
-        margin-bottom: 8px;
         background: color-mix(in srgb, var(--cardSolid) 70%, transparent);
         border-radius: 10px;
         padding: 4px;
