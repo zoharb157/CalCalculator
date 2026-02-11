@@ -87,15 +87,11 @@ struct DietPlanCard: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(isSubscribed 
-                         ? localizationManager.localizedString(for: AppStrings.History.createYourDietPlan) 
-                         : localizationManager.localizedString(for: AppStrings.History.unlockDietPlans))
+                    Text(localizationManager.localizedString(for: AppStrings.History.createYourDietPlan))
                         .font(.headline)
                         .foregroundColor(.primary)
                     
-                    Text(isSubscribed
-                         ? localizationManager.localizedString(for: AppStrings.History.scheduleRepetitiveMeals)
-                         : localizationManager.localizedString(for: AppStrings.History.subscribeToCreateDietPlans))
+                    Text(localizationManager.localizedString(for: AppStrings.History.scheduleRepetitiveMeals))
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(2)
@@ -121,13 +117,7 @@ struct DietPlanCard: View {
                 showingPlansList = true
             } label: {
                 HStack(spacing: 8) {
-                    if !isSubscribed {
-                        Image(systemName: "crown.fill")
-                            .font(.subheadline)
-                    }
-                    Text(isSubscribed 
-                         ? localizationManager.localizedString(for: AppStrings.History.createDietPlan) 
-                         : localizationManager.localizedString(for: AppStrings.History.subscribeCreate))
+                    Text(localizationManager.localizedString(for: AppStrings.History.createDietPlan))
                         .font(.subheadline)
                         .fontWeight(.semibold)
                 }
@@ -136,7 +126,7 @@ struct DietPlanCard: View {
                 .padding(.vertical, 12)
                 .background(
                     LinearGradient(
-                        colors: isSubscribed ? [.blue, .cyan] : [.orange, .yellow.opacity(0.8)],
+                        colors: [.blue, .cyan],
                         startPoint: .leading,
                         endPoint: .trailing
                     )

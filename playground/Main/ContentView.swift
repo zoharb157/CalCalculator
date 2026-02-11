@@ -90,8 +90,16 @@ struct ContentView: View {
                             "📱 [ContentView] Goals: \(result.goals.calories) kcal, \(result.goals.proteinG)g protein"
                         )
                         
-                        withAnimation {
-                            authState = .authenticated
+                        if !sdk.isSubscribed {
+                            paywallItem = PaywallItem(page: .splash) {
+                                withAnimation {
+                                    authState = .authenticated
+                                }
+                            }
+                        } else {
+                            withAnimation {
+                                authState = .authenticated
+                            }
                         }
                     }
                     
@@ -133,26 +141,20 @@ struct ContentView: View {
                     }
             }
         }
-        .fullScreenCover(item: $paywallItem) { page in
-            let show: Binding<Bool> = .init(
-                get: {
-                    true
-                },
-                set: { _ in
-                    page.callback?()
-                    paywallItem = nil
-                }
+        .fullScreenCover(item: $paywallItem) { item in
+            PaywallContainerView(
+                isPresented: Binding(
+                    get: { paywallItem != nil },
+                    set: { newValue in
+                        if !newValue {
+                            item.callback?()
+                            paywallItem = nil
+                        }
+                    }
+                ),
+                sdk: sdk,
+                source: "onboarding_completion"
             )
-            
-            SDKView(
-                model: sdk,
-                page: page.page,
-                show: show,
-                backgroundColor: Color(UIColor.systemBackground) ,
-                ignoreSafeArea: true
-            )
-            .ignoresSafeArea()
-            .id(page.id)
         }
         .onOpenURL { url in
             handleDeepLink(url)

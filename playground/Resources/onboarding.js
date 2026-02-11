@@ -74,8 +74,8 @@
       title: "Height & weight",
       description: "This will be used to calibrate your plan.",
       fields: [
-        { id: "height", label: "Height", required: true, input: { type: "number", placeholder: "170", unitOptions: ["cm", "ft"], defaultUnit: "cm" } },
-        { id: "weight", label: "Weight", required: true, input: { type: "number", placeholder: "70", unitOptions: ["kg", "lb"], defaultUnit: "kg" } },
+        { id: "height", label: "Height", required: true, input: { type: "wheel_picker", min: 100, max: 220, defaultValue: 170, unitOptions: ["cm", "ft"], defaultUnit: "cm" } },
+        { id: "weight", label: "Weight", required: true, input: { type: "wheel_picker", min: 30, max: 200, defaultValue: 70, unitOptions: ["kg", "lb"], defaultUnit: "kg" } },
       ],
       next: "birthdate",
     },
@@ -260,6 +260,11 @@
   const saveAnswersToStorage = () => {
     try {
       localStorage.setItem('caloriecount_onboarding_answers', JSON.stringify(state.answers));
+      // Also save current step index for resuming
+      const stepIndex = order.indexOf(state.currentId);
+      if (stepIndex >= 0) {
+        localStorage.setItem('caloriecount_onboarding_step', String(stepIndex));
+      }
     } catch (error) {
       // Silently fail
     }
@@ -494,6 +499,14 @@
       return null;
     }
     return unit === "lb" || unit === "lbs" ? v * 0.453592 : v;
+  }
+
+  function cmToFt(cm) {
+    return cm / 30.48;
+  }
+
+  function ftToCm(ft) {
+    return ft * 30.48;
   }
   
   // Try to generate goals via native Swift code (bypasses CORS)
@@ -1001,6 +1014,15 @@ async function generateGoalsViaApi() {
       labelRow.appendChild(label);
       labelRow.appendChild(req);
 
+      fieldEl.appendChild(labelRow);
+
+      if (field.input.type === "wheel_picker") {
+        const picker = createWheelPicker(field.id, field.input, step.id);
+        fieldEl.appendChild(picker);
+        fieldsWrap.appendChild(fieldEl);
+        return;
+      }
+
       const control = document.createElement("div");
       control.className = "control";
 
@@ -1132,6 +1154,186 @@ async function generateGoalsViaApi() {
     });
 
     return fieldsWrap;
+  }
+
+  function createWheelPicker(fieldId, config, stepId) {
+    const ITEM_HEIGHT = 44;
+
+    const defaultUnit = config.defaultUnit || (config.unitOptions ? config.unitOptions[0] : undefined);
+    const saved = state.answers[stepId] || {};
+    const savedUnit = saved[`${fieldId}__unit`];
+    let currentUnit = savedUnit || defaultUnit;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "wheel-picker-field";
+
+    let unitToggle = null;
+    if (config.unitOptions && config.unitOptions.length > 1) {
+      unitToggle = document.createElement("div");
+      unitToggle.className = "wheel-picker-unit-toggle";
+
+      config.unitOptions.forEach((unit) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "wheel-picker-unit-btn" + (unit === currentUnit ? " active" : "");
+        btn.textContent = unit;
+        btn.addEventListener("click", () => switchUnit(unit));
+        unitToggle.appendChild(btn);
+      });
+
+      wrapper.appendChild(unitToggle);
+    }
+
+    const pickerWrapper = document.createElement("div");
+    pickerWrapper.className = "wheel-picker-wrapper";
+
+    const container = document.createElement("div");
+    container.className = "wheel-picker-container";
+
+    const items = document.createElement("div");
+    items.className = "wheel-picker-items";
+
+    container.appendChild(items);
+    pickerWrapper.appendChild(container);
+    wrapper.appendChild(pickerWrapper);
+
+    const topGradient = document.createElement("div");
+    topGradient.className = "wheel-picker-gradient top";
+    pickerWrapper.appendChild(topGradient);
+
+    const bottomGradient = document.createElement("div");
+    bottomGradient.className = "wheel-picker-gradient bottom";
+    pickerWrapper.appendChild(bottomGradient);
+
+    const indicator = document.createElement("div");
+    indicator.className = "wheel-picker-indicator";
+    pickerWrapper.appendChild(indicator);
+
+    function resolveRange(unit) {
+      const baseMin = Number(config.min ?? 0);
+      const baseMax = Number(config.max ?? 100);
+      const baseDefault = Number(config.defaultValue ?? Math.floor((baseMin + baseMax) / 2));
+      const step = config.step ? Number(config.step) : 1;
+
+      if (fieldId === "height" && unit === "ft") {
+        return { min: 3, max: 7, step: 0.1, defaultValue: 5.6, precision: 1 };
+      }
+      if (fieldId === "weight" && unit === "lb") {
+        return { min: 66, max: 440, step: 1, defaultValue: 154, precision: 0 };
+      }
+
+      return { min: baseMin, max: baseMax, step, defaultValue: baseDefault, precision: step % 1 ? String(step).split(".")[1].length : 0 };
+    }
+
+    function renderItems(range) {
+      items.innerHTML = "";
+      for (let v = range.min; v <= range.max + 0.0001; v += range.step) {
+        const value = range.precision ? Number(v.toFixed(range.precision)) : Number(v.toFixed(0));
+        const item = document.createElement("div");
+        item.className = "wheel-picker-item";
+        item.textContent = value;
+        item.dataset.value = String(value);
+        items.appendChild(item);
+      }
+    }
+
+    function snapToValue(value, smooth = true) {
+      const range = resolveRange(currentUnit);
+      const maxIndex = Math.max(items.children.length - 1, 0);
+      const index = clamp(Math.round((value - range.min) / range.step), 0, maxIndex);
+      const scrollTop = index * ITEM_HEIGHT;
+      container.scrollTo({ top: scrollTop, behavior: smooth ? "smooth" : "auto" });
+    }
+
+    function updateSelection() {
+      const range = resolveRange(currentUnit);
+      const maxIndex = Math.max(items.children.length - 1, 0);
+      const selectedIndex = clamp(Math.round(container.scrollTop / ITEM_HEIGHT), 0, maxIndex);
+      const selectedValue = range.min + selectedIndex * range.step;
+      const rounded = range.precision ? Number(selectedValue.toFixed(range.precision)) : Number(selectedValue.toFixed(0));
+
+      items.querySelectorAll(".wheel-picker-item").forEach((item, idx) => {
+        item.classList.toggle("selected", idx === selectedIndex);
+      });
+
+      if (!state.answers[stepId]) state.answers[stepId] = {};
+      state.answers[stepId][fieldId] = rounded;
+      state.answers[stepId][`${fieldId}__unit`] = currentUnit;
+    }
+
+    function convertValue(value, fromUnit, toUnit) {
+      if (fieldId === "height") {
+        if (fromUnit === "cm" && toUnit === "ft") return cmToFt(value);
+        if (fromUnit === "ft" && toUnit === "cm") return ftToCm(value);
+      }
+      if (fieldId === "weight") {
+        if (fromUnit === "kg" && toUnit === "lb") return kgToLb(value);
+        if (fromUnit === "lb" && toUnit === "kg") return lbToKg(value);
+      }
+      return value;
+    }
+
+    function switchUnit(nextUnit) {
+      if (currentUnit === nextUnit) return;
+
+      const currentValue = state.answers[stepId] ? Number(state.answers[stepId][fieldId]) : undefined;
+      const fromUnit = currentUnit;
+      currentUnit = nextUnit;
+
+      if (unitToggle) {
+        unitToggle.querySelectorAll(".wheel-picker-unit-btn").forEach((btn) => {
+          btn.classList.toggle("active", btn.textContent === currentUnit);
+        });
+      }
+
+      const range = resolveRange(currentUnit);
+      renderItems(range);
+
+      let nextValue = Number.isFinite(currentValue) ? convertValue(currentValue, fromUnit, currentUnit) : range.defaultValue;
+      nextValue = clamp(nextValue, range.min, range.max);
+      nextValue = range.precision ? Number(nextValue.toFixed(range.precision)) : Math.round(nextValue);
+
+      if (!state.answers[stepId]) state.answers[stepId] = {};
+      state.answers[stepId][fieldId] = nextValue;
+      state.answers[stepId][`${fieldId}__unit`] = currentUnit;
+
+      requestAnimationFrame(() => {
+        snapToValue(nextValue, false);
+        updateSelection();
+      });
+    }
+
+    const initialRange = resolveRange(currentUnit);
+    renderItems(initialRange);
+
+    let initialValue = saved[fieldId];
+    if (!Number.isFinite(Number(initialValue))) {
+      initialValue = initialRange.defaultValue;
+    }
+    initialValue = clamp(Number(initialValue), initialRange.min, initialRange.max);
+    initialValue = initialRange.precision ? Number(initialValue.toFixed(initialRange.precision)) : Math.round(initialValue);
+
+    if (!state.answers[stepId]) state.answers[stepId] = {};
+    state.answers[stepId][fieldId] = initialValue;
+    if (currentUnit) {
+      state.answers[stepId][`${fieldId}__unit`] = currentUnit;
+    }
+
+    requestAnimationFrame(() => {
+      snapToValue(initialValue, false);
+      updateSelection();
+    });
+
+    container.addEventListener("scroll", updateSelection);
+    container.addEventListener("scrollend", () => {
+      const range = resolveRange(currentUnit);
+      const maxIndex = Math.max(items.children.length - 1, 0);
+      const selectedIndex = clamp(Math.round(container.scrollTop / ITEM_HEIGHT), 0, maxIndex);
+      const snappedValue = range.min + selectedIndex * range.step;
+      snapToValue(snappedValue, true);
+    });
+
+    return wrapper;
   }
 
   // Step 7: Age validation function
@@ -2267,8 +2469,9 @@ function showGoalsError(message, apiUrl) {
     footer.innerHTML = "";
     
     const isFirstStep = state.stack.length === 0;
+    const isGoalsGeneration = step.type === "goals_generation";
     
-    if (!isFirstStep) {
+    if (!isFirstStep && !isGoalsGeneration) {
       const backBtn = document.createElement("button");
       backBtn.className = "btn ghost";
       backBtn.type = "button";
@@ -2332,7 +2535,12 @@ function showGoalsError(message, apiUrl) {
     const saved = state.answers[step.id] || {};
 
     step.fields.forEach((field) => {
+      if (field.input && field.input.type === "wheel_picker") {
+        return;
+      }
+
       const fieldEl = content.querySelector(`.field[data-field-id="${field.id}"]`);
+      
       let val = (saved[field.id] ?? "").toString().trim();
 
       // If saved value is empty, check the actual input field value (for default values)
@@ -2422,8 +2630,10 @@ function showGoalsError(message, apiUrl) {
     // This means user has answered all questions
     if (stepId === "generating") {
       setOnboardingCompleted();
-      saveAnswersToStorage();
     }
+    
+    // Save current progress (answers + step) for resuming
+    saveAnswersToStorage();
     
     render();
     const stepIndex = order.indexOf(stepId);
@@ -2448,6 +2658,26 @@ function showGoalsError(message, apiUrl) {
     if (step.type === "form") {
       const obj = state.answers[step.id] || {};
       step.fields.forEach((field) => {
+        if (field.input && field.input.type === "wheel_picker") {
+          const value = obj[field.id];
+          if (value !== undefined) {
+            return;
+          }
+          const currentUnit = obj[`${field.id}__unit`];
+          const fallbackUnit = currentUnit || field.input.defaultUnit || (field.input.unitOptions ? field.input.unitOptions[0] : undefined);
+          let fallbackValue = field.input.defaultValue || field.input.min || 0;
+          if (field.id === "height" && fallbackUnit === "ft") fallbackValue = 5.6;
+          if (field.id === "weight" && fallbackUnit === "lb") fallbackValue = 154;
+          obj[field.id] = fallbackValue;
+          if (field.input.unitOptions && field.input.unitOptions.length) {
+            const unitKey = `${field.id}__unit`;
+            if (!obj[unitKey]) {
+              obj[unitKey] = fallbackUnit;
+            }
+          }
+          return;
+        }
+
         const input = content.querySelector(`#in_${step.id}_${field.id}`);
         if (input) {
           const rawValue = input.value.trim();
@@ -2667,8 +2897,25 @@ function showGoalsError(message, apiUrl) {
         // Returning user - skip directly to paywall/generating
         skipToPaywall();
       } else {
-        // First time user - show full onboarding
-        render();
+        // Check if there's a saved step to resume from (e.g., after returning from Settings)
+        let savedStepIndex = null;
+        try {
+          const savedStep = localStorage.getItem('caloriecount_onboarding_step');
+          if (savedStep !== null) {
+            savedStepIndex = parseInt(savedStep, 10);
+            if (isNaN(savedStepIndex) || savedStepIndex < 0 || savedStepIndex >= order.length) {
+              savedStepIndex = null;
+            }
+          }
+        } catch (e) {}
+        
+        if (savedStepIndex !== null && savedStepIndex > 0) {
+          // Resume from saved step
+          goToStep(savedStepIndex);
+        } else {
+          // First time user - show full onboarding from beginning
+          render();
+        }
         call("ready", { firstStepId: state.currentId });
       }
       
@@ -2681,6 +2928,7 @@ function showGoalsError(message, apiUrl) {
       try {
         localStorage.removeItem(ONBOARDING_COMPLETED_KEY);
         localStorage.removeItem('caloriecount_onboarding_answers');
+        localStorage.removeItem('caloriecount_onboarding_step');
         sendPostRequest("onboarding_reset", '', false);
       } catch (e) {}
     }
