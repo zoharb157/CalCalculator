@@ -774,16 +774,6 @@
 "Purchase failed. Please try again." = "Kauf fehlgeschlagen. Bitte versuchen Sie es erneut.";
 
 /* Paywall Dismiss Confirmation */
-"Paywall.dismiss.title" = "Warte! Verpassen Sie nichts";
-"Paywall.dismiss.subtitle" = "Sie verlieren gleich den Zugang zu diesen Premium-Funktionen:";
-"Paywall.dismiss.stayButton" = "Bleiben & Premium freischalten";
-"Paywall.dismiss.leaveButton" = "Trotzdem verlassen";
-"Paywall.feature.unlimitedScans" = "Unbegrenzte Lebensmittel-Scans";
-"Paywall.feature.advancedProgress" = "Erweiterte Fortschrittsverfolgung";
-"Paywall.feature.dietPlans" = "Individuelle Ernährungspläne";
-"Paywall.feature.pdfExport" = "PDF-Datenexport";
-"Paywall.feature.premiumWidgets" = "Premium-Widgets";
-
 /* Support Email */
 "Thank you! Your support request has been sent successfully. We'll get back to you soon." = "Vielen Dank! Ihre Support-Anfrage wurde erfolgreich gesendet. Wir melden uns bald bei Ihnen.";
 "Failed to send support request. Please try again later." = "Support-Anfrage konnte nicht gesendet werden. Bitte versuchen Sie es später erneut.";

@@ -11,49 +11,44 @@ struct PaywallContainerView: View {
     let sdk: TheSDK
     var source: String = "unknown"
     
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     @State private var showingConfirmation = false
     @State private var internalPresented = true
     
     var body: some View {
-        ZStack {
-            SDKView(
-                model: sdk,
-                page: .splash,
-                show: paywallBinding(showPaywall: $internalPresented, sdk: sdk),
-                backgroundColor: Color(UIColor.systemBackground),
-                ignoreSafeArea: true
-            )
-            
-            if showingConfirmation {
-                PaywallDismissConfirmationView(
-                    onStay: {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                            showingConfirmation = false
-                        }
-                        internalPresented = true
-                    },
-                    onLeave: {
-                        showingConfirmation = false
-                        isPresented = false
-                        NotificationCenter.default.post(name: .paywallDismissed, object: nil)
-                    }
-                )
-                .transition(.opacity.combined(with: .scale(scale: 0.9)))
-                .zIndex(100)
-            }
-        }
+        SDKView(
+            model: sdk,
+            page: .splash,
+            show: paywallBinding(showPaywall: $internalPresented, sdk: sdk),
+            backgroundColor: Color(UIColor.systemBackground),
+            ignoreSafeArea: true
+        )
         .onAppear {
             Pixel.track("paywall_shown_\(source)", type: .transaction)
         }
         .onChange(of: internalPresented) { _, newValue in
             if !newValue && !sdk.isSubscribed {
-                withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
-                    showingConfirmation = true
-                }
+                showingConfirmation = true
             } else if !newValue {
                 isPresented = false
                 NotificationCenter.default.post(name: .paywallDismissed, object: nil)
             }
+        }
+        .alert(
+            localizationManager.localizedString(for: "Are you sure you want to skip the free trial?"),
+            isPresented: $showingConfirmation
+        ) {
+            Button(localizationManager.localizedString(for: "Start Free Trial")) {
+                showingConfirmation = false
+                internalPresented = true
+            }
+            Button(localizationManager.localizedString(for: "Not now")) {
+                showingConfirmation = false
+                isPresented = false
+                NotificationCenter.default.post(name: .paywallDismissed, object: nil)
+            }
+        } message: {
+            Text(localizationManager.localizedString(for: "Claim your free trial now without paying"))
         }
     }
 }
