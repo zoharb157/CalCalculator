@@ -773,17 +773,6 @@
 "Network error. Please check your connection and try again." = "Errore di rete. Controlla la connessione e riprova.";
 "Purchase failed. Please try again." = "Acquisto fallito. Riprova.";
 
-/* Paywall Dismiss Confirmation */
-"Paywall.dismiss.title" = "Aspetta! Non perderti questo";
-"Paywall.dismiss.subtitle" = "Stai per perdere l'accesso a queste funzionalità premium:";
-"Paywall.dismiss.stayButton" = "Resta e Sblocca Premium";
-"Paywall.dismiss.leaveButton" = "Esci comunque";
-"Paywall.feature.unlimitedScans" = "Scansioni cibo illimitate";
-"Paywall.feature.advancedProgress" = "Tracciamento progressi avanzato";
-"Paywall.feature.dietPlans" = "Piani dietetici personalizzati";
-"Paywall.feature.pdfExport" = "Esportazione dati in PDF";
-"Paywall.feature.premiumWidgets" = "Widget Premium";
-
 /* Support Email */
 "Thank you! Your support request has been sent successfully. We'll get back to you soon." = "Grazie! La tua richiesta di supporto è stata inviata con successo. Ti risponderemo presto.";
 "Failed to send support request. Please try again later." = "Impossibile inviare la richiesta di supporto. Riprova più tardi.";

@@ -796,17 +796,6 @@
 "Network error. Please check your connection and try again." = "Network error. Please check your connection and try again.";
 "Purchase failed. Please try again." = "Purchase failed. Please try again.";
 
-/* Paywall Dismiss Confirmation */
-"Paywall.dismiss.title" = "Wait! Don't Miss Out";
-"Paywall.dismiss.subtitle" = "You're about to lose access to these premium features:";
-"Paywall.dismiss.stayButton" = "Stay & Unlock Premium";
-"Paywall.dismiss.leaveButton" = "Leave Anyway";
-"Paywall.feature.unlimitedScans" = "Unlimited Food Scans";
-"Paywall.feature.advancedProgress" = "Advanced Progress Tracking";
-"Paywall.feature.dietPlans" = "Custom Diet Plans";
-"Paywall.feature.pdfExport" = "PDF Data Export";
-"Paywall.feature.premiumWidgets" = "Premium Widgets";
-
 /* Support Email */
 "Thank you! Your support request has been sent successfully. We'll get back to you soon." = "Thank you! Your support request has been sent successfully. We'll get back to you soon.";
 "Failed to send support request. Please try again later." = "Failed to send support request. Please try again later.";
