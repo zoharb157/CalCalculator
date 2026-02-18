@@ -1917,19 +1917,21 @@ async function generateGoalsViaApi() {
       }
 
       if (status === "denied" || status === "restricted") {
-        secondaryBtn.textContent = "Continue";
-        secondaryBtn.onclick = () => {
+        primaryBtn.textContent = "Continue";
+        primaryBtn.onclick = () => {
           persistAnswer(status, "continue");
           goNext();
         };
-
-        primaryBtn.textContent = "Open Settings";
-        primaryBtn.onclick = async () => {
-          await permissionViaNative(step.permissionType, "open_settings");
-        };
-
-        footer.appendChild(secondaryBtn);
         footer.appendChild(primaryBtn);
+
+        const noteText = step.permissionType === "notifications"
+          ? "You can enable notifications anytime from Settings → CalorieVisionAI → Notifications."
+          : "You can enable tracking anytime from Settings → Privacy & Security → Tracking.";
+
+        const note = document.createElement("div");
+        note.className = "permissionNote";
+        note.innerHTML = `<span class="permissionNoteIcon">ℹ️</span><span>${noteText}</span>`;
+        footer.appendChild(note);
         return;
       }
 

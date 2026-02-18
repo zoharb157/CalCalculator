@@ -131,8 +131,7 @@ struct ProgressDashboardView: View {
                                         exerciseMinutes: viewModel.exerciseMinutes,
                                         heartRate: viewModel.heartRate,
                                         distance: viewModel.distance,
-                                        sleepHours: viewModel.sleepHours,
-                                        isSubscribed: isSubscribed
+                                        sleepHours: viewModel.sleepHours
                                     )
                                 }
                             }
@@ -866,18 +865,16 @@ struct HealthDataSection: View {
     let heartRate: Int
     let distance: Double
     let sleepHours: Double
-    let isSubscribed: Bool
     
     @ObservedObject private var localizationManager = LocalizationManager.shared
     
-    init(steps: Int, activeCalories: Int, exerciseMinutes: Int, heartRate: Int, distance: Double, sleepHours: Double, isSubscribed: Bool = true) {
+    init(steps: Int, activeCalories: Int, exerciseMinutes: Int, heartRate: Int, distance: Double, sleepHours: Double) {
         self.steps = steps
         self.activeCalories = activeCalories
         self.exerciseMinutes = exerciseMinutes
         self.heartRate = heartRate
         self.distance = distance
         self.sleepHours = sleepHours
-        self.isSubscribed = isSubscribed
     }
     
     let columns = [
@@ -912,8 +909,7 @@ struct HealthDataSection: View {
                     icon: "figure.walk",
                     title: localizationManager.localizedString(for: AppStrings.Progress.steps),
                     value: formatNumber(steps),
-                    color: .green,
-                    isSubscribed: isSubscribed
+                    color: .green
                 )
                 
                 HealthMetricCard(
@@ -921,8 +917,7 @@ struct HealthDataSection: View {
                     title: localizationManager.localizedString(for: AppStrings.Progress.activeCalories),
                     value: "\(activeCalories)",
                     unit: localizationManager.localizedString(for: AppStrings.Progress.cal),
-                    color: .orange,
-                    isSubscribed: isSubscribed
+                    color: .orange
                 )
                 
                 HealthMetricCard(
@@ -930,8 +925,7 @@ struct HealthDataSection: View {
                     title: localizationManager.localizedString(for: AppStrings.Progress.exercise),
                     value: "\(exerciseMinutes)",
                     unit: "min",
-                    color: .blue,
-                    isSubscribed: isSubscribed
+                    color: .blue
                 )
                 
                 HealthMetricCard(
@@ -939,8 +933,7 @@ struct HealthDataSection: View {
                     title: localizationManager.localizedString(for: AppStrings.Progress.heartRate),
                     value: "\(heartRate)",
                     unit: "bpm",
-                    color: .red,
-                    isSubscribed: isSubscribed
+                    color: .red
                 )
                 
                 HealthMetricCard(
@@ -948,8 +941,7 @@ struct HealthDataSection: View {
                     title: localizationManager.localizedString(for: AppStrings.Progress.distance),
                     value: String(format: "%.1f", distance),
                     unit: "km",
-                    color: .purple,
-                    isSubscribed: isSubscribed
+                    color: .purple
                 )
                 
                 HealthMetricCard(
@@ -957,8 +949,7 @@ struct HealthDataSection: View {
                     title: localizationManager.localizedString(for: AppStrings.Progress.sleep),
                     value: String(format: "%.1f", sleepHours),
                     unit: "hrs",
-                    color: .indigo,
-                    isSubscribed: isSubscribed
+                    color: .indigo
                 )
             }
         }
@@ -983,7 +974,6 @@ struct HealthMetricCard: View {
     let value: String
     var unit: String? = nil
     let color: Color
-    let isSubscribed: Bool
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {

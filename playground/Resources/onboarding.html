@@ -1016,6 +1016,29 @@
         flex-shrink: 0;
       }
 
+      /* ===== PERMISSION DENIED NOTE ===== */
+      .footer {
+        flex-wrap: wrap;
+      }
+      .permissionNote {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 12px 14px;
+        background: color-mix(in srgb, var(--cardSolid) 80%, transparent);
+        border: 1px solid color-mix(in srgb, var(--stroke2) 60%, transparent);
+        border-radius: 14px;
+        font-size: 12px;
+        line-height: 1.45;
+        color: var(--muted);
+        animation: fadeIn .35s ease both;
+      }
+      .permissionNoteIcon {
+        font-size: 16px;
+        flex-shrink: 0;
+      }
+
       /* ===== WHEEL PICKER ===== */
       .wheel-picker-wrapper {
         position: relative;
