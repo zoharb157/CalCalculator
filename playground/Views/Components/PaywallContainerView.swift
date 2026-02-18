@@ -11,8 +11,6 @@ struct PaywallContainerView: View {
     let sdk: TheSDK
     var source: String = "unknown"
     
-    @ObservedObject private var localizationManager = LocalizationManager.shared
-    @State private var showingConfirmation = false
     @State private var internalPresented = true
     
     var body: some View {
@@ -27,28 +25,10 @@ struct PaywallContainerView: View {
             Pixel.track("paywall_shown_\(source)", type: .transaction)
         }
         .onChange(of: internalPresented) { _, newValue in
-            if !newValue && !sdk.isSubscribed {
-                showingConfirmation = true
-            } else if !newValue {
+            if !newValue {
                 isPresented = false
                 NotificationCenter.default.post(name: .paywallDismissed, object: nil)
             }
-        }
-        .alert(
-            localizationManager.localizedString(for: "Are you sure you want to skip the free trial?"),
-            isPresented: $showingConfirmation
-        ) {
-            Button(localizationManager.localizedString(for: "Start Free Trial")) {
-                showingConfirmation = false
-                internalPresented = true
-            }
-            Button(localizationManager.localizedString(for: "Not now")) {
-                showingConfirmation = false
-                isPresented = false
-                NotificationCenter.default.post(name: .paywallDismissed, object: nil)
-            }
-        } message: {
-            Text(localizationManager.localizedString(for: "Claim your free trial now without paying"))
         }
     }
 }
