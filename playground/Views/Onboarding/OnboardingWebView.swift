@@ -389,6 +389,7 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
                     guard granted else {
                         let response: [String: Any] = [
                             "ok": false,
+                            "consentDeclined": true,
                             "error": "AI data sharing consent is required to generate your personalized goals."
                         ]
                         postEventToJS(id: id, payload: response)
@@ -894,7 +895,7 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
                 if !AIConsentManager.shared.hasConsented {
                     let granted = await presentAIConsentSheet()
                     guard granted else {
-                        postGoalsGeneratedToJS(ok: false, error: "AI data sharing consent is required to generate your personalized goals.")
+                        postGoalsGeneratedToJS(ok: false, consentDeclined: true, error: "AI data sharing consent is required to generate your personalized goals.")
                         return
                     }
                 }
@@ -933,7 +934,7 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
             }
         }
         
-        private func postGoalsGeneratedToJS(ok: Bool, goals: [String: Any]? = nil, error: String? = nil) {
+        private func postGoalsGeneratedToJS(ok: Bool, goals: [String: Any]? = nil, consentDeclined: Bool = false, error: String? = nil) {
             DispatchQueue.main.async { [weak self] in
                 guard let webView = self?.webView else {
                     print("⚠️ [OnboardingWebView] WebView is nil, cannot post goals to JS")
@@ -943,6 +944,9 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
                 var payload: [String: Any] = ["ok": ok]
                 if let goals = goals {
                     payload["goals"] = goals
+                }
+                if consentDeclined {
+                    payload["consentDeclined"] = true
                 }
                 if let error = error {
                     payload["error"] = error

@@ -544,8 +544,9 @@
           });
         } else {
           const error = detail.error || "Unknown error from native";
+          const consentDeclined = detail.consentDeclined === true;
           console.error("❌ [tryGenerateGoalsViaNative] Native generation failed:", error);
-          resolve({ success: false, error: error });
+          resolve({ success: false, error: error, consentDeclined: consentDeclined });
         }
       };
       
@@ -2237,6 +2238,13 @@ async function generateGoalsViaApi() {
         } else {
           console.warn("⚠️ [startGoalsGeneration] Native generation failed, falling back to JavaScript API");
           console.warn("⚠️ [startGoalsGeneration] Error: ", nativeResult.error);
+          
+          // If user declined AI consent, show a friendly message instead of falling back to JS API
+          if (nativeResult.consentDeclined) {
+            clearInterval(msgInterval);
+            showConsentDeclinedError();
+            return;
+          }
         }
         
         // Fallback to JavaScript API if native fails
@@ -2483,6 +2491,54 @@ function showGoalsError(message, apiUrl) {
     showGoalsResults(defaultGoals);
     
     // Notify native
+    call("goals_generated", { ok: true, goals: defaultGoals, isDefault: true });
+  });
+
+  btnGroup.appendChild(retry);
+  btnGroup.appendChild(cont);
+  footer.appendChild(btnGroup);
+}
+
+function showConsentDeclinedError() {
+  const loadingEl = document.getElementById("goalsLoading");
+  const resultsEl = document.getElementById("goalsResults");
+
+  if (loadingEl) loadingEl.style.display = "none";
+  if (!resultsEl) return;
+
+  resultsEl.style.display = "block";
+  resultsEl.innerHTML = `
+    <div class="successCheck" style="background: linear-gradient(135deg, rgba(255,165,0,.18), rgba(255,165,0,.08)); margin: 0 auto; font-size: 32px; display: flex; align-items: center; justify-content: center;">🔒</div>
+    <h1 style="margin-top:16px;">No Problem!</h1>
+    <p class="desc" style="margin-bottom:8px;">You skipped data sharing, so we couldn't generate AI‑personalized goals.</p>
+    <p class="desc" style="margin-bottom:12px; opacity:0.7;">You can continue with estimated goals based on your profile and update them anytime in Settings.</p>
+  `;
+
+  footer.innerHTML = "";
+
+  const btnGroup = document.createElement("div");
+  btnGroup.style.display = "flex";
+  btnGroup.style.flexDirection = "column";
+  btnGroup.style.width = "100%";
+  btnGroup.style.gap = "12px";
+
+  const retry = document.createElement("button");
+  retry.className = "btn primary";
+  retry.type = "button";
+  retry.textContent = "Try Again";
+  retry.addEventListener("click", () => {
+    state.currentId = "generating";
+    render();
+  });
+
+  const cont = document.createElement("button");
+  cont.className = "btn ghost";
+  cont.type = "button";
+  cont.textContent = "Continue with Estimates";
+  cont.addEventListener("click", () => {
+    const defaultGoals = calculateDefaultGoals();
+    state.generatedGoals = defaultGoals;
+    showGoalsResults(defaultGoals);
     call("goals_generated", { ok: true, goals: defaultGoals, isDefault: true });
   });
 
