@@ -320,6 +320,8 @@ final class WorkoutCaloriesRepository: WorkoutCaloriesRepositoryProtocol {
         workouts: [WorkoutInput],
         userProfile: WorkoutUserProfile
     ) async throws -> BulkWorkoutCaloriesResult {
+        try AIConsentManager.shared.requireConsent()
+        
         print("🔵 [WorkoutCaloriesRepository] ===== Starting workout calories calculation =====")
         
         // Validate inputs

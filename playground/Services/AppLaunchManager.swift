@@ -63,18 +63,6 @@ final class AppLaunchManager {
     // MARK: - Setup
     
     private func setupNotificationObservers() {
-        // Listen for app becoming active (foreground)
-        NotificationCenter.default.addObserver(
-            forName: UIApplication.didBecomeActiveNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor in
-                self?.handleAppBecameActive()
-            }
-        }
-        
-        // Listen for subscription status updates (paywall dismissed)
         NotificationCenter.default.addObserver(
             forName: .subscriptionStatusUpdated,
             object: nil,
@@ -88,8 +76,8 @@ final class AppLaunchManager {
     
     // MARK: - App Lifecycle
     
-    /// Called when the app becomes active (foreground)
-    private func handleAppBecameActive() {
+    /// Called once on cold launch to increment open count and show paywall if needed
+    func handleColdLaunch() {
         // Check if enough time has passed since last foreground event
         let lastTimestamp = UserDefaults.standard.double(forKey: lastForegroundTimestampKey)
         let now = Date().timeIntervalSince1970

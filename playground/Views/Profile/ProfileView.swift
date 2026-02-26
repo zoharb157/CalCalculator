@@ -37,6 +37,7 @@ struct ProfileView: View {
     @State private var showingSendFeedback = false
     @State private var showingHealthInfoSources = false
     @State private var showingSubscription = false
+    @State private var showingAIConsent = false
     @State private var showingDeveloperSettings = false
     @State private var versionTapCount = 0
     
@@ -120,6 +121,19 @@ struct ProfileView: View {
         }
         .sheet(isPresented: $showingDeveloperSettings) {
             DeveloperSettingsView()
+        }
+        .sheet(isPresented: $showingAIConsent) {
+            AIDataConsentView(
+                onConsent: {
+                    AIConsentManager.shared.grantConsent()
+                },
+                onDecline: {
+                    if AIConsentManager.shared.hasConsented {
+                        AIConsentManager.shared.revokeConsent()
+                    }
+                    Pixel.track("ai_consent_declined_settings", type: .lifecycle)
+                }
+            )
         }
     }
     
@@ -358,12 +372,27 @@ struct ProfileView: View {
                 SettingsDivider()
                 
                 SettingsRow(
+                    icon: "brain",
+                    iconColor: .blue,
+                    title: localizationManager.localizedString(for: AppStrings.AIConsent.settingsTitle),
+                    subtitle: AIConsentManager.shared.hasConsented
+                        ? localizationManager.localizedString(for: AppStrings.AIConsent.settingsConsentGranted)
+                        : localizationManager.localizedString(for: AppStrings.AIConsent.settingsConsentNotGranted),
+                    action: {
+                        Pixel.track("settings_ai_consent_tapped", type: .interaction)
+                        showingAIConsent = true
+                    }
+                )
+                
+                SettingsDivider()
+                
+                SettingsRow(
                     icon: "doc.text",
                     iconColor: .gray,
                     title: localizationManager.localizedString(for: AppStrings.Profile.termsOfService),
                     action: {
                         Pixel.track("settings_terms_tapped", type: .interaction)
-                        openURL("https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")
+                        openURL(Config.termsURL.absoluteString)
                     }
                 )
                 
@@ -375,7 +404,7 @@ struct ProfileView: View {
                     title: localizationManager.localizedString(for: AppStrings.Profile.privacyPolicy),
                     action: {
                         Pixel.track("settings_privacy_tapped", type: .interaction)
-                        openURL("https://www.apple.com/legal/privacy/")
+                        openURL(Config.privacyURL.absoluteString)
                     }
                 )
             }

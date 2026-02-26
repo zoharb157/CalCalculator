@@ -64,6 +64,8 @@ final class CaloriesAPIService: FoodAnalysisServiceProtocol {
         mode: ScanMode = .food,
         foodHint: String? = nil
     ) async throws -> FoodAnalysisResult {
+        try AIConsentManager.shared.requireConsent()
+        
         print("🔵 [FoodAnalysis] ===== Starting food analysis =====")
         print("🔵 [FoodAnalysis] Mode: \(mode)")
         print("🔵 [FoodAnalysis] Food hint: \(foodHint ?? "none")")

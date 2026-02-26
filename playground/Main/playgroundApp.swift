@@ -414,6 +414,8 @@ struct playgroundApp: App {
         manager.onShowRateUs = {
             RateUsManager.shared.showRatePopupNow()
         }
+        
+        manager.handleColdLaunch()
     }
 }
 

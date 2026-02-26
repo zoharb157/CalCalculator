@@ -198,6 +198,8 @@ final class GoalsGenerationService {
     }
     
     func generateGoals(from onboardingData: [String: Any]) async throws -> GoalsResult {
+        try AIConsentManager.shared.requireConsent()
+        
         print("🔵 [GoalsGenerationService] ===== Starting goals generation ======")
         
         guard let userId = authManager.userId else {
