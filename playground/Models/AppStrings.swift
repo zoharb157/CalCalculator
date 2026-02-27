@@ -923,6 +923,33 @@ struct AppStrings {
         static let proteinChampion = "Protein Champion"
         static let locked = "Locked"
     }
+    
+    // MARK: - AI Consent
+    struct AIConsent {
+        static let title = "AI Data Sharing"
+        static let subtitle = "This app uses AI to analyze your food photos, generate nutrition goals, and estimate workout calories. Before we can do this, we need your permission to share some of your data."
+        static let dataSharedHeader = "What data is shared:"
+        static let dataPhotos = "Food Photos"
+        static let dataPhotosDetail = "Photos you take or select for food analysis are sent for AI-powered nutritional estimation."
+        static let dataBodyMetrics = "Body Metrics"
+        static let dataBodyMetricsDetail = "Gender, weight, height, age, and activity level are used to generate personalized nutrition goals."
+        static let dataWorkouts = "Workout Data"
+        static let dataWorkoutsDetail = "Workout type, duration, and intensity along with your body metrics are used to estimate calories burned."
+        static let recipientHeader = "Who receives your data:"
+        static let recipientName = "CalorieCount AI"
+        static let recipientDetail = "Your data is sent to CalorieCount AI servers (app.caloriecount-ai.com) for processing. Data is used only for providing the requested analysis and is not sold to third parties."
+        static let privacyNote = "Your data is transmitted securely and processed only to provide you with nutritional analysis. You can revoke this consent at any time in Settings."
+        static let viewPrivacyPolicy = "View Privacy Policy"
+        static let agreeButton = "Agree & Continue"
+        static let declineButton = "Not Now"
+        static let settingsTitle = "Data & AI Privacy"
+        static let settingsConsentGranted = "Consent granted"
+        static let settingsConsentNotGranted = "Not granted"
+        static let revokeTitle = "Revoke AI Data Consent"
+        static let revokeMessage = "This will prevent the app from sending your data to AI services. Food scanning, goal generation, and workout calorie estimation will be unavailable until you re-enable consent."
+        static let revokeButton = "Revoke Consent"
+        static let consentRequired = "AI data sharing consent is required to use this feature."
+    }
 }
 
 // MARK: - Localized String Access

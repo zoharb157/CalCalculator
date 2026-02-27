@@ -106,6 +106,8 @@ final class WorkoutCaloriesAPIService {
         durationMinutes: Int,
         intensity: String = "moderate"
     ) async throws -> Int? {
+        try AIConsentManager.shared.requireConsent()
+        
         guard let userId = authManager.userId,
               let jwtToken = authManager.jwtToken else {
             AppLogger.forClass("WorkoutCaloriesAPIService").warning("Missing credentials for workout calories API")

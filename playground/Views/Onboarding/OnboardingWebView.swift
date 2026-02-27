@@ -384,6 +384,19 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
             }
             
             Task {
+                if !AIConsentManager.shared.hasConsented {
+                    let granted = await presentAIConsentSheet()
+                    guard granted else {
+                        let response: [String: Any] = [
+                            "ok": false,
+                            "consentDeclined": true,
+                            "error": "AI data sharing consent is required to generate your personalized goals."
+                        ]
+                        postEventToJS(id: id, payload: response)
+                        return
+                    }
+                }
+                
                 do {
                     print("🔵 [OnboardingWebView] Calling GoalsGenerationService (async)...")
                     let goals = try await GoalsGenerationService.shared.generateGoals(from: answers)
@@ -879,6 +892,14 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
             print("📱 [OnboardingWebView] Answers keys: \(answers.keys)")
             
             Task {
+                if !AIConsentManager.shared.hasConsented {
+                    let granted = await presentAIConsentSheet()
+                    guard granted else {
+                        postGoalsGeneratedToJS(ok: false, consentDeclined: true, error: "AI data sharing consent is required to generate your personalized goals.")
+                        return
+                    }
+                }
+                
                 do {
                     print("🔵 [OnboardingWebView] Calling GoalsGenerationService...")
                     let goals = try await GoalsGenerationService.shared.generateGoals(from: answers)
@@ -913,7 +934,7 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
             }
         }
         
-        private func postGoalsGeneratedToJS(ok: Bool, goals: [String: Any]? = nil, error: String? = nil) {
+        private func postGoalsGeneratedToJS(ok: Bool, goals: [String: Any]? = nil, consentDeclined: Bool = false, error: String? = nil) {
             DispatchQueue.main.async { [weak self] in
                 guard let webView = self?.webView else {
                     print("⚠️ [OnboardingWebView] WebView is nil, cannot post goals to JS")
@@ -923,6 +944,9 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
                 var payload: [String: Any] = ["ok": ok]
                 if let goals = goals {
                     payload["goals"] = goals
+                }
+                if consentDeclined {
+                    payload["consentDeclined"] = true
                 }
                 if let error = error {
                     payload["error"] = error
@@ -956,6 +980,42 @@ struct OnboardingWebViewRepresentable: UIViewRepresentable, Equatable {
                         print("✅ [OnboardingWebView] Posted goals to JS successfully")
                     }
                 }
+            }
+        }
+        
+        @MainActor
+        private func presentAIConsentSheet() async -> Bool {
+            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let rootViewController = windowScene.windows.first?.rootViewController else {
+                return false
+            }
+            
+            var topController = rootViewController
+            while let presented = topController.presentedViewController {
+                topController = presented
+            }
+            
+            return await withCheckedContinuation { continuation in
+                let consentView = AIDataConsentView(
+                    onConsent: {
+                        AIConsentManager.shared.grantConsent()
+                        continuation.resume(returning: true)
+                    },
+                    onDecline: {
+                        Pixel.track("ai_consent_declined", type: .lifecycle)
+                        continuation.resume(returning: false)
+                    }
+                )
+                
+                let hostingController = UIHostingController(rootView: consentView)
+                hostingController.modalPresentationStyle = .pageSheet
+                
+                if let sheet = hostingController.sheetPresentationController {
+                    sheet.detents = [.large()]
+                    sheet.prefersGrabberVisible = true
+                }
+                
+                topController.present(hostingController, animated: true)
             }
         }
         

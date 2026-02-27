@@ -18,6 +18,7 @@ struct ScanView: View {
     @Environment(TheSDK.self) private var sdk
     
     @State private var showPaywall = false
+    @State private var showingAIConsent = false
     @State private var previousViewState: ViewState? // Store previous view state before opening settings
     
     enum ViewState {
@@ -71,6 +72,17 @@ struct ScanView: View {
                 }
                 .fullScreenCover(isPresented: $showPaywall) {
                     PaywallContainerView(isPresented: $showPaywall, sdk: sdk, source: "scan_view")
+                }
+                .sheet(isPresented: $showingAIConsent) {
+                    AIDataConsentView(
+                        onConsent: {
+                            AIConsentManager.shared.grantConsent()
+                            analyzeImage()
+                        },
+                        onDecline: {
+                            Pixel.track("ai_consent_declined", type: .lifecycle)
+                        }
+                    )
                 }
         }
     }
@@ -278,7 +290,11 @@ struct ScanView: View {
     }
     
     private func analyzeImage() {
-        // Check free analysis limit for non-subscribed users
+        guard AIConsentManager.shared.hasConsented else {
+            showingAIConsent = true
+            return
+        }
+        
         let limitManager = AnalysisLimitManager.shared
         guard let image = viewModel.selectedImage else { return }
         
